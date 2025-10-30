@@ -305,19 +305,19 @@ def accident_list(request):
         
         for acc in accidents:
             writer.writerow([
-                acc.date_committed.strftime('%Y-%m-%d'),
-                acc.time_committed.strftime('%H:%M'),
-                acc.province,
-                acc.municipal,
-                acc.barangay,
+                acc.date_committed.strftime('%Y-%m-%d') if acc.date_committed else '',
+                acc.time_committed.strftime('%H:%M') if acc.time_committed else '',
+                acc.province or '',
+                acc.municipal or '',
+                acc.barangay or '',
                 acc.street or '',
-                acc.incident_type,
-                acc.victim_count,
+                acc.incident_type or '',
+                acc.victim_count or 0,
                 'Yes' if acc.victim_killed else 'No',
                 'Yes' if acc.victim_injured else 'No',
                 'Yes' if acc.is_hotspot else 'No',
-                float(acc.latitude),
-                float(acc.longitude)
+                float(acc.latitude) if acc.latitude else '',
+                float(acc.longitude) if acc.longitude else ''
             ])
         
         return response
@@ -546,7 +546,7 @@ def hotspot_detail(request, cluster_id):
             'latitude': float(acc['latitude']),  # Convert Decimal to float
             'longitude': float(acc['longitude']),  # Convert Decimal to float
             'incident_type': acc['incident_type'],
-            'date_committed': acc['date_committed'].strftime('%Y-%m-%d'),
+            'date_committed': acc['date_committed'].strftime('%Y-%m-%d') if acc['date_committed'] else '',
             'barangay': acc['barangay'],
             'municipal': acc['municipal'],
             'victim_count': acc['victim_count'],
@@ -561,15 +561,15 @@ def hotspot_detail(request, cluster_id):
     accidents_export = []
     for acc in accidents_display:
         accidents_export.append({
-            'Date': acc.date_committed.strftime('%Y-%m-%d'),
-            'Time': acc.time_committed.strftime('%H:%M'),
+            'Date': acc.date_committed.strftime('%Y-%m-%d') if acc.date_committed else '',
+            'Time': acc.time_committed.strftime('%H:%M') if acc.time_committed else '',
             'Location': f"{acc.barangay}, {acc.municipal}",
             'Type': acc.incident_type,
             'Casualties': acc.victim_count,
             'Fatal': 'Yes' if acc.victim_killed else 'No',
             'Injured': 'Yes' if acc.victim_injured else 'No',  # ADDED
-            'Latitude': float(acc.latitude),  # Convert here too
-            'Longitude': float(acc.longitude),  # Convert here too
+            'Latitude': float(acc.latitude) if acc.latitude else '',  # Convert here too
+            'Longitude': float(acc.longitude) if acc.longitude else '',  # Convert here too
         })
     
     accidents_export_json = json.dumps(accidents_export)
@@ -721,7 +721,7 @@ def map_view(request):
             'latitude': float(accident['latitude']),
             'longitude': float(accident['longitude']),
             'incident_type': accident['incident_type'],
-            'date_committed': accident['date_committed'].strftime('%Y-%m-%d'),
+            'date_committed': accident['date_committed'].strftime('%Y-%m-%d') if accident['date_committed'] else '',
             'time_committed': accident['time_committed'].strftime('%H:%M:%S') if accident['time_committed'] else '00:00:00',
             'barangay': accident['barangay'] or '',
             'municipal': accident['municipal'] or '',
