@@ -1323,21 +1323,5 @@ def get_critical_alerts():
             'message': f'{pending_reports_24h} new reports awaiting verification',
             'action_url': '/admin/accidents/accidentreport/'
         })
-    
-    # Alert 5: Clustering needed (if no recent clustering job)
-    from clustering.models import ClusteringJob
-    recent_clustering = ClusteringJob.objects.filter(
-        started_at__gte=last_7_days,
-        status='completed'
-    ).exists()
-    
-    if not recent_clustering and Accident.objects.count() > 100:
-        alerts.append({
-            'type': 'warning',
-            'icon': '🔍',
-            'title': 'AGNES Analysis Recommended',
-            'message': 'Run clustering to update hotspot detection',
-            'action_url': '/admin/clustering/clusteringjob/add/'
-        })
-    
+
     return alerts
