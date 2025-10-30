@@ -110,6 +110,54 @@
         font-size: 28px;
     }
 
+    .mode-toggle-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .mode-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+    }
+
+    .mode-badge.active {
+        background: white;
+        color: #667eea;
+    }
+
+    .loading-placeholder {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 4px solid #ffc107;
+        margin: 10px 0;
+    }
+
+    .switch-mode-btn {
+        background: white;
+        color: #667eea;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .switch-mode-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
     table.analytics-table {
         width: 100%;
         border-collapse: collapse;
@@ -140,6 +188,35 @@
             <h1 class="mb-4">
                 <i class="fas fa-chart-line"></i> Advanced Analytics Dashboard
             </h1>
+
+            <!-- Mode Toggle Section -->
+            <div class="mode-toggle-section">
+                <div>
+                    <h4 class="mb-2"><i class="fas fa-bolt"></i> Analysis Mode</h4>
+                    <p class="mb-0" style="opacity: 0.9; font-size: 14px;">
+                        {% if simple_mode %}
+                        <span class="mode-badge active">⚡ FAST MODE</span>
+                        <span class="mode-badge">🔬 FULL MODE</span>
+                        <br><small>Currently showing essential metrics (loads in &lt;2 seconds)</small>
+                        {% else %}
+                        <span class="mode-badge">⚡ FAST MODE</span>
+                        <span class="mode-badge active">🔬 FULL MODE</span>
+                        <br><small>Complete statistical analysis with all tests enabled</small>
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    {% if simple_mode %}
+                    <button class="switch-mode-btn" onclick="switchToFullMode()">
+                        <i class="fas fa-microscope"></i> Load Full Analysis
+                    </button>
+                    {% else %}
+                    <button class="switch-mode-btn" onclick="switchToFastMode()">
+                        <i class="fas fa-bolt"></i> Switch to Fast Mode
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
 
             <!-- Filter Section -->
             <div class="filter-section">
@@ -246,6 +323,15 @@
 
                 <h5>Spatial Concentration</h5>
                 {% with spatial=analytics.spatial_analysis.spatial_concentration %}
+                {% if spatial.concentration_level == 'Loading...' %}
+                <div class="loading-placeholder">
+                    <i class="fas fa-info-circle"></i> <strong>Advanced metric:</strong>
+                    This metric requires full analysis mode.
+                    <a href="?simple=false{% if current_province != 'all' %}&province={{ current_province }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                        Load Full Analysis
+                    </a> to view Gini coefficient and spatial concentration.
+                </div>
+                {% else %}
                 <div class="stat-row">
                     <span class="stat-label">Gini Coefficient:</span>
                     <span class="stat-value">{{ spatial.gini_coefficient|default:0 }}</span>
@@ -260,6 +346,7 @@
                     <span class="stat-label">Top 10 Municipalities:</span>
                     <span class="stat-value">{{ spatial.top_10_percentage|default:0 }}% of accidents</span>
                 </div>
+                {% endif %}
                 {% endwith %}
             </div>
         </div>
@@ -297,6 +384,12 @@
 
                 <h5>Weekend vs Weekday</h5>
                 {% with weekend=analytics.temporal_analysis.weekend_vs_weekday %}
+                {% if weekend.higher_risk_period == 'Loading...' %}
+                <div class="loading-placeholder">
+                    <i class="fas fa-info-circle"></i> <strong>Advanced metric:</strong>
+                    Weekend vs weekday analysis available in full mode.
+                </div>
+                {% else %}
                 <div class="stat-row">
                     <span class="stat-label">Weekday Daily Avg:</span>
                     <span class="stat-value">{{ weekend.weekday_daily_average|default:0 }}</span>
@@ -315,6 +408,7 @@
                         <strong>{{ weekend.higher_risk_period|default:"Unknown" }}</strong>
                     </span>
                 </div>
+                {% endif %}
                 {% endwith %}
             </div>
         </div>
@@ -653,6 +747,18 @@ function exportAnalytics() {
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+}
+
+function switchToFullMode() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('simple', 'false');
+    window.location.href = url.toString();
+}
+
+function switchToFastMode() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('simple', 'true');
+    window.location.href = url.toString();
 }
 </script>
 {% endblock %}

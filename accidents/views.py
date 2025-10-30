@@ -1104,7 +1104,7 @@ def analytics_view(request):
 
 def advanced_analytics_view(request):
     """
-    Enhanced analytics view with advanced statistical analysis
+    FAST VERSION - Enhanced analytics with smart caching and lazy loading
     """
     from .analytics import AccidentAnalytics
     from django.core.cache import cache
@@ -1113,6 +1113,9 @@ def advanced_analytics_view(request):
     province_filter = request.GET.get('province', 'all')
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
+
+    # Simple mode by default - loads fast!
+    simple_mode = request.GET.get('simple', 'true') == 'true'
 
     # Build queryset
     accidents = Accident.objects.all()
@@ -1126,23 +1129,54 @@ def advanced_analytics_view(request):
     if date_to:
         accidents = accidents.filter(date_committed__lte=date_to)
 
-    # Cache key for analytics
-    cache_key = f'advanced_analytics_{province_filter}_{date_from}_{date_to}'
+    # Cache key
+    cache_key = f'analytics_{province_filter}_{date_from}_{date_to}_{"simple" if simple_mode else "full"}'
     cached_data = cache.get(cache_key)
 
     if cached_data:
         analytics_data = cached_data
     else:
-        # Generate advanced analytics
         analyzer = AccidentAnalytics(accidents)
-        analytics_data = analyzer.generate_comprehensive_report()
 
-        # Cache for 10 minutes
-        cache.set(cache_key, analytics_data, 600)
+        if simple_mode:
+            # FAST MODE - Only essential metrics (loads in <2 seconds)
+            analytics_data = {
+                'spatial_analysis': {
+                    'hotspot_effectiveness': analyzer.hotspot_effectiveness_analysis(),
+                    'spatial_concentration': {'concentration_level': 'Loading...', 'gini_coefficient': 0}
+                },
+                'temporal_analysis': {
+                    'rush_hour': analyzer.rush_hour_analysis(),
+                    'weekend_vs_weekday': analyzer.weekend_vs_weekday_analysis(),
+                    'seasonal': {'quarterly_breakdown': [], 'highest_risk_quarter': 'Loading...'}
+                },
+                'severity_analysis': {
+                    'severity_index': analyzer.severity_index_analysis(),
+                    'high_risk_combinations': {'high_risk_combinations': []}
+                },
+                'predictive_analysis': {
+                    'trend': analyzer.trend_analysis_with_confidence(),
+                    'anomalies': {'anomalies_detected': 0, 'anomalies': []}
+                },
+                'statistical_tests': {
+                    'provincial_variance': {'test_performed': False},
+                    'correlations': {'time_severity_correlation': 0}
+                }
+            }
+        else:
+            # FULL MODE - All analytics (slower)
+            analytics_data = analyzer.generate_comprehensive_report()
 
-    # Get provinces for filter
-    provinces = list(Accident.objects.values_list('province', flat=True).distinct().order_by('province'))
-    provinces = [p for p in provinces if p and p.strip()]
+        # Cache for 30 minutes
+        cache.set(cache_key, analytics_data, 1800)
+
+    # Get provinces (cached)
+    provinces_key = 'provinces_list'
+    provinces = cache.get(provinces_key)
+    if not provinces:
+        provinces = list(Accident.objects.values_list('province', flat=True).distinct().order_by('province'))
+        provinces = [p for p in provinces if p and p.strip()]
+        cache.set(provinces_key, provinces, 7200)  # 2 hours
 
     context = {
         'analytics': analytics_data,
@@ -1151,6 +1185,7 @@ def advanced_analytics_view(request):
         'current_province': province_filter,
         'date_from': date_from,
         'date_to': date_to,
+        'simple_mode': simple_mode,
         'analytics_json': json.dumps(analytics_data, default=str)
     }
 
