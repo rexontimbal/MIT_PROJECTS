@@ -415,43 +415,90 @@
             }
         }
         
-        /* Smaller Laptops */
+        /* Smaller Laptops - Make navigation more compact */
         @media (max-width: 1200px) {
             .navbar-container {
                 padding: 0.75rem 1rem;
-                gap: 1rem;
+                gap: 0.75rem;
             }
-            
+
             .navbar-brand {
                 gap: 0.75rem;
-                min-width: 320px;
+                min-width: 280px;
             }
-            
+
             .navbar-logo {
                 width: 45px;
                 height: 45px;
             }
-            
+
             .navbar-title h1 {
-                font-size: 1.15rem;
+                font-size: 1.1rem;
             }
-            
+
             .navbar-title p {
                 font-size: 0.75rem;
             }
-            
-            .nav-link {
-                padding: 0.6rem 0.85rem;
-                font-size: 0.85rem;
+
+            /* Hide nav text, show only icons */
+            .nav-link .text {
+                display: none;
             }
-            
+
+            .nav-link {
+                padding: 0.7rem;
+                font-size: 0.9rem;
+                min-width: auto;
+                position: relative;
+            }
+
+            .nav-link .icon {
+                font-size: 1.2rem;
+            }
+
+            /* Show text on hover as tooltip */
+            .nav-link:hover::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                bottom: -40px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 0.5rem 0.75rem;
+                border-radius: 4px;
+                font-size: 0.8rem;
+                white-space: nowrap;
+                z-index: 1000;
+                pointer-events: none;
+            }
+
             .navbar-menu {
                 gap: 0.25rem;
             }
-            
+
+            .quick-action-btn .text {
+                display: none;
+            }
+
             .quick-action-btn {
-                padding: 0.6rem 1rem;
-                font-size: 0.85rem;
+                padding: 0.7rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .user-profile-btn {
+                padding: 0.5rem 0.75rem;
+                gap: 0.5rem;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .user-avatar {
+                width: 38px;
+                height: 38px;
+                font-size: 0.95rem;
             }
         }
 
@@ -639,36 +686,35 @@
             <!-- Navigation Menu - STRAIGHT HORIZONTAL -->
             <ul class="navbar-menu" id="navbarMenu">
                 <li>
-                    <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" data-tooltip="Dashboard">
                         <span class="icon"><i class="fas fa-tachometer-alt"></i></span>
                         <span class="text">Dashboard</span>
                     </a>
                 </li>
-                
-                <!-- ADDED ACCIDENT RECORDS -->
+
                 <li>
-                    <a href="{% url 'accident_list' %}" class="nav-link {% if request.resolver_match.url_name == 'accident_list' %}active{% endif %}">
+                    <a href="{% url 'accident_list' %}" class="nav-link {% if request.resolver_match.url_name == 'accident_list' %}active{% endif %}" data-tooltip="Accident Records">
                         <span class="icon"><i class="fas fa-car-crash"></i></span>
-                        <span class="text">Accident Records</span>
+                        <span class="text">Accidents</span>
                     </a>
                 </li>
-                
+
                 <li>
-                    <a href="{% url 'map_view' %}" class="nav-link {% if request.resolver_match.url_name == 'map_view' %}active{% endif %}">
+                    <a href="{% url 'map_view' %}" class="nav-link {% if request.resolver_match.url_name == 'map_view' %}active{% endif %}" data-tooltip="Map View">
                         <span class="icon"><i class="fas fa-map-marked-alt"></i></span>
-                        <span class="text">Map View</span>
+                        <span class="text">Map</span>
                     </a>
                 </li>
-                
+
                 <li>
-                    <a href="{% url 'hotspots' %}" class="nav-link {% if request.resolver_match.url_name == 'hotspots' %}active{% endif %}">
+                    <a href="{% url 'hotspots' %}" class="nav-link {% if request.resolver_match.url_name == 'hotspots' %}active{% endif %}" data-tooltip="Hotspots">
                         <span class="icon"><i class="fas fa-fire"></i></span>
                         <span class="text">Hotspots</span>
                     </a>
                 </li>
-                
+
                 <li>
-                    <a href="{% url 'analytics' %}" class="nav-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+                    <a href="{% url 'analytics' %}" class="nav-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}" data-tooltip="Analytics">
                         <span class="icon"><i class="fas fa-chart-line"></i></span>
                         <span class="text">Analytics</span>
                     </a>

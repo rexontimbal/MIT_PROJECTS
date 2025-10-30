@@ -47,12 +47,12 @@
             display: flex;
             max-width: 900px;
             width: 100%;
-            min-height: 85vh;
+            min-height: min(600px, 90vh);
             max-height: 95vh;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-            overflow: hidden;
+            overflow: auto;
             position: relative;
             z-index: 1;
         }
@@ -62,14 +62,14 @@
             flex: 1;
             background: linear-gradient(135deg, #003087 0%, #0056b3 100%);
             color: white;
-            padding: 2.5vh 2vw;
+            padding: clamp(1.5rem, 2.5vh, 3rem) clamp(1rem, 2vw, 2rem);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
             position: relative;
-            overflow: hidden;
+            overflow: auto;
         }
 
         .login-left::before {
@@ -184,11 +184,12 @@
         /* RIGHT SIDE - LOGIN FORM */
         .login-right {
             flex: 1;
-            padding: 2.5vh 2vw;
+            padding: clamp(1.5rem, 2.5vh, 3rem) clamp(1rem, 2vw, 2rem);
             display: flex;
             flex-direction: column;
             justify-content: center;
-            overflow: hidden;
+            overflow: auto;
+            min-height: 0;
         }
 
         .login-right h2 {
@@ -451,6 +452,51 @@
 
             .login-right h2 {
                 font-size: 24px;
+            }
+        }
+
+        /* Small Screen Height - ensure everything is visible */
+        @media (max-height: 700px) {
+            .login-container {
+                min-height: auto;
+                max-height: none;
+                margin: 1rem auto;
+            }
+
+            .login-left {
+                padding: 1.5rem 1rem;
+            }
+
+            .login-right {
+                padding: 1.5rem 1rem;
+            }
+
+            .pnp-seal {
+                width: 80px;
+                height: 80px;
+                margin-bottom: 0.75rem;
+            }
+
+            .features-list {
+                margin-top: 1rem;
+            }
+
+            .features-list div {
+                margin-bottom: 0.75rem;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+            }
+
+            .security-notice {
+                margin-bottom: 1rem;
+                padding: 0.5rem 0.75rem;
+            }
+
+            .login-footer {
+                margin-top: 1rem;
+                padding-top: 1rem;
             }
         }
 
