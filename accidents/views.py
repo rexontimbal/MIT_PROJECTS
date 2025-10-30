@@ -1346,8 +1346,15 @@ from .auth_utils import handle_failed_login, handle_successful_login, log_user_a
 def login(request):
     """PNP Login View with audit trail and security features"""
 
-    # If already logged in, redirect to dashboard
+    # If already logged in, check if they have a profile
     if request.user.is_authenticated:
+        # Check if user has profile - if not, logout and show error
+        if not hasattr(request.user, 'profile'):
+            auth_logout(request)
+            messages.error(request, 'Your account is not properly configured. Please contact administrator.')
+            return render(request, 'registration/login.html')
+
+        # User is authenticated with valid profile - redirect to dashboard
         return redirect('dashboard')
 
     if request.method == 'POST':
@@ -1408,13 +1415,21 @@ def logout_view(request):
     """PNP Logout View with audit trail"""
 
     if request.user.is_authenticated:
-        # Log the logout action
-        log_user_action(
-            request,
-            'logout',
-            f'{request.user.profile.get_full_name_with_rank()} logged out',
-            severity='info'
-        )
+        # Log the logout action (handle users without profiles)
+        try:
+            if hasattr(request.user, 'profile'):
+                user_name = request.user.profile.get_full_name_with_rank()
+            else:
+                user_name = request.user.username
+
+            log_user_action(
+                request,
+                'logout',
+                f'{user_name} logged out',
+                severity='info'
+            )
+        except:
+            pass  # If logging fails, just continue with logout
 
         username = request.user.username
         auth_logout(request)
