@@ -3,14 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Login - AGNES Hotspot System | PNP Caraga</title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+    <title>PNP Caraga - Login | AGNES Hotspot Detection System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -19,21 +13,18 @@
         }
 
         body {
-            background: linear-gradient(135deg, 
-                #8B0000 0%, 
-                #DC143C 50%, 
-                #B22222 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #001529 0%, #003087 50%, #0056b3 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            position: relative;
-            overflow-x: hidden;
             padding: 20px;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* Animated Background */
+        /* Animated background */
         body::before {
             content: '';
             position: absolute;
@@ -41,512 +32,573 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(255,255,255,0.05) 0%, transparent 50%);
-            animation: backgroundShift 10s ease-in-out infinite;
+            background-image:
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 70px);
+            animation: slide 20s linear infinite;
         }
 
-        @keyframes backgroundShift {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+        @keyframes slide {
+            0% { background-position: 0 0; }
+            100% { background-position: 100px 100px; }
         }
 
         .login-container {
+            display: flex;
+            max-width: 1100px;
             width: 100%;
-            max-width: 420px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 2;
-        }
-
-        .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
+            background: white;
             border-radius: 20px;
-            box-shadow: 
-                0 20px 40px rgba(0, 0, 0, 0.3),
-                0 0 0 1px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
             overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            z-index: 1;
         }
 
-        .login-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.4),
-                0 0 0 1px rgba(255, 255, 255, 0.2);
-        }
-
-        .login-header {
-            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+        /* LEFT SIDE - PNP BRANDING */
+        .login-left {
+            flex: 1;
+            background: linear-gradient(135deg, #003087 0%, #0056b3 100%);
             color: white;
-            padding: 2rem 1.5rem;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
             position: relative;
+            overflow: hidden;
         }
 
-        .logo-container {
-            width: 70px;
-            height: 70px;
+        .login-left::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 15s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.3; }
+        }
+
+        .pnp-seal {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 30px;
             background: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1rem;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            font-size: 80px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+            animation: float 3s ease-in-out infinite;
         }
 
-        .logo-container img {
-            width: 45px;
-            height: 45px;
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
-        .system-title {
-            font-size: 1.3rem;
+        .login-left h1 {
+            font-size: 28px;
             font-weight: 700;
-            margin-bottom: 0.25rem;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            line-height: 1.2;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
-        .system-subtitle {
-            font-size: 0.85rem;
+        .login-left p {
+            font-size: 16px;
+            opacity: 0.95;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .system-badge {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .system-badge h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
             opacity: 0.9;
-            font-weight: 400;
-            line-height: 1.3;
         }
 
-        .login-body {
-            padding: 2rem 1.5rem;
+        .system-badge p {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .features-list {
+            text-align: left;
+            margin-top: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .features-list div {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            opacity: 0.95;
+        }
+
+        .features-list i {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .features-list span {
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        /* RIGHT SIDE - LOGIN FORM */
+        .login-right {
+            flex: 1;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-right h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #003087;
+            margin-bottom: 10px;
+        }
+
+        .login-right .subtitle {
+            color: #666;
+            font-size: 15px;
+            margin-bottom: 30px;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-error {
+            background: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .security-notice {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: #fff3cd;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .security-notice i {
+            margin-top: 2px;
         }
 
         .form-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: 25px;
         }
 
-        .form-label {
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
             font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            font-size: 0.9rem;
+            font-size: 14px;
         }
 
-        .form-label i {
-            width: 18px;
-            margin-right: 0.5rem;
-            color: #DC143C;
+        .form-group label i {
+            margin-right: 8px;
+            color: #003087;
+            width: 16px;
         }
 
-        .input-group {
+        .input-wrapper {
             position: relative;
         }
 
-        .form-control {
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            padding: 0.75rem 1rem 0.75rem 3rem;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
+        .form-group input[type="text"],
+        .form-group input[type="password"] {
             width: 100%;
+            padding: 14px 16px 14px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
         }
 
-        .form-control:focus {
-            border-color: #DC143C;
-            box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.1);
-            background: white;
-            transform: translateY(-2px);
+        .form-group input:focus {
+            outline: none;
+            border-color: #003087;
+            box-shadow: 0 0 0 4px rgba(0, 48, 135, 0.1);
         }
 
         .input-icon {
             position: absolute;
-            left: 1rem;
+            left: 16px;
             top: 50%;
             transform: translateY(-50%);
-            color: #6c757d;
-            z-index: 3;
-            font-size: 1rem;
+            color: #666;
+            font-size: 16px;
         }
 
-        .btn-login {
-            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
-            border: none;
-            border-radius: 12px;
-            padding: 1rem;
-            font-weight: 700;
-            font-size: 1rem;
-            color: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3);
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-        }
-
-        .btn-login:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(220, 20, 60, 0.4);
-        }
-
-        .btn-login:active {
-            transform: translateY(-1px);
-        }
-
-        .btn-login::before {
-            content: '';
+        .password-toggle {
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            cursor: pointer;
+            user-select: none;
         }
 
-        .btn-login:hover::before {
-            left: 100%;
+        .password-toggle:hover {
+            color: #003087;
         }
 
-        .security-badge {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-            padding: 1rem;
-            text-align: center;
-            margin-top: 1.5rem;
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 14px;
         }
 
-        .security-badge i {
-            color: #28a745;
-            font-size: 1.3rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .emergency-section {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 1.25rem;
-            text-align: center;
-            border-radius: 15px;
-            margin-top: 1.5rem;
-        }
-
-        .emergency-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
+        .remember-me {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
         }
 
-        .emergency-title i {
-            margin-right: 0.5rem;
-            color: #e74c3c;
+        .remember-me input {
+            width: auto;
         }
 
-        .emergency-numbers {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
+        .forgot-password {
+            color: #003087;
+            text-decoration: none;
+            font-weight: 500;
         }
 
-        .emergency-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.75rem;
-            border-radius: 8px;
-            transition: all 0.3s ease;
+        .forgot-password:hover {
+            text-decoration: underline;
         }
 
-        .emergency-item:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .emergency-item i {
-            font-size: 1.1rem;
-            margin-bottom: 0.25rem;
-            display: block;
-        }
-
-        .number {
-            font-weight: 700;
-            font-size: 1rem;
-            color: #e74c3c;
-        }
-
-        .alert {
-            border-radius: 12px;
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #003087 0%, #0056b3 100%);
+            color: white;
             border: none;
-            padding: 0.875rem 1rem;
-            font-size: 0.9rem;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 48, 135, 0.3);
         }
 
-        .alert-danger {
-            background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
-            color: #721c24;
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 48, 135, 0.4);
         }
 
-        .alert-warning {
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-            color: #856404;
+        .login-btn:active {
+            transform: translateY(0);
         }
 
-        .alert-info {
-            background: linear-gradient(135deg, #d1ecf1 0%, #b6e7f1 100%);
-            color: #0c5460;
+        .login-btn i {
+            margin-right: 8px;
         }
 
-        /* Mobile Optimizations */
-        @media (max-width: 576px) {
-            body {
-                padding: 15px;
-                align-items: flex-start;
-                min-height: 100vh;
-                height: auto;
-            }
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 13px;
+            color: #666;
+        }
 
+        .login-footer p {
+            margin-bottom: 5px;
+        }
+
+        /* Loading state */
+        .login-btn.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .login-btn.loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 992px) {
             .login-container {
-                max-width: 100%;
-                margin: 0;
+                flex-direction: column;
+                max-width: 500px;
             }
 
-            .login-header {
-                padding: 1.5rem 1rem;
+            .login-left {
+                padding: 40px 30px;
             }
 
-            .logo-container {
-                width: 60px;
-                height: 60px;
-                margin-bottom: 0.75rem;
+            .pnp-seal {
+                width: 100px;
+                height: 100px;
+                font-size: 50px;
             }
 
-            .system-title {
-                font-size: 1.1rem;
+            .login-left h1 {
+                font-size: 22px;
             }
 
-            .system-subtitle {
-                font-size: 0.8rem;
+            .features-list {
+                display: none;
             }
 
-            .login-body {
-                padding: 1.5rem 1rem;
+            .login-right {
+                padding: 40px 30px;
             }
 
-            .form-control {
-                padding: 0.675rem 0.875rem 0.675rem 2.5rem;
-                font-size: 16px; /* Prevents zoom on iOS */
-            }
-
-            .input-icon {
-                left: 0.875rem;
-                font-size: 0.9rem;
-            }
-
-            .btn-login {
-                padding: 0.875rem;
-                font-size: 1rem;
-            }
-
-            .security-badge {
-                padding: 0.875rem;
-                margin-top: 1.25rem;
-            }
-
-            .emergency-section {
-                padding: 1rem;
-                margin-top: 1.25rem;
-            }
-
-            .emergency-numbers {
-                gap: 0.5rem;
-            }
-
-            .emergency-item {
-                padding: 0.625rem;
-            }
-
-            .emergency-item i {
-                font-size: 1rem;
-            }
-
-            .number {
-                font-size: 0.9rem;
+            .login-right h2 {
+                font-size: 24px;
             }
         }
 
-        /* Small Mobile Devices */
-        @media (max-width: 375px) {
+        @media (max-width: 480px) {
             body {
                 padding: 10px;
             }
 
-            .login-header {
-                padding: 1.25rem 0.875rem;
+            .login-left,
+            .login-right {
+                padding: 30px 20px;
             }
 
-            .login-body {
-                padding: 1.25rem 0.875rem;
+            .login-right h2 {
+                font-size: 22px;
             }
 
-            .system-title {
-                font-size: 1rem;
-            }
-
-            .system-subtitle {
-                font-size: 0.75rem;
-            }
-
-            .form-control {
-                padding: 0.625rem 0.75rem 0.625rem 2.25rem;
-            }
-
-            .input-icon {
-                left: 0.75rem;
-            }
-        }
-
-        /* Tablet Optimizations */
-        @media (min-width: 768px) and (max-width: 1024px) {
-            .login-container {
-                max-width: 450px;
-            }
-
-            .login-header {
-                padding: 2.5rem 2rem;
-            }
-
-            .login-body {
-                padding: 2.5rem 2rem;
-            }
-        }
-
-        /* Prevent horizontal scroll on mobile */
-        html, body {
-            max-width: 100%;
-            overflow-x: hidden;
-        }
-
-        /* Better touch targets for mobile */
-        .form-control, .btn-login {
-            min-height: 44px; /* Minimum touch target size */
-        }
-
-        /* Hide background animation on low-performance devices */
-        @media (max-width: 768px) {
-            body::before {
-                animation: none;
+            .remember-forgot {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
             }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="login-card">
-            <!-- Header -->
-            <div class="login-header">
-                <div class="logo-container">
-                    <i class="fas fa-shield-alt" style="font-size: 2rem; color: #DC143C;"></i>
-                </div>
-                <h1 class="system-title">AGNES HOTSPOT SYSTEM</h1>
-                <p class="system-subtitle">Philippine National Police - Caraga Region</p>
+        <!-- LEFT SIDE - PNP BRANDING -->
+        <div class="login-left">
+            <div class="pnp-seal">
+                🚔
+            </div>
+            <h1>PHILIPPINE NATIONAL POLICE</h1>
+            <p>Caraga Regional Police Office</p>
+            <p style="font-size: 14px; opacity: 0.85; margin-top: 5px;">PRO XIII - Serving with Honor</p>
+
+            <div class="system-badge">
+                <h3>ADVANCED SYSTEM</h3>
+                <p>AGNES Hotspot Detection</p>
             </div>
 
-            <!-- Login Form -->
-            <div class="login-body">
-                {% if form.errors %}
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Access Denied:</strong> Invalid username or password
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="features-list">
+                <div>
+                    <i class="fas fa-shield-alt"></i>
+                    <span><strong>Secure Access</strong><br>Multi-layer authentication</span>
                 </div>
-                {% endif %}
-
-                {% if next %}
-                    {% if user.is_authenticated %}
-                    <div class="alert alert-warning" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>
-                        <strong>Authorization Required:</strong> Insufficient privileges for this page
-                    </div>
-                    {% else %}
-                    <div class="alert alert-info" role="alert">
-                        <i class="fas fa-lock me-2"></i>
-                        <strong>Secure Access:</strong> Please authenticate to continue
-                    </div>
-                    {% endif %}
-                {% endif %}
-
-                <form method="post" action="{% url 'login' %}">
-                    {% csrf_token %}
-                    
-                    <div class="form-group">
-                        <label for="id_username" class="form-label">
-                            <i class="fas fa-user"></i>Username
-                        </label>
-                        <div class="input-group">
-                            <i class="fas fa-user input-icon"></i>
-                            <input type="text" name="username" class="form-control" 
-                                   id="id_username" placeholder="Enter your username" required
-                                   value="{{ form.username.value|default:'' }}">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="id_password" class="form-label">
-                            <i class="fas fa-key"></i>Password
-                        </label>
-                        <div class="input-group">
-                            <i class="fas fa-lock input-icon"></i>
-                            <input type="password" name="password" class="form-control" 
-                                   id="id_password" placeholder="Enter your password" required>
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-login">
-                            <i class="fas fa-sign-in-alt me-2"></i>SECURE LOGIN
-                        </button>
-                    </div>
-
-                    <input type="hidden" name="next" value="{{ next }}">
-                </form>
-
-                <!-- Security Badge -->
-                <div class="security-badge">
-                    <i class="fas fa-shield-check"></i>
-                    <div class="fw-bold text-dark">PNP SECURED SYSTEM</div>
-                    <small class="text-muted">Encrypted & Protected Access</small>
+                <div>
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span><strong>Real-time Monitoring</strong><br>Live accident tracking</span>
+                </div>
+                <div>
+                    <i class="fas fa-chart-line"></i>
+                    <span><strong>Smart Analytics</strong><br>AGNES clustering algorithm</span>
                 </div>
             </div>
         </div>
 
-        <!-- Emergency Contacts -->
-        <div class="emergency-section">
-            <div class="emergency-title">
-                <i class="fas fa-phone-alt"></i>
-                EMERGENCY CONTACTS
+        <!-- RIGHT SIDE - LOGIN FORM -->
+        <div class="login-right">
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Sign in to access the command center</p>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Security Notice -->
+            <div class="security-notice">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                    <strong>Authorized Personnel Only.</strong> All activities are logged and monitored for security purposes.
+                </div>
             </div>
-            <div class="emergency-numbers">
-                <div class="emergency-item">
-                    <i class="fas fa-phone"></i>
-                    <div>PNP HOTLINE</div>
-                    <div class="number">117</div>
+
+            <!-- Login Form -->
+            <form method="post" action="{% url 'login' %}" id="loginForm">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i> Username / Badge Number
+                    </label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            required
+                            autofocus
+                            placeholder="Enter your username or badge number"
+                            autocomplete="username"
+                        >
+                    </div>
                 </div>
-                <div class="emergency-item">
-                    <i class="fas fa-ambulance"></i>
-                    <div>EMERGENCY</div>
-                    <div class="number">911</div>
+
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            required
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                        >
+                        <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+                    </div>
                 </div>
+
+                <div class="remember-forgot">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember" id="remember">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="forgot-password">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p><strong>Need assistance?</strong> Contact your Station Commander or IT Support</p>
+                <p style="font-size: 11px; color: #999; margin-top: 10px;">
+                    © 2025 PNP Caraga Regional Police Office. All rights reserved.
+                </p>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Password toggle
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // Form submission loading state
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+
+        loginForm.addEventListener('submit', function() {
+            loginBtn.classList.add('loading');
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Signing in...';
+        });
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
 </body>
 </html>
