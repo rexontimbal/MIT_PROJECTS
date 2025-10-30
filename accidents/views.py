@@ -1,8 +1,8 @@
-from django.shortcuts import render, redirect, get_object_or_404 
-from django.contrib.auth.decorators import login_required 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count, Q, Sum
-from django.db.models.functions import TruncMonth, ExtractWeekDay 
+from django.db.models.functions import TruncMonth, ExtractWeekDay
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
@@ -12,8 +12,9 @@ import json
 from .models import Accident, AccidentCluster, AccidentReport
 from datetime import datetime
 from django.contrib.auth.views import LoginView
+from .auth_utils import pnp_login_required
 
-#@login_required
+@pnp_login_required
 def dashboard(request):
     """Optimized dashboard with better performance and caching - Enhanced for PNP Operations"""
 
@@ -252,7 +253,7 @@ def get_accidents_by_time_of_day():
     
     return [night, morning, afternoon, evening]
 
-#@login_required
+@pnp_login_required
 def accident_list(request):
     """List all accidents with filtering and statistics"""
     accidents = Accident.objects.all().order_by('-date_committed')
@@ -399,7 +400,7 @@ def accident_list(request):
     
     return render(request, 'accidents/accident_list.html', context)
 
-#@login_required
+@pnp_login_required
 def accident_detail(request, pk):
     """Display detailed information about a specific accident"""
     from math import radians, cos, sin, asin, sqrt
@@ -472,7 +473,7 @@ def accident_detail(request, pk):
     
     return render(request, 'accidents/accident_detail.html', context)
 
-#@login_required
+@pnp_login_required
 def hotspots_view(request):
     """Display all detected hotspots"""
     
@@ -545,7 +546,7 @@ def hotspots_view(request):
     return render(request, 'hotspots/hotspots_list.html', context)
 
 
-#@login_required
+@pnp_login_required
 def hotspot_detail(request, cluster_id):
     """Display detailed information about a specific hotspot"""
     hotspot = get_object_or_404(AccidentCluster, cluster_id=cluster_id)
@@ -645,7 +646,7 @@ def hotspot_detail(request, cluster_id):
     return render(request, 'hotspots/hotspot_detail.html', context)
 
 
-#@login_required
+@pnp_login_required
 def report_accident(request):
     """Form for reporting new accidents"""
     if request.method == 'POST':
@@ -670,6 +671,7 @@ def report_accident(request):
     return render(request, 'reports/report_form.html', context)
 
 
+@pnp_login_required
 def report_success(request, pk):
     """Success page after submitting a report"""
     report = get_object_or_404(AccidentReport, pk=pk)
@@ -682,19 +684,22 @@ def report_success(request, pk):
 
 
 # Additional utility views
+@pnp_login_required
 def about(request):
     """About page"""
     return render(request, 'pages/about.html')
 
+@pnp_login_required
 def help_view(request):
     """Help and support page"""
     return render(request, 'pages/help.html')
 
+@pnp_login_required
 def contact(request):
     """Contact page"""
     return render(request, 'pages/contact.html')
 
-#@login_required
+@pnp_login_required
 def profile(request):
     """User profile page"""
     user_reports = AccidentReport.objects.filter(
@@ -707,6 +712,7 @@ def profile(request):
     
     return render(request, 'accounts/profile.html', context)
 
+@pnp_login_required
 def map_view(request):
     """
     OPTIMIZED Interactive map view with all accidents and hotspots
@@ -819,6 +825,7 @@ def map_view(request):
     
     return render(request, 'maps/map_view.html', context)
 
+@pnp_login_required
 def heatmap_view(request):
     """Heatmap visualization of accidents"""
     
@@ -837,7 +844,7 @@ def heatmap_view(request):
     
     return render(request, 'maps/heatmap.html', context)
 
-#@login_required
+@pnp_login_required
 def analytics_view(request):
     """
     ENHANCED Analytics with Predictive Insights and WORKING FILTERS
@@ -1156,6 +1163,7 @@ def analytics_view(request):
     return render(request, 'analytics/analytics.html', context)
 
 
+@pnp_login_required
 def advanced_analytics_view(request):
     """
     FAST VERSION - Enhanced analytics with smart caching and lazy loading
