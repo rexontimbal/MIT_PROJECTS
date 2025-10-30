@@ -1325,3 +1325,91 @@ def get_critical_alerts():
         })
 
     return alerts
+
+
+# ============================================================================
+# AUTHENTICATION VIEWS - PNP Login System
+# ============================================================================
+
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from .auth_utils import handle_failed_login, handle_successful_login, log_user_action, get_client_ip
+
+
+def login(request):
+    """PNP Login View with audit trail and security features"""
+
+    # If already logged in, redirect to dashboard
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        remember = request.POST.get('remember')
+
+        # Authenticate user
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            # Check if user has profile
+            if not hasattr(user, 'profile'):
+                messages.error(request, 'Your account is not properly configured. Contact administrator.')
+                return render(request, 'registration/login.html')
+
+            profile = user.profile
+
+            # Check if account is locked
+            if profile.is_account_locked():
+                messages.error(request, 'Account temporarily locked due to failed login attempts. Please try again later.')
+                return render(request, 'registration/login.html')
+
+            # Check if account is active
+            if not profile.is_active:
+                messages.error(request, 'Your account has been deactivated. Contact administrator.')
+                log_user_action(
+                    request,
+                    'login_failed',
+                    f'Login attempt for deactivated account: {username}',
+                    severity='warning',
+                    success=False
+                )
+                return render(request, 'registration/login.html')
+
+            # Successful login
+            auth_login(request, user)
+            handle_successful_login(user, request)
+
+            # Set session expiry based on "remember me"
+            if not remember:
+                request.session.set_expiry(0)  # Expire when browser closes
+
+            messages.success(request, f'Welcome back, {profile.get_full_name_with_rank()}!')
+
+            # Redirect to next page or dashboard
+            next_url = request.GET.get('next', 'dashboard')
+            return redirect(next_url)
+        else:
+            # Failed login
+            error_message = handle_failed_login(username, get_client_ip(request))
+            messages.error(request, error_message)
+
+    return render(request, 'registration/login.html')
+
+
+def logout_view(request):
+    """PNP Logout View with audit trail"""
+
+    if request.user.is_authenticated:
+        # Log the logout action
+        log_user_action(
+            request,
+            'logout',
+            f'{request.user.profile.get_full_name_with_rank()} logged out',
+            severity='info'
+        )
+
+        username = request.user.username
+        auth_logout(request)
+        messages.success(request, f'You have been logged out successfully. Stay safe, officer!')
+
+    return redirect('login')
