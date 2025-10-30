@@ -1,0 +1,4292 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Interactive Accident Map{% endblock %}
+
+{% block breadcrumb_items %}
+<span> / Map View</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    }
+
+    .page-header h2 {
+        margin: 0;
+        color: var(--primary-blue);
+        font-size: 1.5rem;
+    }
+
+    .page-header p {
+        margin: 0.25rem 0 0 0;
+        color: var(--text-medium);
+        font-size: 0.9rem;
+    }
+
+    .dashboard-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Map Wrapper */
+    .map-wrapper {
+        position: relative;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .map-container {
+        height: calc(100vh - 280px);
+        min-height: 600px;
+        position: relative;
+    }
+
+    #mainMap {
+        height: 100%;
+        width: 100%;
+    }
+
+    /* Enhanced Toggle Buttons */
+    .map-toggle-buttons {
+        position: absolute;
+        top: 50%;
+        left: 15px;
+        transform: translateY(-50%);
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .toggle-icon-btn {
+        width: 48px;
+        height: 48px;
+        background: white;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .toggle-icon-btn:hover {
+        background: var(--light-blue);
+        transform: scale(1.1);
+    }
+
+    .toggle-icon-btn.active {
+        background: var(--primary-blue);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 48, 135, 0.3);
+    }
+
+    /* Tooltip for buttons */
+    .toggle-icon-btn::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 58px;
+        background: var(--dark-navy);
+        color: white;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        z-index: 10;
+    }
+
+    .toggle-icon-btn:hover::after {
+        opacity: 1;
+    }
+
+    .map-stats {
+        position: absolute;
+        top: 20px;
+        left: 80px;
+        z-index: 900;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        transform: translateX(-120%);
+        opacity: 0;
+        pointer-events: none;
+        width: 260px; 
+    }
+
+    .map-stats.show {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Stats Header (match legend header) */
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.9rem 1.1rem;
+    background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+    color: white;
+    border-radius: 12px 12px 0 0;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.stats-header span {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+    /* Stats Content */
+    .stats-content {
+        padding: 10px;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: 0.85rem;
+        padding: 3px 0;
+        border-bottom: 1px solid #E9ECEF;
+    }
+
+    .stat-item:last-child {
+        margin-bottom: 0;
+        border-bottom: none;
+    }
+
+    .stat-label {
+        color: #666;
+        font-weight: 500;
+    }
+
+    .stat-value {
+        font-weight: 700;
+        color: #003087;
+        font-size: 0.8rem;
+    }
+
+    /* Enhanced Map Controls Panel */
+    .map-controls {
+        position: absolute;
+        top: 20px;
+        left: 80px;
+        z-index: 900;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        width: 260px;
+        max-width: 260px;
+        transition: all 0.3s ease;
+        transform: translateX(-100%);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .map-controls.show {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .controls-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.9rem 1.1rem;
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        color: white;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .controls-header h3 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .controls-body {
+        padding: 1.1rem;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    body.fullscreen-mode .controls-body {
+        max-height: calc(100vh - 80px);  
+    }
+
+    .control-section {
+        margin-bottom: 1.3rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .control-section:last-child {
+        margin-bottom: 0;
+        border-bottom: none;
+    }
+
+    .control-section h4 {
+        margin: 0 0 0.9rem 0;
+        color: var(--primary-blue);
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--light-blue);
+    }
+
+    .control-group {
+        margin-bottom: 0.9rem;
+    }
+
+    .control-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .control-group label {
+        display: block;
+        margin-bottom: 0.4rem;
+        font-weight: 500;
+        color: var(--text-dark);
+        font-size: 0.8rem;
+    }
+
+    .control-group select, 
+    .control-group input {
+        width: 100%;
+        padding: 0.55rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 0.85rem;
+        background: white;
+        transition: border-color 0.2s;
+    }
+
+    .control-group select:focus,
+    .control-group input:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.08);
+    }
+
+    .control-group button {
+        width: 100%;
+        padding: 0.6rem;
+        font-size: 0.85rem;
+    }
+
+    /* Time Range Slider */
+    .time-range-slider {
+        margin: 1rem 0;
+    }
+
+    .time-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: var(--text-light);
+        margin-top: 0.25rem;
+    }
+
+    /* Enhanced Layer Toggles */
+    .layer-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.65rem 0.75rem;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: background 0.2s;
+        margin-bottom: 0.4rem;
+    }
+
+    .layer-toggle:last-child {
+        margin-bottom: 0;
+    }
+
+    .layer-toggle:hover {
+        background-color: var(--light-blue);
+    }
+
+    .layer-toggle input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .layer-toggle span {
+        font-size: 0.85rem;
+        color: var(--text-dark);
+    }
+
+    /* Enhanced Legend */
+    .map-legend {
+        position: absolute;
+        bottom: 20px;
+        left: 80px;
+        z-index: 900;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        transform: translateX(-120%);
+        opacity: 0;
+        pointer-events: none;
+        width: 260px; 
+        max-height: calc(100vh - 300px); /* Don't overlap with stats */
+        overflow: hidden;
+    }
+
+    .map-legend.show {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .map-legend h4 {
+        margin: 0 0 0.65rem 0;
+        font-size: 0.85rem;
+        color: var(--text-dark);
+        font-weight: 600;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin-bottom: 0.45rem;
+        font-size: 0.8rem;
+    }
+
+    .legend-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .legend-icon {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    /* Time Filter Badge */
+.time-filter-badge {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary-blue);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    z-index: 800;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    display: none;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    max-width: 5000px; /* Limit maximum width */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.time-filter-badge.show {
+    display: flex;
+}
+.time-filter-badge .close-banner,
+.search-active-banner .close-banner {
+    background: rgba(255,255,255,0.3);
+    border: none;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    font-weight: bold;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+}
+.time-filter-badge.show:only-child {
+    transform: translateX(-50%);
+}
+.search-active-banner.show:only-child {
+    transform: translateX(-50%);
+}
+
+.time-filter-badge .close-banner:hover,
+.search-active-banner .close-banner:hover {
+    background: rgba(255,255,255,0.5);
+    transform: scale(1.1);
+}
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Scrollbar Styling */
+    .controls-body::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .controls-body::-webkit-scrollbar-track {
+        background: var(--bg-light);
+        border-radius: 10px;
+    }
+
+    .controls-body::-webkit-scrollbar-thumb {
+        background: var(--primary-blue);
+        border-radius: 10px;
+    }
+
+    /* Enhanced Popup Styling */
+    .leaflet-popup-content-wrapper {
+        border-radius: 10px;
+        padding: 0;
+    }
+
+    .marker-popup {
+        min-width: 280px;
+    }
+
+    .popup-header {
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        color: white;
+        padding: 0.9rem;
+        border-radius: 10px 10px 0 0;
+        margin: -20px -20px 0 -20px;
+    }
+
+    .popup-header h4 {
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    .popup-body {
+        padding: 0.9rem;
+    }
+
+    .popup-body p {
+        margin: 0.4rem 0;
+        font-size: 0.85rem;
+    }
+
+    .popup-footer {
+        padding: 0 0.9rem 0.9rem 0.9rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .popup-footer a {
+        display: inline-block;
+        padding: 0.45rem 0.9rem;
+        background-color: var(--primary-blue);
+        color: white;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 0.8rem;
+        transition: background 0.2s;
+    }
+
+    .popup-footer a:hover {
+        background-color: var(--secondary-blue);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .map-toggle-buttons {
+            left: 10px;
+            top: 10px;
+            transform: none;
+        }
+
+        .toggle-icon-btn {
+            width: 42px;
+            height: 42px;
+            font-size: 1.2rem;
+        }
+
+        .map-container {
+            height: 500px;
+        }
+    }
+
+    /* ============================================================================
+       MINIMALIST SEARCH SYSTEM - NON-INTRUSIVE UX
+       ============================================================================ */
+
+    /* Floating Search Button (Always Visible) */
+.floating-search-btn {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    z-index: 1000;
+    width: 48px;
+    height: 48px;
+    background: white;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    transition: all 0.3s ease;
+}
+
+.floating-search-btn:hover {
+    background: var(--light-blue);
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.floating-search-btn.active {
+    background: var(--primary-blue);
+    color: white;
+}
+
+    /* Tooltip for floating buttons */
+    .floating-search-btn::after,
+    .fullscreen-btn::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        right: 58px;
+        background: var(--dark-navy);
+        color: white;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        z-index: 10;
+    }
+
+    .floating-search-btn:hover::after,
+    .fullscreen-btn:hover::after {
+        opacity: 1;
+    }
+
+    /* Search Bar Container (Slides in from top) */
+.map-search-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-120%);
+    z-index: 1000;
+    width: 90%;
+    max-width: 600px;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.map-search-container.active {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+.search-bar {
+    display: flex;
+    gap: 0.5rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    border: 2px solid var(--primary-blue);
+}
+
+.search-bar input {
+    flex: 1;
+    border: none;
+    padding: 0.7rem 1.2rem;
+    font-size: 0.9rem;
+    outline: none;
+    background: transparent;
+    color: var(--text-dark);
+}
+
+.search-bar input::placeholder {
+    color: var(--text-light);
+}
+
+.search-btn {
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.search-btn:hover {
+    background: var(--secondary-blue);
+    transform: scale(1.05);
+}
+
+.close-search-btn {
+    background: #DC143C;
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.close-search-btn:hover {
+    background: #8B0000;
+    transform: rotate(90deg);
+}
+
+    /* Search Results Dropdown */
+    .search-results {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        max-height: 500px;
+        overflow-y: auto;
+        z-index: 1001;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .search-result-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1001;
+    margin-top: 0.5rem;
+    animation: slideDown 0.3s ease;
+    border: 1px solid var(--border-color);
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    gap: 0.75rem;
+}
+.suggestion-item:hover {
+    background: var(--light-blue);
+    padding-left: 1.25rem;
+}
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+.suggestion-icon {
+    font-size: 1.1rem;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.suggestion-text {
+    flex: 1;
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+.suggestion-type {
+    background: var(--bg-light);
+    color: var(--text-medium);
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+/* Search History */
+.search-history {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1001;
+    margin-top: 0.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-light);
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 12px 12px 0 0;
+}
+
+.history-header span {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+.clear-history {
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+}
+
+.clear-history:hover {
+    background: var(--secondary-blue);
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    background: var(--light-blue);
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-query {
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 0.85rem;
+}
+
+.history-time {
+    color: var(--text-light);
+    font-size: 0.75rem;
+}
+
+.history-remove {
+    background: #DC143C;
+    color: white;
+    border: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-left: 0.5rem;
+}
+
+.history-remove:hover {
+    background: #8B0000;
+    transform: scale(1.1);
+}
+
+/* Loading and Empty States */
+.suggestions-loading,
+.no-suggestions {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-medium);
+}
+
+.suggestions-loading-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--light-blue);
+    border-top-color: var(--primary-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+.no-suggestions-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+.no-suggestions-text {
+    font-size: 0.85rem;
+}
+{% comment %} ~~~~~~~~~~~~~~~~~~~~~~~ {% endcomment %}
+    .search-result-item:hover {
+        background: var(--light-blue);
+        padding-left: 1.5rem;
+    }
+
+    .search-result-item:last-child {
+        border-bottom: none;
+    }
+
+    .search-result-title {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    .search-result-details {
+        font-size: 0.8rem;
+        color: var(--text-medium);
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+    }
+
+    .search-result-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .badge-fatal {
+        background: #FFE5E5;
+        color: #DC143C;
+    }
+
+    .badge-injury {
+        background: #FFF3E0;
+        color: #FFA500;
+    }
+
+    .badge-property {
+        background: #E8F5E9;
+        color: #28A745;
+    }
+
+    /* Quick Search Tags */
+.quick-search-tags {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeIn 0.5s ease 0.2s both;
+}
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+.tag-btn {
+    background: white;
+    border: 1px solid var(--border-color);
+    padding: 0.4rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-dark);
+}
+
+.tag-btn:hover {
+    background: var(--primary-blue);
+    color: white;
+    border-color: var(--primary-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+    /* Search Info Panel */
+    .search-info-panel {
+        position: absolute;
+        top: 40px;
+        right: 80px;
+        width: 260px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 900;
+        max-height: 600px;
+        overflow: hidden;
+        animation: slideInRight 0.3s ease;
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .search-info-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        color: white;
+    }
+
+    .search-info-header h4 {
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    .search-info-header button {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+    .search-info-header button:hover {
+        background: rgba(255,255,255,0.3);
+        transform: rotate(90deg);
+    }
+
+    .search-info-body {
+        padding: 1rem;
+        overflow-y: auto;
+        max-height: 600px;
+    }
+
+    .search-stat-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem;
+        background: var(--bg-light);
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+    }
+
+    .search-stat-label {
+        font-size: 0.85rem;
+        color: var(--text-medium);
+    }
+
+    .search-stat-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+    }
+
+    /* No Results State */
+    .no-results {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-medium);
+    }
+
+    .no-results-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .no-results-text {
+        font-size: 0.9rem;
+    }
+
+    /* Loading State */
+    .search-loading {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .search-loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid var(--light-blue);
+        border-top-color: var(--primary-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    /* Fullscreen Button */
+    .fullscreen-btn {
+        position: absolute;
+        top: calc(50% + 60px);
+        right: 15px;
+        z-index: 1000;
+        width: 48px;
+        height: 48px;
+        background: white;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        transition: all 0.3s ease;
+    }
+
+    .fullscreen-btn:hover {
+        background: var(--light-blue);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .fullscreen-btn.active {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    /* Fullscreen Mode Styles */
+    body.fullscreen-mode {
+        overflow: hidden;
+    }
+
+    body.fullscreen-mode .map-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9999;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    body.fullscreen-mode .map-container {
+        height: 100vh !important;
+        border-radius: 0;
+    }
+
+    body.fullscreen-mode #mainMap {
+        height: 100vh !important;
+    }
+
+    /* Hide other elements in fullscreen */
+    body.fullscreen-mode .breadcrumb,
+    body.fullscreen-mode .page-header {
+        display: none;
+    }
+
+    /* Responsive Search */
+@media (max-width: 768px) {
+    .map-search-container {
+        width: 95%;
+        max-width: none;
+    }
+    
+    .search-bar input {
+        font-size: 0.85rem;
+        padding: 0.6rem 1rem;
+    }
+    
+    .search-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+    
+    .quick-search-tags {
+        gap: 0.35rem;
+    }
+    
+    .tag-btn {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.75rem;
+    }
+    
+    .floating-search-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 1.2rem;
+    }
+    
+    .search-active-banner {
+        max-width: 300px;
+        font-size: 0.8rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+    /* Scrollbar for search results */
+    .search-results::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .search-results::-webkit-scrollbar-track {
+        background: var(--bg-light);
+    }
+
+    .search-results::-webkit-scrollbar-thumb {
+        background: var(--primary-blue);
+        border-radius: 3px;
+    }
+
+    .search-results::-webkit-scrollbar-thumb:hover {
+        background: var(--secondary-blue);
+    }
+
+    .back-to-list-btn {
+        position: absolute;
+        top: calc(50% + 120px);
+        right: 15px;
+        z-index: 1000;
+        width: 48px;
+        height: 48px;
+        background: white;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-to-list-btn:hover {
+        background: var(--light-blue);
+        transform: scale(1.1);
+    }
+
+    /* ============================================================================
+       ENHANCED LEGEND STYLING
+       ============================================================================ */
+
+.legend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.9rem 1.1rem;
+    background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+    border-radius: 12px 12px 0 0;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-bottom: 2px solid var(--light-blue);
+}
+
+.legend-header h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: white;
+}
+.legend-close-btn:hover {
+    background: rgba(0, 0, 0, 0.2);
+    transform: scale(1.1);
+}
+
+
+.stats-close-btn,
+.legend-close-btn,
+.controls-close-btn {
+    background: rgba(0, 0, 0, 0.1);
+    border: none;
+    color: var(--primary-blue);
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.stats-close-btn,
+.legend-close-btn,
+.controls-close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.stats-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.legend-content {
+    padding: 15px;
+    max-height: calc(100vh - 350px);
+    overflow-y: auto;
+}
+
+.legend-category {
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #E9ECEF;
+}
+
+.legend-category:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.legend-category-title {
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #003087;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    color: #333;
+    line-height: 1.3;
+}
+
+.legend-item:last-child {
+    margin-bottom: 0;
+}
+
+.legend-marker,
+.legend-hotspot,
+.legend-cluster-icon,
+.legend-heatmap {
+    flex-shrink: 0;
+}
+
+    .legend-hotspot {
+        flex-shrink: 0;
+    }
+
+    .legend-cluster-icon {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .legend-heatmap {
+        flex-shrink: 0;
+    }
+
+.map-stats,
+.map-legend {
+    position: absolute;
+    z-index: 900;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    cursor: text;
+    user-select: none;
+}
+.stats-header,
+.legend-header {
+    cursor: grab;
+    user-select: none;
+}
+.stats-header *,
+.legend-header * {
+    user-select: none;
+    -webkit-user-select: none;
+}
+.map-stats.dragging,
+.map-legend.dragging {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    opacity: 0.95;
+}
+.stats-content,
+.legend-content {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+    /* Responsive stat and legend*/
+    @media (max-width: 768px) {
+        .map-stats,
+        .map-legend {
+            left: 10px;
+            width: calc(100vw - 85px);
+            max-width: 220px;
+        }
+        
+        .map-legend {
+            bottom: 10px;
+            max-height: 50vh;
+        }
+    }
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+    .time-filter-badge,
+    .search-active-banner {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        max-width: 300px;
+        gap: 8px;
+    }
+    
+    .time-filter-badge.show {
+        transform: translateX(calc(-50% - 80px));
+    }
+    
+    .search-active-banner.show {
+        transform: translateX(calc(-50% + 80px));
+    }
+}
+    /* ============================================================================
+       SEARCH ACTIVE BANNER
+       ============================================================================ */
+
+.search-active-banner {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #FFA500, #FF8C00);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    z-index: 800;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    display: none;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    max-width: 500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-active-banner.show {
+    display: flex;
+}
+
+
+.search-active-banner .close-banner {
+    background: rgba(255,255,255,0.3);
+    border: none;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.search-active-banner .close-banner:hover {
+    background: rgba(255,255,255,0.5);
+    transform: scale(1.1);
+}
+/* Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+/* Scrollbar Styling */
+.search-suggestions::-webkit-scrollbar,
+.search-history::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-suggestions::-webkit-scrollbar-track,
+.search-history::-webkit-scrollbar-track {
+    background: var(--bg-light);
+    border-radius: 10px;
+}
+
+.search-suggestions::-webkit-scrollbar-thumb,
+.search-history::-webkit-scrollbar-thumb {
+    background: var(--primary-blue);
+    border-radius: 10px;
+}
+
+.search-suggestions::-webkit-scrollbar-thumb:hover,
+.search-history::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-blue);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Map Wrapper -->
+<div class="map-wrapper">
+    <div class="map-container">
+        <div id="mainMap"></div>
+
+        <div class="time-filter-badge" id="timeFilterBadge">
+            <span>📅 All Time Periods</span>
+            <button class="close-banner" onclick="clearTimeFilterBadge()">×</button>
+        </div>
+
+        <!-- Search Active Banner -->
+        <div class="search-active-banner" id="searchActiveBanner">
+            <span>🔍 Search Active: <strong id="searchBannerText">""</strong></span>
+            <button class="close-banner" onclick="clearSearchFromBanner()">×</button>
+        </div>
+
+        <!-- Toggle Buttons - Left Side -->
+        <div class="map-toggle-buttons">
+            <button class="toggle-icon-btn" id="statsToggle" data-tooltip="Statistics" onclick="toggleStats()">
+                📊
+            </button>
+            <button class="toggle-icon-btn" id="legendToggle" data-tooltip="Legend" onclick="toggleLegend()">
+                🗺️
+            </button>
+            <button class="toggle-icon-btn" id="controlsToggle" data-tooltip="Map Controls" onclick="toggleMapControls()">
+                ⚙️
+            </button>
+        </div>
+
+        <!-- INTELLIGENT SEARCH BAR -->
+        <div class="floating-search-btn" id="floatingSearchBtn" onclick="toggleSearchBar()" data-tooltip="Search Accidents">
+            🔍
+        </div>
+
+        <!-- Search Bar -->
+        <div class="map-search-container" id="mapSearchContainer" style="display: none;">
+            <div class="search-bar">
+                <input 
+                    type="text" 
+                    id="mapSearchInput" 
+                    placeholder="🔍 Search location, incident type, or keyword..."
+                    autocomplete="off"
+                    onkeyup="handleSearchInput(event)"
+                    onkeypress="handleEnterKey(event)"
+                >
+                <button class="search-btn" onclick="performSearch()">
+                    Search
+                </button>
+                <button class="history-btn" id="historyBtn" onclick="toggleSearchHistory()" title="Search History">
+                    📚
+                </button>
+                <button class="close-search-btn" onclick="closeSearchBar()">
+                    ✕
+                </button>
+            </div>
+            
+            <!-- Search Suggestions -->
+            <div class="search-suggestions" id="searchSuggestions" style="display: none;"></div>
+            
+            <!-- Search History -->
+            <div class="search-history" id="searchHistory" style="display: none;">
+                <div class="history-header">
+                    <span>📚 Recent Searches</span>
+                    <button class="clear-history" onclick="clearSearchHistory()">Clear All</button>
+                </div>
+                <div class="history-items" id="historyItems"></div>
+            </div>
+            
+            <!-- Quick Search Filters -->
+            <div class="quick-search-tags">
+                <button class="tag-btn" onclick="quickSearch('fatal')">💀 Fatal</button>
+                <button class="tag-btn" onclick="quickSearch('injury')">🚑 Injury</button>
+                <button class="tag-btn" onclick="quickSearch('motorcycle')">🏍️ Motorcycle</button>
+                <button class="tag-btn" onclick="quickSearch('tricycle')">🛺 Tricycle</button>
+                <button class="tag-btn" onclick="quickSearch('car')">🚗 Car</button>
+                <button class="tag-btn" onclick="quickSearch('pick-up')">🚙 Pick-up</button>
+            </div>
+        </div>
+
+        <!-- Search Active Banner -->
+        <div class="search-active-banner" id="searchActiveBanner">
+            <span>🔍 Search Active: <strong id="searchBannerText">""</strong></span>
+            <button class="close-banner" onclick="clearSearchFromBanner()">×</button>
+        </div>
+
+        
+
+        <!-- Search Info Panel (Results Summary) -->
+        <div class="search-info-panel" id="searchInfoPanel" style="display: none;">
+            <div class="search-info-header">
+                <h4>🔍 Search Results</h4>
+                <button onclick="closeSearchInfo()">✕</button>
+            </div>
+            <div class="search-info-body" id="searchInfoBody"></div>
+        </div>
+
+        <!-- Fullscreen/Maximize Button -->
+        <div class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()" data-tooltip="Fullscreen Mode">
+            ⛶
+        </div>
+
+        <!-- Back to List Button -->
+        <div class="back-to-list-btn" id="backToListBtn" onclick="goBackToList()" data-tooltip="Back to Accident List" style="display: none;">
+            📋
+        </div>
+
+        <!-- Stats Box -->
+            <div class="map-stats" id="statsBox">
+                <div class="stats-header" id="statsHeader">
+                    <span>📊 Statistics</span>
+                    <button class="stats-close-btn" onclick="toggleStats()">×</button>
+                </div>
+                <div class="stats-content">
+                <div class="stat-item">
+                    <span class="stat-label">Total Accidents:</span>
+                    <span class="stat-value" id="statsTotalAccidents">{{ total_accidents }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Hotspots:</span>
+                    <span class="stat-value" id="statsTotalHotspots">{{ total_hotspots }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Visible:</span>
+                    <span class="stat-value" id="statsVisibleMarkers">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Time Range:</span>
+                    <span class="stat-value" id="statsTimeRange">All Time</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Fatal Accidents:</span>
+                    <span class="stat-value" style="color: #DC143C;" id="statsFatalAccidents">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Map Controls Panel -->
+        <div class="map-controls" id="mapControls">
+            <div class="controls-header" id="controlsHeader">
+                <h3>🗺️ Advanced Map Controls</h3>
+                <button class="controls-close-btn" onclick="toggleMapControls()">×</button>
+            </div>
+            
+            <div class="controls-body">
+                <!-- Time-Based Filters -->
+                <div class="control-section">
+                    <h4>📅 Time-Based Filtering</h4>
+                    
+                    <div class="control-group">
+                        <label for="timeRange">Time Period</label>
+                        <select id="timeRange" onchange="applyTimeFilter()">
+                            <option value="all">All Time</option>
+                            <option value="current_year">Current Year</option>
+                            <option value="last_year">Last Year</option>
+                            <option value="last_6_months">Last 6 Months</option>
+                            <option value="last_3_months">Last 3 Months</option>
+                            <option value="last_month">Last Month</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group" id="customDateRange" style="display: none;">
+                        <label for="startDate">From Date</label>
+                        <input type="date" id="startDate" onchange="updateCustomRange()">
+                        <label for="endDate" style="margin-top: 0.5rem;">To Date</label>
+                        <input type="date" id="endDate" onchange="updateCustomRange()">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="timeOfDay">Time of Day</label>
+                        <select id="timeOfDay" onchange="applyTimeFilter()">
+                            <option value="all">All Day</option>
+                            <option value="morning">Morning (6AM-12PM)</option>
+                            <option value="afternoon">Afternoon (12PM-6PM)</option>
+                            <option value="evening">Evening (6PM-12AM)</option>
+                            <option value="night">Night (12AM-6AM)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Data Filters -->
+                <div class="control-section">
+                    <h4>🔍 Data Filters</h4>
+                    
+                    <div class="control-group">
+                        <label for="provinceFilter">Province</label>
+                        <select id="provinceFilter" onchange="applyFilters()">
+                            <option value="">All Provinces</option>
+                            {% for province in provinces %}
+                            <option value="{{ province }}">{{ province }}</option>
+                            {% empty %}
+                            <!-- Fallback options if no provinces in database -->
+                            <option value="AGUSAN DEL NORTE">Agusan del Norte</option>
+                            <option value="AGUSAN DEL SUR">Agusan del Sur</option>
+                            <option value="SURIGAO DEL NORTE">Surigao del Norte</option>
+                            <option value="SURIGAO DEL SUR">Surigao del Sur</option>
+                            <option value="DINAGAT ISLANDS">Dinagat Islands</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="severityFilter">Minimum Severity</label>
+                        <select id="severityFilter" onchange="applyFilters()">
+                            <option value="0">All Severities</option>
+                            <option value="30">Medium (30+)</option>
+                            <option value="50">High (50+)</option>
+                            <option value="70">Critical (70+)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <button class="btn btn-outline" style="width: 100%;" onclick="clearAllFilters()">
+                            🗑️ Clear All Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Map Layers -->
+                <div class="control-section">
+                    <h4>🗂️ Map Layers & Visualization</h4>
+                    
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="showAccidents" checked onchange="toggleLayer('accidents')">
+                        <span>📍 Accident Markers</span>
+                    </label>
+
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="showHotspots" checked onchange="toggleLayer('hotspots')">
+                        <span>🔴 Hotspot Areas</span>
+                    </label>
+
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="showClusters" onchange="toggleLayer('clusters')">
+                        <span>📊 Cluster Markers</span>
+                    </label>
+
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="showHeatmap" onchange="toggleLayer('heatmap')">
+                        <span>🔥 Heatmap Layer</span>
+                    </label>
+
+                    <div class="control-group" style="margin-top: 1rem;">
+                        <label for="clusterIntensity">
+                            Cluster Intensity: <span id="clusterIntensityValue">50</span>%
+                        </label>
+                        <input type="range" id="clusterIntensity" min="1" max="100" value="50" 
+                            oninput="updateClusterIntensityLive(this.value)" 
+                            onchange="updateClusterIntensity()">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="heatmapIntensity">Heatmap Intensity</label>
+                        <input type="range" id="heatmapIntensity" min="1" max="100" value="25" onchange="updateHeatmapIntensity()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- Enhanced Legend -->
+    <div class="map-legend" id="legendBox">
+        <div class="legend-header" id="legendHeader">
+            <h4>🗺️ Map Legend</h4>
+            <button class="legend-close-btn" onclick="toggleLegend()">×</button>
+        </div>
+    
+    <div class="legend-content">
+        <!-- Accident Markers Section -->
+        <div class="legend-category">
+            <div class="legend-category-title">🚗 Accident Markers</div>
+            
+            <div class="legend-item">
+                <div class="legend-marker" style="background: #8B0000; width: 14px; height: 14px; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
+                <span>Fatal Accident (with deaths)</span>
+            </div>
+            
+            <div class="legend-item">
+                <div class="legend-marker" style="background: #FFA500; width: 13px; height: 13px; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
+                <span>Injury Accident</span>
+            </div>
+            
+            <div class="legend-item">
+                <div class="legend-marker" style="background: #DC143C; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
+                <span>Property Damage Only</span>
+            </div>
+        </div>
+        
+        <!-- Hotspot Areas Section -->
+        <div class="legend-category">
+            <div class="legend-category-title">🔥 Hotspot Areas</div>
+            
+            <div class="legend-item">
+                <div class="legend-hotspot" style="background: rgba(220, 20, 60, 0.2); border: 2px solid #DC143C; width: 20px; height: 20px; border-radius: 50%;"></div>
+                <span>Critical Hotspot (70+)</span>
+            </div>
+            
+            <div class="legend-item">
+                <div class="legend-hotspot" style="background: rgba(255, 165, 0, 0.2); border: 2px solid #FFA500; width: 20px; height: 20px; border-radius: 50%;"></div>
+                <span>High Hotspot (50-69)</span>
+            </div>
+            
+            <div class="legend-item">
+                <div class="legend-hotspot" style="background: rgba(40, 167, 69, 0.2); border: 2px solid #28A745; width: 20px; height: 20px; border-radius: 50%;"></div>
+                <span>Medium Hotspot (30-49)</span>
+            </div>
+        </div>
+        
+        <!-- Map Features Section -->
+        <div class="legend-category">
+            <div class="legend-category-title">📍 Map Features</div>
+            
+            <div class="legend-item">
+                <div class="legend-cluster-icon">
+                    <span style="background: #FFA500; color: white; padding: 2px 6px; border-radius: 50%; font-size: 0.7rem; font-weight: bold;">5</span>
+                </div>
+                <span>Clustered Markers</span>
+            </div>
+            
+            <div class="legend-item">
+                <div class="legend-heatmap" style="background: linear-gradient(to right, #0000FF, #FFFF00, #FF0000); width: 30px; height: 10px; border-radius: 3px;"></div>
+                <span>Heatmap Intensity</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center;">
+        <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
+        <p>Loading map data...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet Markercluster Plugin -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<!-- Leaflet Heatmap Plugin -->
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+
+<script>
+// ============================================================================
+// ENHANCED MAP SYSTEM - CLEANED AND FIXED VERSION
+// ============================================================================
+
+// Core Map Variables
+let map;
+let accidentMarkers = [];
+let hotspotCircles = [];
+let clusterMarkers = [];
+let markerClusterGroup;
+let heatmapLayer;
+let allAccidents = {{ accidents_json|safe }};
+let allHotspots = {{ hotspots_json|safe }};
+
+// Search System Variables
+let searchTimeout;
+let isSearching = false;
+let currentSuggestions = [];
+let searchHistory = JSON.parse(localStorage.getItem('accidentSearchHistory')) || [];
+
+// Current filter state
+let currentFilters = {
+    timeRange: 'all',
+    timeOfDay: 'all',
+    province: '',
+    severity: 0,
+    searchQuery: ''
+};
+
+// Active markers (currently visible on map)
+let activeMarkers = [];
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing Enhanced Map System...');
+    console.log('📊 Total accidents loaded:', allAccidents.length);
+    console.log('🎯 Total hotspots loaded:', allHotspots.length);
+    
+    validateData();
+    initializeEnhancedMap();
+    loadAllAccidentMarkers();
+    loadAllHotspotCircles();
+    setupTimeFilters();
+    
+    // Initialize search history system
+    initializeSearchHistory();
+    
+    // Initialize statistics with all accidents
+    activeMarkers = [...accidentMarkers];
+    updateAllStatistics();
+    
+    console.log('✅ Map system initialized successfully');
+    console.log('📊 Active markers:', activeMarkers.length);
+    console.log('📚 Search history items:', searchHistory.length);
+    
+    // Initialize draggable panels
+    makePanelDraggable('statsBox', 'statsHeader');
+    makePanelDraggable('legendBox', 'legendHeader');
+    
+    // Check for URL parameters to jump to specific location
+    checkURLParametersAndJump();
+});
+
+// ============================================================================
+// DATA VALIDATION
+// ============================================================================
+
+function validateData() {
+    console.log('🔍 Validating accident data...');
+    
+    let valid = 0;
+    let invalid = 0;
+    let fatalCount = 0;
+    let injuryCount = 0;
+    
+    allAccidents.forEach((accident, index) => {
+        if (!accident.latitude || !accident.longitude || 
+            isNaN(parseFloat(accident.latitude)) || isNaN(parseFloat(accident.longitude)) ||
+            Math.abs(accident.latitude) > 90 || Math.abs(accident.longitude) > 180) {
+            console.warn(`⚠️ Invalid coordinates at index ${index}:`, accident.latitude, accident.longitude);
+            invalid++;
+            return;
+        }
+        
+        let accidentDate;
+        try {
+            accidentDate = new Date(accident.date_committed);
+            if (isNaN(accidentDate.getTime()) || accidentDate > new Date()) {
+                console.warn(`⚠️ Invalid date at index ${index}:`, accident.date_committed);
+                invalid++;
+                return;
+            }
+        } catch (error) {
+            console.warn(`⚠️ Date parsing error at index ${index}:`, error);
+            invalid++;
+            return;
+        }
+        
+        if (!accident.incident_type || !accident.province) {
+            console.warn(`⚠️ Missing required fields at index ${index}:`, accident);
+            invalid++;
+            return;
+        }
+        
+        valid++;
+        if (accident.victim_killed) fatalCount++;
+        if (accident.victim_injured) injuryCount++;
+    });
+    
+    console.log(`✅ Validation complete: ${valid} valid, ${invalid} invalid`);
+    console.log(`💀 Fatal accidents: ${fatalCount}`);
+    console.log(`🚑 Injury accidents: ${injuryCount}`);
+    console.log(`🚗 Property damage: ${valid - fatalCount - injuryCount}`);
+    
+    return valid > 0;
+}
+
+// ============================================================================
+// MAP INITIALIZATION
+// ============================================================================
+
+function initializeEnhancedMap() {
+    try {
+        // Center on Caraga Region (approximate center)
+        map = L.map('mainMap').setView([9.0, 125.5], 9);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 18,
+            minZoom: 7
+        }).addTo(map);
+
+        // Initialize cluster group with default settings
+        initializeClusterGroup(50);
+
+        console.log('✅ Map initialized successfully');
+        
+        // Force map to recalculate size
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 100);
+        
+    } catch (error) {
+        console.error('❌ Map initialization failed:', error);
+        alert('Error loading map. Please refresh the page.');
+    }
+}
+
+function initializeClusterGroup(intensity) {
+    markerClusterGroup = L.markerClusterGroup({
+        maxClusterRadius: function(zoom) {
+            const baseRadius = 40 + (intensity / 100 * 60);
+            return zoom > 12 ? baseRadius * 0.7 : baseRadius;
+        },
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        chunkedLoading: true,
+        chunkInterval: 200,
+        chunkDelay: 50,
+        disableClusteringAtZoom: intensity > 80 ? 16 : 18,
+        animate: true,
+        animateAddingMarkers: false,
+        zoomToBoundsOnClick: true,
+        removeOutsideVisibleBounds: true,
+        spiderLegPolylineOptions: { 
+            weight: 1.5, 
+            color: '#222', 
+            opacity: 0.5 
+        }
+    });
+}
+
+// ============================================================================
+// MARKER CREATION
+// ============================================================================
+
+function loadAllAccidentMarkers() {
+    console.log('📍 Loading accident markers...');
+    
+    accidentMarkers = [];
+    markerClusterGroup.clearLayers();
+
+    allAccidents.forEach((accident, index) => {
+        try {
+            const marker = createAccidentMarker(accident);
+            if (marker) {
+                accidentMarkers.push(marker);
+            }
+        } catch (error) {
+            console.warn(`⚠️ Failed to create marker for accident ${index}:`, error);
+        }
+    });
+
+    // Add all markers to cluster group
+    accidentMarkers.forEach(marker => {
+        markerClusterGroup.addLayer(marker);
+    });
+
+    map.addLayer(markerClusterGroup);
+    
+    // Set activeMarkers to all markers initially
+    activeMarkers = [...accidentMarkers];
+    
+    console.log(`✅ Loaded ${accidentMarkers.length} accident markers`);
+    updateAllStatistics();
+}
+
+function createAccidentMarker(accident) {
+    let markerColor = '#DC143C';
+    let markerSize = 12;
+    
+    if (accident.victim_killed) {
+        markerColor = '#8B0000';
+        markerSize = 14;
+    } else if (accident.victim_injured) {
+        markerColor = '#FFA500';
+        markerSize = 13;
+    }
+
+    const icon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="
+            background-color: ${markerColor}; 
+            width: ${markerSize}px; 
+            height: ${markerSize}px; 
+            border-radius: 50%; 
+            border: 2px solid white; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            cursor: pointer;
+        "></div>`,
+        iconSize: [markerSize + 4, markerSize + 4],
+        iconAnchor: [(markerSize + 4) / 2, (markerSize + 4) / 2]
+    });
+
+    const marker = L.marker([accident.latitude, accident.longitude], { 
+        icon: icon,
+        title: accident.incident_type || 'Accident'
+    });
+
+    const vehicleInfo = accident.vehicle_kind ? `
+        <p><strong>🚗 Vehicles:</strong> ${accident.vehicle_kind}</p>
+    ` : '';
+    
+    const clusterInfo = accident.cluster_id ? `
+        <p><strong>🔴 Hotspot:</strong> Cluster #${accident.cluster_id}</p>
+    ` : '';
+
+    const popupContent = `
+        <div class="marker-popup">
+            <div class="popup-header">
+                <h4>${accident.incident_type || 'Traffic Accident'}</h4>
+            </div>
+            <div class="popup-body">
+                <p><strong>📍 Location:</strong> ${accident.barangay || 'N/A'}, ${accident.municipal || 'N/A'}</p>
+                <p><strong>🏛️ Province:</strong> ${accident.province || 'N/A'}</p>
+                <p><strong>📅 Date:</strong> ${accident.date_committed || 'N/A'}</p>
+                <p><strong>🕐 Time:</strong> ${accident.time_committed || 'N/A'}</p>
+                <p><strong>👥 Casualties:</strong> ${accident.victim_count || 0}</p>
+                ${vehicleInfo}
+                ${clusterInfo}
+                ${accident.victim_killed ? '<p style="color: #DC143C; font-weight: bold; background: #FFE5E5; padding: 5px; border-radius: 3px;">💀 FATAL ACCIDENT</p>' : ''}
+                ${accident.victim_injured && !accident.victim_killed ? '<p style="color: #FFA500; font-weight: bold; background: #FFF3E0; padding: 5px; border-radius: 3px;">⚠️ INJURY ACCIDENT</p>' : ''}
+                ${!accident.victim_killed && !accident.victim_injured ? '<p style="color: #28A745; font-weight: bold; background: #E8F5E9; padding: 5px; border-radius: 3px;">🚗 PROPERTY DAMAGE ONLY</p>' : ''}
+            </div>
+            <div class="popup-footer">
+                <a href="/accidents/${accident.id}/">View Details</a>
+                ${accident.cluster_id ? `<a href="/hotspots/${accident.cluster_id}/" style="background: #FFA500;">View Hotspot</a>` : ''}
+            </div>
+        </div>
+    `;
+
+    marker.accidentData = accident;
+    marker.on('click', function() {
+        if (!this.getPopup()) {
+            this.bindPopup(popupContent, {
+                maxWidth: 320,
+                className: 'custom-popup'
+            });
+        }
+    });
+    
+    return marker;
+}
+
+function loadAllHotspotCircles() {
+    console.log('🎯 Loading initial hotspot circles...');
+    
+    hotspotCircles = [];
+    
+    const clusterMap = new Map();
+    allAccidents.forEach(acc => {
+        if (acc.cluster_id) {
+            if (!clusterMap.has(acc.cluster_id)) {
+                clusterMap.set(acc.cluster_id, []);
+            }
+            clusterMap.get(acc.cluster_id).push(acc);
+        }
+    });
+
+    allHotspots.forEach((hotspot, index) => {
+        try {
+            const hotspotAccidents = clusterMap.get(hotspot.cluster_id) || [];
+            
+            if (hotspotAccidents.length === 0) {
+                console.warn(`⚠️ Hotspot ${hotspot.cluster_id} has no accidents`);
+                return;
+            }
+            
+            const maxDistance = calculateMaxDistance(
+                hotspot.center_latitude,
+                hotspot.center_longitude,
+                hotspotAccidents
+            );
+            
+            const radius = maxDistance * 1.2;
+            
+            let fillColor, borderColor;
+            if (hotspot.severity_score >= 70) {
+                fillColor = '#DC143C';
+                borderColor = '#DC143C';
+            } else if (hotspot.severity_score >= 50) {
+                fillColor = '#FFA500';
+                borderColor = '#FFA500';
+            } else {
+                fillColor = '#28A745';
+                borderColor = '#28A745';
+            }
+            
+            const circle = L.circle(
+                [hotspot.center_latitude, hotspot.center_longitude],
+                {
+                    color: borderColor,
+                    fillColor: fillColor,
+                    fillOpacity: 0.2,
+                    radius: radius,
+                    weight: 2
+                }
+            );
+            
+            const popupContent = `
+                <div class="marker-popup">
+                    <div class="popup-header" style="background: linear-gradient(135deg, ${fillColor}, ${fillColor}99);">
+                        <h4>🔴 ${getRiskLevel(hotspot.severity_score)} HOTSPOT</h4>
+                    </div>
+                    <div class="popup-body">
+                        <p><strong>📍 Location:</strong> ${hotspot.primary_location}</p>
+                        <p><strong>📊 Accidents:</strong> ${hotspotAccidents.length}</p>
+                        <p><strong>👥 Casualties:</strong> ${hotspot.total_casualties}</p>
+                        <p><strong>⚡ Severity:</strong> ${hotspot.severity_score.toFixed(1)}/100</p>
+                        <p><strong>📏 Coverage:</strong> ${radius.toFixed(0)}m radius</p>
+                        <p><strong>🆔 Cluster ID:</strong> #${hotspot.cluster_id}</p>
+                    </div>
+                    <div class="popup-footer">
+                        <a href="/hotspots/${hotspot.cluster_id}/">View Details</a>
+                        <a href="javascript:void(0)" onclick="zoomToHotspotArea(${hotspot.cluster_id}, ${hotspot.center_latitude}, ${hotspot.center_longitude})" style="background: #FFA500;">🔍 Zoom to Area</a>
+                    </div>
+                </div>
+            `;
+            
+            circle.bindPopup(popupContent, { maxWidth: 300 });
+            
+            circle.on('mouseover', function() {
+                this.setStyle({
+                    fillOpacity: 0.35,
+                    weight: 3
+                });
+            });
+            
+            circle.on('mouseout', function() {
+                this.setStyle({
+                    fillOpacity: 0.2,
+                    weight: 2
+                });
+            });
+            
+            hotspotCircles.push({
+                circle: circle,
+                hotspot: hotspot,
+                accidents: hotspotAccidents
+            });
+            
+        } catch (error) {
+            console.warn(`⚠️ Failed to create hotspot ${index}:`, error);
+        }
+    });
+
+    console.log(`✅ Prepared ${hotspotCircles.length} hotspot circles`);
+    
+    const { startDate, endDate } = getDateRange();
+    updateHotspotDisplay(startDate, endDate);
+}
+
+function getRiskLevel(severity) {
+    if (severity >= 70) return 'CRITICAL';
+    if (severity >= 50) return 'HIGH';
+    if (severity >= 30) return 'MEDIUM';
+    return 'LOW';
+}
+
+function calculateMaxDistance(centerLat, centerLng, accidents) {
+    let maxDistance = 0;
+    
+    accidents.forEach(accident => {
+        if (!accident.latitude || !accident.longitude) return;
+        
+        const R = 6371000;
+        const lat1 = centerLat * Math.PI / 180;
+        const lat2 = accident.latitude * Math.PI / 180;
+        const deltaLat = (accident.latitude - centerLat) * Math.PI / 180;
+        const deltaLng = (accident.longitude - centerLng) * Math.PI / 180;
+        
+        const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
+                  Math.cos(lat1) * Math.cos(lat2) *
+                  Math.sin(deltaLng/2) * Math.sin(deltaLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+        
+        if (distance > maxDistance) {
+            maxDistance = distance;
+        }
+    });
+    
+    return maxDistance;
+}
+
+// ============================================================================
+// UNIFIED FILTER SYSTEM
+// ============================================================================
+
+function applyAllFilters() {
+    console.log('🔍 Applying unified filters...');
+    showLoading();
+    
+    currentFilters.timeRange = document.getElementById('timeRange').value;
+    currentFilters.timeOfDay = document.getElementById('timeOfDay').value;
+    currentFilters.province = document.getElementById('provinceFilter').value;
+    currentFilters.severity = parseInt(document.getElementById('severityFilter').value);
+    
+    const customRange = document.getElementById('customDateRange');
+    if (customRange) {
+        customRange.style.display = currentFilters.timeRange === 'custom' ? 'block' : 'none';
+    }
+    
+    setTimeout(() => {
+        filterAndDisplayMarkers();
+        updateTimeFilterBadge();
+        updateAllStatistics();
+        
+        if (document.getElementById('showHeatmap') && document.getElementById('showHeatmap').checked) {
+            createHeatmap();
+        }
+        
+        const searchInput = document.getElementById('mapSearchInput');
+        const searchBanner = document.getElementById('searchActiveBanner');
+        const bannerText = document.getElementById('searchBannerText');
+        
+        if (currentFilters.searchQuery && searchBanner && bannerText) {
+            bannerText.textContent = `"${currentFilters.searchQuery}"`;
+            searchBanner.classList.add('show');
+            
+            const searchPanel = document.getElementById('searchInfoPanel');
+            if (searchPanel && searchPanel.style.display !== 'none') {
+                showSearchResultsSummary(currentFilters.searchQuery);
+            }
+        }
+        
+        hideLoading();
+        console.log('✅ All filters applied successfully');
+        
+        const visibleCount = activeMarkers.length;
+        if (visibleCount === 0) {
+            showNotification('No accidents match your filters', 'info');
+        } else {
+            showNotification(`Showing ${visibleCount} accidents with current filters`, 'success');
+        }
+    }, 100);
+}
+
+function filterAndDisplayMarkers() {
+    const { startDate, endDate } = getDateRange();
+    
+    console.log('🔄 Filtering markers with search query:', currentFilters.searchQuery);
+    
+    markerClusterGroup.clearLayers();
+    activeMarkers = [];
+    
+    let stats = { total: 0, fatal: 0, injury: 0, property: 0 };
+    
+    accidentMarkers.forEach(marker => {
+        if (!marker.accidentData) return;
+        
+        const accident = marker.accidentData;
+        
+        if (passesAllFilters(accident, startDate, endDate)) {
+            markerClusterGroup.addLayer(marker);
+            activeMarkers.push(marker);
+            
+            stats.total++;
+            if (accident.victim_killed) stats.fatal++;
+            else if (accident.victim_injured) stats.injury++;
+            else stats.property++;
+        }
+    });
+    
+    console.log('=== FILTER RESULTS ===');
+    console.log('Search query:', currentFilters.searchQuery);
+    console.log('Filtered accidents:', stats);
+    console.log('Active markers on map:', activeMarkers.length);
+    
+    if (!map.hasLayer(markerClusterGroup)) {
+        map.addLayer(markerClusterGroup);
+        console.log('✅ Added cluster group to map');
+    }
+    
+    updateHotspotDisplay(startDate, endDate);
+    updateAllStatistics();
+}
+
+function updateHotspotDisplay(startDate, endDate) {
+    console.log('🎯 Updating hotspot display...');
+    
+    hotspotCircles.forEach(item => {
+        if (item.circle && item.circle.remove) {
+            item.circle.remove();
+        }
+    });
+    
+    let visibleHotspotCount = 0;
+    const clusterMap = new Map();
+    
+    activeMarkers.forEach(marker => {
+        const accident = marker.accidentData;
+        if (accident && accident.cluster_id) {
+            if (!clusterMap.has(accident.cluster_id)) {
+                clusterMap.set(accident.cluster_id, []);
+            }
+            clusterMap.get(accident.cluster_id).push(accident);
+        }
+    });
+    
+    console.log('📊 Clusters with visible accidents:', clusterMap.size);
+    
+    hotspotCircles.forEach(item => {
+        const hotspot = item.hotspot;
+        const circle = item.circle;
+        const hotspotAccidents = clusterMap.get(hotspot.cluster_id) || [];
+        
+        if (hotspotAccidents.length === 0) {
+            console.log(`❌ Hotspot ${hotspot.cluster_id} filtered out - no visible accidents`);
+            return;
+        }
+        
+        console.log(`✅ Hotspot ${hotspot.cluster_id} has ${hotspotAccidents.length} visible accidents - DISPLAYING`);
+        visibleHotspotCount++;
+        
+        const fatalCount = hotspotAccidents.filter(a => a.victim_killed).length;
+        const injuryCount = hotspotAccidents.filter(a => a.victim_injured && !a.victim_killed).length;
+        const riskLevel = getRiskLevel(hotspot.severity_score);
+        
+        let fillColor, borderColor;
+        if (hotspot.severity_score >= 70) {
+            fillColor = 'rgba(220, 20, 60, 0.2)';
+            borderColor = '#DC143C';
+        } else if (hotspot.severity_score >= 50) {
+            fillColor = 'rgba(255, 165, 0, 0.2)';
+            borderColor = '#FFA500';
+        } else {
+            fillColor = 'rgba(40, 167, 69, 0.2)';
+            borderColor = '#28A745';
+        }
+        
+        circle.setStyle({
+            fillColor: fillColor,
+            color: borderColor,
+            fillOpacity: 0.2,
+            weight: 2
+        });
+        
+        const popupContent = `
+            <div class="marker-popup">
+                <div class="popup-header" style="background: linear-gradient(135deg, ${borderColor}, ${borderColor}99);">
+                    <h4>🔴 ${riskLevel} RISK HOTSPOT</h4>
+                </div>
+                <div class="popup-body">
+                    <p><strong>📍 Location:</strong> ${hotspot.primary_location}</p>
+                    <p><strong>📊 Visible Accidents:</strong> ${hotspotAccidents.length}</p>
+                    <p><strong>💀 Fatal:</strong> <span style="color: #DC143C;">${fatalCount}</span></p>
+                    <p><strong>🚑 Injury:</strong> <span style="color: #FFA500;">${injuryCount}</span></p>
+                    <p><strong>⚡ Severity:</strong> ${hotspot.severity_score.toFixed(1)}/100</p>
+                    <p><strong>📏 Coverage:</strong> ${Math.round(circle.getRadius())}m radius</p>
+                    <p><strong>🆔 Cluster ID:</strong> #${hotspot.cluster_id}</p>
+                    ${currentFilters.searchQuery ? `<p><strong>🔍 Search Match:</strong> "${currentFilters.searchQuery}"</p>` : ''}
+                </div>
+                <div class="popup-footer">
+                    <a href="/hotspots/${hotspot.cluster_id}/">View Details</a>
+                    <a href="javascript:void(0)" onclick="zoomToHotspotArea(${hotspot.cluster_id}, ${hotspot.center_latitude}, ${hotspot.center_longitude})" style="background: #FFA500;">🔍 Zoom to Area</a>
+                </div>
+            </div>
+        `;
+        
+        circle.bindPopup(popupContent, { maxWidth: 350 });
+        
+        const hotspotsEnabled = document.getElementById('showHotspots')?.checked;
+        if (hotspotsEnabled && circle) {
+            circle.addTo(map);
+            console.log(`✅ Added hotspot ${hotspot.cluster_id} to map`);
+        }
+    });
+    
+    console.log(`✅ Displayed ${visibleHotspotCount} filtered hotspot circles`);
+    updateHotspotStatistics(visibleHotspotCount);
+}
+
+function passesAllFilters(accident, startDate, endDate) {
+    let accidentDate;
+    try {
+        accidentDate = new Date(accident.date_committed);
+        if (isNaN(accidentDate.getTime())) return false;
+    } catch (error) {
+        return false;
+    }
+    
+    if (accidentDate < startDate || accidentDate > endDate) {
+        return false;
+    }
+    
+    if (currentFilters.timeOfDay !== 'all') {
+        if (!passesTimeOfDayFilter(accident.time_committed, currentFilters.timeOfDay)) {
+            return false;
+        }
+    }
+    
+    if (currentFilters.province && currentFilters.province !== '') {
+        if (!accident.province || accident.province !== currentFilters.province) {
+            return false;
+        }
+    }
+    
+    if (currentFilters.severity > 0) {
+        if (!passesSeverityFilter(accident, currentFilters.severity)) {
+            return false;
+        }
+    }
+    
+    if (currentFilters.searchQuery) {
+        if (!passesSearchFilter(accident, currentFilters.searchQuery)) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+function getDateRange() {
+    const now = new Date();
+    let startDate, endDate = new Date(now);
+    
+    switch(currentFilters.timeRange) {
+        case 'current_year':
+            startDate = new Date(now.getFullYear(), 0, 1);
+            break;
+        case 'last_year':
+            startDate = new Date(now.getFullYear() - 1, 0, 1);
+            endDate = new Date(now.getFullYear(), 0, 0);
+            break;
+        case 'last_6_months':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+            break;
+        case 'last_3_months':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+            break;
+        case 'last_month':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+            break;
+        case 'custom':
+            const startInput = document.getElementById('startDate');
+            const endInput = document.getElementById('endDate');
+            startDate = startInput && startInput.value ? new Date(startInput.value) : new Date(now.getFullYear() - 1, 0, 1);
+            endDate = endInput && endInput.value ? new Date(endInput.value) : now;
+            break;
+        default:
+            startDate = new Date(2000, 0, 1);
+            endDate = new Date(2100, 0, 1);
+    }
+    
+    return { startDate, endDate };
+}
+
+function passesTimeOfDayFilter(timeString, timeOfDay) {
+    if (!timeString) return true;
+    
+    const timeParts = timeString.toString().split(':');
+    const hour = timeParts.length > 0 ? parseInt(timeParts[0]) : 12;
+    
+    switch(timeOfDay) {
+        case 'morning':
+            return hour >= 6 && hour < 12;
+        case 'afternoon':
+            return hour >= 12 && hour < 18;
+        case 'evening':
+            return hour >= 18 && hour < 24;
+        case 'night':
+            return hour >= 0 && hour < 6;
+        default:
+            return true;
+    }
+}
+
+function passesSeverityFilter(accident, severityLevel) {
+    switch(severityLevel) {
+        case 70:
+            return accident.victim_killed === true;
+        case 50:
+            return accident.victim_injured === true && !accident.victim_killed;
+        case 30:
+            return !accident.victim_killed && !accident.victim_injured;
+        default:
+            return true;
+    }
+}
+
+function passesSearchFilter(accident, query) {
+    if (!query || query.trim() === '') return true;
+    
+    const searchLower = query.toLowerCase().trim();
+    
+    if (searchLower === 'fatal' || searchLower === 'fatal accident' || searchLower === 'death' || searchLower === 'killed') {
+        return accident.victim_killed === true;
+    }
+    
+    if (searchLower === 'injury' || searchLower === 'injured' || searchLower === 'injury accident' || searchLower === 'hurt') {
+        return accident.victim_injured === true && !accident.victim_killed;
+    }
+    
+    if (searchLower === 'property' || searchLower === 'property only' || searchLower === 'property damage' || searchLower === 'damage only') {
+        return accident.victim_killed === false && accident.victim_injured === false;
+    }
+    
+    if (searchLower === 'motorcycle' || searchLower === 'motorcyle' || 
+        searchLower === 'motorbike' || searchLower === 'motor' ||
+        searchLower === 'bike' || searchLower === 'mc' || searchLower === 'moto') {
+        if (accident.vehicle_kind) {
+            const vehicleLower = accident.vehicle_kind.toLowerCase();
+            return vehicleLower.includes('motorcycle') || vehicleLower.includes('moto') || vehicleLower.includes('bike');
+        }
+        return false;
+    }
+    
+    if (searchLower === 'tricycle' || searchLower === 'trike' || searchLower === 'trikes') {
+        if (accident.vehicle_kind) {
+            const vehicleLower = accident.vehicle_kind.toLowerCase();
+            return vehicleLower.includes('tricycle') || vehicleLower.includes('trike');
+        }
+        return false;
+    }
+    
+    if (searchLower === 'car' || searchLower === 'automobile' || searchLower === 'sedan' || searchLower === 'cars') {
+        if (accident.vehicle_kind) {
+            const vehicleLower = accident.vehicle_kind.toLowerCase();
+            return vehicleLower.includes('car') || vehicleLower.includes('sedan') || vehicleLower.includes('auto');
+        }
+        return false;
+    }
+    
+    if (searchLower === 'pickup' || searchLower === 'pick-up' || 
+        searchLower === 'truck' || searchLower === 'lorry' || searchLower === 'pick up') {
+        if (accident.vehicle_kind) {
+            const vehicleLower = accident.vehicle_kind.toLowerCase();
+            return vehicleLower.includes('pick-up') || vehicleLower.includes('truck') || vehicleLower.includes('lorry');
+        }
+        return false;
+    }
+    
+    if (accident.cluster_id) {
+        const hotspot = allHotspots.find(h => h.cluster_id === accident.cluster_id);
+        if (hotspot) {
+            if (hotspot.primary_location && hotspot.primary_location.toLowerCase().includes(searchLower)) {
+                return true;
+            }
+            
+            if (hotspot.municipalities && Array.isArray(hotspot.municipalities)) {
+                for (let municipality of hotspot.municipalities) {
+                    if (municipality && municipality.toLowerCase().includes(searchLower)) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    
+    const searchFields = [
+        accident.barangay,
+        accident.municipal,
+        accident.province,
+        accident.date_committed,
+        accident.vehicle_kind,
+        accident.incident_type,
+        accident.street,
+        accident.type_of_place
+    ].filter(field => field && field.toString().trim() !== '');
+    
+    return searchFields.some(field => 
+        field.toString().toLowerCase().includes(searchLower)
+    );
+}
+
+// ============================================================================
+// STATISTICS UPDATE
+// ============================================================================
+
+function updateAllStatistics() {
+    const stats = {
+        total: activeMarkers.length,
+        fatal: 0,
+        injury: 0,
+        property: 0
+    };
+    
+    activeMarkers.forEach(marker => {
+        if (!marker.accidentData) return;
+        
+        const accident = marker.accidentData;
+        if (accident.victim_killed) {
+            stats.fatal++;
+        } else if (accident.victim_injured) {
+            stats.injury++;
+        } else {
+            stats.property++;
+        }
+    });
+    
+    updateStatisticsDisplay(stats);
+}
+
+function updateStatisticsDisplay(stats) {
+    const totalEl = document.getElementById('statsVisibleMarkers');
+    const fatalEl = document.getElementById('statsFatalAccidents');
+    const timeRangeEl = document.getElementById('statsTimeRange');
+    
+    if (totalEl) totalEl.textContent = stats.total;
+    if (fatalEl) fatalEl.textContent = stats.fatal;
+    
+    if (timeRangeEl) {
+        const timeRange = document.getElementById('timeRange');
+        if (timeRange) {
+            const selectedOption = timeRange.options[timeRange.selectedIndex];
+            timeRangeEl.textContent = selectedOption ? selectedOption.text : 'All';
+        }
+    }
+    
+    console.log('📊 Statistics updated:', stats);
+}
+
+function updateHotspotStatistics(hotspotCount) {
+    const statsElement = document.getElementById('statsTotalHotspots');
+    if (statsElement) {
+        statsElement.textContent = hotspotCount;
+    }
+}
+
+// ============================================================================
+// TIME FILTER SETUP
+// ============================================================================
+
+function setupTimeFilters() {
+    const today = new Date();
+    const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+    
+    const endDateInput = document.getElementById('endDate');
+    const startDateInput = document.getElementById('startDate');
+    
+    if (endDateInput) endDateInput.value = today.toISOString().split('T')[0];
+    if (startDateInput) startDateInput.value = oneMonthAgo.toISOString().split('T')[0];
+    
+    console.log('📅 Time filters initialized');
+}
+
+function applyTimeFilter() {
+    applyAllFilters();
+}
+
+function updateCustomRange() {
+    if (document.getElementById('timeRange').value === 'custom') {
+        applyAllFilters();
+    }
+}
+
+function updateTimeFilterBadge() {
+    const badge = document.getElementById('timeFilterBadge');
+    if (!badge) return;
+    
+    const timeRange = document.getElementById('timeRange').value;
+    const timeOfDay = document.getElementById('timeOfDay').value;
+    const province = document.getElementById('provinceFilter').value;
+    const severity = document.getElementById('severityFilter').value;
+    
+    let text = '📅 ';
+    switch(timeRange) {
+        case 'current_year': text += 'Current Year'; break;
+        case 'last_year': text += 'Last Year'; break;
+        case 'last_6_months': text += 'Last 6 Months'; break;
+        case 'last_3_months': text += 'Last 3 Months'; break;
+        case 'last_month': text += 'Last Month'; break;
+        case 'custom': text += 'Custom Range'; break;
+        default: text += 'All Time';
+    }
+
+    if (timeOfDay !== 'all') {
+        text += ` • ${timeOfDay.charAt(0).toUpperCase() + timeOfDay.slice(1)}`;
+    }
+
+    if (province !== '') {
+        text += ` • ${province}`;
+    }
+
+    if (severity !== '0') {
+        text += ` • Severity ${severity}+`;
+    }
+    
+    const textElement = badge.querySelector('span') || document.createElement('span');
+    if (!badge.querySelector('span')) {
+        textElement.textContent = text;
+        badge.insertBefore(textElement, badge.querySelector('.close-banner'));
+    } else {
+        textElement.textContent = text;
+    }
+    
+    const shouldShow = timeRange !== 'all' || timeOfDay !== 'all' || province !== '' || severity !== '0';
+    badge.classList.toggle('show', shouldShow);
+    
+    setTimeout(updateBadgePositions, 10);
+    
+    console.log('🕒 Time filter badge updated:', { text, shouldShow });
+}
+
+function applyFilters() {
+    applyAllFilters();
+}
+
+function clearAllFilters() {
+    console.log('🗑️ Clearing all filters...');
+    
+    document.getElementById('timeRange').value = 'all';
+    document.getElementById('timeOfDay').value = 'all';
+    document.getElementById('provinceFilter').value = '';
+    document.getElementById('severityFilter').value = '0';
+    
+    const customRange = document.getElementById('customDateRange');
+    if (customRange) customRange.style.display = 'none';
+    
+    const clusterIntensity = document.getElementById('clusterIntensity');
+    if (clusterIntensity) {
+        clusterIntensity.value = '50';
+        const valueDisplay = document.getElementById('clusterIntensityValue');
+        if (valueDisplay) valueDisplay.textContent = '50';
+    }
+    
+    const heatmapIntensity = document.getElementById('heatmapIntensity');
+    if (heatmapIntensity) heatmapIntensity.value = '25';
+    
+    const searchInput = document.getElementById('mapSearchInput');
+    if (searchInput) searchInput.value = '';
+    
+    currentFilters = {
+        timeRange: 'all',
+        timeOfDay: 'all',
+        province: '',
+        severity: 0,
+        searchQuery: ''
+    };
+    
+    const timeBadge = document.getElementById('timeFilterBadge');
+    if (timeBadge) timeBadge.classList.remove('show');
+    
+    const searchBanner = document.getElementById('searchActiveBanner');
+    if (searchBanner) searchBanner.classList.remove('show');
+    
+    updateBadgePositions();
+    applyAllFilters();
+    
+    setTimeout(() => {
+        updateClusterIntensity();
+        const { startDate, endDate } = getDateRange();
+        updateHotspotDisplay(startDate, endDate);
+    }, 300);
+        
+    console.log('✅ All filters cleared');
+}
+
+// ============================================================================
+// LAYER MANAGEMENT
+// ============================================================================
+
+function toggleLayer(layerType) {
+    const checkbox = document.getElementById(`show${layerType.charAt(0).toUpperCase() + layerType.slice(1)}`);
+    if (!checkbox) return;
+    
+    const isChecked = checkbox.checked;
+    
+    switch(layerType) {
+        case 'accidents':
+            if (isChecked) {
+                map.addLayer(markerClusterGroup);
+            } else {
+                map.removeLayer(markerClusterGroup);
+            }
+            break;
+
+        case 'hotspots':
+            if (isChecked) {
+                const { startDate, endDate } = getDateRange();
+                updateHotspotDisplay(startDate, endDate);
+                console.log('✅ Hotspots layer enabled');
+            } else {
+                hotspotCircles.forEach(item => {
+                    if (item.circle && item.circle.remove) {
+                        item.circle.remove();
+                    }
+                });
+                updateHotspotStatistics(0);
+                console.log('❌ Hotspots layer disabled');
+            }
+            break;
+
+        case 'heatmap':
+            if (isChecked) {
+                createHeatmap();
+            } else if (heatmapLayer) {
+                map.removeLayer(heatmapLayer);
+            }
+            break;
+
+        case 'clusters':
+            if (isChecked) {
+                createClusterMarkers();
+            } else {
+                removeClusterMarkers();
+            }
+            break;
+    }
+    
+    updateAllStatistics();
+}
+
+// ============================================================================
+// HEATMAP FUNCTIONALITY
+// ============================================================================
+
+function createHeatmap() {
+    if (heatmapLayer) {
+        map.removeLayer(heatmapLayer);
+    }
+
+    const heatData = activeMarkers.map(marker => {
+        const accident = marker.accidentData;
+        return [
+            marker.getLatLng().lat,
+            marker.getLatLng().lng,
+            accident.victim_count || 1
+        ];
+    });
+
+    if (heatData.length === 0) {
+        console.warn('⚠️ No data for heatmap');
+        return;
+    }
+
+    const intensityInput = document.getElementById('heatmapIntensity');
+    const intensity = intensityInput ? parseInt(intensityInput.value) / 100 : 0.25;
+
+    heatmapLayer = L.heatLayer(heatData, {
+        radius: 25,
+        blur: 15,
+        maxZoom: 13,
+        gradient: {
+            0.0: 'blue',
+            0.5: 'yellow',
+            1.0: 'red'
+        },
+        max: intensity
+    }).addTo(map);
+
+    console.log('🔥 Heatmap created with', heatData.length, 'points');
+}
+
+function updateHeatmapIntensity() {
+    const checkbox = document.getElementById('showHeatmap');
+    if (heatmapLayer && checkbox && checkbox.checked) {
+        createHeatmap();
+    }
+}
+
+// ============================================================================
+// CLUSTER INTENSITY MANAGEMENT
+// ============================================================================
+
+function updateClusterIntensity() {
+    const intensityInput = document.getElementById('clusterIntensity');
+    if (!intensityInput) return;
+    
+    const intensity = parseInt(intensityInput.value);
+    console.log('🎯 Updating cluster intensity to:', intensity);
+    
+    showClusterIntensityFeedback(intensity);
+    
+    if (markerClusterGroup) {
+        map.removeLayer(markerClusterGroup);
+    }
+    
+    initializeClusterGroup(intensity);
+    
+    activeMarkers.forEach(marker => {
+        markerClusterGroup.addLayer(marker);
+    });
+    
+    const checkbox = document.getElementById('showAccidents');
+    if (checkbox && checkbox.checked) {
+        map.addLayer(markerClusterGroup);
+    }
+    
+    setTimeout(() => {
+        if (markerClusterGroup) {
+            markerClusterGroup.refreshClusters();
+            console.log(`✅ Cluster intensity updated to ${intensity}%`);
+        }
+    }, 200);
+}
+
+function updateClusterIntensityLive(value) {
+    const valueDisplay = document.getElementById('clusterIntensityValue');
+    if (valueDisplay) {
+        valueDisplay.textContent = value;
+    }
+}
+
+function showClusterIntensityFeedback(intensity) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: var(--primary-blue);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        z-index: 10000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        animation: slideIn 0.3s ease;
+    `;
+    notification.textContent = `🎯 Cluster Intensity: ${intensity}%`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 1500);
+}
+
+// ============================================================================
+// CLUSTER MARKERS
+// ============================================================================
+
+function createClusterMarkers() {
+    removeClusterMarkers();
+    
+    allHotspots.forEach(hotspot => {
+        const clusterIcon = L.divIcon({
+            className: 'cluster-marker',
+            html: `
+                <div style="
+                    background-color: #FFA500; 
+                    width: 24px; 
+                    height: 24px; 
+                    border-radius: 50%; 
+                    border: 3px solid white; 
+                    box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    font-size: 11px;
+                    color: white;
+                ">
+                    ${hotspot.cluster_id}
+                </div>
+            `,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        const marker = L.marker(
+            [hotspot.center_latitude, hotspot.center_longitude], 
+            {
+                icon: clusterIcon,
+                title: `Hotspot Cluster #${hotspot.cluster_id}`
+            }
+        );
+
+        const popupContent = `
+            <div class="marker-popup">
+                <div class="popup-header" style="background: linear-gradient(135deg, #FFA500, #FF8C00);">
+                    <h4>📊 Cluster #${hotspot.cluster_id}</h4>
+                </div>
+                <div class="popup-body">
+                    <p><strong>📍 Location:</strong> ${hotspot.primary_location}</p>
+                    <p><strong>📊 Accidents:</strong> ${hotspot.accident_count}</p>
+                    <p><strong>👥 Casualties:</strong> ${hotspot.total_casualties}</p>
+                    <p><strong>⚡ Severity:</strong> ${hotspot.severity_score.toFixed(1)}/100</p>
+                    <p><strong>🎯 Risk Level:</strong> ${getRiskLevel(hotspot.severity_score)}</p>
+                </div>
+                <div class="popup-footer">
+                    <a href="/hotspots/${hotspot.cluster_id}/">View Hotspot Details</a>
+                </div>
+            </div>
+        `;
+
+        marker.bindPopup(popupContent, { maxWidth: 300 });
+        marker.addTo(map);
+        clusterMarkers.push(marker);
+    });
+
+    console.log(`✅ Created ${clusterMarkers.length} cluster markers`);
+}
+
+function removeClusterMarkers() {
+    clusterMarkers.forEach(marker => marker.remove());
+    clusterMarkers = [];
+}
+
+// ============================================================================
+// UI TOGGLE FUNCTIONS
+// ============================================================================
+
+function toggleStats() {
+    const statsBox = document.getElementById('statsBox');
+    const toggle = document.getElementById('statsToggle');
+    if (statsBox && toggle) {
+        const isShowing = statsBox.classList.contains('show');
+        
+        if (!isShowing) {
+            statsBox.classList.add('show');
+            toggle.classList.add('active');
+            bringToFront('statsBox');
+        } else {
+            statsBox.classList.remove('show');
+            toggle.classList.remove('active');
+        }
+    }
+}
+
+function toggleLegend() {
+    const legendBox = document.getElementById('legendBox');
+    const toggle = document.getElementById('legendToggle');
+    if (legendBox && toggle) {
+        const isShowing = legendBox.classList.contains('show');
+        
+        if (!isShowing) {
+            legendBox.classList.add('show');
+            toggle.classList.add('active');
+            bringToFront('legendBox');
+        } else {
+            legendBox.classList.remove('show');
+            toggle.classList.remove('active');
+        }
+    }
+}
+
+function toggleMapControls() {
+    const controls = document.getElementById('mapControls');
+    const toggle = document.getElementById('controlsToggle');
+    if (controls && toggle) {
+        const isShowing = controls.classList.contains('show');
+        
+        if (!isShowing) {
+            controls.classList.add('show');
+            toggle.classList.add('active');
+            bringToFront('mapControls');
+        } else {
+            controls.classList.remove('show');
+            toggle.classList.remove('active');
+        }
+        
+        setTimeout(updateBadgePositions, 300);
+    }
+}
+
+function bringToFront(panelId) {
+    const panels = ['statsBox', 'legendBox', 'mapControls'];
+    
+    panels.forEach(id => {
+        const panel = document.getElementById(id);
+        if (panel) {
+            panel.style.zIndex = '900';
+        }
+    });
+    
+    const activePanel = document.getElementById(panelId);
+    if (activePanel) {
+        activePanel.style.zIndex = '950';
+    }
+}
+
+// ============================================================================
+// LOADING STATES
+// ============================================================================
+
+function showLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// ============================================================================
+// HOTSPOT ZOOM FUNCTIONALITY
+// ============================================================================
+
+function zoomToHotspotArea(hotspotId, centerLat, centerLng) {
+    console.log('🔍 Zooming to hotspot area:', hotspotId);
+    
+    const hotspotAccidents = allAccidents.filter(acc => acc.cluster_id === hotspotId);
+    
+    if (hotspotAccidents.length === 0) {
+        showNotification('No accidents found in this hotspot', 'error');
+        return;
+    }
+    
+    const bounds = L.latLngBounds();
+    hotspotAccidents.forEach(acc => {
+        if (acc.latitude && acc.longitude) {
+            bounds.extend([acc.latitude, acc.longitude]);
+        }
+    });
+    
+    bounds.extend([centerLat, centerLng]);
+    
+    map.flyToBounds(bounds, {
+        padding: [80, 80],
+        maxZoom: 15,
+        duration: 1.5
+    });
+    
+    showNotification(`Zoomed to ${hotspotAccidents.length} accidents in hotspot #${hotspotId}`, 'success');
+}
+
+// ============================================================================
+// SEARCH SYSTEM - ENHANCED WITH AUTOCOMPLETE
+// ============================================================================
+
+function toggleSearchBar() {
+    const container = document.getElementById('mapSearchContainer');
+    const btn = document.getElementById('floatingSearchBtn');
+    const input = document.getElementById('mapSearchInput');
+    
+    if (container.style.display === 'none' || !container.classList.contains('active')) {
+        container.style.display = 'block';
+        setTimeout(() => {
+            container.classList.add('active');
+            btn.classList.add('active');
+        }, 10);
+        
+        setTimeout(() => {
+            if (input) input.focus();
+        }, 400);
+    } else {
+        closeSearchBar();
+    }
+}
+
+function closeSearchBar() {
+    const container = document.getElementById('mapSearchContainer');
+    const btn = document.getElementById('floatingSearchBtn');
+    
+    container.classList.remove('active');
+    btn.classList.remove('active');
+    
+    hideSearchSuggestions();
+    hideSearchHistory();
+    
+    setTimeout(() => {
+        container.style.display = 'none';
+    }, 400);
+    
+    const input = document.getElementById('mapSearchInput');
+    if (input && !currentFilters.searchQuery) {
+        input.value = '';
+    }
+    
+    updateBadgePositions();
+}
+
+function handleSearchInput(event) {
+    const query = event.target.value.trim();
+    
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+    
+    hideSearchResults();
+    hideSearchHistory();
+    
+    if (query.length === 0) {
+        hideSearchSuggestions();
+        return;
+    }
+    
+    if (query.length < 2) {
+        hideSearchSuggestions();
+        return;
+    }
+    
+    showSuggestionsLoading();
+    
+    searchTimeout = setTimeout(() => {
+        generateSearchSuggestions(query);
+    }, 300);
+}
+
+function handleEnterKey(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        performSearch();
+    }
+}
+
+function performSearch() {
+    const input = document.getElementById('mapSearchInput');
+    if (!input) return;
+    
+    const query = input.value.trim();
+    
+    if (query.length < 2) {
+        showNotification('Please enter at least 2 characters', 'error');
+        return;
+    }
+    
+    console.log('🔍 Performing search for:', query);
+    showLoading();
+    
+    addToSearchHistory(query);
+    hideSearchSuggestions();
+    hideSearchHistory();
+    
+    const accidentsCheckbox = document.getElementById('showAccidents');
+    if (accidentsCheckbox && !accidentsCheckbox.checked) {
+        console.log('⚠️ Accidents layer was hidden, enabling it...');
+        accidentsCheckbox.checked = true;
+    }
+    
+    if (!map.hasLayer(markerClusterGroup)) {
+        console.log('⚠️ Cluster group not on map, adding it...');
+        map.addLayer(markerClusterGroup);
+    }
+    
+    currentFilters.searchQuery = query;
+    applyAllFilters();
+    updateTimeFilterBadge();
+    updateAllStatistics();
+    showSearchResultsSummary(query);
+    
+    const banner = document.getElementById('searchActiveBanner');
+    const bannerText = document.getElementById('searchBannerText');
+    if (banner && bannerText) {
+        bannerText.textContent = `"${query}"`;
+        banner.classList.add('show');
+    }
+    
+    setTimeout(updateBadgePositions, 10);
+    
+    setTimeout(() => {
+        if (activeMarkers.length > 0) {
+            const bounds = L.latLngBounds();
+            activeMarkers.forEach(marker => {
+                bounds.extend(marker.getLatLng());
+            });
+            
+            hotspotCircles.forEach(item => {
+                bounds.extend(item.circle.getLatLng());
+            });
+            
+            map.fitBounds(bounds, {
+                padding: [60, 60],
+                maxZoom: 13,
+                duration: 1.5
+            });
+            
+            console.log('🗺️ Map adjusted to show', activeMarkers.length, 'search results');
+        } else {
+            showNotification('No results found for your search with current filters', 'error');
+        }
+        hideLoading();
+    }, 500);
+}
+
+function quickSearch(keyword) {
+    console.log('🔍 Quick search:', keyword);
+    const input = document.getElementById('mapSearchInput');
+    if (input) {
+        input.value = keyword;
+        performSearch();
+    }
+}
+
+// ============================================================================
+// SEARCH SUGGESTIONS SYSTEM
+// ============================================================================
+
+function generateSearchSuggestions(query) {
+    const suggestions = [];
+    const queryLower = query.toLowerCase();
+    
+    console.log('🔍 Generating suggestions for:', query);
+    
+    const locationSuggestions = generateLocationSuggestions(queryLower);
+    suggestions.push(...locationSuggestions);
+    
+    const incidentSuggestions = generateIncidentSuggestions(queryLower);
+    suggestions.push(...incidentSuggestions);
+    
+    const vehicleSuggestions = generateVehicleSuggestions(queryLower);
+    suggestions.push(...vehicleSuggestions);
+    
+    const severitySuggestions = generateSeveritySuggestions(queryLower);
+    suggestions.push(...severitySuggestions);
+    
+    const historySuggestions = generateHistorySuggestions(queryLower);
+    suggestions.push(...historySuggestions);
+    
+    displaySearchSuggestions(suggestions, query);
+}
+
+function generateLocationSuggestions(query) {
+    const suggestions = [];
+    const locations = new Set();
+    
+    allAccidents.forEach(accident => {
+        if (accident.barangay && accident.barangay.toLowerCase().includes(query)) {
+            locations.add(accident.barangay);
+        }
+        if (accident.municipal && accident.municipal.toLowerCase().includes(query)) {
+            locations.add(accident.municipal);
+        }
+        if (accident.province && accident.province.toLowerCase().includes(query)) {
+            locations.add(accident.province);
+        }
+        if (accident.street && accident.street.toLowerCase().includes(query)) {
+            locations.add(accident.street);
+        }
+    });
+    
+    // Convert to array and take top 5
+    const locationArray = Array.from(locations).slice(0, 5);
+    
+    locationArray.forEach(location => {
+        // Determine icon based on location type
+        let icon = '📍'; // Default
+        if (location === location.toUpperCase()) icon = '🗺️'; // Province
+        else if (location.includes('St.') || location.includes('Street')) icon = '🛣️'; // Street
+        else if (location.includes('City') || location.includes('Municipal')) icon = '🏛️'; // City/Municipality
+        
+        suggestions.push({
+            text: location,
+            type: 'location',
+            query: location,
+            icon: icon
+        });
+    });
+    
+    return suggestions;
+}
+
+function generateIncidentSuggestions(query) {
+    const suggestions = [];
+    const incidents = new Set();
+    
+    allAccidents.forEach(accident => {
+        if (accident.incident_type && accident.incident_type.toLowerCase().includes(query)) {
+            incidents.add(accident.incident_type);
+        }
+    });
+    
+    Array.from(incidents).slice(0, 3).forEach(incident => {
+        suggestions.push({
+            text: incident,
+            type: 'incident',
+            query: incident,
+            icon: '🚨'
+        });
+    });
+    
+    return suggestions;
+}
+
+function generateVehicleSuggestions(query) {
+    const vehicleMap = {
+        'motorcycle': { display: 'Motorcycle Accidents', icon: '🏍️' },
+        'tricycle': { display: 'Tricycle Accidents', icon: '🛺' },
+        'car': { display: 'Car Accidents', icon: '🚗' },
+        'truck': { display: 'Truck Accidents', icon: '🚙' },
+        'bus': { display: 'Bus Accidents', icon: '🚌' },
+        'van': { display: 'Van Accidents', icon: '🚐' },
+        'jeep': { display: 'Jeepney Accidents', icon: '🚙' }
+    };
+    
+    const vehicleKeywords = {
+        'motorcycle': ['motorcycle', 'motorcyle', 'motorbike', 'motor', 'bike', 'mc', 'moto'],
+        'tricycle': ['tricycle', 'trike', 'trikes'],
+        'car': ['car', 'automobile', 'sedan', 'cars'],
+        'truck': ['truck', 'pick-up', 'pickup', 'lorry', 'pick up'],
+        'bus': ['bus', 'buses'],
+        'van': ['van', 'vans'],
+        'jeep': ['jeep', 'jeepney']
+    };
+    
+    const suggestions = [];
+    
+    Object.entries(vehicleKeywords).forEach(([vehicle, keywords]) => {
+        if (keywords.some(keyword => keyword.includes(query))) {
+            suggestions.push({
+                text: vehicleMap[vehicle].display,
+                type: 'vehicle',
+                query: vehicle,
+                icon: vehicleMap[vehicle].icon
+            });
+        }
+    });
+    
+    return suggestions.slice(0, 3);
+}
+
+
+function generateSeveritySuggestions(query) {
+    const severityMap = {
+        'fatal': { display: 'Fatal Accidents', icon: '💀' },
+        'injury': { display: 'Injury Accidents', icon: '🚑' },
+        'property': { display: 'Property Damage Accidents', icon: '🚗' }
+    };
+    
+    const severityKeywords = {
+        'fatal': ['fatal', 'death', 'killed', 'fatality'],
+        'injury': ['injury', 'injured', 'hurt', 'wounded'],
+        'property': ['property', 'damage', 'property only', 'damage only']
+    };
+    
+    const suggestions = [];
+    
+    Object.entries(severityKeywords).forEach(([severity, keywords]) => {
+        if (keywords.some(keyword => keyword.includes(query))) {
+            suggestions.push({
+                text: severityMap[severity].display,
+                type: 'severity',
+                query: severity,
+                icon: severityMap[severity].icon
+            });
+        }
+    });
+    
+    return suggestions;
+}
+
+function generateHistorySuggestions(query) {
+    return searchHistory
+        .filter(item => item.query.toLowerCase().includes(query))
+        .slice(0, 3)
+        .map(item => ({
+            text: item.query,
+            type: 'history',
+            query: item.query,
+            icon: '📚',
+            timestamp: item.timestamp
+        }));
+}
+
+function displaySearchSuggestions(suggestions, originalQuery) {
+    const container = document.getElementById('searchSuggestions');
+    if (!container) return;
+    
+    if (suggestions.length === 0) {
+        container.innerHTML = `
+            <div class="no-suggestions">
+                <div class="no-suggestions-icon">🔍</div>
+                <div class="no-suggestions-text">No suggestions found for "${originalQuery}"</div>
+            </div>
+        `;
+    } else {
+        container.innerHTML = suggestions.map(suggestion => {
+            // Get the proper icon based on suggestion type
+            const icon = getSuggestionIcon(suggestion.type, suggestion.text);
+            return `
+                <div class="suggestion-item" onclick="selectSuggestion('${suggestion.query.replace(/'/g, "\\'")}')">
+                    <span class="suggestion-icon">${icon}</span>
+                    <span class="suggestion-text">${suggestion.text}</span>
+                    <span class="suggestion-type">${suggestion.type}</span>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    container.style.display = 'block';
+}
+function getSuggestionIcon(type, text) {
+    // Return appropriate icons based on type and content
+    switch(type) {
+        case 'location':
+            if (text.includes('📍')) return '📍';
+            if (text.includes('🏛️')) return '🏛️';
+            if (text.includes('🗺️')) return '🗺️';
+            if (text.includes('🛣️')) return '🛣️';
+            return '📍';
+        
+        case 'incident':
+            return '🚨';
+            
+        case 'vehicle':
+            if (text.includes('🏍️')) return '🏍️';
+            if (text.includes('🛺')) return '🛺';
+            if (text.includes('🚗')) return '🚗';
+            if (text.includes('🚙')) return '🚙';
+            if (text.includes('🚌')) return '🚌';
+            if (text.includes('🚐')) return '🚐';
+            return '🚗';
+            
+        case 'severity':
+            if (text.includes('💀')) return '💀';
+            if (text.includes('🚑')) return '🚑';
+            return '🚗';
+            
+        case 'history':
+            return '📚';
+            
+        default:
+            return '🔍';
+    }
+}
+//aaaaaaaaaaaaa
+
+function showSuggestionsLoading() {
+    const container = document.getElementById('searchSuggestions');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="suggestions-loading">
+            <div class="suggestions-loading-spinner"></div>
+            <div>Finding suggestions...</div>
+        </div>
+    `;
+    container.style.display = 'block';
+}
+
+function hideSearchSuggestions() {
+    const container = document.getElementById('searchSuggestions');
+    if (container) {
+        container.style.display = 'none';
+    }
+}
+
+function selectSuggestion(query) {
+    const input = document.getElementById('mapSearchInput');
+    if (input) {
+        input.value = query;
+        input.focus();
+    }
+    
+    hideSearchSuggestions();
+    performSearch();
+}
+
+// ============================================================================
+// SEARCH HISTORY MANAGEMENT
+// ============================================================================
+
+function initializeSearchHistory() {
+    console.log('📚 Initializing search history:', searchHistory.length, 'items');
+    updateHistoryDisplay();
+}
+
+function addToSearchHistory(query) {
+    if (!query || query.trim().length < 2) return;
+    
+    const timestamp = new Date().toISOString();
+    const historyItem = {
+        query: query.trim(),
+        timestamp: timestamp,
+        displayTime: new Date().toLocaleTimeString()
+    };
+    
+    searchHistory = searchHistory.filter(item => 
+        item.query.toLowerCase() !== query.toLowerCase()
+    );
+    
+    searchHistory.unshift(historyItem);
+    searchHistory = searchHistory.slice(0, 20);
+    
+    localStorage.setItem('accidentSearchHistory', JSON.stringify(searchHistory));
+    updateHistoryDisplay();
+    
+    console.log('💾 Added to search history:', query);
+}
+
+function updateHistoryDisplay() {
+    const container = document.getElementById('historyItems');
+    if (!container) return;
+    
+    if (searchHistory.length === 0) {
+        container.innerHTML = `
+            <div class="no-suggestions">
+                <div class="no-suggestions-icon">📚</div>
+                <div class="no-suggestions-text">No search history yet</div>
+            </div>
+        `;
+    } else {
+        container.innerHTML = searchHistory.map((item, index) => `
+            <div class="history-item">
+                <span class="history-query">${item.query}</span>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="history-time">${item.displayTime}</span>
+                    <button class="history-remove" onclick="removeFromHistory(${index})">×</button>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+function toggleSearchHistory() {
+    const historyContainer = document.getElementById('searchHistory');
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+    
+    if (!historyContainer) return;
+    
+    if (historyContainer.style.display === 'block') {
+        hideSearchHistory();
+    } else {
+        if (suggestionsContainer) {
+            suggestionsContainer.style.display = 'none';
+        }
+        
+        historyContainer.style.display = 'block';
+        updateHistoryDisplay();
+    }
+}
+
+function hideSearchHistory() {
+    const container = document.getElementById('searchHistory');
+    if (container) {
+        container.style.display = 'none';
+    }
+}
+
+function removeFromHistory(index) {
+    event.stopPropagation();
+    
+    if (index >= 0 && index < searchHistory.length) {
+        searchHistory.splice(index, 1);
+        localStorage.setItem('accidentSearchHistory', JSON.stringify(searchHistory));
+        updateHistoryDisplay();
+    }
+}
+
+function clearSearchHistory() {
+    if (confirm('Are you sure you want to clear all search history?')) {
+        searchHistory = [];
+        localStorage.removeItem('accidentSearchHistory');
+        updateHistoryDisplay();
+        showNotification('Search history cleared', 'success');
+    }
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+function showSearchResultsSummary(query) {
+    const panel = document.getElementById('searchInfoPanel');
+    const body = document.getElementById('searchInfoBody');
+    
+    if (!panel || !body) return;
+    
+    const stats = {
+        total: activeMarkers.length,
+        fatal: activeMarkers.filter(m => m.accidentData && m.accidentData.victim_killed).length,
+        injury: activeMarkers.filter(m => m.accidentData && m.accidentData.victim_injured && !m.accidentData.victim_killed).length,
+        property: activeMarkers.filter(m => m.accidentData && !m.accidentData.victim_killed && !m.accidentData.victim_injured).length
+    };
+    
+    body.innerHTML = `
+        <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--light-blue); border-radius: 8px;">
+            <strong style="color: var(--primary-blue);">Search Query:</strong><br>
+            <span style="font-size: 0.9rem;">"${query}"</span>
+        </div>
+        
+        <div class="search-stat-item">
+            <span class="search-stat-label">📊 Total Results:</span>
+            <span class="search-stat-value">${stats.total}</span>
+        </div>
+        
+        <div class="search-stat-item">
+            <span class="search-stat-label">💀 Fatal:</span>
+            <span class="search-stat-value" style="color: #DC143C;">${stats.fatal}</span>
+        </div>
+        
+        <div class="search-stat-item">
+            <span class="search-stat-label">🚑 Injury:</span>
+            <span class="search-stat-value" style="color: #FFA500;">${stats.injury}</span>
+        </div>
+        
+        <div class="search-stat-item">
+            <span class="search-stat-label">🚗 Property Only:</span>
+            <span class="search-stat-value" style="color: #28A745;">${stats.property}</span>
+        </div>
+        
+        <button onclick="clearSearchFilter()" style="
+            width: 100%;
+            padding: 0.7rem;
+            margin-top: 1rem;
+            background: #DC143C;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        " onmouseover="this.style.background='#8B0000'" onmouseout="this.style.background='#DC143C'">
+            Clear Search
+        </button>
+    `;
+    
+    panel.style.display = 'block';
+}
+
+function closeSearchInfo() {
+    const panel = document.getElementById('searchInfoPanel');
+    if (panel) {
+        panel.style.display = 'none';
+    }
+}
+
+function clearTimeFilterBadge() {
+    console.log('🗑️ Clearing ALL filters from badge...');
+    
+    document.getElementById('timeRange').value = 'all';
+    document.getElementById('timeOfDay').value = 'all';
+    document.getElementById('provinceFilter').value = '';
+    document.getElementById('severityFilter').value = '0';
+    
+    const customRange = document.getElementById('customDateRange');
+    if (customRange) {
+        customRange.style.display = 'none';
+    }
+    
+    currentFilters.timeRange = 'all';
+    currentFilters.timeOfDay = 'all';
+    currentFilters.province = '';
+    currentFilters.severity = 0;
+    
+    const badge = document.getElementById('timeFilterBadge');
+    if (badge) {
+        badge.classList.remove('show');
+    }
+    
+    updateBadgePositions();
+    applyAllFilters();
+    
+    showNotification('All filters cleared - Showing all data', 'success');
+    
+    console.log('✅ ALL filters cleared from badge');
+}
+
+function clearSearchFromBanner() {
+    console.log('🗑️ Clearing search from banner...');
+    
+    const input = document.getElementById('mapSearchInput');
+    if (input) {
+        input.value = '';
+    }
+    
+    currentFilters.searchQuery = '';
+    applyAllFilters();
+    
+    const banner = document.getElementById('searchActiveBanner');
+    if (banner) {
+        banner.classList.remove('show');
+    }
+    
+    closeSearchInfo();
+    updateBadgePositions();
+    
+    showNotification('Search cleared', 'success');
+    
+    console.log('✅ Search banner cleared');
+}
+
+function clearSearchFilter() {
+    console.log('🗑️ Clearing search filter...');
+    
+    const input = document.getElementById('mapSearchInput');
+    if (input) {
+        input.value = '';
+    }
+    
+    currentFilters.searchQuery = '';
+    applyAllFilters();
+    closeSearchInfo();
+    
+    const banner = document.getElementById('searchActiveBanner');
+    if (banner) {
+        banner.classList.remove('show');
+    }
+    
+    updateBadgePositions();
+    showNotification('Search cleared - View reset to all data', 'success');
+    
+    setTimeout(() => {
+        const { startDate, endDate } = getDateRange();
+        updateHotspotDisplay(startDate, endDate);
+    }, 100);
+    
+    console.log('✅ Search filter cleared');
+}
+
+function hideSearchResults() {
+    const results = document.getElementById('searchResults');
+    if (results) {
+        results.style.display = 'none';
+    }
+}
+
+// ============================================================================
+// FULLSCREEN FUNCTIONALITY
+// ============================================================================
+
+function toggleFullscreen() {
+    const body = document.body;
+    const btn = document.getElementById('fullscreenBtn');
+    
+    if (!body.classList.contains('fullscreen-mode')) {
+        body.classList.add('fullscreen-mode');
+        if (btn) {
+            btn.classList.add('active');
+            btn.innerHTML = '⛶';
+            btn.setAttribute('data-tooltip', 'Exit Fullscreen');
+        }
+        
+        setTimeout(() => {
+            if (map) map.invalidateSize();
+        }, 100);
+        
+        showNotification('Fullscreen mode enabled', 'success');
+    } else {
+        body.classList.remove('fullscreen-mode');
+        if (btn) {
+            btn.classList.remove('active');
+            btn.innerHTML = '⛶';
+            btn.setAttribute('data-tooltip', 'Fullscreen Mode');
+        }
+        
+        setTimeout(() => {
+            if (map) map.invalidateSize();
+        }, 100);
+        
+        showNotification('Fullscreen mode disabled', 'success');
+    }
+}
+
+// ============================================================================
+// NOTIFICATION SYSTEM
+// ============================================================================
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#28A745' : type === 'error' ? '#DC143C' : '#007BFF'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        animation: slideIn 0.3s ease;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// ============================================================================
+// EVENT LISTENERS
+// ============================================================================
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const body = document.body;
+        if (body.classList.contains('fullscreen-mode')) {
+            toggleFullscreen();
+        }
+        
+        const container = document.getElementById('mapSearchContainer');
+        if (container && container.classList.contains('active')) {
+            closeSearchBar();
+        }
+    }
+});
+
+document.addEventListener('click', function(event) {
+    const searchContainer = document.getElementById('mapSearchContainer');
+    const searchBtn = document.getElementById('floatingSearchBtn');
+    const suggestions = document.getElementById('searchSuggestions');
+    const history = document.getElementById('searchHistory');
+    
+    if (searchContainer && searchBtn) {
+        const isClickInside = searchContainer.contains(event.target) || 
+                              searchBtn.contains(event.target);
+        
+        if (!isClickInside) {
+            hideSearchSuggestions();
+            hideSearchHistory();
+        }
+    }
+});
+
+// ============================================================================
+// ANIMATION STYLES
+// ============================================================================
+
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.5); opacity: 0.7; }
+    }
+`;
+document.head.appendChild(style);
+
+// ============================================================================
+// BADGE POSITIONING
+// ============================================================================
+
+function updateBadgePositions() {
+    const timeBadge = document.getElementById('timeFilterBadge');
+    const searchBanner = document.getElementById('searchActiveBanner');
+    
+    if (!timeBadge || !searchBanner) return;
+    
+    const timeVisible = timeBadge.classList.contains('show');
+    const searchVisible = searchBanner.classList.contains('show');
+    
+    timeBadge.style.transform = 'translateX(-50%)';
+    searchBanner.style.transform = 'translateX(-50%)';
+    timeBadge.style.top = '20px';
+    searchBanner.style.top = '20px';
+    
+    if (timeVisible && searchVisible) {
+        const timeWidth = timeBadge.offsetWidth;
+        const searchWidth = searchBanner.offsetWidth;
+        const totalWidth = timeWidth + searchWidth + 20;
+        const maxAllowedWidth = window.innerWidth * 0.8;
+        
+        if (totalWidth <= maxAllowedWidth) {
+            const spacing = (timeWidth + searchWidth) / 2 + 20;
+            timeBadge.style.transform = `translateX(calc(-50% - ${spacing / 2}px))`;
+            searchBanner.style.transform = `translateX(calc(-50% + ${spacing / 2}px))`;
+        } else {
+            timeBadge.style.transform = 'translateX(-50%)';
+            timeBadge.style.top = '20px';
+            searchBanner.style.transform = 'translateX(-50%)';
+            searchBanner.style.top = '70px';
+        }
+    } else if (timeVisible) {
+        timeBadge.style.transform = 'translateX(-50%)';
+        timeBadge.style.top = '20px';
+    } else if (searchVisible) {
+        searchBanner.style.transform = 'translateX(-50%)';
+        searchBanner.style.top = '20px';
+    }
+}
+
+// ============================================================================
+// DRAGGABLE PANELS
+// ============================================================================
+
+let draggedPanel = null;
+let dragOffset = { x: 0, y: 0 };
+
+function makePanelDraggable(panelId, handleId) {
+    const panel = document.getElementById(panelId);
+    const handle = document.getElementById(handleId);
+    
+    if (!panel || !handle) return;
+    
+    handle.addEventListener('mousedown', startDrag);
+    handle.addEventListener('touchstart', startDragTouch);
+    
+    function startDrag(e) {
+        e.preventDefault();
+        draggedPanel = panel;
+        
+        const rect = panel.getBoundingClientRect();
+        dragOffset.x = e.clientX - rect.left;
+        dragOffset.y = e.clientY - rect.top;
+        
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', stopDrag);
+        panel.classList.add('dragging');
+    }
+    
+    function startDragTouch(e) {
+        e.preventDefault();
+        if (e.touches.length === 1) {
+            draggedPanel = panel;
+            
+            const rect = panel.getBoundingClientRect();
+            dragOffset.x = e.touches[0].clientX - rect.left;
+            dragOffset.y = e.touches[0].clientY - rect.top;
+            
+            document.addEventListener('touchmove', onDragTouch);
+            document.addEventListener('touchend', stopDrag);
+            panel.classList.add('dragging');
+        }
+    }
+    
+    function onDrag(e) {
+        if (!draggedPanel) return;
+        
+        const x = e.clientX - dragOffset.x;
+        const y = e.clientY - dragOffset.y;
+        
+        const maxX = window.innerWidth - panel.offsetWidth;
+        const maxY = window.innerHeight - panel.offsetHeight;
+        
+        const boundedX = Math.max(10, Math.min(x, maxX - 10));
+        const boundedY = Math.max(10, Math.min(y, maxY - 10));
+        
+        panel.style.left = boundedX + 'px';
+        panel.style.top = boundedY + 'px';
+        panel.style.transform = 'none';
+    }
+    
+    function onDragTouch(e) {
+        if (!draggedPanel || e.touches.length !== 1) return;
+        
+        const x = e.touches[0].clientX - dragOffset.x;
+        const y = e.touches[0].clientY - dragOffset.y;
+        
+        const maxX = window.innerWidth - panel.offsetWidth;
+        const maxY = window.innerHeight - panel.offsetHeight;
+        
+        const boundedX = Math.max(10, Math.min(x, maxX - 10));
+        const boundedY = Math.max(10, Math.min(y, maxY - 10));
+        
+        panel.style.left = boundedX + 'px';
+        panel.style.top = boundedY + 'px';
+        panel.style.transform = 'none';
+    }
+    
+    function stopDrag() {
+        if (draggedPanel) {
+            draggedPanel.classList.remove('dragging');
+            draggedPanel = null;
+            
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('touchmove', onDragTouch);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchend', stopDrag);
+        }
+    }
+}
+
+// ============================================================================
+// URL PARAMETER HANDLING
+// ============================================================================
+
+function checkURLParametersAndJump() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lat = urlParams.get('lat');
+    const lng = urlParams.get('lng');
+    const zoom = urlParams.get('zoom');
+    const accidentId = urlParams.get('accident_id');
+    
+    if (lat && lng) {
+        const backBtn = document.getElementById('backToListBtn');
+        if (backBtn) backBtn.style.display = 'flex';
+        
+        const latitude = parseFloat(lat);
+        const longitude = parseFloat(lng);
+        const zoomLevel = zoom ? parseInt(zoom) : 16;
+        
+        console.log('🎯 Jumping to location from URL:', latitude, longitude);
+        
+        setTimeout(() => {
+            map.flyTo([latitude, longitude], zoomLevel, {
+                duration: 2,
+                easeLinearity: 0.5
+            });
+            
+            if (accidentId) {
+                setTimeout(() => {
+                    const targetMarker = accidentMarkers.find(m => 
+                        m.accidentData && m.accidentData.id == accidentId
+                    );
+                    
+                    if (targetMarker) {
+                        targetMarker.openPopup();
+                        
+                        const markerElement = targetMarker.getElement();
+                        if (markerElement) {
+                            markerElement.style.animation = 'pulse 2s ease 5';
+                        }
+                        
+                        showNotification('Location found! 🎯', 'success');
+                    }
+                }, 2000);
+            }
+        }, 500);
+    }
+}
+
+function goBackToList() {
+    window.location.href = "{% url 'accident_list' %}";
+}
+
+// ============================================================================
+// DEBUG FUNCTIONS
+// ============================================================================
+
+window.debugMap = function() {
+    console.log('=== MAP DEBUG INFO ===');
+    console.log('Total accidents loaded:', allAccidents.length);
+    console.log('Total hotspots loaded:', allHotspots.length);
+    console.log('Accident markers created:', accidentMarkers.length);
+    console.log('Active (visible) markers:', activeMarkers.length);
+    console.log('Current filters:', currentFilters);
+    console.log('Marker cluster group:', markerClusterGroup);
+    
+    const stats = {
+        fatal: activeMarkers.filter(m => m.accidentData && m.accidentData.victim_killed).length,
+        injury: activeMarkers.filter(m => m.accidentData && m.accidentData.victim_injured && !m.accidentData.victim_killed).length,
+        property: activeMarkers.filter(m => m.accidentData && !m.accidentData.victim_killed && !m.accidentData.victim_injured).length
+    };
+    console.log('Statistics:', stats);
+};
+
+window.debugHotspots = function() {
+    console.log('=== HOTSPOT DEBUG INFO ===');
+    console.log('Total hotspots in database:', allHotspots.length);
+    console.log('Hotspot circles currently displayed:', hotspotCircles.length);
+    console.log('Active markers (visible accidents):', activeMarkers.length);
+    console.log('Current search query:', currentFilters.searchQuery);
+    
+    const clusterMap = new Map();
+    activeMarkers.forEach(marker => {
+        const accident = marker.accidentData;
+        if (accident && accident.cluster_id) {
+            clusterMap.set(accident.cluster_id, (clusterMap.get(accident.cluster_id) || 0) + 1);
+        }
+    });
+    
+    console.log('Clusters with visible accidents:', clusterMap.size);
+    console.log('Accidents per cluster:', Object.fromEntries(clusterMap));
+    
+    allHotspots.forEach(hotspot => {
+        const accidentCount = clusterMap.get(hotspot.cluster_id) || 0;
+        console.log(`Hotspot ${hotspot.cluster_id}: ${accidentCount} accidents - ${accidentCount > 0 ? 'SHOULD SHOW' : 'SHOULD HIDE'}`);
+    });
+    
+    const hotspotsEnabled = document.getElementById('showHotspots')?.checked;
+    console.log('Hotspots layer enabled:', hotspotsEnabled);
+};
+
+window.testFilters = function() {
+    console.log('=== TESTING FILTERS ===');
+    applyAllFilters();
+};
+
+window.resetMap = function() {
+    console.log('=== RESETTING MAP ===');
+    clearAllFilters();
+    map.setView([9.0, 125.5], 9);
+};
+</script>
+{% endblock %}

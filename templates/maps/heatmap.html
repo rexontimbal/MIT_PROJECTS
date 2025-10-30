@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accident Heatmap{% endblock %}
+
+{% block extra_css %}
+<style>
+    #heatmapContainer {
+        height: calc(100vh - 200px);
+        min-height: 600px;
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+    }
+
+    .heatmap-controls {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow-lg);
+        max-width: 250px;
+    }
+
+    .intensity-control {
+        margin: 1rem 0;
+    }
+
+    .intensity-control label {
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .intensity-control input[type="range"] {
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>🔥 Accident Heatmap</h2>
+    <p>Density visualization of accident occurrences</p>
+</div>
+
+<div style="position: relative;">
+    <div id="heatmapContainer"></div>
+    
+    <div class="heatmap-controls">
+        <h3>Heatmap Settings</h3>
+        
+        <div class="intensity-control">
+            <label for="radiusSlider">Radius: <span id="radiusValue">25</span></label>
+            <input type="range" id="radiusSlider" min="10" max="50" value="25" oninput="updateHeatmap()">
+        </div>
+
+        <div class="intensity-control">
+            <label for="blurSlider">Blur: <span id="blurValue">15</span></label>
+            <input type="range" id="blurSlider" min="5" max="30" value="15" oninput="updateHeatmap()">
+        </div>
+
+        <div class="intensity-control">
+            <label for="maxIntensity">Max Intensity: <span id="maxValue">1.0</span></label>
+            <input type="range" id="maxIntensity" min="0.1" max="2" step="0.1" value="1.0" oninput="updateHeatmap()">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+<script>
+    let heatmap;
+    let heatLayer;
+    const accidentData = {{ accidents_json|safe }};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeHeatmap();
+    });
+
+    function initializeHeatmap() {
+        heatmap = L.map('heatmapContainer').setView([9.0, 125.5], 9);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(heatmap);
+
+        updateHeatmap();
+    }
+
+    function updateHeatmap() {
+        if (heatLayer) {
+            heatmap.removeLayer(heatLayer);
+        }
+
+        const radius = parseInt(document.getElementById('radiusSlider').value);
+        const blur = parseInt(document.getElementById('blurSlider').value);
+        const maxIntensity = parseFloat(document.getElementById('maxIntensity').value);
+
+        document.getElementById('radiusValue').textContent = radius;
+        document.getElementById('blurValue').textContent = blur;
+        document.getElementById('maxValue').textContent = maxIntensity.toFixed(1);
+
+        const heatData = accidentData.map(accident => [
+            accident.latitude,
+            accident.longitude,
+            accident.victim_count || 1
+        ]);
+
+        heatLayer = L.heatLayer(heatData, {
+            radius: radius,
+            blur: blur,
+            max: maxIntensity,
+            gradient: {
+                0.0: 'blue',
+                0.3: 'cyan',
+                0.5: 'lime',
+                0.7: 'yellow',
+                1.0: 'red'
+            }
+        }).addTo(heatmap);
+    }
+</script>
+{% endblock %}

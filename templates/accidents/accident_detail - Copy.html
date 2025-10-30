@@ -1,0 +1,830 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accident Details - AGNES Hotspot System{% endblock %}
+
+{% block breadcrumb_items %}
+<span> / <a href="{% url 'accident_list' %}">Accidents</a> / Details</span>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    .accident-detail-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Hero Section */
+    .accident-hero {
+        background: linear-gradient(135deg, #003087 0%, #0052CC 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 12px rgba(0, 48, 135, 0.2);
+    }
+
+    .accident-hero h1 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .accident-id-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .accident-meta {
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+        font-size: 1.1rem;
+    }
+
+    .accident-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateX(-3px);
+    }
+
+    .btn-map {
+        background: #28A745;
+        color: white;
+    }
+
+    .btn-map:hover {
+        background: #218838;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-print {
+        background: #FFC107;
+        color: #212529;
+    }
+
+    .btn-print:hover {
+        background: #FFA000;
+        transform: translateY(-2px);
+    }
+
+    /* Status Cards */
+    .status-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .status-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .status-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .status-card.severity {
+        border-left-color: #DC143C;
+    }
+
+    .status-card.casualties {
+        border-left-color: #FFA500;
+    }
+
+    .status-card.hotspot {
+        border-left-color: #003087;
+    }
+
+    .status-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        color: #666;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
+
+    .status-card-icon {
+        font-size: 1.5rem;
+    }
+
+    .status-card-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .status-card-detail {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #666;
+        font-size: 0.95rem;
+        margin-top: 8px;
+    }
+
+    /* Information Sections */
+    .info-section {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 25px;
+    }
+
+    .info-section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #E9ECEF;
+    }
+
+    .info-section-header h3 {
+        color: #003087;
+        font-size: 1.3rem;
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .info-section-icon {
+        font-size: 1.8rem;
+        color: #003087;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #666;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 1.1rem;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .info-value.highlight {
+        color: #003087;
+        font-weight: 700;
+    }
+
+    /* Map Section */
+    #accidentMap {
+        height: 400px;
+        border-radius: 12px;
+        margin-top: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Narrative Section */
+    .narrative-box {
+        background: #F8F9FA;
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 4px solid #003087;
+        margin-top: 15px;
+        line-height: 1.8;
+        color: #333;
+        font-size: 1rem;
+    }
+
+    /* Nearby Accidents */
+    .nearby-list {
+        display: grid;
+        gap: 15px;
+    }
+
+    .nearby-item {
+        background: #F8F9FA;
+        padding: 15px 20px;
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+        cursor: pointer;
+    }
+
+    .nearby-item:hover {
+        background: #E9ECEF;
+        border-left-color: #003087;
+        transform: translateX(5px);
+    }
+
+    .nearby-info {
+        flex: 1;
+    }
+
+    .nearby-title {
+        font-weight: 600;
+        color: #003087;
+        margin-bottom: 5px;
+    }
+
+    .nearby-details {
+        font-size: 0.9rem;
+        color: #666;
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .nearby-distance {
+        background: #003087;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    /* Badges */
+    .badge-severity {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .badge-fatal {
+        background: #DC143C;
+        color: white;
+    }
+
+    .badge-injury {
+        background: #FFA500;
+        color: white;
+    }
+
+    .badge-property {
+        background: #6C757D;
+        color: white;
+    }
+
+    .badge-hotspot {
+        background: #DC143C;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #6C757D;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    /* Print Styles */
+    @media print {
+        .action-buttons,
+        .main-header,
+        .main-nav,
+        .main-footer {
+            display: none !important;
+        }
+
+        .accident-hero {
+            background: #003087 !important;
+            color: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .info-section,
+        .status-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        #accidentMap {
+            height: 300px;
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .accident-hero h1 {
+            font-size: 1.5rem;
+        }
+
+        .accident-meta {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .status-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+
+        #accidentMap {
+            height: 300px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="accident-detail-container">
+    <!-- Hero Section -->
+    <div class="accident-hero">
+        <h1>
+            <i class="fas fa-car-crash"></i>
+            {{ accident.incident_type }}
+            <span class="accident-id-badge">#{{ accident.id }}</span>
+        </h1>
+        
+        <div class="accident-meta">
+            <div class="accident-meta-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>{{ accident.date_committed|date:"F d, Y" }}</span>
+            </div>
+            <div class="accident-meta-item">
+                <i class="fas fa-clock"></i>
+                <span>{{ accident.time_committed|time:"g:i A" }}</span>
+            </div>
+            <div class="accident-meta-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ accident.barangay }}, {{ accident.municipal }}</span>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="{% url 'accident_list' %}" class="btn-action btn-back">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+            <a href="{% url 'map_view' %}?lat={{ accident.latitude }}&lng={{ accident.longitude }}&zoom=16&accident_id={{ accident.id }}" class="btn-action btn-map">
+                <i class="fas fa-map-marked-alt"></i> View on Map
+            </a>
+            <button onclick="window.print()" class="btn-action btn-print">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="status-cards">
+        <!-- Severity Card -->
+        <div class="status-card severity">
+            <div class="status-card-header">
+                <span class="status-card-icon">🚨</span>
+                <span>Severity</span>
+            </div>
+            <div class="status-card-value">
+                {% if accident.victim_killed %}
+                    <span class="badge-severity badge-fatal">
+                        <i class="fas fa-skull-crossbones"></i> FATAL
+                    </span>
+                {% elif accident.victim_injured %}
+                    <span class="badge-severity badge-injury">
+                        <i class="fas fa-user-injured"></i> INJURY
+                    </span>
+                {% else %}
+                    <span class="badge-severity badge-property">
+                        <i class="fas fa-car"></i> PROPERTY
+                    </span>
+                {% endif %}
+            </div>
+            <div class="status-card-detail">
+                {% if accident.victim_killed %}
+                    <i class="fas fa-skull-crossbones" style="color: #DC143C;"></i>
+                    <span>Fatal accident</span>
+                {% elif accident.victim_injured %}
+                    <i class="fas fa-user-injured" style="color: #FFA500;"></i>
+                    <span>With injuries</span>
+                {% else %}
+                    <i class="fas fa-check-circle" style="color: #28A745;"></i>
+                    <span>No casualties</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Casualties Card -->
+        <div class="status-card casualties">
+            <div class="status-card-header">
+                <span class="status-card-icon">👥</span>
+                <span>Casualties</span>
+            </div>
+            <div class="status-card-value">
+                {{ accident.victim_count|default:0 }} Total
+            </div>
+            <div class="status-card-detail">
+                {% if accident.victim_killed %}
+                <i class="fas fa-skull-crossbones" style="color: #DC143C;"></i>
+                <span>Killed: 1+</span>
+                {% endif %}
+            </div>
+            <div class="status-card-detail">
+                {% if accident.victim_injured %}
+                <i class="fas fa-user-injured" style="color: #FFA500;"></i>
+                <span>Injured: 1+</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Hotspot Card -->
+        <div class="status-card hotspot">
+            <div class="status-card-header">
+                <span class="status-card-icon">🔥</span>
+                <span>Hotspot Status</span>
+            </div>
+            <div class="status-card-value">
+                {% if accident.is_hotspot %}
+                    <span class="badge-hotspot">
+                        <i class="fas fa-fire"></i> HOTSPOT
+                    </span>
+                {% else %}
+                    <span class="badge-severity badge-property">
+                        <i class="fas fa-check"></i> NORMAL
+                    </span>
+                {% endif %}
+            </div>
+            {% if accident.is_hotspot and accident.cluster_id %}
+            <div class="status-card-detail">
+                <i class="fas fa-layer-group"></i>
+                <a href="{% url 'hotspot_detail' accident.cluster_id %}" style="color: #003087; text-decoration: none; font-weight: 600;">
+                    View Cluster #{{ accident.cluster_id }}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Location Information -->
+    <div class="info-section">
+        <div class="info-section-header">
+            <span class="info-section-icon"><i class="fas fa-map-marker-alt"></i></span>
+            <h3>Location Information</h3>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Region</span>
+                <span class="info-value">{{ accident.region }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Province</span>
+                <span class="info-value highlight">{{ accident.province }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Municipality</span>
+                <span class="info-value highlight">{{ accident.municipal }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Barangay</span>
+                <span class="info-value">{{ accident.barangay }}</span>
+            </div>
+            {% if accident.street %}
+            <div class="info-item">
+                <span class="info-label">Street/Road</span>
+                <span class="info-value">{{ accident.street }}</span>
+            </div>
+            {% endif %}
+            <div class="info-item">
+                <span class="info-label">Type of Place</span>
+                <span class="info-value">{{ accident.type_of_place|default:"Not specified" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Coordinates</span>
+                <span class="info-value">{{ accident.latitude }}°N, {{ accident.longitude }}°E</span>
+            </div>
+        </div>
+
+        <!-- Map -->
+        <div id="accidentMap"></div>
+    </div>
+
+    <!-- Incident Details -->
+    <div class="info-section">
+        <div class="info-section-header">
+            <span class="info-section-icon"><i class="fas fa-clipboard-list"></i></span>
+            <h3>Incident Details</h3>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Incident Type</span>
+                <span class="info-value">{{ accident.incident_type }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Date Reported</span>
+                <span class="info-value">{{ accident.date_reported|date:"F d, Y"|default:"Not recorded" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Time Reported</span>
+                <span class="info-value">{{ accident.time_reported|time:"g:i A"|default:"Not recorded" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Case Status</span>
+                <span class="info-value highlight">{{ accident.case_status|default:"Unknown" }}</span>
+            </div>
+            {% if accident.offense %}
+            <div class="info-item">
+                <span class="info-label">Offense</span>
+                <span class="info-value">{{ accident.offense }}</span>
+            </div>
+            {% endif %}
+            {% if accident.offense_type %}
+            <div class="info-item">
+                <span class="info-label">Offense Type</span>
+                <span class="info-value">{{ accident.offense_type }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if accident.narrative %}
+        <div style="margin-top: 20px;">
+            <div class="info-label" style="margin-bottom: 10px;">Narrative</div>
+            <div class="narrative-box">
+                {{ accident.narrative }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Vehicle Information -->
+    {% if accident.vehicle_kind or accident.vehicle_make or accident.vehicle_model or accident.vehicle_plate_no %}
+    <div class="info-section">
+        <div class="info-section-header">
+            <span class="info-section-icon"><i class="fas fa-car"></i></span>
+            <h3>Vehicle Information</h3>
+        </div>
+        
+        <div class="info-grid">
+            {% if accident.vehicle_kind %}
+            <div class="info-item">
+                <span class="info-label">Vehicle Kind</span>
+                <span class="info-value">{{ accident.vehicle_kind }}</span>
+            </div>
+            {% endif %}
+            {% if accident.vehicle_make %}
+            <div class="info-item">
+                <span class="info-label">Vehicle Make</span>
+                <span class="info-value">{{ accident.vehicle_make }}</span>
+            </div>
+            {% endif %}
+            {% if accident.vehicle_model %}
+            <div class="info-item">
+                <span class="info-label">Vehicle Model</span>
+                <span class="info-value">{{ accident.vehicle_model }}</span>
+            </div>
+            {% endif %}
+            {% if accident.vehicle_plate_no %}
+            <div class="info-item">
+                <span class="info-label">Plate Number</span>
+                <span class="info-value highlight">{{ accident.vehicle_plate_no }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Police Information -->
+    <div class="info-section">
+        <div class="info-section-header">
+            <span class="info-section-icon"><i class="fas fa-shield-alt"></i></span>
+            <h3>Police Information</h3>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">PRO</span>
+                <span class="info-value">{{ accident.pro|default:"Not specified" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">PPO</span>
+                <span class="info-value">{{ accident.ppo|default:"Not specified" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Station</span>
+                <span class="info-value">{{ accident.station|default:"Not specified" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nearby Accidents -->
+    {% if nearby_accidents %}
+    <div class="info-section">
+        <div class="info-section-header">
+            <span class="info-section-icon"><i class="fas fa-map-marked"></i></span>
+            <h3>Nearby Accidents (Within 5km)</h3>
+        </div>
+        
+        <div class="nearby-list">
+            {% for nearby in nearby_accidents %}
+            <div class="nearby-item" onclick="window.location.href='{% url 'accident_detail' nearby.pk %}'">
+                <div class="nearby-info">
+                    <div class="nearby-title">{{ nearby.incident_type|truncatewords:5 }}</div>
+                    <div class="nearby-details">
+                        <span><i class="fas fa-calendar"></i> {{ nearby.date_committed|date:"M d, Y" }}</span>
+                        <span><i class="fas fa-map-marker-alt"></i> {{ nearby.barangay }}, {{ nearby.municipal }}</span>
+                        {% if nearby.victim_killed %}
+                        <span style="color: #DC143C;"><i class="fas fa-skull-crossbones"></i> Fatal</span>
+                        {% elif nearby.victim_injured %}
+                        <span style="color: #FFA500;"><i class="fas fa-user-injured"></i> Injury</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <span class="nearby-distance">
+                    <i class="fas fa-route"></i> ~{{ nearby.distance|floatformat:1 }} km
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="info-section">
+        <div class="info-section-header">
+            <span class="info-section-icon"><i class="fas fa-map-marked"></i></span>
+            <h3>Nearby Accidents</h3>
+        </div>
+        <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <h5>No nearby accidents found</h5>
+            <p>No other accidents recorded within 5km of this location</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize map
+    const lat = {{ accident.latitude }};
+    const lng = {{ accident.longitude }};
+    
+    const map = L.map('accidentMap').setView([lat, lng], 15);
+    
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+    
+    // Custom marker icon based on severity
+    let markerColor = 'blue';
+    {% if accident.victim_killed %}
+        markerColor = 'red';
+    {% elif accident.victim_injured %}
+        markerColor = 'orange';
+    {% endif %}
+    
+    // Add main accident marker
+    const mainMarker = L.marker([lat, lng]).addTo(map);
+    mainMarker.bindPopup(`
+        <div style="text-align: center; padding: 10px;">
+            <strong style="color: #003087; font-size: 1.1rem;">{{ accident.incident_type|escapejs }}</strong><br>
+            <div style="margin-top: 8px; color: #666;">
+                <i class="fas fa-calendar"></i> {{ accident.date_committed|date:"M d, Y"|escapejs }}<br>
+                <i class="fas fa-clock"></i> {{ accident.time_committed|time:"g:i A"|escapejs }}<br>
+                <i class="fas fa-map-marker-alt"></i> {{ accident.barangay|escapejs }}, {{ accident.municipal|escapejs }}
+            </div>
+        </div>
+    `).openPopup();
+    
+    // Add nearby accidents markers
+    {% if nearby_accidents %}
+    const nearbyAccidents = [
+        {% for nearby in nearby_accidents %}
+        {
+            lat: {{ nearby.latitude }},
+            lng: {{ nearby.longitude }},
+            id: {{ nearby.pk }},
+            type: "{{ nearby.incident_type|escapejs }}",
+            date: "{{ nearby.date_committed|date:'M d, Y'|escapejs }}",
+            location: "{{ nearby.barangay|escapejs }}, {{ nearby.municipal|escapejs }}",
+            fatal: {{ nearby.victim_killed|yesno:"true,false" }},
+            injured: {{ nearby.victim_injured|yesno:"true,false" }}
+        },
+        {% endfor %}
+    ];
+    
+    nearbyAccidents.forEach(accident => {
+        const marker = L.circleMarker([accident.lat, accident.lng], {
+            radius: 8,
+            fillColor: accident.fatal ? '#DC143C' : accident.injured ? '#FFA500' : '#6C757D',
+            color: 'white',
+            weight: 2,
+            opacity: 0.8,
+            fillOpacity: 0.6
+        }).addTo(map);
+        
+        marker.bindPopup(`
+            <div style="text-align: center; padding: 8px;">
+                <strong style="color: #003087;">${accident.type}</strong><br>
+                <div style="margin-top: 5px; font-size: 0.9rem; color: #666;">
+                    ${accident.date}<br>
+                    ${accident.location}
+                </div>
+                <a href="/accidents/${accident.id}/" style="display: inline-block; margin-top: 8px; color: #003087; font-weight: 600; text-decoration: none;">
+                    View Details →
+                </a>
+            </div>
+        `);
+    });
+    {% endif %}
+    
+    // Add circle showing 5km radius
+    L.circle([lat, lng], {
+        color: '#003087',
+        fillColor: '#003087',
+        fillOpacity: 0.05,
+        radius: 5000 // 5km in meters
+    }).addTo(map);
+});
+</script>
+{% endblock %}

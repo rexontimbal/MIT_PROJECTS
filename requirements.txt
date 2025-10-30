@@ -1,0 +1,33 @@
+# Django and Core
+Django==5.0.6
+psycopg2-binary==2.9.9
+
+# GIS Support - REMOVE THESE TWO LINES
+# django-leaflet==0.30.1
+# folium==0.17.0
+
+# Data Science & Clustering
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.5.0
+scipy==1.13.1
+
+# API & Serialization
+djangorestframework==3.15.1
+django-cors-headers==4.3.1
+
+# Image handling
+Pillow==10.3.0
+
+# Data import/export
+openpyxl==3.1.2
+
+# Environment management
+python-decouple==3.8
+
+# Date/Time utilities
+python-dateutil==2.9.0
+
+# For production (optional)
+gunicorn==22.0.0
+whitenoise==6.6.0

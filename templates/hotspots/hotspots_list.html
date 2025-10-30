@@ -1,0 +1,1139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accident Hotspots{% endblock %}
+
+{% block breadcrumb_items %}
+<span> / Hotspots</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hotspots-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .hotspots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .hotspot-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        transition: var(--transition);
+        border-left: 4px solid var(--primary-red);
+        position: relative;
+    }
+
+    .hotspot-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-3px);
+    }
+
+    .hotspot-header {
+        background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+        color: white;
+        padding: 1.5rem;
+        position: relative;
+    }
+
+    .hotspot-rank {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.3);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .hotspot-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .hotspot-body {
+        padding: 1.5rem;
+    }
+
+    .hotspot-stat {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .hotspot-stat:last-child {
+        border-bottom: none;
+    }
+
+    .stat-label {
+        color: var(--text-medium);
+        font-size: 0.9rem;
+    }
+
+    .stat-value {
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    .severity-meter {
+        margin-top: 1rem;
+    }
+
+    .severity-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .severity-bar {
+        height: 10px;
+        background: var(--bg-light);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .severity-fill {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+    }
+
+    .severity-low { background: linear-gradient(90deg, #28A745, #5CB85C); }
+    .severity-medium { background: linear-gradient(90deg, #FFA500, #FFB84D); }
+    .severity-high { background: linear-gradient(90deg, #DC143C, #FF6B6B); }
+
+    .hotspot-actions {
+        padding: 1rem 1.5rem;
+        background: var(--bg-light);
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    /* Enhanced Filters Section */
+    .filters-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+    }
+
+    .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-group label {
+        font-weight: 500;
+        color: var(--text-dark);
+        font-size: 0.9rem;
+    }
+
+    .filter-group select, .filter-group input {
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: var(--transition);
+    }
+
+    .filter-group select:focus, .filter-group input:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.1);
+    }
+
+    .active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .filter-tag {
+        background: var(--light-blue);
+        color: var(--primary-blue);
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-tag button {
+        background: none;
+        border: none;
+        color: var(--primary-blue);
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        text-align: center;
+        transition: var(--transition);
+    }
+
+    .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .summary-card h3 {
+        font-size: 2rem;
+        color: var(--primary-blue);
+        margin-bottom: 0.5rem;
+    }
+
+    .summary-card p {
+        color: var(--text-medium);
+        font-size: 0.9rem;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        padding: 0.5rem 1rem;
+        background: var(--light-blue);
+        color: var(--primary-blue);
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: var(--transition);
+    }
+
+    .action-btn:hover {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    /* Loading States */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid var(--primary-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Empty State */
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Tooltip for municipality names */
+    .municipality-hover {
+        cursor: help;
+        position: relative;
+        border-bottom: 1px dotted var(--text-medium);
+    }
+
+    .municipality-hover:hover {
+        color: var(--primary-blue);
+    }
+
+    .info-icon {
+        font-size: 0.75rem;
+        opacity: 0.5;
+        margin-left: 0.25rem;
+    }
+
+    .municipality-hover:hover .info-icon {
+        opacity: 1;
+    }
+
+    .municipality-hover::after {
+        content: attr(data-municipalities);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--dark-navy);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        z-index: 100;
+        margin-bottom: 0.5rem;
+    }
+
+    .municipality-hover:hover::after {
+        opacity: 1;
+    }
+
+    .municipality-hover::before {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: var(--dark-navy);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        z-index: 100;
+    }
+
+    .municipality-hover:hover::before {
+        opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+        .hotspots-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .hotspots-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Enhanced Search & Stats */
+    .stats-search-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* View Toggle */
+    .view-toggle {
+        display: flex;
+        background: var(--bg-light);
+        border-radius: 8px;
+        padding: 0.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .view-option {
+        flex: 1;
+        padding: 0.5rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: var(--transition);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .view-option.active {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    /* Grid vs List View */
+    .hotspots-grid.view-list {
+        grid-template-columns: 1fr;
+    }
+
+    .hotspot-card.view-list {
+        display: flex;
+        min-height: auto;
+    }
+
+    .hotspot-card.view-list .hotspot-header {
+        flex: 0 0 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .hotspot-card.view-list .hotspot-body {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .hotspot-card.view-list .hotspot-actions {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .hotspot-card.view-list .severity-meter {
+        margin-top: 0;
+    }
+
+    /* Risk Level Badges */
+    .risk-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .risk-critical { background: #DC143C; color: white; }
+    .risk-high { background: #FFA500; color: white; }
+    .risk-medium { background: #FFB84D; color: #333; }
+    .risk-low { background: #28A745; color: white; }
+
+    /* Progress Indicators */
+    .progress-indicators {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .progress-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--border-color);
+    }
+
+    .progress-dot.active {
+        background: var(--primary-blue);
+    }
+
+
+    .search-info.show {
+        display: block;
+    }
+
+    /* No Results State */
+    .no-results {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        margin: 1rem 0;
+    }
+
+    .no-results h4 {
+        color: var(--text-medium);
+        margin-bottom: 1rem;
+    }
+
+    .no-results p {
+        color: var(--text-light);
+        margin-bottom: 0.5rem;
+    }
+
+    /* Quick Stats */
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-item-small {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: var(--shadow-sm);
+        text-align: center;
+    }
+
+    .stat-item-small .value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        display: block;
+    }
+
+    .stat-item-small .label {
+        font-size: 0.8rem;
+        color: var(--text-light);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hotspots-header">
+    <div>
+        <h2>🔴 Accident Hotspots</h2>
+        <p>High-risk areas identified by AGNES clustering algorithm • {{ hotspots.count }} hotspots detected</p>
+    </div>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn btn-outline" onclick="window.location.href='{% url 'map_view' %}'">
+            <span>🗺️</span> View on Map
+        </button>
+        <button class="btn btn-primary" onclick="exportHotspots()">
+            <span>📥</span> Export Report
+        </button>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <button class="action-btn" onclick="filterBySeverity('high')">🔴 High Severity Only</button>
+    <button class="action-btn" onclick="filterBySeverity('critical')">💀 Critical Only</button>
+    <button class="action-btn" onclick="showAllHotspots()">📊 Show All</button>
+    <button class="action-btn" onclick="sortByAccidents()">📈 Sort by Accidents</button>
+    <button class="action-btn" onclick="sortBySeverity()">⚡ Sort by Severity</button>
+</div>
+
+<!-- View Toggle & Progress -->
+<div class="view-toggle">
+    <div class="view-option active" onclick="switchView('grid')">📊 Grid View</div>
+    <div class="view-option" onclick="switchView('list')">📋 List View</div>
+</div>
+
+
+<!-- Summary Cards -->
+<div class="summary-cards">
+    <div class="summary-card">
+        <h3 id="totalHotspots">{{ hotspots.count }}</h3>
+        <p>Total Hotspots</p>
+    </div>
+    <div class="summary-card">
+        <h3 id="totalAccidents">{{ total_accidents }}</h3>
+        <p>Accidents in Hotspots</p>
+    </div>
+    <div class="summary-card">
+        <h3 id="totalCasualties">{{ total_casualties }}</h3>
+        <p>Total Casualties</p>
+    </div>
+    <div class="summary-card">
+        <h3 id="criticalCount">{{ critical_count }}</h3>
+        <p>Critical Hotspots</p>
+    </div>
+</div>
+
+<!-- Enhanced Filters -->
+<div class="filters-section">
+    <div class="filters-header">
+        <h3 style="margin: 0;">Filter Hotspots</h3>
+        <button type="button" class="btn btn-outline btn-sm" onclick="clearAllFilters()">
+            Clear All Filters
+        </button>
+    </div>
+    
+    <form method="get" class="filters-grid" id="hotspotFilters">
+        <div class="filter-group">
+            <label for="province">Province</label>
+            <select name="province" id="province" onchange="applyFilters()">
+                <option value="">All Provinces</option>
+                {% for prov in provinces %}
+                <option value="{{ prov }}" {% if request.GET.province == prov %}selected{% endif %}>{{ prov }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="min_severity">Minimum Severity</label>
+            <select name="min_severity" id="min_severity" onchange="applyFilters()">
+                <option value="">All Levels</option>
+                <option value="70" {% if request.GET.min_severity == '70' %}selected{% endif %}>Critical (70+)</option>
+                <option value="50" {% if request.GET.min_severity == '50' %}selected{% endif %}>High (50+)</option>
+                <option value="30" {% if request.GET.min_severity == '30' %}selected{% endif %}>Medium (30+)</option>
+                <option value="0" {% if request.GET.min_severity == '0' %}selected{% endif %}>Low (0+)</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="min_accidents">Minimum Accidents</label>
+            <select name="min_accidents" id="min_accidents" onchange="applyFilters()">
+                <option value="">All Sizes</option>
+                <option value="50" {% if request.GET.min_accidents == '50' %}selected{% endif %}>50+ accidents</option>
+                <option value="20" {% if request.GET.min_accidents == '20' %}selected{% endif %}>20+ accidents</option>
+                <option value="10" {% if request.GET.min_accidents == '10' %}selected{% endif %}>10+ accidents</option>
+                <option value="5" {% if request.GET.min_accidents == '5' %}selected{% endif %}>5+ accidents</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="municipality">Municipality</label>
+            <select name="municipality" id="municipality" onchange="applyFilters()">
+                <option value="">All Municipalities</option>
+                {% for mun in municipalities %}
+                <option value="{{ mun }}" {% if request.GET.municipality == mun %}selected{% endif %}>{{ mun }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+    
+    <!-- Active Filters Display -->
+    <div class="active-filters" id="activeFilters">
+        <!-- Active filters will be displayed here dynamically -->
+    </div>
+</div>
+
+<!-- Hotspots Grid -->
+<div class="hotspots-grid" id="hotspotsContainer">
+    {% for hotspot in hotspots %}
+    <div class="hotspot-card"
+        data-severity="{{ hotspot.severity_score }}" 
+        data-accidents="{{ hotspot.accident_count }}" 
+        data-province="{{ hotspot.municipalities|join:',' }}"
+        data-municipalities="{{ hotspot.municipalities|join:', ' }}"
+        data-cluster="{{ hotspot.cluster_id }}"
+        data-location="{{ hotspot.primary_location }}">
+        <div class="hotspot-header">
+            <span class="hotspot-rank">
+                {% if hotspot.severity_score >= 70 %}💀{% elif hotspot.severity_score >= 50 %}🔴{% else %}⚠️{% endif %}
+                Rank #{{ forloop.counter }}
+            </span>
+            <h3 class="hotspot-title">{{ hotspot.primary_location }}</h3>
+            <div style="margin-top: 0.5rem;">
+                <span class="risk-badge {% if hotspot.severity_score >= 70 %}risk-critical{% elif hotspot.severity_score >= 50 %}risk-high{% elif hotspot.severity_score >= 30 %}risk-medium{% else %}risk-low{% endif %}">
+                    {% if hotspot.severity_score >= 70 %}CRITICAL
+                    {% elif hotspot.severity_score >= 50 %}HIGH
+                    {% elif hotspot.severity_score >= 30 %}MEDIUM
+                    {% else %}LOW{% endif %} RISK
+                </span>
+            </div>
+        </div>
+        
+        <div class="hotspot-body">
+            <div class="hotspot-stat">
+                <span class="stat-label">Cluster ID</span>
+                <span class="stat-value">#{{ hotspot.cluster_id }}</span>
+            </div>
+            <div class="hotspot-stat">
+                <span class="stat-label">Total Accidents</span>
+                <span class="stat-value">{{ hotspot.accident_count }}</span>
+            </div>
+            <div class="hotspot-stat">
+                <span class="stat-label">Total Casualties</span>
+                <span class="stat-value">{{ hotspot.total_casualties }}</span>
+            </div>
+            <div class="hotspot-stat">
+                <span class="stat-label">Fatal Accidents</span>
+                <span class="stat-value" style="color: #DC143C;">
+                    {{ hotspot.killed_count|default:"0" }}
+                </span>
+            </div>
+            <div class="hotspot-stat">
+                <span class="stat-label">Coverage</span>
+                <span class="stat-value municipality-hover" 
+                      data-municipalities="{{ hotspot.municipalities|join:', ' }}">
+                    <strong>{{ hotspot.municipalities|length }}</strong> municipalities
+                    <span class="info-icon">ℹ️</span>
+                </span>
+            </div>
+            
+            <div class="severity-meter">
+                <div class="severity-label">
+                    <span>Severity Score</span>
+                    <strong>{{ hotspot.severity_score|floatformat:1 }}/100</strong>
+                </div>
+                <div class="severity-bar">
+                    <div class="severity-fill {% if hotspot.severity_score >= 70 %}severity-high{% elif hotspot.severity_score >= 40 %}severity-medium{% else %}severity-low{% endif %}" 
+                         style="width: {{ hotspot.severity_score }}%">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="hotspot-actions">
+            <a href="{% url 'hotspot_detail' hotspot.cluster_id %}" class="btn btn-primary btn-sm">
+                View Details
+            </a>
+            <button class="btn btn-outline btn-sm" onclick="viewOnMap({{ hotspot.center_latitude }}, {{ hotspot.center_longitude }})">
+                Show on Map
+            </button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <h3>No hotspots found</h3>
+        <p>Try running the clustering algorithm or adjusting your filters.</p>
+        <button class="btn btn-primary" onclick="window.location.href='/admin/accidents/clusteringjob/'">
+            Run Clustering
+        </button>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center;">
+        <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
+        <p>Loading hotspots...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        updateActiveFilters();
+        initializeHotspotCards();
+    });
+
+    // Enhanced filtering functions
+    function applyFilters() {
+        showLoading();
+        document.getElementById('hotspotFilters').submit();
+    }
+
+    function clearAllFilters() {
+        window.location.href = '{% url "hotspots" %}';
+    }
+
+    function filterBySeverity(level) {
+        let minSeverity = 0;
+        switch(level) {
+            case 'critical': minSeverity = 70; break;
+            case 'high': minSeverity = 50; break;
+            case 'medium': minSeverity = 30; break;
+        }
+        window.location.href = `{% url "hotspots" %}?min_severity=${minSeverity}`;
+    }
+
+    function showAllHotspots() {
+        window.location.href = '{% url "hotspots" %}';
+    }
+
+    function sortByAccidents() {
+        // This would require backend implementation
+        // For now, we'll do client-side sorting
+        const container = document.getElementById('hotspotsContainer');
+        const cards = Array.from(container.getElementsByClassName('hotspot-card'));
+        
+        cards.sort((a, b) => {
+            const aAccidents = parseInt(a.getAttribute('data-accidents'));
+            const bAccidents = parseInt(b.getAttribute('data-accidents'));
+            return bAccidents - aAccidents;
+        });
+        
+        cards.forEach(card => container.appendChild(card));
+        showNotification('Sorted by accident count', 'info');
+    }
+
+    function sortBySeverity() {
+        const container = document.getElementById('hotspotsContainer');
+        const cards = Array.from(container.getElementsByClassName('hotspot-card'));
+        
+        cards.sort((a, b) => {
+            const aSeverity = parseFloat(a.getAttribute('data-severity'));
+            const bSeverity = parseFloat(b.getAttribute('data-severity'));
+            return bSeverity - aSeverity;
+        });
+        
+        cards.forEach(card => container.appendChild(card));
+        showNotification('Sorted by severity score', 'info');
+    }
+
+    function updateActiveFilters() {
+        const activeFilters = document.getElementById('activeFilters');
+        const params = new URLSearchParams(window.location.search);
+        let activeFiltersHTML = '';
+        
+        if (params.get('province')) {
+            activeFiltersHTML += `<div class="filter-tag">
+                Province: ${params.get('province')}
+                <button onclick="removeFilter('province')">×</button>
+            </div>`;
+        }
+        
+        if (params.get('min_severity')) {
+            const severity = params.get('min_severity');
+            let level = 'All';
+            if (severity === '70') level = 'Critical (70+)';
+            else if (severity === '50') level = 'High (50+)';
+            else if (severity === '30') level = 'Medium (30+)';
+            else if (severity === '0') level = 'Low (0+)';
+            
+            activeFiltersHTML += `<div class="filter-tag">
+                Min Severity: ${level}
+                <button onclick="removeFilter('min_severity')">×</button>
+            </div>`;
+        }
+        
+        if (params.get('min_accidents')) {
+            activeFiltersHTML += `<div class="filter-tag">
+                Min Accidents: ${params.get('min_accidents')}+
+                <button onclick="removeFilter('min_accidents')">×</button>
+            </div>`;
+        }
+        
+        if (params.get('municipality')) {
+            activeFiltersHTML += `<div class="filter-tag">
+                Municipality: ${params.get('municipality')}
+                <button onclick="removeFilter('municipality')">×</button>
+            </div>`;
+        }
+        
+        activeFilters.innerHTML = activeFiltersHTML;
+    }
+
+    function removeFilter(filterName) {
+        const url = new URL(window.location);
+        url.searchParams.delete(filterName);
+        window.location.href = url.toString();
+    }
+
+    function initializeHotspotCards() {
+        // Add click handlers for interactive elements
+        const cards = document.getElementsByClassName('hotspot-card');
+        Array.from(cards).forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (!e.target.closest('.hotspot-actions')) {
+                    const clusterId = this.querySelector('.stat-value').textContent.replace('#', '');
+                    window.location.href = `/hotspots/${clusterId}/`;
+                }
+            });
+        });
+    }
+
+    function viewOnMap(lat, lng) {
+        window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=13`;
+    }
+
+    function exportHotspots() {
+        const data = [
+            {% for hotspot in hotspots %}
+            {
+                'Rank': {{ forloop.counter }},
+                'Cluster ID': {{ hotspot.cluster_id }},
+                'Location': '{{ hotspot.primary_location }}',
+                'Accidents': {{ hotspot.accident_count }},
+                'Casualties': {{ hotspot.total_casualties }},
+                'Fatal Accidents': {{ hotspot.killed_count|default:0 }},
+                'Severity': {{ hotspot.severity_score|floatformat:1 }},
+                'Municipalities': '{{ hotspot.municipalities|join:", " }}',
+                'Latitude': {{ hotspot.center_latitude }},
+                'Longitude': {{ hotspot.center_longitude }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        if (typeof AGNESSystem !== 'undefined') {
+            AGNESSystem.exportToCSV(data, 'accident_hotspots_report.csv');
+            AGNESSystem.showNotification('Hotspots exported successfully', 'success');
+        } else {
+            // Fallback export
+            const csv = convertToCSV(data);
+            downloadCSV(csv, 'accident_hotspots_report.csv');
+        }
+    }
+
+    function refreshHotspots() {
+        const btn = document.getElementById('refreshBtn');
+        btn.innerHTML = '<span class="loading-spinner"></span> Refreshing...';
+        btn.disabled = true;
+        
+        // Simulate refresh - in real implementation, this would reload from server
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    }
+
+    function showLoading() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    function showNotification(message, type = 'info') {
+        if (typeof AGNESSystem !== 'undefined' && AGNESSystem.showNotification) {
+            AGNESSystem.showNotification(message, type);
+        } else {
+            alert(message);
+        }
+    }
+
+    // Utility functions for CSV export
+    function convertToCSV(data) {
+        if (!data || data.length === 0) return '';
+        
+        const headers = Object.keys(data[0]);
+        const csvRows = [headers.join(',')];
+        
+        for (const row of data) {
+            const values = headers.map(header => {
+                const value = row[header];
+                return `"${value}"`;
+            });
+            csvRows.push(values.join(','));
+        }
+        
+        return csvRows.join('\n');
+    }
+
+    function downloadCSV(csv, filename) {
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+
+    
+    function showNoResultsMessage(searchTerm) {
+        let noResultsDiv = document.getElementById('noResultsMessage');
+        if (!noResultsDiv) {
+            noResultsDiv = document.createElement('div');
+            noResultsDiv.id = 'noResultsMessage';
+            noResultsDiv.className = 'no-results';
+            noResultsDiv.innerHTML = `
+                <h4>🔍 No hotspots found</h4>
+                <p>No hotspots match "<strong>${searchTerm}</strong>"</p>
+                <p style="font-size: 0.9rem; color: var(--text-light); margin-top: 0.5rem;">
+                    Try searching by location name, cluster ID, or municipality
+                </p>
+            `;
+            document.getElementById('hotspotsContainer').appendChild(noResultsDiv);
+        } else {
+            noResultsDiv.innerHTML = `
+                <h4>🔍 No hotspots found</h4>
+                <p>No hotspots match "<strong>${searchTerm}</strong>"</p>
+                <p style="font-size: 0.9rem; color: var(--text-light); margin-top: 0.5rem;">
+                    Try searching by location name, cluster ID, or municipality
+                </p>
+            `;
+        }
+    }
+    
+    function hideNoResultsMessage() {
+        const noResultsDiv = document.getElementById('noResultsMessage');
+        if (noResultsDiv) {
+            noResultsDiv.remove();
+        }
+    }
+    
+    function clearSearch() {
+        document.getElementById('hotspotSearch').value = '';
+        const cards = document.getElementsByClassName('hotspot-card');
+        Array.from(cards).forEach(card => {
+            card.style.display = '';
+        });
+        
+        const searchInfo = document.getElementById('searchInfo');
+        searchInfo.classList.remove('show');
+        hideNoResultsMessage();
+        updateRealTimeStats();
+    }
+    
+    // View Switching 
+    function switchView(viewType) {
+        const container = document.getElementById('hotspotsContainer');
+        const cards = container.getElementsByClassName('hotspot-card');
+        const options = document.querySelectorAll('.view-option');
+        
+        // Update active button
+        options.forEach(opt => opt.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        // Switch view
+        container.className = 'hotspots-grid';
+        if (viewType === 'list') {
+            container.classList.add('view-list');
+            Array.from(cards).forEach(card => card.classList.add('view-list'));
+        } else {
+            // Grid view
+            Array.from(cards).forEach(card => card.classList.remove('view-list'));
+        }
+        
+        updateRealTimeStats();
+    }
+    
+    // Real-time Statistics 
+    function updateRealTimeStats() {
+        const visibleCards = Array.from(document.getElementsByClassName('hotspot-card'))
+            .filter(card => card.style.display !== 'none');
+        
+        let totalFatal = 0;
+        let totalInjured = 0;
+        let totalSeverity = 0;
+        
+        visibleCards.forEach(card => {
+            const severity = parseFloat(card.getAttribute('data-severity'));
+            const accidents = parseInt(card.getAttribute('data-accidents'));
+            
+            // Estimate fatal/injured based on severity
+            const fatalEstimate = Math.round(accidents * (severity / 100) * 0.3);
+            const injuredEstimate = Math.round(accidents * (severity / 100) * 0.6);
+            
+            totalFatal += fatalEstimate;
+            totalInjured += injuredEstimate;
+            totalSeverity += severity;
+        });
+        
+        const avgSeverity = visibleCards.length > 0 ? (totalSeverity / visibleCards.length).toFixed(1) : 0;
+        
+        // Update only the real-time stats display (not redundant ones)
+        document.getElementById('realTimeFatal').textContent = totalFatal;
+        document.getElementById('realTimeInjured').textContent = totalInjured;
+        document.getElementById('realTimeAvgSeverity').textContent = avgSeverity;
+    }
+    
+            
+    // Risk Analysis
+    function analyzeRiskPatterns() {
+        const cards = Array.from(document.getElementsByClassName('hotspot-card'));
+        const severityScores = cards.map(card => parseFloat(card.getAttribute('data-severity')));
+        
+        if (severityScores.length === 0) return;
+        
+        const avgSeverity = severityScores.reduce((a, b) => a + b) / severityScores.length;
+        const maxSeverity = Math.max(...severityScores);
+        const highRiskPercentage = (severityScores.filter(s => s >= 50).length / severityScores.length * 100).toFixed(1);
+        
+        showNotification(
+            `Risk Analysis: Avg Severity ${avgSeverity.toFixed(1)}, ${highRiskPercentage}% High Risk Areas`, 
+            'info'
+        );
+    }
+    
+    // Export Enhanced Data
+    function exportEnhancedReport() {
+        const visibleCards = Array.from(document.getElementsByClassName('hotspot-card'))
+            .filter(card => card.style.display !== 'none');
+        
+        const data = visibleCards.map(card => {
+            const severity = parseFloat(card.getAttribute('data-severity'));
+            const accidents = parseInt(card.getAttribute('data-accidents'));
+            const location = card.querySelector('.hotspot-title').textContent;
+            const clusterId = card.querySelector('.stat-value').textContent.replace('#', '');
+            
+            return {
+                'Cluster ID': clusterId,
+                'Location': location,
+                'Accidents': accidents,
+                'Severity': severity,
+                'Risk Level': severity >= 70 ? 'CRITICAL' : severity >= 50 ? 'HIGH' : severity >= 30 ? 'MEDIUM' : 'LOW',
+                'Estimated Fatal': Math.round(accidents * (severity / 100) * 0.3),
+                'Estimated Injured': Math.round(accidents * (severity / 100) * 0.6),
+                'Priority': severity >= 70 ? 'URGENT' : severity >= 50 ? 'HIGH' : 'MEDIUM'
+            };
+        });
+        
+        if (typeof AGNESSystem !== 'undefined') {
+            AGNESSystem.exportToCSV(data, 'enhanced_hotspots_analysis.csv');
+            AGNESSystem.showNotification('Enhanced report exported successfully', 'success');
+        }
+    }
+    
+    // Initialize enhanced features when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        updateActiveFilters();
+        initializeHotspotCards();
+        updateRealTimeStats(); // Initialize stats
+        
+        // Add risk analysis button to quick actions
+        const quickActions = document.querySelector('.quick-actions');
+        if (quickActions) {
+            const riskBtn = document.createElement('button');
+            riskBtn.className = 'action-btn';
+            riskBtn.innerHTML = '📊 Risk Analysis';
+            riskBtn.onclick = analyzeRiskPatterns;
+            quickActions.appendChild(riskBtn);
+            
+            const exportBtn = document.createElement('button');
+            exportBtn.className = 'action-btn';
+            exportBtn.innerHTML = '📈 Enhanced Export';
+            exportBtn.onclick = exportEnhancedReport;
+            quickActions.appendChild(exportBtn);
+        }
+    });
+
+
+    // Debug function to check what data is available
+    function debugSearch() {
+        const cards = document.getElementsByClassName('hotspot-card');
+        console.log('Total cards found:', cards.length);
+        
+        Array.from(cards).forEach((card, index) => {
+            const location = card.querySelector('.hotspot-title').textContent;
+            const clusterId = card.querySelector('.stat-value').textContent;
+            const municipalities = card.getAttribute('data-municipalities');
+            
+            console.log(`Card ${index + 1}:`, {
+                location: location,
+                clusterId: clusterId,
+                municipalities: municipalities
+            });
+        });
+    }
+    
+    // Call this temporarily to check the data
+    document.addEventListener('DOMContentLoaded', function() {
+        // debugSearch(); // Uncomment to see debug info in console
+    });
+</script>
+{% endblock %}

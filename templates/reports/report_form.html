@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Report New Accident{% endblock %}
+
+{% block breadcrumb_items %}
+<span> / Report Accident</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-form-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .form-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+    }
+
+    .form-section h3 {
+        color: var(--primary-blue);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--light-blue);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-dark);
+    }
+
+    .form-group label.required::after {
+        content: ' *';
+        color: var(--danger-red);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: var(--transition);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.1);
+    }
+
+    .form-control.error {
+        border-color: var(--danger-red);
+    }
+
+    .location-picker {
+        height: 400px;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .help-text {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        margin-top: 0.25rem;
+    }
+
+    .photo-upload {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .photo-upload-item {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .photo-upload {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-form-container">
+    <div class="page-header">
+        <h2>📝 Report New Accident</h2>
+        <p>Fill in the details below to report a traffic accident</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="accidentReportForm">
+        {% csrf_token %}
+
+        <!-- Reporter Information -->
+        <div class="form-section">
+            <h3>👤 Reporter Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_reporter_name" class="required">Full Name</label>
+                    {{ form.reporter_name }}
+                    {% if form.reporter_name.errors %}
+                        <span class="help-text" style="color: var(--danger-red);">{{ form.reporter_name.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_reporter_contact" class="required">Contact Number/Email</label>
+                    {{ form.reporter_contact }}
+                    {% if form.reporter_contact.errors %}
+                        <span class="help-text" style="color: var(--danger-red);">{{ form.reporter_contact.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Incident Date & Time -->
+        <div class="form-section">
+            <h3>📅 When Did It Happen?</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_incident_date" class="required">Date of Incident</label>
+                    {{ form.incident_date }}
+                </div>
+                <div class="form-group">
+                    <label for="id_incident_time" class="required">Time of Incident</label>
+                    {{ form.incident_time }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Information -->
+        <div class="form-section">
+            <h3>📍 Where Did It Happen?</h3>
+            
+            <div class="form-group">
+                <label class="required">Click on the map to set location</label>
+                <div id="locationPicker" class="location-picker"></div>
+                <p class="help-text">Click on the map to pinpoint the exact location of the accident</p>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_latitude" class="required">Latitude</label>
+                    {{ form.latitude }}
+                </div>
+                <div class="form-group">
+                    <label for="id_longitude" class="required">Longitude</label>
+                    {{ form.longitude }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_province" class="required">Province</label>
+                    {{ form.province }}
+                </div>
+                <div class="form-group">
+                    <label for="id_municipal" class="required">Municipality/City</label>
+                    {{ form.municipal }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_barangay" class="required">Barangay</label>
+                    {{ form.barangay }}
+                </div>
+                <div class="form-group">
+                    <label for="id_street_address">Street/Landmark</label>
+                    {{ form.street_address }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Incident Details -->
+        <div class="form-section">
+            <h3>📋 What Happened?</h3>
+            <div class="form-group">
+                <label for="id_incident_description" class="required">Incident Description</label>
+                {{ form.incident_description }}
+                <p class="help-text">Describe the accident in detail (what vehicles were involved, how it happened, etc.)</p>
+            </div>
+        </div>
+
+        <!-- Casualties -->
+        <div class="form-section">
+            <h3>⚕️ Casualties</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_casualties_killed">Number Kille
+                        <label for="id_casualties_killed">Number Killed</label>
+                    {{ form.casualties_killed }}
+                </div>
+                <div class="form-group">
+                    <label for="id_casualties_injured">Number Injured</label>
+                    {{ form.casualties_injured }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicle Information -->
+        <div class="form-section">
+            <h3>🚗 Vehicle Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_vehicle_type_1">Vehicle 1 Type</label>
+                    {{ form.vehicle_type_1 }}
+                </div>
+                <div class="form-group">
+                    <label for="id_vehicle_plate_1">Vehicle 1 Plate Number</label>
+                    {{ form.vehicle_plate_1 }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_vehicle_type_2">Vehicle 2 Type (if any)</label>
+                    {{ form.vehicle_type_2 }}
+                </div>
+                <div class="form-group">
+                    <label for="id_vehicle_plate_2">Vehicle 2 Plate Number</label>
+                    {{ form.vehicle_plate_2 }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo Upload -->
+        <div class="form-section">
+            <h3>📷 Photos (Optional)</h3>
+            <div class="photo-upload">
+                <div class="photo-upload-item">
+                    <div class="form-group">
+                        <label for="id_photo_1">Photo 1</label>
+                        {{ form.photo_1 }}
+                    </div>
+                </div>
+                <div class="photo-upload-item">
+                    <div class="form-group">
+                        <label for="id_photo_2">Photo 2</label>
+                        {{ form.photo_2 }}
+                    </div>
+                </div>
+                <div class="photo-upload-item">
+                    <div class="form-group">
+                        <label for="id_photo_3">Photo 3</label>
+                        {{ form.photo_3 }}
+                    </div>
+                </div>
+            </div>
+            <p class="help-text">Upload up to 3 photos of the accident scene (optional)</p>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <a href="{% url 'dashboard' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <span>📝</span> Submit Report
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let locationMap;
+    let locationMarker;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeLocationPicker();
+        setupFormValidation();
+    });
+
+    function initializeLocationPicker() {
+        // Initialize map centered on Caraga Region
+        locationMap = L.map('locationPicker').setView([9.0, 125.5], 9);
+
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(locationMap);
+
+        // Add click handler to map
+        locationMap.on('click', function(e) {
+            setLocation(e.latlng.lat, e.latlng.lng);
+        });
+
+        // Check if there's already a location set
+        const lat = document.getElementById('id_latitude').value;
+        const lng = document.getElementById('id_longitude').value;
+        
+        if (lat && lng) {
+            setLocation(parseFloat(lat), parseFloat(lng));
+        }
+    }
+
+    function setLocation(lat, lng) {
+        // Validate coordinates are within Caraga Region
+        const validation = AGNESSystem.validateCoordinates(lat, lng);
+        if (!validation.valid) {
+            AGNESSystem.showNotification(validation.message, 'error');
+            return;
+        }
+
+        // Update form fields
+        document.getElementById('id_latitude').value = lat.toFixed(6);
+        document.getElementById('id_longitude').value = lng.toFixed(6);
+
+        // Remove existing marker if any
+        if (locationMarker) {
+            locationMap.removeLayer(locationMarker);
+        }
+
+        // Add new marker
+        locationMarker = L.marker([lat, lng], {
+            draggable: true
+        }).addTo(locationMap);
+
+        // Make marker draggable
+        locationMarker.on('dragend', function(e) {
+            const pos = e.target.getLatLng();
+            setLocation(pos.lat, pos.lng);
+        });
+
+        // Center map on marker
+        locationMap.setView([lat, lng], 13);
+
+        // Try to get address from coordinates (reverse geocoding)
+        reverseGeocode(lat, lng);
+    }
+
+    function reverseGeocode(lat, lng) {
+        // Use Nominatim API for reverse geocoding
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.address) {
+                    // Auto-fill address fields if empty
+                    const municipal = document.getElementById('id_municipal');
+                    const barangay = document.getElementById('id_barangay');
+                    const street = document.getElementById('id_street_address');
+
+                    if (!municipal.value && data.address.city) {
+                        municipal.value = data.address.city || data.address.municipality || '';
+                    }
+
+                    if (!barangay.value && data.address.suburb) {
+                        barangay.value = data.address.suburb || '';
+                    }
+
+                    if (!street.value && data.address.road) {
+                        street.value = data.address.road || '';
+                    }
+                }
+            })
+            .catch(error => {
+                console.log('Could not get address:', error);
+            });
+    }
+
+    function setupFormValidation() {
+        const form = document.getElementById('accidentReportForm');
+        
+        form.addEventListener('submit', function(e) {
+            // Check if location is set
+            const lat = document.getElementById('id_latitude').value;
+            const lng = document.getElementById('id_longitude').value;
+
+            if (!lat || !lng) {
+                e.preventDefault();
+                AGNESSystem.showNotification('Please click on the map to set the accident location', 'error');
+                document.getElementById('locationPicker').scrollIntoView({ behavior: 'smooth' });
+                return false;
+            }
+
+            // Show loading
+            AGNESSystem.showNotification('Submitting report...', 'info');
+        });
+    }
+</script>
+{% endblock %}

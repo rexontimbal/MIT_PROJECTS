@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hotspot #{{ hotspot.cluster_id }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
+    
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #FFA500, #FF8C00); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+                <h1 style="margin: 0 0 0.5rem 0; font-size: 2.5rem;">🔴 {{ hotspot.primary_location }}</h1>
+                <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">Cluster #{{ hotspot.cluster_id }} • High-Risk Accident Zone</p>
+                <div style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px; display: inline-block; margin-top: 1rem;">
+                    <strong>Severity Score: {{ hotspot.severity_score|floatformat:1 }}/100</strong>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+                <button onclick="window.location.href='/map/?lat={{ hotspot.center_latitude }}&lng={{ hotspot.center_longitude }}&zoom=14'" 
+                        style="background: white; color: #003087; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    🗺️ View on Map
+                </button>
+                <button onclick="window.print()" 
+                        style="background: white; color: #003087; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    🖨️ Print Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        
+        <!-- Location Card -->
+        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="color: #003087; margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 2px solid #E8F0FE;">📍 Location Information</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                    <span style="color: #666;">Primary Location</span>
+                    <strong>{{ hotspot.primary_location }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                    <span style="color: #666;">Coordinates</span>
+                    <strong style="font-size: 0.85rem;">{{ hotspot.center_latitude|floatformat:4 }}°N, {{ hotspot.center_longitude|floatformat:4 }}°E</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                    <span style="color: #666;">Municipalities</span>
+                    <strong>{{ hotspot.municipalities|join:", " }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Card -->
+        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="color: #003087; margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 2px solid #E8F0FE;">📊 Accident Statistics</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                    <span style="color: #666;">Total Accidents</span>
+                    <strong style="color: #DC143C; font-size: 1.2rem;">{{ hotspot.accident_count }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                    <span style="color: #666;">Total Casualties</span>
+                    <strong>{{ hotspot.total_casualties }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                    <span style="color: #666;">Fatal Accidents</span>
+                    <strong style="color: #DC143C;">{{ total_killed }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                    <span style="color: #666;">Injury Accidents</span>
+                    <strong style="color: #FFA500;">{{ total_injured }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Period Card -->
+        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="color: #003087; margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 2px solid #E8F0FE;">📅 Time Period</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                    <span style="color: #666;">From</span>
+                    <strong>{{ hotspot.date_range_start|date:"M d, Y" }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                    <span style="color: #666;">To</span>
+                    <strong>{{ hotspot.date_range_end|date:"M d, Y" }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                    <span style="color: #666;">Duration</span>
+                    <strong>{{ date_span }} days</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                    <span style="color: #666;">Last Updated</span>
+                    <strong style="font-size: 0.85rem;">{{ hotspot.computed_at|date:"M d, Y" }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accident Trend Chart -->
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+        <h3 style="color: #003087; margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 2px solid #E8F0FE;">📈 Accident Trend Over Time (Last 12 Months)</h3>
+        <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Map -->
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+        <h3 style="color: #003087; margin: 0 0 1rem 0;">🗺️ Location Map</h3>
+        <div id="hotspotMap" style="height: 450px; border-radius: 8px;"></div>
+    </div>
+
+    <!-- Accidents Table -->
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #003087; margin: 0;">
+                📋 Accidents in This Hotspot 
+                {% if showing_count < total_accidents %}
+                    (Showing {{ showing_count }} of {{ total_accidents }})
+                {% else %}
+                    ({{ total_accidents }})
+                {% endif %}
+            </h3>
+            <a href="{% url 'hotspots' %}" style="padding: 0.5rem 1rem; background: #f0f0f0; color: #003087; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                ← Back to Hotspots
+            </a>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: #E8F0FE;">
+                    <tr>
+                        <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600;">Date</th>
+                        <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600;">Time</th>
+                        <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600;">Location</th>
+                        <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600;">Type</th>
+                        <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600;">Casualties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for accident in accidents %}
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 0.75rem;">{{ accident.date_committed|date:"M d, Y" }}</td>
+                        <td style="padding: 0.75rem;">{{ accident.time_committed|time:"g:i A" }}</td>
+                        <td style="padding: 0.75rem;">{{ accident.barangay }}, {{ accident.municipal }}</td>
+                        <td style="padding: 0.75rem; font-size: 0.85rem;">{{ accident.incident_type|truncatewords:5 }}</td>
+                        <td style="padding: 0.75rem;">
+                            {% if accident.victim_killed %}
+                                <span style="background: #FFE5E5; color: #DC143C; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem;">
+                                    {{ accident.victim_count }} killed
+                                </span>
+                            {% elif accident.victim_injured %}
+                                <span style="background: #FFF3CD; color: #856404; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem;">
+                                    {{ accident.victim_count }} injured
+                                </span>
+                            {% else %}
+                                {{ accident.victim_count }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="padding: 2rem; text-align: center; color: #666;">
+                            No accidents found in this hotspot.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div style="background: linear-gradient(135deg, #E8F0FE 0%, #F8F9FA 100%); padding: 1.5rem; border-radius: 12px; margin-top: 2rem; border-left: 4px solid #003087;">
+        <h3 style="color: #003087; margin: 0 0 1rem 0;">💡 Recommended Actions</h3>
+        <ul style="margin: 0; padding-left: 1.5rem; line-height: 2;">
+            <li><strong>Increase Patrol Frequency:</strong> Deploy traffic enforcers during peak hours</li>
+            <li><strong>Infrastructure Review:</strong> Assess road conditions, signage, and lighting in this area</li>
+            <li><strong>Speed Enforcement:</strong> Install speed cameras or conduct regular speed checks</li>
+            <li><strong>Public Awareness:</strong> Inform motorists about this high-risk location</li>
+            <li><strong>Multi-Agency Coordination:</strong> Work with {{ hotspot.municipalities|join:" and " }} for joint road safety initiatives</li>
+        </ul>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Trend Chart
+    createTrendChart();
+    
+    // Initialize Map
+    try {
+        const map = L.map('hotspotMap').setView([{{ hotspot.center_latitude }}, {{ hotspot.center_longitude }}], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(map);
+
+        const circle = L.circle([{{ hotspot.center_latitude }}, {{ hotspot.center_longitude }}], {
+            color: '#FFA500',
+            fillColor: '#FFA500',
+            fillOpacity: 0.3,
+            radius: {{ hotspot.accident_count }} * 30,
+            weight: 2
+        }).addTo(map);
+
+        circle.bindPopup(`
+            <div style="padding: 0.5rem;">
+                <strong>Hotspot #{{ hotspot.cluster_id }}</strong><br>
+                {{ hotspot.primary_location }}<br>
+                <strong>{{ hotspot.accident_count }}</strong> accidents<br>
+                Severity: <strong>{{ hotspot.severity_score|floatformat:1 }}</strong>/100
+            </div>
+        `);
+
+        console.log('Map loaded successfully');
+    } catch (error) {
+        console.error('Map initialization error:', error);
+    }
+});
+
+function createTrendChart() {
+    const ctx = document.getElementById('trendChart');
+    
+    if (!ctx) {
+        console.error('Trend chart canvas not found');
+        return;
+    }
+    
+    const labels = {{ month_labels|safe }};
+    const data = {{ month_data|safe }};
+    
+    // Check if we have data
+    if (!labels || labels.length === 0 || !data || data.length === 0) {
+        console.warn('No chart data available');
+        ctx.getContext('2d').font = '16px Arial';
+        ctx.getContext('2d').fillText('No data available for the past 12 months', 50, 150);
+        return;
+    }
+    
+    console.log('Chart Labels:', labels);
+    console.log('Chart Data:', data);
+    
+    try {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Accidents per Month',
+                    data: data,
+                    borderColor: '#DC143C',
+                    backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#DC143C',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return 'Accidents: ' + context.parsed.y;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+        
+        console.log('Chart created successfully');
+    } catch (error) {
+        console.error('Error creating chart:', error);
+    }
+}
+</script>
+{% endblock %}

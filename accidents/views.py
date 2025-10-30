@@ -1,0 +1,1198 @@
+from django.shortcuts import render, redirect, get_object_or_404 
+from django.contrib.auth.decorators import login_required 
+from django.contrib import messages
+from django.db.models import Count, Q, Sum
+from django.db.models.functions import TruncMonth, ExtractWeekDay 
+from django.utils import timezone
+from django.core.paginator import Paginator
+from django.core.serializers.json import DjangoJSONEncoder
+from datetime import timedelta
+from datetime import time as dt_time
+import json
+from .models import Accident, AccidentCluster, AccidentReport
+from datetime import datetime
+from django.contrib.auth.views import LoginView
+
+#@login_required
+def dashboard(request):
+    """Optimized dashboard with better performance and caching"""
+    
+    # Check if it's an AJAX request for partial updates
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    
+    # Get current date for calculations
+    today = timezone.now().date()
+    
+    # Use database aggregation for faster statistics
+    from django.db.models import Count, Q, Sum
+    from django.core.cache import cache
+    
+    # Cache key for dashboard data
+    cache_key = 'dashboard_data'
+    cached_data = cache.get(cache_key)
+    
+    if cached_data and not is_ajax:
+        # Use cached data if available (except for AJAX requests)
+        context = cached_data
+    else:
+        # Calculate statistics with optimized queries
+        stats = Accident.objects.aggregate(
+            total_accidents=Count('id'),
+            total_killed=Count('id', filter=Q(victim_killed=True)),
+            total_injured=Count('id', filter=Q(victim_injured=True)),
+            total_casualties=Sum('victim_count')
+        )
+        
+        # Get counts with single queries
+        total_hotspots = AccidentCluster.objects.count()
+        pending_reports = AccidentReport.objects.filter(status='pending').count()
+        
+        # Calculate recent increase (last 30 days vs previous 30 days)
+        last_30_days = today - timedelta(days=30)
+        last_60_days = today - timedelta(days=60)
+        
+        recent_accidents_count = Accident.objects.filter(
+            date_committed__gte=last_30_days
+        ).count()
+        
+        previous_accidents_count = Accident.objects.filter(
+            date_committed__gte=last_60_days,
+            date_committed__lt=last_30_days
+        ).count()
+        
+        recent_increase = 0
+        if previous_accidents_count > 0:
+            recent_increase = ((recent_accidents_count - previous_accidents_count) / previous_accidents_count) * 100
+        
+        # Optimized queries for recent data with select_related and limit
+        recent_accidents_list = Accident.objects.select_related().order_by('-date_committed')[:10]
+        
+        # Optimized hotspots query
+        top_hotspots = AccidentCluster.objects.only(
+            'cluster_id', 'primary_location', 'accident_count', 'severity_score'
+        ).order_by('-severity_score')[:5]
+        
+        # Get chart data (these are already optimized in their functions)
+        time_data = get_accidents_over_time(12)
+        province_data = get_accidents_by_province()
+        type_data = get_accidents_by_type()
+        time_of_day_data = get_accidents_by_time_of_day()
+        
+        context = {
+            'total_accidents': stats['total_accidents'] or 0,
+            'total_hotspots': total_hotspots,
+            'total_casualties': stats['total_casualties'] or 0,
+            'killed': stats['total_killed'] or 0,
+            'injured': stats['total_injured'] or 0,
+            'pending_reports': pending_reports,
+            'recent_increase': round(recent_increase, 1),
+            'recent_accidents': recent_accidents_list,
+            'top_hotspots': top_hotspots,
+            
+            # Chart data
+            'time_labels': json.dumps(time_data['labels']),
+            'time_data': json.dumps(time_data['data']),
+            'province_labels': json.dumps(province_data['labels']),
+            'province_data': json.dumps(province_data['data']),
+            'type_labels': json.dumps(type_data['labels']),
+            'type_data': json.dumps(type_data['data']),
+            'time_of_day_data': json.dumps(time_of_day_data),
+            
+        }
+        
+        # Cache the data for 5 minutes (300 seconds)
+        if not is_ajax:
+            cache.set(cache_key, context, 300)
+    
+    if is_ajax:
+        # Return minimal HTML for AJAX updates
+        return render(request, 'dashboard/dashboard_partial.html', context)
+    else:
+        return render(request, 'dashboard/dashboard.html', context)
+
+
+def get_accidents_over_time(months=12):
+    """Get accident counts for the last N months"""
+    from django.db.models.functions import TruncMonth
+    
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=months * 30)
+    
+    accidents_by_month = Accident.objects.filter(
+        date_committed__gte=start_date,
+        date_committed__lte=end_date
+    ).annotate(
+        month=TruncMonth('date_committed')
+    ).values('month').annotate(
+        count=Count('id')
+    ).order_by('month')
+    
+    # Format labels and data
+    labels = []
+    data = []
+    
+    for item in accidents_by_month:
+        labels.append(item['month'].strftime('%B %Y'))
+        data.append(item['count'])
+    
+    return {'labels': labels, 'data': data}
+
+
+def get_accidents_by_province():
+    """Get accident counts by province"""
+    accidents_by_province = Accident.objects.values('province').annotate(
+        count=Count('id')
+    ).order_by('-count')[:5]  # Top 5 provinces
+    
+    labels = [item['province'] for item in accidents_by_province]
+    data = [item['count'] for item in accidents_by_province]
+    
+    return {'labels': labels, 'data': data}
+
+
+def get_accidents_by_type():
+    """Get accident counts by incident type"""
+    accidents_by_type = Accident.objects.values('incident_type').annotate(
+        count=Count('id')
+    ).order_by('-count')[:5]  # Top 5 types
+    
+    labels = []
+    data = []
+    
+    for item in accidents_by_type:
+        # Shorten long incident type names
+        type_name = item['incident_type'].replace('(Incident) ', '')
+        labels.append(type_name[:30])
+        data.append(item['count'])
+    
+    return {'labels': labels, 'data': data}
+
+
+def get_accidents_by_time_of_day():
+    """Categorize accidents by time of day"""
+    from datetime import time as dt_time
+    
+    # Night: 12AM - 6AM
+    night = Accident.objects.filter(
+        time_committed__gte=dt_time(0, 0),
+        time_committed__lt=dt_time(6, 0)
+    ).count()
+    
+    # Morning: 6AM - 12PM
+    morning = Accident.objects.filter(
+        time_committed__gte=dt_time(6, 0),
+        time_committed__lt=dt_time(12, 0)
+    ).count()
+    
+    # Afternoon: 12PM - 6PM
+    afternoon = Accident.objects.filter(
+        time_committed__gte=dt_time(12, 0),
+        time_committed__lt=dt_time(18, 0)
+    ).count()
+    
+    # Evening: 6PM - 12AM (11:59 PM)
+    evening = Accident.objects.filter(
+        time_committed__gte=dt_time(18, 0),
+        time_committed__lte=dt_time(23, 59)
+    ).count()
+    
+    return [night, morning, afternoon, evening]
+
+#@login_required
+def accident_list(request):
+    """List all accidents with filtering and statistics"""
+    accidents = Accident.objects.all().order_by('-date_committed')
+    
+    # Apply filters
+    province = request.GET.get('province')
+    municipal = request.GET.get('municipal')
+    year = request.GET.get('year')
+    is_hotspot = request.GET.get('is_hotspot')
+    search = request.GET.get('search')
+    
+    # Quick filters
+    fatal_only = request.GET.get('fatal')
+    injury_only = request.GET.get('injury')
+    no_hotspot = request.GET.get('no_hotspot')  # NEW
+    
+    if province:
+        accidents = accidents.filter(province=province)
+    if municipal:
+        accidents = accidents.filter(municipal=municipal)
+    if year:
+        accidents = accidents.filter(year=year)
+    if is_hotspot:
+        accidents = accidents.filter(is_hotspot=True)
+    if fatal_only:
+        accidents = accidents.filter(victim_killed=True)
+    if injury_only:
+        accidents = accidents.filter(victim_injured=True)
+    if no_hotspot:  # NEW
+        accidents = accidents.filter(is_hotspot=False)  # NEW
+    
+    # Search filter
+    if search:
+        from django.db.models import Q
+        accidents = accidents.filter(
+            Q(barangay__icontains=search) |
+            Q(municipal__icontains=search) |
+            Q(province__icontains=search) |
+            Q(incident_type__icontains=search) |
+            Q(street__icontains=search)
+        )
+    
+    # Calculate statistics for filtered results
+    fatal_count = accidents.filter(victim_killed=True).count()
+    injury_count = accidents.filter(victim_injured=True).count()
+    hotspot_count = accidents.filter(is_hotspot=True).count()
+    
+    # Get all provinces for the main dropdown
+    provinces = Accident.objects.exclude(
+        province__isnull=True
+    ).exclude(
+        province=''
+    ).values_list('province', flat=True).distinct().order_by('province')
+    provinces = [p for p in provinces if p and p.strip()]
+    
+    # Get municipalities based on selected province
+    if province:
+        municipalities = Accident.objects.filter(
+            province=province
+        ).exclude(
+            municipal__isnull=True
+        ).exclude(
+            municipal=''
+        ).values_list('municipal', flat=True).distinct().order_by('municipal')
+    else:
+        municipalities = Accident.objects.exclude(
+            municipal__isnull=True
+        ).exclude(
+            municipal=''
+        ).values_list('municipal', flat=True).distinct().order_by('municipal')
+    
+    municipalities = [m for m in municipalities if m and m.strip()]
+    
+    years = Accident.objects.exclude(
+        year__isnull=True
+    ).values_list('year', flat=True).distinct().order_by('-year')
+    years = [y for y in years if y]
+    
+    # Precompute municipality data for all provinces (for JavaScript)
+    municipality_data = {}
+    for prov in provinces:
+        munis = Accident.objects.filter(province=prov).exclude(
+            municipal__isnull=True
+        ).exclude(
+            municipal=''
+        ).values_list('municipal', flat=True).distinct().order_by('municipal')
+        municipality_data[prov] = [m for m in munis if m and m.strip()]
+    
+    # Export to CSV if requested
+    export = request.GET.get('export')
+    if export == 'csv':
+        import csv
+        from django.http import HttpResponse
+        
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="accidents_export.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow([
+            'Date', 'Time', 'Province', 'Municipality', 'Barangay',
+            'Street', 'Incident Type', 'Casualties', 'Fatal', 'Injured',
+            'Hotspot', 'Latitude', 'Longitude'
+        ])
+        
+        for acc in accidents:
+            writer.writerow([
+                acc.date_committed.strftime('%Y-%m-%d'),
+                acc.time_committed.strftime('%H:%M'),
+                acc.province,
+                acc.municipal,
+                acc.barangay,
+                acc.street or '',
+                acc.incident_type,
+                acc.victim_count,
+                'Yes' if acc.victim_killed else 'No',
+                'Yes' if acc.victim_injured else 'No',
+                'Yes' if acc.is_hotspot else 'No',
+                float(acc.latitude),
+                float(acc.longitude)
+            ])
+        
+        return response
+    
+    # Pagination
+    from django.core.paginator import Paginator
+    paginator = Paginator(accidents, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'accidents': page_obj,
+        'provinces': provinces,
+        'municipalities': municipalities,
+        'years': years,
+        'municipality_data_json': json.dumps(municipality_data),
+        'fatal_count': fatal_count,
+        'injury_count': injury_count,
+        'hotspot_count': hotspot_count,
+        'is_fatal_view': fatal_only,  # NEW
+        'is_injury_view': injury_only,  # NEW
+        'is_hotspot_view': is_hotspot,  # NEW
+        'is_standalone_view': no_hotspot,  # NEW
+    }
+    
+    return render(request, 'accidents/accident_list.html', context)
+
+#@login_required
+def accident_detail(request, pk):
+    """Display detailed information about a specific accident"""
+    from math import radians, cos, sin, asin, sqrt
+    from decimal import Decimal
+    
+    accident = get_object_or_404(Accident, pk=pk)
+    
+    # Get nearby accidents (within ~5km)
+    nearby_accidents_raw = Accident.objects.filter(
+        latitude__range=(accident.latitude - Decimal('0.05'), accident.latitude + Decimal('0.05')),
+        longitude__range=(accident.longitude - Decimal('0.05'), accident.longitude + Decimal('0.05'))
+    ).exclude(pk=pk)[:10]  # Get top 10
+    
+    # Calculate actual distance for each nearby accident
+    def haversine_distance(lat1, lon1, lat2, lon2):
+        """
+        Calculate the great circle distance between two points 
+        on the earth (specified in decimal degrees)
+        Returns distance in kilometers
+        """
+        # Convert to float first, then to radians
+        lat1 = float(lat1)
+        lon1 = float(lon1)
+        lat2 = float(lat2)
+        lon2 = float(lon2)
+        
+        # Convert decimal degrees to radians
+        lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+        
+        # Haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * asin(sqrt(a))
+        
+        # Radius of earth in kilometers
+        r = 6371
+        
+        return c * r
+    
+    # Add distance to each nearby accident
+    nearby_accidents = []
+    for nearby in nearby_accidents_raw:
+        try:
+            distance = haversine_distance(
+                accident.latitude,
+                accident.longitude,
+                nearby.latitude,
+                nearby.longitude
+            )
+            
+            # Only include if within 5km
+            if distance <= 5.0:
+                nearby.distance = distance
+                nearby_accidents.append(nearby)
+        except Exception as e:
+            # Skip if calculation fails
+            continue
+    
+    # Sort by distance
+    nearby_accidents.sort(key=lambda x: x.distance)
+    
+    # Keep only top 5 nearest
+    nearby_accidents = nearby_accidents[:5]
+    
+    context = {
+        'accident': accident,
+        'nearby_accidents': nearby_accidents,
+    }
+    
+    return render(request, 'accidents/accident_detail.html', context)
+
+#@login_required
+def hotspots_view(request):
+    """Display all detected hotspots"""
+    
+    # Get all hotspots ordered by severity
+    hotspots = AccidentCluster.objects.all().order_by('-severity_score')
+    
+    # Apply filters
+    province = request.GET.get('province')
+    min_severity = request.GET.get('min_severity')
+    min_accidents = request.GET.get('min_accidents')
+    municipality = request.GET.get('municipality')
+    
+    if province:
+        # Get cluster IDs that have accidents from this province
+        cluster_ids_in_province = Accident.objects.filter(
+            province=province,
+            cluster_id__isnull=False
+        ).values_list('cluster_id', flat=True).distinct()
+        
+        # Filter hotspots to only those cluster IDs
+        hotspots = hotspots.filter(cluster_id__in=cluster_ids_in_province)
+    
+    if min_severity:
+        hotspots = hotspots.filter(severity_score__gte=float(min_severity))
+    
+    if min_accidents:
+        hotspots = hotspots.filter(accident_count__gte=int(min_accidents))
+    
+    if municipality:
+        # Filter hotspots that include this municipality
+        hotspots = hotspots.filter(municipalities__contains=[municipality])
+    
+    # Calculate summary statistics (only for filtered hotspots)
+    total_accidents = sum(h.accident_count for h in hotspots)
+    total_casualties = sum(h.total_casualties for h in hotspots)
+    critical_count = hotspots.filter(severity_score__gte=70).count()
+    
+    # Get unique provinces and municipalities for filter dropdowns
+    provinces = Accident.objects.values_list('province', flat=True).distinct().order_by('province')
+    provinces = [p for p in provinces if p and p.strip()]
+    
+    municipalities = Accident.objects.values_list('municipal', flat=True).distinct().order_by('municipal')
+    municipalities = [m for m in municipalities if m and m.strip()]
+    
+    # Add killed_count to each hotspot for display
+    for hotspot in hotspots:
+        hotspot.killed_count = Accident.objects.filter(
+            cluster_id=hotspot.cluster_id, 
+            victim_killed=True
+        ).count()
+    
+    # Prepare hotspots data for JSON (for map preview)
+    from django.core.serializers.json import DjangoJSONEncoder
+    import json
+    hotspots_json = json.dumps(list(hotspots.values(
+        'cluster_id', 'center_latitude', 'center_longitude',
+        'primary_location', 'accident_count', 'severity_score'
+    )), cls=DjangoJSONEncoder)
+    
+    context = {
+        'hotspots': hotspots,
+        'total_accidents': total_accidents,
+        'total_casualties': total_casualties,
+        'critical_count': critical_count,
+        'provinces': provinces,
+        'municipalities': municipalities,
+        'hotspots_json': hotspots_json,  # Add this for map preview
+    }
+    
+    return render(request, 'hotspots/hotspots_list.html', context)
+
+
+#@login_required
+def hotspot_detail(request, cluster_id):
+    """Display detailed information about a specific hotspot"""
+    hotspot = get_object_or_404(AccidentCluster, cluster_id=cluster_id)
+    
+    # Get all accidents in this cluster (limit to recent 50 for performance)
+    accidents = Accident.objects.filter(cluster_id=cluster_id).order_by('-date_committed')
+    total_count = accidents.count()
+    
+    # Limit to 50 most recent for display
+    accidents_display = accidents[:50]
+    
+    # Statistics for this hotspot
+    total_killed = accidents.filter(victim_killed=True).count()
+    total_injured = accidents.filter(victim_injured=True).count()
+    
+    # Calculate date span
+    if hotspot.date_range_start and hotspot.date_range_end:
+        date_span = (hotspot.date_range_end - hotspot.date_range_start).days
+    else:
+        date_span = 0
+    
+    # Accidents by month for trend chart
+    from django.db.models.functions import TruncMonth
+    from datetime import timedelta
+    
+    accidents_by_month = accidents.annotate(
+    month=TruncMonth('date_committed')
+    ).values('month').annotate(
+        count=Count('id')
+    ).order_by('month')
+
+    # If too many months (more than 24), show only last 24 months for readability
+    if accidents_by_month.count() > 24:
+        cutoff_date = timezone.now().date() - timedelta(days=730)  # 2 years
+        accidents_by_month = accidents_by_month.filter(month__gte=cutoff_date)
+
+    month_labels = [item['month'].strftime('%b %Y') for item in accidents_by_month]
+    month_data = [item['count'] for item in accidents_by_month]
+    
+    # Prepare accidents data for map - WITH DECIMAL TO FLOAT CONVERSION
+    accidents_for_map = accidents_display.values(
+        'id', 'latitude', 'longitude', 'incident_type',
+        'date_committed', 'barangay', 'municipal', 
+        'victim_count', 'victim_killed', 'victim_injured'  # ADDED victim_injured
+    )
+    
+    # Convert dates and decimals for JSON
+    accidents_map_list = []
+    for acc in accidents_for_map:
+        acc_dict = {
+            'id': acc['id'],
+            'latitude': float(acc['latitude']),  # Convert Decimal to float
+            'longitude': float(acc['longitude']),  # Convert Decimal to float
+            'incident_type': acc['incident_type'],
+            'date_committed': acc['date_committed'].strftime('%Y-%m-%d'),
+            'barangay': acc['barangay'],
+            'municipal': acc['municipal'],
+            'victim_count': acc['victim_count'],
+            'victim_killed': acc['victim_killed'],
+            'victim_injured': acc['victim_injured']  # ADDED
+        }
+        accidents_map_list.append(acc_dict)
+    
+    accidents_json = json.dumps(accidents_map_list)
+    
+    # Prepare export data
+    accidents_export = []
+    for acc in accidents_display:
+        accidents_export.append({
+            'Date': acc.date_committed.strftime('%Y-%m-%d'),
+            'Time': acc.time_committed.strftime('%H:%M'),
+            'Location': f"{acc.barangay}, {acc.municipal}",
+            'Type': acc.incident_type,
+            'Casualties': acc.victim_count,
+            'Fatal': 'Yes' if acc.victim_killed else 'No',
+            'Injured': 'Yes' if acc.victim_injured else 'No',  # ADDED
+            'Latitude': float(acc.latitude),  # Convert here too
+            'Longitude': float(acc.longitude),  # Convert here too
+        })
+    
+    accidents_export_json = json.dumps(accidents_export)
+    
+    context = {
+        'hotspot': hotspot,
+        'accidents': accidents_display,
+        'total_accidents': total_count,
+        'showing_count': len(accidents_display),
+        'total_killed': total_killed,
+        'total_injured': total_injured,
+        'date_span': date_span,
+        'month_labels': json.dumps(month_labels),  
+        'month_data': json.dumps(month_data),      
+        'accidents_json': accidents_json,
+        'accidents_export': accidents_export_json,
+    }
+    
+    return render(request, 'hotspots/hotspot_detail.html', context)
+
+
+#@login_required
+def report_accident(request):
+    """Form for reporting new accidents"""
+    if request.method == 'POST':
+        from .forms import AccidentReportForm
+        form = AccidentReportForm(request.POST, request.FILES)
+        
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.reported_by = request.user
+            report.save()
+            
+            messages.success(request, 'Accident report submitted successfully!')
+            return redirect('report_success', pk=report.pk)
+    else:
+        from .forms import AccidentReportForm
+        form = AccidentReportForm()
+    
+    context = {
+        'form': form,
+    }
+    
+    return render(request, 'reports/report_form.html', context)
+
+
+def report_success(request, pk):
+    """Success page after submitting a report"""
+    report = get_object_or_404(AccidentReport, pk=pk)
+    
+    context = {
+        'report': report,
+    }
+    
+    return render(request, 'reports/report_success.html', context)
+
+
+# Additional utility views
+def about(request):
+    """About page"""
+    return render(request, 'pages/about.html')
+
+def help_view(request):
+    """Help and support page"""
+    return render(request, 'pages/help.html')
+
+def contact(request):
+    """Contact page"""
+    return render(request, 'pages/contact.html')
+
+#@login_required
+def profile(request):
+    """User profile page"""
+    user_reports = AccidentReport.objects.filter(
+        reported_by=request.user
+    ).order_by('-created_at')
+    
+    context = {
+        'user_reports': user_reports,
+    }
+    
+    return render(request, 'accounts/profile.html', context)
+
+def map_view(request):
+    """
+    OPTIMIZED Interactive map view with all accidents and hotspots
+    Fixed: Province loading, data validation, performance
+    """
+    from django.core.serializers.json import DjangoJSONEncoder
+    import json
+    
+    # Get all accidents with coordinates - OPTIMIZED QUERY
+    accidents = Accident.objects.filter(
+        latitude__isnull=False,
+        longitude__isnull=False
+    ).values(
+        'id', 'latitude', 'longitude', 'incident_type',
+        'date_committed', 'time_committed', 'barangay',
+        'municipal', 'province', 'victim_count',
+        'victim_killed', 'victim_injured', 'year', 'cluster_id',
+        'vehicle_kind'
+    ).order_by('-date_committed')  # Most recent first
+    
+    # Get all hotspots - OPTIMIZED QUERY
+    hotspots = AccidentCluster.objects.all().values(
+        'cluster_id', 'center_latitude', 'center_longitude',
+        'primary_location', 'accident_count', 'total_casualties',
+        'severity_score'
+    )
+    
+    # RELIABLE province extraction from actual data
+    provinces_raw = Accident.objects.filter(
+        province__isnull=False
+    ).exclude(
+        province__exact=''
+    ).values_list('province', flat=True).distinct().order_by('province')
+    
+    # Clean and validate provinces
+    provinces = []
+    caraga_provinces = {
+        'AGUSAN DEL NORTE',
+        'AGUSAN DEL SUR',
+        'SURIGAO DEL NORTE',
+        'SURIGAO DEL SUR',
+        'DINAGAT ISLANDS'
+    }
+    
+    # Add provinces from database if they exist
+    for province in provinces_raw:
+        if province and province.strip():
+            cleaned = province.strip().upper()
+            if cleaned in caraga_provinces:
+                provinces.append(cleaned)
+    
+    # Fallback: If no provinces found, use default Caraga provinces
+    if not provinces:
+        provinces = list(caraga_provinces)
+        provinces.sort()
+    else:
+        # Remove duplicates and sort
+        provinces = sorted(list(set(provinces)))
+    
+    # Convert QuerySets to JSON with proper serialization
+    accidents_list = []
+    for accident in accidents:
+        # Convert Decimal to float for JSON serialization
+        accident_dict = {
+            'id': accident['id'],
+            'latitude': float(accident['latitude']),
+            'longitude': float(accident['longitude']),
+            'incident_type': accident['incident_type'],
+            'date_committed': accident['date_committed'].strftime('%Y-%m-%d'),
+            'time_committed': accident['time_committed'].strftime('%H:%M:%S') if accident['time_committed'] else '00:00:00',
+            'barangay': accident['barangay'] or '',
+            'municipal': accident['municipal'] or '',
+            'province': accident['province'] or '',
+            'victim_count': accident['victim_count'] or 0,
+            'victim_killed': accident['victim_killed'],
+            'victim_injured': accident['victim_injured'],
+            'year': accident['year'] or '',
+            'cluster_id': accident['cluster_id'],
+            'vehicle_kind': accident.get('vehicle_kind', '') or ''
+        }
+        accidents_list.append(accident_dict)
+    
+    hotspots_list = []
+    for hotspot in hotspots:
+        hotspot_dict = {
+            'cluster_id': hotspot['cluster_id'],
+            'center_latitude': float(hotspot['center_latitude']),
+            'center_longitude': float(hotspot['center_longitude']),
+            'primary_location': hotspot['primary_location'] or '',
+            'accident_count': hotspot['accident_count'] or 0,
+            'total_casualties': hotspot['total_casualties'] or 0,
+            'severity_score': float(hotspot['severity_score']) if hotspot['severity_score'] else 0
+        }
+        hotspots_list.append(hotspot_dict)
+    
+    accidents_json = json.dumps(accidents_list)
+    hotspots_json = json.dumps(hotspots_list)
+    
+    # Calculate statistics
+    total_accidents = len(accidents_list)
+    total_hotspots = len(hotspots_list)
+    
+    context = {
+        'accidents_json': accidents_json,
+        'hotspots_json': hotspots_json,
+        'total_accidents': total_accidents,
+        'total_hotspots': total_hotspots,
+        'provinces': provinces,  # Now guaranteed to have data
+    }
+    
+    return render(request, 'maps/map_view.html', context)
+
+def heatmap_view(request):
+    """Heatmap visualization of accidents"""
+    
+    accidents = Accident.objects.filter(
+        latitude__isnull=False,
+        longitude__isnull=False
+    ).values(
+        'latitude', 'longitude', 'victim_count'
+    )
+    
+    accidents_json = json.dumps(list(accidents), cls=DjangoJSONEncoder)
+    
+    context = {
+        'accidents_json': accidents_json,
+    }
+    
+    return render(request, 'maps/heatmap.html', context)
+
+#@login_required
+def analytics_view(request):
+    """
+    ENHANCED Analytics with Predictive Insights and WORKING FILTERS
+    Boss's Complete Analytics Function
+    """
+    
+    # ============================================================================
+    # GET FILTER PARAMETERS FROM URL
+    # ============================================================================
+    severity_filter = request.GET.get('severity', 'all')
+    province_filter = request.GET.get('province', 'all')
+    time_granularity = request.GET.get('granularity', 'monthly')
+    analysis_type = request.GET.get('analysis_type', 'overview')
+    
+    # Get total count for reference
+    total_in_database = Accident.objects.count()
+    
+    # ============================================================================
+    # DATE RANGE SETUP
+    # ============================================================================
+    from_date_str = request.GET.get('from_date')
+    to_date_str = request.GET.get('to_date')
+    
+    if from_date_str:
+        from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+    else:
+        # Get the earliest accident date to show ALL data by default
+        earliest_accident = Accident.objects.order_by('date_committed').first()
+        if earliest_accident:
+            from_date = earliest_accident.date_committed
+        else:
+            from_date = (timezone.now() - timedelta(days=365)).date()
+    
+    if to_date_str:
+        to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+    else:
+        # Get the latest accident date
+        latest_accident = Accident.objects.order_by('-date_committed').first()
+        if latest_accident:
+            to_date = latest_accident.date_committed
+        else:
+            to_date = timezone.now().date()
+    
+    # ============================================================================
+    # FILTER ACCIDENTS BY DATE RANGE
+    # ============================================================================
+    accidents = Accident.objects.filter(
+        date_committed__gte=from_date,
+        date_committed__lte=to_date
+    )
+    
+    # ============================================================================
+    # APPLY SEVERITY FILTER
+    # ============================================================================
+    if severity_filter == 'fatal':
+        accidents = accidents.filter(victim_killed=True)
+    elif severity_filter == 'injury':
+        accidents = accidents.filter(victim_injured=True)
+    elif severity_filter == 'property':
+        accidents = accidents.filter(victim_killed=False, victim_injured=False)
+    # 'all' - no additional filter
+    
+    # ============================================================================
+    # APPLY PROVINCE FILTER
+    # ============================================================================
+    if province_filter and province_filter != 'all':
+        accidents = accidents.filter(province=province_filter)
+    
+    # ============================================================================
+    # BASIC STATISTICS
+    # ============================================================================
+    total_accidents = accidents.count()
+    fatal_count = accidents.filter(victim_killed=True).count()
+    injury_count = accidents.filter(victim_injured=True).count()
+    
+    # Calculate fatality rate
+    fatality_rate = (fatal_count / total_accidents * 100) if total_accidents > 0 else 0
+    
+    # ============================================================================
+    # MONTHLY TREND DATA (with time granularity support)
+    # ============================================================================
+    from django.db.models.functions import TruncMonth, TruncQuarter, TruncWeek, TruncDay
+    
+    if time_granularity == 'daily':
+        trunc_func = TruncDay
+        date_format = '%Y-%m-%d'
+    elif time_granularity == 'weekly':
+        trunc_func = TruncWeek
+        date_format = 'Week of %b %d, %Y'
+    elif time_granularity == 'quarterly':
+        trunc_func = TruncQuarter
+        date_format = 'Q%q %Y'
+    else:  # monthly (default)
+        trunc_func = TruncMonth
+        date_format = '%b %Y'
+    
+    monthly_trends = accidents.annotate(
+        period=trunc_func('date_committed')
+    ).values('period').annotate(
+        total=Count('id'),
+        fatal=Count('id', filter=Q(victim_killed=True)),
+        injury=Count('id', filter=Q(victim_injured=True))
+    ).order_by('period')
+    
+    # Format labels based on granularity
+    trend_labels = []
+    for item in monthly_trends:
+        if time_granularity == 'quarterly':
+            quarter = (item['period'].month - 1) // 3 + 1
+            trend_labels.append(f"Q{quarter} {item['period'].year}")
+        else:
+            trend_labels.append(item['period'].strftime(date_format))
+    
+    trend_total = [item['total'] for item in monthly_trends]
+    trend_fatal = [item['fatal'] for item in monthly_trends]
+    trend_injury = [item['injury'] for item in monthly_trends]
+    
+    # ============================================================================
+    # HOURLY DISTRIBUTION ANALYSIS
+    # ============================================================================
+    from django.db.models.functions import ExtractHour
+    
+    hourly_distribution = accidents.annotate(
+        hour=ExtractHour('time_committed')
+    ).values('hour').annotate(
+        count=Count('id')
+    ).order_by('hour')
+    
+    # Create 24-hour array
+    hourly_data = [0] * 24
+    for item in hourly_distribution:
+        if item['hour'] is not None:
+            hourly_data[item['hour']] = item['count']
+    
+    hourly_labels = [f"{h:02d}:00" for h in range(24)]
+    
+    # ============================================================================
+    # TOP RISK FACTORS / INCIDENT TYPES ANALYSIS
+    # ============================================================================
+    incident_analysis = accidents.values('incident_type').annotate(
+        count=Count('id')
+    ).order_by('-count')[:5]
+    
+    incident_labels = [item['incident_type'][:30] for item in incident_analysis]
+    incident_data = [item['count'] for item in incident_analysis]
+    
+    # ============================================================================
+    # VEHICLE TYPE ANALYSIS
+    # ============================================================================
+    vehicle_types = {}
+    for accident in accidents:
+        if accident.vehicle_kind:
+            kinds = accident.vehicle_kind.split(',')
+            for kind in kinds:
+                kind = kind.strip()
+                if kind:
+                    vehicle_types[kind] = vehicle_types.get(kind, 0) + 1
+    
+    # Get top 6 vehicle types
+    sorted_vehicles = sorted(vehicle_types.items(), key=lambda x: x[1], reverse=True)[:6]
+    vehicle_labels = [v[0] for v in sorted_vehicles] if sorted_vehicles else ['Motorcycle', 'Car', 'Truck', 'Bus', 'SUV', 'Van']
+    vehicle_data = [v[1] for v in sorted_vehicles] if sorted_vehicles else [85, 72, 45, 28, 38, 22]
+    
+    # ============================================================================
+    # DAY OF WEEK ANALYSIS WITH BREAKDOWN
+    # ============================================================================
+    from django.db.models.functions import ExtractWeekDay
+    
+    day_of_week = accidents.annotate(
+        weekday=ExtractWeekDay('date_committed')
+    ).values('weekday').annotate(
+        total=Count('id'),
+        fatal=Count('id', filter=Q(victim_killed=True)),
+        injury=Count('id', filter=Q(victim_injured=True))
+    ).order_by('weekday')
+    
+    days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    dow_data = [0] * 7
+    dow_fatal = [0] * 7
+    dow_injury = [0] * 7
+    
+    for item in day_of_week:
+        idx = item['weekday'] - 1  # weekday is 1-7
+        dow_data[idx] = item['total']
+        dow_fatal[idx] = item['fatal']
+        dow_injury[idx] = item['injury']
+    
+    # ============================================================================
+    # SEVERITY BY LOCATION (TOP 10)
+    # ============================================================================
+    severity_by_location = accidents.values('municipal', 'province').annotate(
+        total=Count('id'),
+        killed=Count('id', filter=Q(victim_killed=True)),
+        injured=Count('id', filter=Q(victim_injured=True))
+    ).order_by('-killed', '-total')[:10]
+    
+    # ============================================================================
+    # PROVINCE COMPARISON
+    # ============================================================================
+    province_stats = accidents.values('province').annotate(
+        total=Count('id'),
+        fatal=Count('id', filter=Q(victim_killed=True)),
+        injury=Count('id', filter=Q(victim_injured=True))
+    ).order_by('-total')
+    
+    province_labels = [item['province'] for item in province_stats]
+    province_total = [item['total'] for item in province_stats]
+    province_fatal = [item['fatal'] for item in province_stats]
+    province_injury = [item['injury'] for item in province_stats]
+    
+    # ============================================================================
+    # PREDICTIVE INSIGHTS (Simple Moving Average)
+    # ============================================================================
+    
+    # Calculate trend direction
+    if len(trend_total) >= 3:
+        recent_avg = sum(trend_total[-3:]) / 3
+        previous_avg = sum(trend_total[-6:-3]) / 3 if len(trend_total) >= 6 else recent_avg
+        trend_direction = "increasing" if recent_avg > previous_avg else "decreasing"
+        trend_percentage = ((recent_avg - previous_avg) / previous_avg * 100) if previous_avg > 0 else 0
+    else:
+        trend_direction = "stable"
+        trend_percentage = 0
+    
+    # Calculate predicted next period (simple linear extrapolation)
+    if len(trend_total) >= 2:
+        predicted_next_month = int(trend_total[-1] + (trend_total[-1] - trend_total[-2]))
+        predicted_next_month = max(0, predicted_next_month)  # Can't be negative
+    else:
+        predicted_next_month = 0
+    
+    # Risk level calculation
+    if fatality_rate >= 15:
+        risk_level = "CRITICAL"
+    elif fatality_rate >= 10:
+        risk_level = "HIGH"
+    elif fatality_rate >= 5:
+        risk_level = "MEDIUM"
+    else:
+        risk_level = "LOW"
+    
+    # Peak hours calculation
+    if hourly_data and max(hourly_data) > 0:
+        peak_hour = hourly_data.index(max(hourly_data))
+        peak_hours = f"{peak_hour:02d}:00-{(peak_hour+1):02d}:00"
+    else:
+        peak_hours = "Unknown"
+    
+    # Get unique provinces for filter dropdown
+    provinces = list(Accident.objects.values_list('province', flat=True).distinct().order_by('province'))
+    provinces = [p for p in provinces if p and p.strip()]
+    
+    # ============================================================================
+    # PREPARE CONTEXT WITH ALL DATA
+    # ============================================================================
+    context = {
+        # Basic Stats
+        'total_accidents': total_accidents,
+        'fatal_count': fatal_count,
+        'injury_count': injury_count,
+        'fatality_rate': fatality_rate,
+        'from_date': from_date.strftime('%Y-%m-%d'),
+        'to_date': to_date.strftime('%Y-%m-%d'),
+        'total_in_database': total_in_database,
+        
+        # Filter values (to maintain state)
+        'current_severity_filter': severity_filter,
+        'current_province_filter': province_filter,
+        'current_time_granularity': time_granularity,
+        'current_analysis_type': analysis_type,
+        
+        # Provinces for dropdown
+        'provinces': provinces,
+        
+        # Trend Data (for line chart)
+        'trend_labels': json.dumps(trend_labels),
+        'trend_total': json.dumps(trend_total),
+        'trend_fatal': json.dumps(trend_fatal),
+        'trend_injury': json.dumps(trend_injury),
+        
+        # Hourly Data (for bar chart)
+        'hourly_labels': json.dumps(hourly_labels),
+        'hourly_data': json.dumps(hourly_data),
+        
+        # Vehicle Data
+        'vehicle_labels': json.dumps(vehicle_labels),
+        'vehicle_data': json.dumps(vehicle_data),
+        
+        # Day of Week Data (enhanced)
+        'dow_labels': json.dumps(days),
+        'dow_data': json.dumps(dow_data),
+        'dow_fatal': json.dumps(dow_fatal),
+        'dow_injury': json.dumps(dow_injury),
+        
+        # Province Comparison
+        'province_labels': json.dumps(province_labels),
+        'province_total': json.dumps(province_total),
+        'province_fatal': json.dumps(province_fatal),
+        'province_injury': json.dumps(province_injury),
+        
+        # Severity by Location
+        'severity_locations': severity_by_location,
+        
+        # Incident Types
+        'incident_labels': json.dumps(incident_labels),
+        'incident_data': json.dumps(incident_data),
+        
+        # Predictive Insights
+        'predicted_next_month': predicted_next_month,
+        'trend_direction': trend_direction,
+        'trend_percentage': abs(round(trend_percentage, 1)),
+        'risk_level': risk_level,
+        'peak_hours': peak_hours,
+    }
+    
+    return render(request, 'analytics/analytics.html', context)
+
+def get_critical_alerts():
+    """Get real-time critical alerts for dashboard"""
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Count, Q
+    
+    today = timezone.now().date()
+    last_24h = today - timedelta(hours=24)
+    last_7_days = today - timedelta(days=7)
+    
+    alerts = []
+    
+    # Alert 1: Recent fatalities in last 24 hours
+    recent_fatalities = Accident.objects.filter(
+        victim_killed=True,
+        date_committed__gte=last_24h
+    ).count()
+    
+    if recent_fatalities > 0:
+        alerts.append({
+            'type': 'critical',
+            'icon': '💀',
+            'title': 'Recent Fatalities',
+            'message': f'{recent_fatalities} fatal accident(s) in the last 24 hours',
+            'action_url': '/accidents/?victim_killed=true'
+        })
+    
+    # Alert 2: Spike in accidents (50% increase compared to previous week)
+    current_week_accidents = Accident.objects.filter(
+        date_committed__gte=last_7_days
+    ).count()
+    
+    previous_week = today - timedelta(days=14)
+    previous_week_accidents = Accident.objects.filter(
+        date_committed__gte=previous_week,
+        date_committed__lt=last_7_days
+    ).count()
+    
+    if previous_week_accidents > 0:
+        increase_percentage = ((current_week_accidents - previous_week_accidents) / previous_week_accidents) * 100
+        if increase_percentage >= 50:
+            alerts.append({
+                'type': 'warning',
+                'icon': '📈',
+                'title': 'Accident Spike Detected',
+                'message': f'{increase_percentage:.0f}% increase in accidents this week',
+                'action_url': '/analytics/'
+            })
+    
+    # Alert 3: High-severity hotspots
+    critical_hotspots = AccidentCluster.objects.filter(
+        severity_score__gte=80
+    ).count()
+    
+    if critical_hotspots > 0:
+        alerts.append({
+            'type': 'danger',
+            'icon': '🔴',
+            'title': 'Critical Hotspots',
+            'message': f'{critical_hotspots} high-severity areas identified',
+            'action_url': '/hotspots/?min_severity=80'
+        })
+    
+    # Alert 4: Pending reports needing attention
+    pending_reports_24h = AccidentReport.objects.filter(
+        status='pending',
+        created_at__gte=last_24h
+    ).count()
+    
+    if pending_reports_24h >= 5:
+        alerts.append({
+            'type': 'info',
+            'icon': '📝',
+            'title': 'Pending Reports',
+            'message': f'{pending_reports_24h} new reports awaiting verification',
+            'action_url': '/admin/accidents/accidentreport/'
+        })
+    
+    # Alert 5: Clustering needed (if no recent clustering job)
+    from clustering.models import ClusteringJob
+    recent_clustering = ClusteringJob.objects.filter(
+        started_at__gte=last_7_days,
+        status='completed'
+    ).exists()
+    
+    if not recent_clustering and Accident.objects.count() > 100:
+        alerts.append({
+            'type': 'warning',
+            'icon': '🔍',
+            'title': 'AGNES Analysis Recommended',
+            'message': 'Run clustering to update hotspot detection',
+            'action_url': '/admin/clustering/clusteringjob/add/'
+        })
+    
+    return alerts
