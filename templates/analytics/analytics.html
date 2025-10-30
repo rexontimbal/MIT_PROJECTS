@@ -281,19 +281,134 @@
         .analytics-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .control-row {
             grid-template-columns: 1fr;
         }
-        
+
         .date-range-selector {
             flex-direction: column;
             align-items: stretch;
         }
-        
+
         .date-inputs {
             flex-direction: column;
         }
+
+        .analytics-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .analytics-header h2 {
+            font-size: 20px;
+        }
+
+        .analytics-header p {
+            font-size: 14px;
+        }
+
+        .stat-card {
+            padding: 15px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+        }
+
+        .chart-container {
+            padding: 15px;
+        }
+
+        .chart-header h3 {
+            font-size: 16px;
+        }
+
+        .export-section {
+            padding: 20px;
+        }
+
+        .export-options {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .export-options button {
+            width: 100%;
+        }
+
+        .summary-cards {
+            grid-template-columns: 1fr;
+        }
+
+        canvas {
+            max-height: 250px !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stat-value {
+            font-size: 20px;
+        }
+
+        .chart-header h3 {
+            font-size: 14px;
+        }
+
+        .analytics-container {
+            padding: 10px;
+        }
+    }
+
+    /* Enhanced Export Section Styling */
+    .export-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-top: 30px;
+        text-align: center;
+    }
+
+    .export-section h3 {
+        color: white;
+        margin-bottom: 10px;
+    }
+
+    .export-section p {
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 20px;
+    }
+
+    .export-options {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .export-btn-enhanced {
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        border: 2px solid white;
+        background: white;
+        color: #667eea;
+        cursor: pointer;
+        transition: all 0.3s;
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .export-btn-enhanced:hover {
+        background: transparent;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
     }
 </style>
 {% endblock %}
@@ -668,14 +783,17 @@
         <h3>📤 Export Analytics Data</h3>
         <p>Download comprehensive analytics data for further analysis</p>
         <div class="export-options">
-            <button class="btn btn-primary" onclick="exportAnalytics()">
-                📄 Export as CSV
+            <button class="export-btn-enhanced" onclick="exportAnalytics()">
+                <i class="fas fa-file-csv"></i> Export as CSV
             </button>
-            <button class="btn btn-outline" onclick="generateSummaryReport()">
-                📋 Generate Summary Report
+            <button class="export-btn-enhanced" onclick="exportAsExcelRegular()">
+                <i class="fas fa-file-excel"></i> Export as Excel
             </button>
-            <button class="btn btn-outline" onclick="window.print()">
-                🖨️ Print Report
+            <button class="export-btn-enhanced" onclick="generateSummaryReport()">
+                <i class="fas fa-file-alt"></i> Summary Report
+            </button>
+            <button class="export-btn-enhanced" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Report
             </button>
         </div>
     </div>
@@ -705,6 +823,7 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
     // Chart instances
     let trendChart, severityChart, hourlyChart, vehicleChart, dowChart, comparisonChart, forecastChart;
@@ -1474,6 +1593,51 @@
         document.body.removeChild(link);
         
         console.log('✅ CSV exported successfully');
+    }
+
+    function exportAsExcelRegular() {
+        console.log('📊 Exporting analytics data as Excel...');
+
+        const timestamp = new Date().toISOString().split('T')[0];
+
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+
+        // Summary Sheet
+        const summaryData = [
+            ['AGNES HOTSPOT DETECTION SYSTEM'],
+            ['ANALYTICS SUMMARY REPORT'],
+            [''],
+            ['Generated:', new Date().toLocaleString()],
+            ['Date Range:', '{{ from_date }} to {{ to_date }}'],
+            [''],
+            ['SUMMARY STATISTICS'],
+            ['Metric', 'Value'],
+            ['Total Accidents', {{ total_accidents }}],
+            ['Fatal Accidents', {{ fatal_count }}],
+            ['Injury Accidents', {{ injury_count }}],
+            ['Fatality Rate', '{{ fatality_rate|floatformat:1 }}%'],
+            ['Risk Level', '{{ risk_level }}'],
+            ['Peak Hours', '{{ peak_hours }}'],
+            [''],
+            ['TOP MUNICIPALITIES BY SEVERITY'],
+            ['Rank', 'Municipality', 'Province', 'Total', 'Fatal', 'Injury', 'Fatality Rate'],
+            {% for loc in severity_locations %}
+            [{{ forloop.counter }}, '{{ loc.municipal }}', '{{ loc.province }}', {{ loc.total }}, {{ loc.killed }}, {{ loc.injured }}, '{% widthratio loc.killed loc.total 100 %}%'],
+            {% endfor %}
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(summaryData);
+
+        // Set column widths
+        ws['!cols'] = [{ wch: 25 }, { wch: 30 }, { wch: 20 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 15 }];
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Analytics Summary');
+
+        // Download
+        XLSX.writeFile(wb, `analytics_report_${timestamp}.xlsx`);
+
+        console.log('✅ Excel exported successfully');
     }
 
 function generateSummaryReport() {

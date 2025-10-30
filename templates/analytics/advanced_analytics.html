@@ -178,6 +178,124 @@
     table.analytics-table tr:hover {
         background: #f5f5f5;
     }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .mode-toggle-section {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .mode-toggle-section > div {
+            width: 100%;
+        }
+
+        .switch-mode-btn {
+            width: 100%;
+        }
+
+        .metric-box {
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+        }
+
+        .analytics-table {
+            font-size: 12px;
+        }
+
+        .analytics-table th,
+        .analytics-table td {
+            padding: 8px 6px;
+        }
+
+        .stat-row {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+
+        .stat-value {
+            float: none;
+            margin-top: 5px;
+        }
+
+        .filter-section .row {
+            gap: 10px;
+        }
+
+        h1 {
+            font-size: 24px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .metric-value {
+            font-size: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+        }
+
+        .mode-badge {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+    }
+
+    /* Export Button Enhancements */
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .export-btn {
+        flex: 1;
+        min-width: 120px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .export-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .export-btn.csv {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+
+    .export-btn.excel {
+        background: linear-gradient(135deg, #1e7e34 0%, #28a745 100%);
+        color: white;
+    }
+
+    .export-btn.pdf {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .export-buttons {
+            flex-direction: column;
+        }
+
+        .export-btn {
+            width: 100%;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -724,29 +842,216 @@
     <div class="row">
         <div class="col-12">
             <div class="analytics-card">
-                <h5>Export Analytics Data</h5>
-                <p class="text-muted">Download this analytics report for further analysis or thesis documentation.</p>
-                <button class="btn btn-success" onclick="exportAnalytics()">
-                    <i class="fas fa-download"></i> Export as JSON
-                </button>
-                <button class="btn btn-primary" onclick="window.print()">
-                    <i class="fas fa-print"></i> Print Report
-                </button>
+                <div class="section-title">
+                    <span class="section-icon">📤</span>
+                    Export Analytics Data
+                </div>
+                <p class="text-muted mb-4">Download this analytics report for further analysis or thesis documentation.</p>
+                <div class="export-buttons">
+                    <button class="export-btn csv" onclick="exportAsCSV()">
+                        <i class="fas fa-file-csv"></i> Export as CSV
+                    </button>
+                    <button class="export-btn excel" onclick="exportAsExcel()">
+                        <i class="fas fa-file-excel"></i> Export as Excel
+                    </button>
+                    <button class="export-btn pdf" onclick="exportAsPDF()">
+                        <i class="fas fa-file-pdf"></i> Export as PDF
+                    </button>
+                    <button class="export-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
 <script>
-function exportAnalytics() {
-    const analyticsData = {{ analytics_json|safe }};
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(analyticsData, null, 2));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", "advanced_analytics_report.json");
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
+// Export as CSV
+function exportAsCSV() {
+    const data = {{ analytics_json|safe }};
+    const timestamp = new Date().toISOString().split('T')[0];
+
+    let csv = 'AGNES HOTSPOT DETECTION SYSTEM - ADVANCED ANALYTICS REPORT\n';
+    csv += `Generated: ${new Date().toLocaleString()}\n`;
+    csv += `Province: {{ current_province }}\n`;
+    csv += `Total Accidents: {{ total_accidents }}\n\n`;
+
+    // Spatial Analysis
+    csv += 'SPATIAL ANALYSIS\n';
+    csv += 'Metric,Value\n';
+    csv += `Hotspot Accidents,${data.spatial_analysis.hotspot_effectiveness.hotspot_accidents}\n`;
+    csv += `Non-Hotspot Accidents,${data.spatial_analysis.hotspot_effectiveness.non_hotspot_accidents}\n`;
+    csv += `Concentration Ratio,${data.spatial_analysis.hotspot_effectiveness.hotspot_concentration_ratio}\n`;
+    csv += `Hotspot Fatality Rate,${data.spatial_analysis.hotspot_effectiveness.hotspot_fatality_rate}%\n`;
+    csv += '\n';
+
+    // Severity Analysis
+    csv += 'SEVERITY ANALYSIS\n';
+    csv += 'Metric,Value\n';
+    csv += `Fatal Accidents,${data.severity_analysis.severity_index.fatal_accidents}\n`;
+    csv += `Injury Accidents,${data.severity_analysis.severity_index.injury_accidents}\n`;
+    csv += `Severity Index,${data.severity_analysis.severity_index.severity_index}\n`;
+    csv += `Severity Category,${data.severity_analysis.severity_index.severity_category}\n`;
+    csv += '\n';
+
+    // Predictive Analysis
+    csv += 'PREDICTIVE ANALYSIS\n';
+    csv += 'Metric,Value\n';
+    csv += `Trend Direction,${data.predictive_analysis.trend.trend}\n`;
+    csv += `Confidence,${data.predictive_analysis.trend.confidence_percentage}%\n`;
+    csv += `Predicted Next Month,${data.predictive_analysis.trend.prediction_next_month}\n`;
+
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `advanced_analytics_${timestamp}.csv`;
+    link.click();
+}
+
+// Export as Excel
+function exportAsExcel() {
+    const data = {{ analytics_json|safe }};
+    const timestamp = new Date().toISOString().split('T')[0];
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+
+    // Summary Sheet
+    const summaryData = [
+        ['AGNES HOTSPOT DETECTION SYSTEM'],
+        ['Advanced Analytics Report'],
+        [''],
+        ['Generated:', new Date().toLocaleString()],
+        ['Province:', '{{ current_province }}'],
+        ['Total Accidents:', {{ total_accidents }}],
+        [''],
+        ['SPATIAL ANALYSIS'],
+        ['Metric', 'Value'],
+        ['Hotspot Accidents', data.spatial_analysis.hotspot_effectiveness.hotspot_accidents],
+        ['Non-Hotspot Accidents', data.spatial_analysis.hotspot_effectiveness.non_hotspot_accidents],
+        ['Concentration Ratio', data.spatial_analysis.hotspot_effectiveness.hotspot_concentration_ratio],
+        ['Hotspot Fatality Rate', data.spatial_analysis.hotspot_effectiveness.hotspot_fatality_rate + '%'],
+        [''],
+        ['SEVERITY ANALYSIS'],
+        ['Metric', 'Value'],
+        ['Fatal Accidents', data.severity_analysis.severity_index.fatal_accidents],
+        ['Injury Accidents', data.severity_analysis.severity_index.injury_accidents],
+        ['Severity Index', data.severity_analysis.severity_index.severity_index],
+        ['Severity Category', data.severity_analysis.severity_index.severity_category],
+        [''],
+        ['PREDICTIVE ANALYSIS'],
+        ['Metric', 'Value'],
+        ['Trend Direction', data.predictive_analysis.trend.trend],
+        ['Confidence', data.predictive_analysis.trend.confidence_percentage + '%'],
+        ['R² Value', data.predictive_analysis.trend.r_squared],
+        ['Predicted Next Month', data.predictive_analysis.trend.prediction_next_month],
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(summaryData);
+
+    // Set column widths
+    ws['!cols'] = [{ wch: 30 }, { wch: 20 }];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Analytics Summary');
+
+    // Download
+    XLSX.writeFile(wb, `advanced_analytics_${timestamp}.xlsx`);
+}
+
+// Export as PDF
+function exportAsPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const data = {{ analytics_json|safe }};
+    const timestamp = new Date().toLocaleString();
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text('AGNES HOTSPOT DETECTION SYSTEM', 105, 20, { align: 'center' });
+
+    doc.setFontSize(14);
+    doc.text('Advanced Analytics Report', 105, 28, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Generated: ${timestamp}`, 14, 40);
+    doc.text(`Province: {{ current_province }}`, 14, 46);
+    doc.text(`Total Accidents: {{ total_accidents }}`, 14, 52);
+
+    let yPos = 62;
+
+    // Spatial Analysis
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('SPATIAL ANALYSIS', 14, yPos);
+    yPos += 8;
+
+    doc.autoTable({
+        startY: yPos,
+        head: [['Metric', 'Value']],
+        body: [
+            ['Hotspot Accidents', data.spatial_analysis.hotspot_effectiveness.hotspot_accidents],
+            ['Non-Hotspot Accidents', data.spatial_analysis.hotspot_effectiveness.non_hotspot_accidents],
+            ['Concentration Ratio', data.spatial_analysis.hotspot_effectiveness.hotspot_concentration_ratio + ':1'],
+            ['Hotspot Fatality Rate', data.spatial_analysis.hotspot_effectiveness.hotspot_fatality_rate + '%'],
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [102, 126, 234] },
+    });
+
+    yPos = doc.lastAutoTable.finalY + 10;
+
+    // Severity Analysis
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('SEVERITY ANALYSIS', 14, yPos);
+    yPos += 8;
+
+    doc.autoTable({
+        startY: yPos,
+        head: [['Metric', 'Value']],
+        body: [
+            ['Fatal Accidents', data.severity_analysis.severity_index.fatal_accidents],
+            ['Injury Accidents', data.severity_analysis.severity_index.injury_accidents],
+            ['Severity Index', data.severity_analysis.severity_index.severity_index],
+            ['Severity Category', data.severity_analysis.severity_index.severity_category],
+            ['Total Casualties', data.severity_analysis.severity_index.total_casualties],
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [102, 126, 234] },
+    });
+
+    yPos = doc.lastAutoTable.finalY + 10;
+
+    // Predictive Analysis
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('PREDICTIVE ANALYSIS', 14, yPos);
+    yPos += 8;
+
+    doc.autoTable({
+        startY: yPos,
+        head: [['Metric', 'Value']],
+        body: [
+            ['Trend Direction', data.predictive_analysis.trend.trend],
+            ['Confidence', data.predictive_analysis.trend.confidence_percentage + '%'],
+            ['R² Value', data.predictive_analysis.trend.r_squared],
+            ['Predicted Next Month', data.predictive_analysis.trend.prediction_next_month + ' accidents'],
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [102, 126, 234] },
+    });
+
+    // Download
+    const filename = `advanced_analytics_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(filename);
 }
 
 function switchToFullMode() {
