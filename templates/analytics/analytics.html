@@ -825,7 +825,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-    // Chart instances
+    // Chart instances - Store in window for global access
+    window.charts = {};
     let trendChart, severityChart, hourlyChart, vehicleChart, dowChart, comparisonChart, forecastChart;
     let provinceComparisonChart, incidentTypeChart, trendComparisonChart;
 
@@ -941,6 +942,7 @@
                     }
                 }
             });
+            window.charts.trendChart = trendChart;
             console.log('✅ Trend Chart created successfully');
         } catch (error) {
             console.error('❌ Trend Chart error:', error);
@@ -980,6 +982,7 @@
                     }
                 }
             });
+            window.charts.severityChart = severityChart;
             console.log('✅ Severity Chart created successfully');
         } catch (error) {
             console.error('❌ Severity Chart error:', error);
@@ -1013,6 +1016,7 @@
                     }
                 }
             });
+            window.charts.hourlyChart = hourlyChart;
             console.log('✅ Hourly Chart created successfully');
         } catch (error) {
             console.error('❌ Hourly Chart error:', error);
@@ -1046,6 +1050,7 @@
                     }
                 }
             });
+            window.charts.vehicleChart = vehicleChart;
             console.log('✅ Vehicle Chart created successfully');
         } catch (error) {
             console.error('❌ Vehicle Chart error:', error);
@@ -1079,6 +1084,7 @@
                     }
                 }
             });
+            window.charts.dowChart = dowChart;
             console.log('✅ Day of Week Chart created successfully');
         } catch (error) {
             console.error('❌ Day of Week Chart error:', error);
@@ -1118,6 +1124,7 @@
                     }
                 }
             });
+            window.charts.comparisonChart = comparisonChart;
             console.log('✅ Comparison Chart created successfully');
         } catch (error) {
             console.error('❌ Comparison Chart error:', error);
@@ -1164,6 +1171,7 @@
                     }
                 }
             });
+            window.charts.forecastChart = forecastChart;
             console.log('✅ Forecast Chart created successfully');
         } catch (error) {
             console.error('❌ Forecast Chart error:', error);
@@ -1224,6 +1232,7 @@
                     }
                 }
             });
+            window.charts.provinceComparisonChart = provinceComparisonChart;
             console.log('✅ Province Comparison Chart created successfully');
         } catch (error) {
             console.error('❌ Province Comparison Chart error:', error);
@@ -1270,6 +1279,7 @@
                     }
                 }
             });
+            window.charts.incidentTypeChart = incidentTypeChart;
             console.log('✅ Incident Type Chart created successfully');
         } catch (error) {
             console.error('❌ Incident Type Chart error:', error);
@@ -1338,6 +1348,7 @@
                     }
                 }
             });
+            window.charts.trendComparisonChart = trendComparisonChart;
             console.log('✅ Trend Comparison Chart created successfully');
         } catch (error) {
             console.error('❌ Trend Comparison Chart error:', error);
@@ -1526,18 +1537,24 @@
     // EXPORT FUNCTIONS
     // ============================================================================
     function exportChart(chartId) {
-        const chart = window[chartId];
+        const chart = window.charts[chartId];
         if (!chart) {
-            alert('Chart not available for export');
+            alert('Chart not available for export. Please wait for charts to load.');
+            console.error('❌ Chart not found:', chartId, 'Available charts:', Object.keys(window.charts));
             return;
         }
-        
-        const link = document.createElement('a');
-        link.download = `${chartId}_${new Date().toISOString().split('T')[0]}.png`;
-        link.href = chart.toBase64Image();
-        link.click();
-        
-        console.log(`✅ Exported chart: ${chartId}`);
+
+        try {
+            const link = document.createElement('a');
+            link.download = `${chartId}_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = chart.toBase64Image();
+            link.click();
+
+            console.log(`✅ Exported chart: ${chartId}`);
+        } catch (error) {
+            console.error('❌ Error exporting chart:', error);
+            alert('Error exporting chart. Please try again.');
+        }
     }
 
     function exportAnalytics() {
