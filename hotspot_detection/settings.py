@@ -86,11 +86,19 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'accident_hotspot_db',
         'USER': 'postgres',
-        'PASSWORD': 'irex@9911',  
+        'PASSWORD': 'irex@9911',
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
+
+# Use SQLite for testing
+import sys
+if 'test' in sys.argv or 'test_coverage' in sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
 
 # ==============================================================================
 # PASSWORD VALIDATION
@@ -178,6 +186,45 @@ SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
+
+# ==============================================================================
+# CACHE CONFIGURATION
+# ==============================================================================
+
+# Default: File-based caching (no Redis required for development)
+# For production, switch to Redis backend (see Redis configuration below)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': BASE_DIR / 'cache',
+        'TIMEOUT': 300,  # 5 minutes default
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000
+        }
+    }
+}
+
+# Redis cache configuration (commented out - will be used with Celery)
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:6379/1',
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         },
+#         'KEY_PREFIX': 'hotspot',
+#         'TIMEOUT': 300,  # 5 minutes default
+#     }
+# }
+
+# Cache keys for different data types
+CACHE_TTL = {
+    'dashboard': 60 * 5,        # 5 minutes
+    'statistics': 60 * 15,      # 15 minutes
+    'clusters': 60 * 10,        # 10 minutes
+    'accidents_list': 60 * 5,   # 5 minutes
+    'map_data': 60 * 30,        # 30 minutes
+}
 
 # ==============================================================================
 # DJANGO REST FRAMEWORK
@@ -279,6 +326,43 @@ CLUSTERING_CONFIG = {
     'AUTO_RUN_ENABLED': False,  # Set to True to auto-run clustering
     'AUTO_RUN_SCHEDULE': 'daily',  # Options: 'daily', 'weekly', 'monthly'
 }
+
+# ==============================================================================
+# CELERY CONFIGURATION (Async Task Queue)
+# ==============================================================================
+
+# Celery broker URL (Redis)
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+
+# Celery result backend
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+
+# Celery task settings
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Manila'  # Philippines timezone
+CELERY_ENABLE_UTC = False
+
+# Task execution settings
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes max
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # 25 minutes soft limit
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 50  # Restart worker after 50 tasks
+
+# Result backend settings
+CELERY_RESULT_EXTENDED = True
+CELERY_RESULT_EXPIRES = 3600  # Results expire after 1 hour
+
+# Task routing
+CELERY_TASK_ROUTES = {
+    'accidents.tasks.run_clustering_task': {'queue': 'clustering'},
+    'accidents.tasks.export_*': {'queue': 'exports'},
+    'accidents.tasks.generate_*': {'queue': 'reports'},
+}
+
+# Beat schedule (periodic tasks configured in celery.py)
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # ==============================================================================
 # FILE UPLOAD SETTINGS
