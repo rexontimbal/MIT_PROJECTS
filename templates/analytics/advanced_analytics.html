@@ -1,0 +1,658 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Advanced Analytics - AGNES Hotspot Detection{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .analytics-header {
+        border-bottom: 3px solid #4CAF50;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+
+    .metric-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .metric-box.success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    .metric-box.warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .metric-box.info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .metric-label {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 5px;
+    }
+
+    .metric-value {
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    .metric-unit {
+        font-size: 16px;
+        opacity: 0.8;
+    }
+
+    .stat-row {
+        border-bottom: 1px solid #eee;
+        padding: 10px 0;
+    }
+
+    .stat-row:last-child {
+        border-bottom: none;
+    }
+
+    .stat-label {
+        font-weight: 600;
+        color: #555;
+    }
+
+    .stat-value {
+        float: right;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .badge-critical { background: #f44336; color: white; padding: 4px 12px; border-radius: 12px; }
+    .badge-high { background: #ff9800; color: white; padding: 4px 12px; border-radius: 12px; }
+    .badge-moderate { background: #2196F3; color: white; padding: 4px 12px; border-radius: 12px; }
+    .badge-low { background: #4CAF50; color: white; padding: 4px 12px; border-radius: 12px; }
+
+    .trend-up {
+        color: #f44336;
+    }
+
+    .trend-down {
+        color: #4CAF50;
+    }
+
+    .filter-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-icon {
+        margin-right: 10px;
+        font-size: 28px;
+    }
+
+    table.analytics-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table.analytics-table th {
+        background: #667eea;
+        color: white;
+        padding: 12px;
+        text-align: left;
+    }
+
+    table.analytics-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #eee;
+    }
+
+    table.analytics-table tr:hover {
+        background: #f5f5f5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-chart-line"></i> Advanced Analytics Dashboard
+            </h1>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Province</label>
+                        <select name="province" class="form-control">
+                            <option value="all" {% if current_province == 'all' %}selected{% endif %}>All Provinces</option>
+                            {% for province in provinces %}
+                            <option value="{{ province }}" {% if current_province == province %}selected{% endif %}>{{ province }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Date From</label>
+                        <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Date To</label>
+                        <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="metric-box">
+                        <div class="metric-label">Total Accidents Analyzed</div>
+                        <div class="metric-value">{{ total_accidents|default:0 }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-box info">
+                        <div class="metric-label">Hotspot Concentration</div>
+                        <div class="metric-value">
+                            {{ analytics.spatial_analysis.hotspot_effectiveness.hotspot_percentage|default:0 }}
+                            <span class="metric-unit">%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-box warning">
+                        <div class="metric-label">Severity Index</div>
+                        <div class="metric-value">{{ analytics.severity_analysis.severity_index.severity_index|default:0 }}</div>
+                        <div class="metric-unit">{{ analytics.severity_analysis.severity_index.severity_category|default:"N/A" }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-box success">
+                        <div class="metric-label">Trend Confidence</div>
+                        <div class="metric-value">
+                            {{ analytics.predictive_analysis.trend.confidence_percentage|default:0 }}
+                            <span class="metric-unit">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spatial Analysis Section -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="analytics-card">
+                <div class="section-title">
+                    <span class="section-icon">🗺️</span>
+                    Spatial Analysis
+                </div>
+
+                <h5>Hotspot Effectiveness</h5>
+                {% with hotspot=analytics.spatial_analysis.hotspot_effectiveness %}
+                <div class="stat-row">
+                    <span class="stat-label">Hotspot Accidents:</span>
+                    <span class="stat-value">{{ hotspot.hotspot_accidents|default:0 }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Non-Hotspot Accidents:</span>
+                    <span class="stat-value">{{ hotspot.non_hotspot_accidents|default:0 }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Concentration Ratio:</span>
+                    <span class="stat-value">{{ hotspot.hotspot_concentration_ratio|default:0 }}:1</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Hotspot Fatality Rate:</span>
+                    <span class="stat-value">{{ hotspot.hotspot_fatality_rate|default:0 }}%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Severity Differential:</span>
+                    <span class="stat-value {% if hotspot.severity_differential > 0 %}trend-up{% else %}trend-down{% endif %}">
+                        {{ hotspot.severity_differential|default:0 }}%
+                    </span>
+                </div>
+                {% endwith %}
+
+                <hr>
+
+                <h5>Spatial Concentration</h5>
+                {% with spatial=analytics.spatial_analysis.spatial_concentration %}
+                <div class="stat-row">
+                    <span class="stat-label">Gini Coefficient:</span>
+                    <span class="stat-value">{{ spatial.gini_coefficient|default:0 }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Concentration Level:</span>
+                    <span class="stat-value">
+                        <span class="badge-{{ spatial.concentration_level|lower }}">{{ spatial.concentration_level|default:"N/A" }}</span>
+                    </span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Top 10 Municipalities:</span>
+                    <span class="stat-value">{{ spatial.top_10_percentage|default:0 }}% of accidents</span>
+                </div>
+                {% endwith %}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="analytics-card">
+                <div class="section-title">
+                    <span class="section-icon">🕐</span>
+                    Temporal Analysis
+                </div>
+
+                <h5>Rush Hour Analysis</h5>
+                {% with rush=analytics.temporal_analysis.rush_hour %}
+                <div class="stat-row">
+                    <span class="stat-label">Rush Hour Accidents:</span>
+                    <span class="stat-value">{{ rush.rush_hour_accidents|default:0 }} ({{ rush.rush_hour_percentage|default:0 }}%)</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Risk Multiplier:</span>
+                    <span class="stat-value">{{ rush.rush_hour_risk_multiplier|default:1 }}x</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">High Risk Period:</span>
+                    <span class="stat-value">
+                        {% if rush.is_rush_hour_high_risk %}
+                        <span class="badge-high">Yes - Rush Hour</span>
+                        {% else %}
+                        <span class="badge-low">No</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% endwith %}
+
+                <hr>
+
+                <h5>Weekend vs Weekday</h5>
+                {% with weekend=analytics.temporal_analysis.weekend_vs_weekday %}
+                <div class="stat-row">
+                    <span class="stat-label">Weekday Daily Avg:</span>
+                    <span class="stat-value">{{ weekend.weekday_daily_average|default:0 }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Weekend Daily Avg:</span>
+                    <span class="stat-value">{{ weekend.weekend_daily_average|default:0 }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Weekend Risk Ratio:</span>
+                    <span class="stat-value">{{ weekend.weekend_risk_ratio|default:0 }}x</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Higher Risk Period:</span>
+                    <span class="stat-value">
+                        <strong>{{ weekend.higher_risk_period|default:"Unknown" }}</strong>
+                    </span>
+                </div>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Severity Analysis -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="analytics-card">
+                <div class="section-title">
+                    <span class="section-icon">⚠️</span>
+                    Severity & Risk Analysis
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        {% with severity=analytics.severity_analysis.severity_index %}
+                        <h5>Severity Breakdown</h5>
+                        <div class="stat-row">
+                            <span class="stat-label">Fatal Accidents:</span>
+                            <span class="stat-value">{{ severity.fatal_accidents|default:0 }} ({{ severity.fatal_rate|default:0 }}%)</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Injury Accidents:</span>
+                            <span class="stat-value">{{ severity.injury_accidents|default:0 }} ({{ severity.injury_rate|default:0 }}%)</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Property Only:</span>
+                            <span class="stat-value">{{ severity.property_only_accidents|default:0 }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Total Casualties:</span>
+                            <span class="stat-value"><strong>{{ severity.total_casualties|default:0 }}</strong></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Avg Casualties/Accident:</span>
+                            <span class="stat-value">{{ severity.average_casualties_per_accident|default:0 }}</span>
+                        </div>
+                        {% endwith %}
+                    </div>
+
+                    <div class="col-md-8">
+                        <h5>High-Risk Combinations</h5>
+                        {% with combos=analytics.severity_analysis.high_risk_combinations.high_risk_combinations %}
+                        {% if combos %}
+                        <table class="analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Time Slot</th>
+                                    <th>Location</th>
+                                    <th>Accidents</th>
+                                    <th>Fatal</th>
+                                    <th>Risk Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for combo in combos %}
+                                <tr>
+                                    <td>{{ combo.time_slot }}</td>
+                                    <td>{{ combo.location }}</td>
+                                    <td>{{ combo.accidents }}</td>
+                                    <td>{{ combo.fatal }}</td>
+                                    <td><strong>{{ combo.risk_score }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="text-muted">No high-risk combinations identified with current filters.</p>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Predictive Analysis -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="analytics-card">
+                <div class="section-title">
+                    <span class="section-icon">📈</span>
+                    Predictive Analytics
+                </div>
+
+                {% with trend=analytics.predictive_analysis.trend %}
+                <h5>Trend Analysis</h5>
+                <div class="stat-row">
+                    <span class="stat-label">Trend Direction:</span>
+                    <span class="stat-value">
+                        <span class="badge-{% if trend.trend == 'INCREASING' %}high{% elif trend.trend == 'DECREASING' %}low{% else %}moderate{% endif %}">
+                            {{ trend.trend|default:"UNKNOWN" }}
+                        </span>
+                    </span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Confidence Level:</span>
+                    <span class="stat-value">{{ trend.confidence_percentage|default:0 }}%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">R² Value:</span>
+                    <span class="stat-value">{{ trend.r_squared|default:0 }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">P-Value:</span>
+                    <span class="stat-value">{{ trend.p_value|default:"N/A" }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Statistical Significance:</span>
+                    <span class="stat-value">
+                        {% if trend.is_significant %}
+                        <span class="badge-high">Significant</span>
+                        {% else %}
+                        <span class="badge-moderate">Not Significant</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Predicted Next Month:</span>
+                    <span class="stat-value"><strong>{{ trend.prediction_next_month|default:0 }} accidents</strong></span>
+                </div>
+                {% endwith %}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="analytics-card">
+                <div class="section-title">
+                    <span class="section-icon">🔍</span>
+                    Anomaly Detection
+                </div>
+
+                {% with anomalies=analytics.predictive_analysis.anomalies %}
+                <div class="stat-row">
+                    <span class="stat-label">Anomalies Detected:</span>
+                    <span class="stat-value"><strong>{{ anomalies.anomalies_detected|default:0 }}</strong></span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Mean Accidents:</span>
+                    <span class="stat-value">{{ anomalies.mean|default:0 }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Std Deviation:</span>
+                    <span class="stat-value">{{ anomalies.std_dev|default:0 }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Anomaly Threshold:</span>
+                    <span class="stat-value">{{ anomalies.threshold|default:0 }}</span>
+                </div>
+
+                {% if anomalies.anomalies %}
+                <hr>
+                <h6>Detected Anomalies:</h6>
+                {% for anomaly in anomalies.anomalies %}
+                <div class="alert alert-warning">
+                    <strong>{{ anomaly.month }}</strong>: {{ anomaly.count }} accidents
+                    ({{ anomaly.percentage_above_normal }}% above normal, σ={{ anomaly.deviation }})
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistical Tests -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="analytics-card">
+                <div class="section-title">
+                    <span class="section-icon">📊</span>
+                    Statistical Tests
+                </div>
+
+                <h5>Provincial Variance (ANOVA)</h5>
+                {% with anova=analytics.statistical_tests.provincial_variance %}
+                {% if anova.test_performed %}
+                <div class="stat-row">
+                    <span class="stat-label">F-Statistic:</span>
+                    <span class="stat-value">{{ anova.f_statistic|default:"N/A" }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">P-Value:</span>
+                    <span class="stat-value">{{ anova.p_value|default:"N/A" }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Significance:</span>
+                    <span class="stat-value">
+                        {% if anova.is_significant %}
+                        <span class="badge-high">Significant (p < 0.05)</span>
+                        {% else %}
+                        <span class="badge-moderate">Not Significant</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Provinces Tested:</span>
+                    <span class="stat-value">{{ anova.provinces_tested|default:0 }}</span>
+                </div>
+                <div class="alert alert-info mt-3">
+                    {{ anova.conclusion|default:"No conclusion available" }}
+                </div>
+                {% else %}
+                <p class="text-muted">{{ anova.reason|default:"Test could not be performed" }}</p>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="analytics-card">
+                <div class="section-title">
+                    <span class="section-icon">🔗</span>
+                    Correlation Analysis
+                </div>
+
+                <h5>Time vs Severity Correlation</h5>
+                {% with corr=analytics.statistical_tests.correlations %}
+                <div class="stat-row">
+                    <span class="stat-label">Pearson Coefficient (r):</span>
+                    <span class="stat-value">{{ corr.time_severity_correlation|default:"N/A" }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">P-Value:</span>
+                    <span class="stat-value">{{ corr.p_value|default:"N/A" }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Significance:</span>
+                    <span class="stat-value">
+                        {% if corr.is_significant %}
+                        <span class="badge-high">Significant</span>
+                        {% else %}
+                        <span class="badge-moderate">Not Significant</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <strong>Interpretation:</strong> {{ corr.interpretation|default:"N/A" }}
+                </div>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Seasonal Analysis -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="analytics-card">
+                <div class="section-title">
+                    <span class="section-icon">📅</span>
+                    Seasonal Patterns
+                </div>
+
+                {% with seasonal=analytics.temporal_analysis.seasonal %}
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="stat-row">
+                            <span class="stat-label">Highest Risk Quarter:</span>
+                            <span class="stat-value"><strong>{{ seasonal.highest_risk_quarter|default:"N/A" }}</strong></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Accidents:</span>
+                            <span class="stat-value">{{ seasonal.highest_risk_count|default:0 }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-row">
+                            <span class="stat-label">Lowest Risk Quarter:</span>
+                            <span class="stat-value"><strong>{{ seasonal.lowest_risk_quarter|default:"N/A" }}</strong></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Accidents:</span>
+                            <span class="stat-value">{{ seasonal.lowest_risk_count|default:0 }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-row">
+                            <span class="stat-label">Seasonal Variation:</span>
+                            <span class="stat-value">{{ seasonal.seasonal_variation|default:0 }}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if seasonal.quarterly_breakdown %}
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Quarter</th>
+                            <th>Total Accidents</th>
+                            <th>Fatal Accidents</th>
+                            <th>Fatality Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for quarter in seasonal.quarterly_breakdown %}
+                        <tr>
+                            <td><strong>{{ quarter.quarter }}</strong></td>
+                            <td>{{ quarter.total }}</td>
+                            <td>{{ quarter.fatal }}</td>
+                            <td>{{ quarter.fatality_rate }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="analytics-card">
+                <h5>Export Analytics Data</h5>
+                <p class="text-muted">Download this analytics report for further analysis or thesis documentation.</p>
+                <button class="btn btn-success" onclick="exportAnalytics()">
+                    <i class="fas fa-download"></i> Export as JSON
+                </button>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportAnalytics() {
+    const analyticsData = {{ analytics_json|safe }};
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(analyticsData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "advanced_analytics_report.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+}
+</script>
+{% endblock %}

@@ -1101,6 +1101,62 @@ def analytics_view(request):
     
     return render(request, 'analytics/analytics.html', context)
 
+
+def advanced_analytics_view(request):
+    """
+    Enhanced analytics view with advanced statistical analysis
+    """
+    from .analytics import AccidentAnalytics
+    from django.core.cache import cache
+
+    # Get filter parameters
+    province_filter = request.GET.get('province', 'all')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+
+    # Build queryset
+    accidents = Accident.objects.all()
+
+    if province_filter and province_filter != 'all':
+        accidents = accidents.filter(province=province_filter)
+
+    if date_from:
+        accidents = accidents.filter(date_committed__gte=date_from)
+
+    if date_to:
+        accidents = accidents.filter(date_committed__lte=date_to)
+
+    # Cache key for analytics
+    cache_key = f'advanced_analytics_{province_filter}_{date_from}_{date_to}'
+    cached_data = cache.get(cache_key)
+
+    if cached_data:
+        analytics_data = cached_data
+    else:
+        # Generate advanced analytics
+        analyzer = AccidentAnalytics(accidents)
+        analytics_data = analyzer.generate_comprehensive_report()
+
+        # Cache for 10 minutes
+        cache.set(cache_key, analytics_data, 600)
+
+    # Get provinces for filter
+    provinces = list(Accident.objects.values_list('province', flat=True).distinct().order_by('province'))
+    provinces = [p for p in provinces if p and p.strip()]
+
+    context = {
+        'analytics': analytics_data,
+        'total_accidents': accidents.count(),
+        'provinces': provinces,
+        'current_province': province_filter,
+        'date_from': date_from,
+        'date_to': date_to,
+        'analytics_json': json.dumps(analytics_data, default=str)
+    }
+
+    return render(request, 'analytics/advanced_analytics.html', context)
+
+
 def get_critical_alerts():
     """Get real-time critical alerts for dashboard"""
     from django.utils import timezone

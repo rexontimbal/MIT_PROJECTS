@@ -23,7 +23,8 @@ urlpatterns = [
     
     # Analytics
     path('analytics/', views.analytics_view, name='analytics'),
-    
+    path('analytics/advanced/', views.advanced_analytics_view, name='advanced_analytics'),
+
     # Other pages
     path('about/', views.about, name='about'),
     path('help/', views.help_view, name='help'),
