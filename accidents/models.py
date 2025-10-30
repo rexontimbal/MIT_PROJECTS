@@ -219,3 +219,199 @@ class ClusteringJob(models.Model):
     
     def __str__(self):
         return f"Clustering Job {self.id} - {self.status}"
+
+
+class UserProfile(models.Model):
+    """Extended user profile for PNP personnel with roles and permissions"""
+
+    ROLE_CHOICES = [
+        ('super_admin', 'Super Admin'),
+        ('regional_director', 'Regional Director'),
+        ('provincial_chief', 'Provincial Chief'),
+        ('station_commander', 'Station Commander'),
+        ('traffic_officer', 'Traffic Officer'),
+        ('data_encoder', 'Data Encoder'),
+    ]
+
+    RANK_CHOICES = [
+        ('PGEN', 'Police General'),
+        ('PLTGEN', 'Police Lieutenant General'),
+        ('PMGEN', 'Police Major General'),
+        ('PBGEN', 'Police Brigadier General'),
+        ('PCOLONEL', 'Police Colonel'),
+        ('PLTCOL', 'Police Lieutenant Colonel'),
+        ('PMAJOR', 'Police Major'),
+        ('PCAPTAIN', 'Police Captain'),
+        ('PLIEUTENANT', 'Police Lieutenant'),
+        ('PEXECUTIVE MASTER SERGEANT', 'Police Executive Master Sergeant'),
+        ('PCHIEF MASTER SERGEANT', 'Police Chief Master Sergeant'),
+        ('PSENIOR MASTER SERGEANT', 'Police Senior Master Sergeant'),
+        ('PMASTER SERGEANT', 'Police Master Sergeant'),
+        ('PSTAFF SERGEANT', 'Police Staff Sergeant'),
+        ('PCORPORAL', 'Police Corporal'),
+        ('PATROLMAN', 'Patrolman'),
+        ('CIVILIAN', 'Civilian Personnel'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+
+    # PNP-specific fields
+    badge_number = models.CharField(max_length=50, unique=True, verbose_name="Badge/ID Number")
+    rank = models.CharField(max_length=50, choices=RANK_CHOICES, default='PATROLMAN')
+    role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='traffic_officer')
+
+    # Assignment/Jurisdiction
+    region = models.CharField(max_length=100, default="CARAGA")
+    province = models.CharField(max_length=100, blank=True, null=True)
+    station = models.CharField(max_length=200, blank=True, null=True)
+    unit = models.CharField(max_length=200, blank=True, null=True, verbose_name="Unit/Office")
+
+    # Contact
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    mobile_number = models.CharField(max_length=20)
+
+    # Security
+    is_active = models.BooleanField(default=True)
+    failed_login_attempts = models.IntegerField(default=0)
+    account_locked_until = models.DateTimeField(null=True, blank=True)
+    last_login = models.DateTimeField(null=True, blank=True)
+    password_changed_at = models.DateTimeField(null=True, blank=True)
+    must_change_password = models.BooleanField(default=True)
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_profiles')
+
+    class Meta:
+        db_table = 'user_profiles'
+        ordering = ['rank', 'user__last_name']
+        verbose_name = 'User Profile'
+        verbose_name_plural = 'User Profiles'
+
+    def __str__(self):
+        return f"{self.get_rank_display()} {self.user.get_full_name() or self.user.username} - {self.get_role_display()}"
+
+    def get_full_name_with_rank(self):
+        """Return rank + full name"""
+        name = self.user.get_full_name() or self.user.username
+        return f"{self.get_rank_display()} {name}"
+
+    def has_permission(self, permission):
+        """Check if user has specific permission based on role"""
+        permissions = {
+            'super_admin': ['view', 'add', 'edit', 'delete', 'manage_users', 'run_clustering', 'view_all_data'],
+            'regional_director': ['view', 'add', 'edit', 'manage_users', 'run_clustering', 'view_all_data'],
+            'provincial_chief': ['view', 'add', 'edit', 'delete', 'run_clustering', 'view_province_data'],
+            'station_commander': ['view', 'add', 'edit', 'view_station_data'],
+            'traffic_officer': ['view', 'add', 'view_own_data'],
+            'data_encoder': ['view', 'add', 'view_all_data'],
+        }
+        return permission in permissions.get(self.role, [])
+
+    def can_view_accident(self, accident):
+        """Check if user can view specific accident based on jurisdiction"""
+        if self.role in ['super_admin', 'regional_director', 'data_encoder']:
+            return True
+        if self.role == 'provincial_chief':
+            return accident.province == self.province
+        if self.role == 'station_commander':
+            return accident.station == self.station
+        if self.role == 'traffic_officer':
+            return accident.station == self.station
+        return False
+
+    def is_account_locked(self):
+        """Check if account is currently locked"""
+        if self.account_locked_until:
+            if timezone.now() < self.account_locked_until:
+                return True
+            else:
+                # Auto-unlock if lock period expired
+                self.account_locked_until = None
+                self.failed_login_attempts = 0
+                self.save()
+        return False
+
+
+class AuditLog(models.Model):
+    """Comprehensive audit trail for all user actions"""
+
+    ACTION_CHOICES = [
+        ('login', 'User Login'),
+        ('logout', 'User Logout'),
+        ('login_failed', 'Failed Login Attempt'),
+        ('password_change', 'Password Changed'),
+        ('accident_create', 'Accident Created'),
+        ('accident_edit', 'Accident Edited'),
+        ('accident_delete', 'Accident Deleted'),
+        ('accident_view', 'Accident Viewed'),
+        ('user_create', 'User Created'),
+        ('user_edit', 'User Edited'),
+        ('user_delete', 'User Deleted'),
+        ('user_activate', 'User Activated'),
+        ('user_deactivate', 'User Deactivated'),
+        ('clustering_run', 'Clustering Executed'),
+        ('report_generate', 'Report Generated'),
+        ('export_data', 'Data Exported'),
+        ('system_config', 'System Configuration Changed'),
+    ]
+
+    SEVERITY_CHOICES = [
+        ('info', 'Information'),
+        ('warning', 'Warning'),
+        ('critical', 'Critical'),
+    ]
+
+    # Who
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='audit_logs')
+    username = models.CharField(max_length=150)  # Store username in case user is deleted
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, null=True)
+
+    # What
+    action = models.CharField(max_length=50, choices=ACTION_CHOICES)
+    action_description = models.TextField()
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default='info')
+
+    # When
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    # Where (for geographic tracking)
+    station = models.CharField(max_length=200, blank=True, null=True)
+    province = models.CharField(max_length=100, blank=True, null=True)
+
+    # Details
+    object_type = models.CharField(max_length=100, blank=True, null=True)  # e.g., "Accident", "User"
+    object_id = models.IntegerField(null=True, blank=True)
+    object_repr = models.CharField(max_length=500, blank=True, null=True)  # String representation
+    changes = models.JSONField(null=True, blank=True)  # Store old/new values
+
+    # Status
+    success = models.BooleanField(default=True)
+    error_message = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'audit_logs'
+        ordering = ['-timestamp']
+        verbose_name = 'Audit Log'
+        verbose_name_plural = 'Audit Logs'
+        indexes = [
+            models.Index(fields=['user', '-timestamp']),
+            models.Index(fields=['action', '-timestamp']),
+            models.Index(fields=['timestamp']),
+        ]
+
+    def __str__(self):
+        return f"{self.timestamp.strftime('%Y-%m-%d %H:%M')} - {self.username}: {self.get_action_display()}"
+
+    @staticmethod
+    def log_action(user, action, description, **kwargs):
+        """Convenience method to create audit log entry"""
+        return AuditLog.objects.create(
+            user=user,
+            username=user.username if user else 'Anonymous',
+            action=action,
+            action_description=description,
+            **kwargs
+        )
