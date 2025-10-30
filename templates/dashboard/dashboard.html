@@ -34,20 +34,80 @@
     </div>
     {% endif %}
     <!-- Page Header -->
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; padding: 0;">
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; padding: 0;">
     <div class="header-content">
-        <h2 style="color: #003087; margin-bottom: 0.5rem; font-size: 1.8rem; font-weight: 700;">📊 Accident Analytics Dashboard</h2>
-        <p style="color: #666; margin: 0;">Overview of traffic accidents in Caraga Region</p>
+        <h2 style="color: #003087; margin-bottom: 0.5rem; font-size: 1.8rem; font-weight: 700;">🚔 PNP Caraga - Command Center Dashboard</h2>
+        <p style="color: #666; margin: 0;">Real-time accident monitoring and hotspot detection | <span id="currentDateTime">{{ current_time|date:"F d, Y - h:i A" }}</span></p>
     </div>
     <div class="dashboard-actions" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-        <button class="btn btn-primary" onclick="window.location.href='{% url 'report_accident' %}'" style="padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; border: 2px solid #007bff; background: #007bff; color: white; cursor: pointer; text-decoration: none;">
-            <span>📝</span> Report New Accident
+        <button class="btn btn-primary" onclick="window.location.href='{% url 'report_accident' %}'" style="padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; border: 2px solid #DC143C; background: #DC143C; color: white; cursor: pointer; text-decoration: none; box-shadow: 0 2px 8px rgba(220, 20, 60, 0.3);">
+            <span>🚨</span> Report Accident
         </button>
-        <button class="btn btn-outline" onclick="AGNESSystem.printPage()" style="padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; border: 2px solid #007bff; background: transparent; color: #007bff; cursor: pointer; text-decoration: none;">
-            <span>🖨️</span> Print Report
+        <button class="btn btn-outline" onclick="window.location.href='{% url 'hotspots' %}'" style="padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; border: 2px solid #003087; background: transparent; color: #003087; cursor: pointer; text-decoration: none;">
+            <span>🗺️</span> View Hotspots
+        </button>
+        <button class="btn btn-outline" onclick="AGNESSystem.printPage()" style="padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; border: 2px solid #666; background: transparent; color: #666; cursor: pointer; text-decoration: none;">
+            <span>🖨️</span> Print
         </button>
     </div>
 </div>
+
+    <!-- Real-Time Operational Stats -->
+    <div class="operational-stats-section" style="background: linear-gradient(135deg, #003087 0%, #0056b3 100%); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; color: white; box-shadow: 0 4px 15px rgba(0, 48, 135, 0.2);">
+        <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600; opacity: 0.95;">📊 OPERATIONAL SUMMARY</h3>
+        <div class="time-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <!-- TODAY -->
+            <div class="time-stat-card" style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255, 255, 255, 0.2);">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span style="font-size: 1.5rem;">📅</span>
+                    <span style="font-weight: 600; font-size: 0.9rem; opacity: 0.9;">TODAY</span>
+                </div>
+                <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">{{ today_total }}</div>
+                <div style="display: flex; gap: 1rem; font-size: 0.85rem; opacity: 0.95;">
+                    <span>💀 {{ today_fatal }} Fatal</span>
+                    <span>🏥 {{ today_injury }} Injury</span>
+                </div>
+            </div>
+
+            <!-- THIS WEEK -->
+            <div class="time-stat-card" style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255, 255, 255, 0.2);">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span style="font-size: 1.5rem;">📆</span>
+                    <span style="font-weight: 600; font-size: 0.9rem; opacity: 0.9;">THIS WEEK</span>
+                </div>
+                <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">{{ week_total }}</div>
+                <div style="display: flex; gap: 1rem; font-size: 0.85rem; opacity: 0.95;">
+                    <span>💀 {{ week_fatal }} Fatal</span>
+                    <span>🏥 {{ week_injury }} Injury</span>
+                </div>
+            </div>
+
+            <!-- THIS MONTH -->
+            <div class="time-stat-card" style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255, 255, 255, 0.2);">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span style="font-size: 1.5rem;">📊</span>
+                    <span style="font-weight: 600; font-size: 0.9rem; opacity: 0.9;">THIS MONTH</span>
+                </div>
+                <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">{{ month_total }}</div>
+                <div style="display: flex; gap: 1rem; font-size: 0.85rem; opacity: 0.95;">
+                    <span>💀 {{ month_fatal }} Fatal</span>
+                    <span>🏥 {{ month_injury }} Injury</span>
+                </div>
+            </div>
+
+            <!-- CRITICAL HOTSPOTS -->
+            <div class="time-stat-card" style="background: rgba(220, 20, 60, 0.9); backdrop-filter: blur(10px); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255, 255, 255, 0.3);">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span style="font-size: 1.5rem;">🔴</span>
+                    <span style="font-weight: 600; font-size: 0.9rem;">ACTIVE HOTSPOTS</span>
+                </div>
+                <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;">{{ total_hotspots }}</div>
+                <div style="font-size: 0.85rem; opacity: 0.95;">
+                    <span>⚠️ Requires attention</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Statistics Cards -->
     <div class="stats-grid">
@@ -728,16 +788,81 @@
         .table-row {
             grid-template-columns: 1fr;
         }
-        
+
         .table-container .card-header {
             flex-direction: column;
             gap: 0.5rem;
             align-items: flex-start;
         }
-        
+
         .header-actions {
             width: 100%;
             justify-content: flex-start;
+        }
+
+        /* Mobile responsiveness for new operational stats */
+        .page-header {
+            flex-direction: column !important;
+            gap: 1rem;
+        }
+
+        .page-header h2 {
+            font-size: 1.3rem !important;
+        }
+
+        .page-header p {
+            font-size: 0.85rem !important;
+        }
+
+        .dashboard-actions {
+            width: 100%;
+            justify-content: flex-start !important;
+        }
+
+        .dashboard-actions button {
+            flex: 1;
+            min-width: auto !important;
+            padding: 0.5rem 0.8rem !important;
+            font-size: 0.85rem !important;
+        }
+
+        .operational-stats-section {
+            padding: 1rem !important;
+        }
+
+        .operational-stats-section h3 {
+            font-size: 0.95rem !important;
+        }
+
+        .time-stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.75rem !important;
+        }
+
+        .time-stat-card {
+            padding: 0.75rem !important;
+        }
+
+        .time-stat-card > div:nth-child(2) {
+            font-size: 1.5rem !important;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-header h2 {
+            font-size: 1.1rem !important;
+        }
+
+        .time-stat-card > div:nth-child(2) {
+            font-size: 1.3rem !important;
+        }
+
+        .dashboard-actions button span:first-child {
+            display: none;
         }
     }
 </style>

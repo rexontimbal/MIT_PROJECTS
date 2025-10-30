@@ -15,26 +15,60 @@ from django.contrib.auth.views import LoginView
 
 #@login_required
 def dashboard(request):
-    """Optimized dashboard with better performance and caching"""
-    
+    """Optimized dashboard with better performance and caching - Enhanced for PNP Operations"""
+
     # Check if it's an AJAX request for partial updates
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-    
+
     # Get current date for calculations
     today = timezone.now().date()
-    
+    now = timezone.now()
+
     # Use database aggregation for faster statistics
     from django.db.models import Count, Q, Sum
     from django.core.cache import cache
-    
+
     # Cache key for dashboard data
     cache_key = 'dashboard_data'
     cached_data = cache.get(cache_key)
-    
+
     if cached_data and not is_ajax:
         # Use cached data if available (except for AJAX requests)
         context = cached_data
     else:
+        # === REAL-TIME OPERATIONAL STATS FOR PNP ===
+
+        # TODAY's accidents
+        today_accidents = Accident.objects.filter(
+            date_committed=today
+        ).aggregate(
+            total=Count('id'),
+            fatal=Count('id', filter=Q(victim_killed=True)),
+            injury=Count('id', filter=Q(victim_injured=True))
+        )
+
+        # THIS WEEK's accidents (Monday to today)
+        week_start = today - timedelta(days=today.weekday())
+        week_accidents = Accident.objects.filter(
+            date_committed__gte=week_start,
+            date_committed__lte=today
+        ).aggregate(
+            total=Count('id'),
+            fatal=Count('id', filter=Q(victim_killed=True)),
+            injury=Count('id', filter=Q(victim_injured=True))
+        )
+
+        # THIS MONTH's accidents
+        month_start = today.replace(day=1)
+        month_accidents = Accident.objects.filter(
+            date_committed__gte=month_start,
+            date_committed__lte=today
+        ).aggregate(
+            total=Count('id'),
+            fatal=Count('id', filter=Q(victim_killed=True)),
+            injury=Count('id', filter=Q(victim_injured=True))
+        )
+
         # Calculate statistics with optimized queries
         stats = Accident.objects.aggregate(
             total_accidents=Count('id'),
@@ -42,43 +76,60 @@ def dashboard(request):
             total_injured=Count('id', filter=Q(victim_injured=True)),
             total_casualties=Sum('victim_count')
         )
-        
+
         # Get counts with single queries
         total_hotspots = AccidentCluster.objects.count()
         pending_reports = AccidentReport.objects.filter(status='pending').count()
-        
+
         # Calculate recent increase (last 30 days vs previous 30 days)
         last_30_days = today - timedelta(days=30)
         last_60_days = today - timedelta(days=60)
-        
+
         recent_accidents_count = Accident.objects.filter(
             date_committed__gte=last_30_days
         ).count()
-        
+
         previous_accidents_count = Accident.objects.filter(
             date_committed__gte=last_60_days,
             date_committed__lt=last_30_days
         ).count()
-        
+
         recent_increase = 0
         if previous_accidents_count > 0:
             recent_increase = ((recent_accidents_count - previous_accidents_count) / previous_accidents_count) * 100
-        
+
         # Optimized queries for recent data with select_related and limit
-        recent_accidents_list = Accident.objects.select_related().order_by('-date_committed')[:10]
-        
+        recent_accidents_list = Accident.objects.select_related().order_by('-date_committed', '-time_committed')[:15]
+
         # Optimized hotspots query
         top_hotspots = AccidentCluster.objects.only(
             'cluster_id', 'primary_location', 'accident_count', 'severity_score'
         ).order_by('-severity_score')[:5]
-        
+
         # Get chart data (these are already optimized in their functions)
         time_data = get_accidents_over_time(12)
         province_data = get_accidents_by_province()
         type_data = get_accidents_by_type()
         time_of_day_data = get_accidents_by_time_of_day()
-        
+
+        # Get critical alerts
+        critical_alerts = get_critical_alerts()
+
         context = {
+            # Real-time operational stats
+            'today_total': today_accidents['total'] or 0,
+            'today_fatal': today_accidents['fatal'] or 0,
+            'today_injury': today_accidents['injury'] or 0,
+
+            'week_total': week_accidents['total'] or 0,
+            'week_fatal': week_accidents['fatal'] or 0,
+            'week_injury': week_accidents['injury'] or 0,
+
+            'month_total': month_accidents['total'] or 0,
+            'month_fatal': month_accidents['fatal'] or 0,
+            'month_injury': month_accidents['injury'] or 0,
+
+            # Overall statistics
             'total_accidents': stats['total_accidents'] or 0,
             'total_hotspots': total_hotspots,
             'total_casualties': stats['total_casualties'] or 0,
@@ -88,7 +139,8 @@ def dashboard(request):
             'recent_increase': round(recent_increase, 1),
             'recent_accidents': recent_accidents_list,
             'top_hotspots': top_hotspots,
-            
+            'critical_alerts': critical_alerts,
+
             # Chart data
             'time_labels': json.dumps(time_data['labels']),
             'time_data': json.dumps(time_data['data']),
@@ -97,13 +149,15 @@ def dashboard(request):
             'type_labels': json.dumps(type_data['labels']),
             'type_data': json.dumps(type_data['data']),
             'time_of_day_data': json.dumps(time_of_day_data),
-            
+
+            # Current time for display
+            'current_time': now,
         }
-        
-        # Cache the data for 5 minutes (300 seconds)
+
+        # Cache the data for 2 minutes (120 seconds) - shorter for real-time feel
         if not is_ajax:
-            cache.set(cache_key, context, 300)
-    
+            cache.set(cache_key, context, 120)
+
     if is_ajax:
         # Return minimal HTML for AJAX updates
         return render(request, 'dashboard/dashboard_partial.html', context)
