@@ -1545,12 +1545,29 @@
         }
 
         try {
+            // Get the original canvas
+            const originalCanvas = chart.canvas;
+
+            // Create a new canvas with white background
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = originalCanvas.width;
+            tempCanvas.height = originalCanvas.height;
+            const ctx = tempCanvas.getContext('2d');
+
+            // Fill with white background
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+            // Draw the chart on top of white background
+            ctx.drawImage(originalCanvas, 0, 0);
+
+            // Export with white background
             const link = document.createElement('a');
             link.download = `${chartId}_${new Date().toISOString().split('T')[0]}.png`;
-            link.href = chart.toBase64Image();
+            link.href = tempCanvas.toDataURL('image/png');
             link.click();
 
-            console.log(`✅ Exported chart: ${chartId}`);
+            console.log(`✅ Exported chart with white background: ${chartId}`);
         } catch (error) {
             console.error('❌ Error exporting chart:', error);
             alert('Error exporting chart. Please try again.');
