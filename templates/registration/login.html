@@ -52,7 +52,7 @@
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-            overflow: auto;
+            overflow: hidden;
             position: relative;
             z-index: 1;
         }
@@ -455,48 +455,51 @@
             }
         }
 
-        /* Small Screen Height - ensure everything is visible */
-        @media (max-height: 700px) {
+        /* Small Screen Height - ONLY enable scroll on very small heights */
+        @media (max-height: 650px) {
             .login-container {
                 min-height: auto;
                 max-height: none;
+                overflow: auto;
                 margin: 1rem auto;
             }
 
             .login-left {
                 padding: 1.5rem 1rem;
+                overflow: auto;
             }
 
             .login-right {
                 padding: 1.5rem 1rem;
+                overflow: auto;
             }
 
             .pnp-seal {
-                width: 80px;
-                height: 80px;
-                margin-bottom: 0.75rem;
+                width: 70px;
+                height: 70px;
+                margin-bottom: 0.5rem;
             }
 
             .features-list {
-                margin-top: 1rem;
+                margin-top: 0.75rem;
             }
 
             .features-list div {
-                margin-bottom: 0.75rem;
+                margin-bottom: 0.5rem;
             }
 
             .form-group {
-                margin-bottom: 1rem;
+                margin-bottom: 0.75rem;
             }
 
             .security-notice {
-                margin-bottom: 1rem;
-                padding: 0.5rem 0.75rem;
+                margin-bottom: 0.75rem;
+                padding: 0.4rem 0.6rem;
             }
 
             .login-footer {
-                margin-top: 1rem;
-                padding-top: 1rem;
+                margin-top: 0.75rem;
+                padding-top: 0.75rem;
             }
         }
 
