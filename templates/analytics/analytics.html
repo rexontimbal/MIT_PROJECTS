@@ -798,27 +798,6 @@
         </div>
     </div>
 </div>
-
-<!-- Scroll to Top Button -->
-<button id="scrollTopBtn" style="
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: #003087;
-    color: white;
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 24px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    display: none;
-    z-index: 1000;
-    transition: all 0.3s ease;
-" onclick="scrollToTop()">
-    ↑
-</button>
 {% endblock %}
 
 {% block extra_js %}
@@ -1753,24 +1732,5 @@ window.addEventListener('scroll', function() {
         }
     }
 });
-
-// Show/hide scroll to top button
-window.addEventListener('scroll', function() {
-    const scrollBtn = document.getElementById('scrollTopBtn');
-    if (scrollBtn) {
-        if (window.scrollY > 300) {
-            scrollBtn.style.display = 'block';
-        } else {
-            scrollBtn.style.display = 'none';
-        }
-    }
-});
-
-function scrollToTop() {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-}
 </script>
 {% endblock %}
