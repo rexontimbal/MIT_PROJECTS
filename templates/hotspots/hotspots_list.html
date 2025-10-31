@@ -558,7 +558,7 @@
 </div>
 
 
-<!-- Summary Cards -->
+<!-- Summary Cards - Dynamic Updates Based on Filters -->
 <div class="summary-cards">
     <div class="summary-card">
         <h3 id="totalHotspots">{{ hotspots.count }}</h3>
@@ -573,8 +573,8 @@
         <p>Total Casualties</p>
     </div>
     <div class="summary-card">
-        <h3 id="criticalCount">{{ critical_count }}</h3>
-        <p>Critical Hotspots</p>
+        <h3 id="highSeverityCount">0</h3>
+        <p>High Severity (50+)</p>
     </div>
 </div>
 
@@ -677,8 +677,9 @@
 <div class="hotspots-grid" id="hotspotsContainer">
     {% for hotspot in hotspots %}
     <div class="hotspot-card"
-        data-severity="{{ hotspot.severity_score }}" 
-        data-accidents="{{ hotspot.accident_count }}" 
+        data-severity="{{ hotspot.severity_score }}"
+        data-accidents="{{ hotspot.accident_count }}"
+        data-casualties="{{ hotspot.total_casualties }}"
         data-province="{{ hotspot.municipalities|join:',' }}"
         data-municipalities="{{ hotspot.municipalities|join:', ' }}"
         data-cluster="{{ hotspot.cluster_id }}"
@@ -1034,7 +1035,37 @@
             noResultsDiv.remove();
         }
     }
-    
+
+    // UPDATE SUMMARY CARDS - Real-time stats based on filtered data
+    function updateSummaryCards(visibleCards) {
+        let totalHotspots = visibleCards.length;
+        let totalAccidents = 0;
+        let totalCasualties = 0;
+        let highSeverityCount = 0;
+
+        visibleCards.forEach(card => {
+            // Sum accidents
+            const accidents = parseInt(card.getAttribute('data-accidents')) || 0;
+            totalAccidents += accidents;
+
+            // Sum casualties
+            const casualties = parseInt(card.getAttribute('data-casualties')) || 0;
+            totalCasualties += casualties;
+
+            // Count high severity (50+)
+            const severity = parseFloat(card.getAttribute('data-severity')) || 0;
+            if (severity >= 50) {
+                highSeverityCount++;
+            }
+        });
+
+        // Update DOM elements
+        document.getElementById('totalHotspots').textContent = totalHotspots;
+        document.getElementById('totalAccidents').textContent = totalAccidents;
+        document.getElementById('totalCasualties').textContent = totalCasualties;
+        document.getElementById('highSeverityCount').textContent = highSeverityCount;
+    }
+
     // SEARCH FUNCTIONALITY
     function searchHotspots() {
         const searchTerm = document.getElementById('hotspotSearch').value.toLowerCase().trim();
@@ -1140,13 +1171,19 @@
         document.getElementById('prevPage').disabled = currentPage <= 1;
         document.getElementById('nextPage').disabled = currentPage >= totalPages;
 
-        // Scroll to top when changing pages
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Update summary cards with filtered data
+        updateSummaryCards(searchVisibleCards);
     }
 
     function changePage(direction) {
         currentPage += direction;
         updatePagination();
+
+        // Scroll to filters section smoothly (not top)
+        const filtersSection = document.querySelector('.filters-section');
+        if (filtersSection) {
+            filtersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     function changeItemsPerPage() {
@@ -1229,8 +1266,11 @@
     document.addEventListener('DOMContentLoaded', function() {
         updateActiveFilters();
         initializeHotspotCards();
-        updateRealTimeStats(); // Initialize stats
-        
+
+        // Initialize summary cards with all visible cards
+        const allCards = Array.from(document.getElementsByClassName('hotspot-card'));
+        updateSummaryCards(allCards);
+
         // Add risk analysis button to quick actions
         const quickActions = document.querySelector('.quick-actions');
         if (quickActions) {
@@ -1239,7 +1279,7 @@
             riskBtn.innerHTML = '📊 Risk Analysis';
             riskBtn.onclick = analyzeRiskPatterns;
             quickActions.appendChild(riskBtn);
-            
+
             const exportBtn = document.createElement('button');
             exportBtn.className = 'action-btn';
             exportBtn.innerHTML = '📈 Enhanced Export';
