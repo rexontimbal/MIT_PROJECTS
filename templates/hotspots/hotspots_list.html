@@ -601,49 +601,49 @@
         </div>
     </div>
 
-    <form method="get" class="filters-grid" id="hotspotFilters">
+    <div class="filters-grid" id="hotspotFilters">
         <div class="filter-group">
             <label for="province">Province</label>
-            <select name="province" id="province" onchange="applyFilters()">
+            <select name="province" id="province" onchange="applyClientSideFilters()">
                 <option value="">All Provinces</option>
                 {% for prov in provinces %}
-                <option value="{{ prov }}" {% if request.GET.province == prov %}selected{% endif %}>{{ prov }}</option>
+                <option value="{{ prov }}">{{ prov }}</option>
                 {% endfor %}
             </select>
         </div>
-        
+
         <div class="filter-group">
             <label for="min_severity">Minimum Severity</label>
-            <select name="min_severity" id="min_severity" onchange="applyFilters()">
+            <select name="min_severity" id="min_severity" onchange="applyClientSideFilters()">
                 <option value="">All Levels</option>
-                <option value="70" {% if request.GET.min_severity == '70' %}selected{% endif %}>Critical (70+)</option>
-                <option value="50" {% if request.GET.min_severity == '50' %}selected{% endif %}>High (50+)</option>
-                <option value="30" {% if request.GET.min_severity == '30' %}selected{% endif %}>Medium (30+)</option>
-                <option value="0" {% if request.GET.min_severity == '0' %}selected{% endif %}>Low (0+)</option>
+                <option value="70">Critical (70+)</option>
+                <option value="50">High (50+)</option>
+                <option value="30">Medium (30+)</option>
+                <option value="0">Low (0+)</option>
             </select>
         </div>
-        
+
         <div class="filter-group">
             <label for="min_accidents">Minimum Accidents</label>
-            <select name="min_accidents" id="min_accidents" onchange="applyFilters()">
+            <select name="min_accidents" id="min_accidents" onchange="applyClientSideFilters()">
                 <option value="">All Sizes</option>
-                <option value="50" {% if request.GET.min_accidents == '50' %}selected{% endif %}>50+ accidents</option>
-                <option value="20" {% if request.GET.min_accidents == '20' %}selected{% endif %}>20+ accidents</option>
-                <option value="10" {% if request.GET.min_accidents == '10' %}selected{% endif %}>10+ accidents</option>
-                <option value="5" {% if request.GET.min_accidents == '5' %}selected{% endif %}>5+ accidents</option>
+                <option value="50">50+ accidents</option>
+                <option value="20">20+ accidents</option>
+                <option value="10">10+ accidents</option>
+                <option value="5">5+ accidents</option>
             </select>
         </div>
-        
+
         <div class="filter-group">
             <label for="municipality">Municipality</label>
-            <select name="municipality" id="municipality" onchange="applyFilters()">
+            <select name="municipality" id="municipality" onchange="applyClientSideFilters()">
                 <option value="">All Municipalities</option>
                 {% for mun in municipalities %}
-                <option value="{{ mun }}" {% if request.GET.municipality == mun %}selected{% endif %}>{{ mun }}</option>
+                <option value="{{ mun }}">{{ mun }}</option>
                 {% endfor %}
             </select>
         </div>
-    </form>
+    </div>
     
     <!-- Active Filters Display -->
     <div class="active-filters" id="activeFilters">
@@ -778,37 +778,117 @@
         initializeHotspotCards();
     });
 
-    // Enhanced filtering functions
-    function applyFilters() {
-        showLoading();
-        document.getElementById('hotspotFilters').submit();
-    }
+    // CLIENT-SIDE FILTERING - No page reload!
+    function applyClientSideFilters() {
+        const cards = Array.from(document.getElementsByClassName('hotspot-card'));
+        const searchTerm = document.getElementById('hotspotSearch').value.toLowerCase().trim();
 
-    function clearAllFilters() {
-        window.location.href = '{% url "hotspots" %}';
+        // Get dropdown filter values
+        const provinceFilter = document.getElementById('province').value.toLowerCase();
+        const severityFilter = document.getElementById('min_severity').value;
+        const accidentsFilter = document.getElementById('min_accidents').value;
+        const municipalityFilter = document.getElementById('municipality').value.toLowerCase();
+
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            // Get card data
+            const location = (card.getAttribute('data-location') || '').toLowerCase();
+            const clusterId = (card.getAttribute('data-cluster') || '').toString().toLowerCase();
+            const municipalities = (card.getAttribute('data-municipalities') || '').toLowerCase();
+            const province = (card.getAttribute('data-province') || '').toLowerCase();
+            const titleElement = card.querySelector('.hotspot-title');
+            const titleText = titleElement ? titleElement.textContent.toLowerCase() : '';
+            const severity = parseFloat(card.getAttribute('data-severity')) || 0;
+            const accidents = parseInt(card.getAttribute('data-accidents')) || 0;
+
+            // Check search match
+            const searchMatch = searchTerm === '' ||
+                              location.includes(searchTerm) ||
+                              clusterId.includes(searchTerm) ||
+                              municipalities.includes(searchTerm) ||
+                              province.includes(searchTerm) ||
+                              titleText.includes(searchTerm);
+
+            // Check province filter
+            const provinceMatch = provinceFilter === '' ||
+                                province.includes(provinceFilter) ||
+                                municipalities.includes(provinceFilter);
+
+            // Check severity filter
+            const severityMatch = severityFilter === '' ||
+                                severity >= parseFloat(severityFilter);
+
+            // Check accidents filter
+            const accidentsMatch = accidentsFilter === '' ||
+                                 accidents >= parseInt(accidentsFilter);
+
+            // Check municipality filter
+            const municipalityMatch = municipalityFilter === '' ||
+                                    municipalities.includes(municipalityFilter);
+
+            // Card is visible only if ALL filters match
+            const allMatch = searchMatch && provinceMatch && severityMatch &&
+                           accidentsMatch && municipalityMatch;
+
+            if (allMatch) {
+                card.setAttribute('data-search-visible', 'true');
+                visibleCount++;
+            } else {
+                card.setAttribute('data-search-visible', 'false');
+            }
+        });
+
+        // Show no results message if needed
+        if (visibleCount === 0) {
+            showNoResultsMessage('your filters');
+        } else {
+            hideNoResultsMessage();
+        }
+
+        // Update active filters display
+        updateActiveFilters();
+
+        // Reset to page 1 and update pagination
+        currentPage = 1;
+        updatePagination();
     }
 
     function clearAllFiltersAndSearch() {
         // Clear search
         document.getElementById('hotspotSearch').value = '';
-        clearSearch();
 
-        // Clear URL filters and reload
-        window.location.href = '{% url "hotspots" %}';
+        // Clear all dropdown filters
+        document.getElementById('province').value = '';
+        document.getElementById('min_severity').value = '';
+        document.getElementById('min_accidents').value = '';
+        document.getElementById('municipality').value = '';
+
+        // Reset all cards to visible
+        const cards = document.getElementsByClassName('hotspot-card');
+        Array.from(cards).forEach(card => {
+            card.setAttribute('data-search-visible', 'true');
+        });
+
+        hideNoResultsMessage();
+        updateActiveFilters();
+        currentPage = 1;
+        updatePagination();
     }
 
     function filterBySeverity(level) {
-        let minSeverity = 0;
+        let minSeverity = '';
         switch(level) {
-            case 'critical': minSeverity = 70; break;
-            case 'high': minSeverity = 50; break;
-            case 'medium': minSeverity = 30; break;
+            case 'critical': minSeverity = '70'; break;
+            case 'high': minSeverity = '50'; break;
+            case 'medium': minSeverity = '30'; break;
         }
-        window.location.href = `{% url "hotspots" %}?min_severity=${minSeverity}`;
+        document.getElementById('min_severity').value = minSeverity;
+        applyClientSideFilters();
     }
 
     function showAllHotspots() {
-        window.location.href = '{% url "hotspots" %}';
+        clearAllFiltersAndSearch();
     }
 
     function sortByAccidents() {
@@ -843,8 +923,14 @@
 
     function updateActiveFilters() {
         const activeFilters = document.getElementById('activeFilters');
-        const params = new URLSearchParams(window.location.search);
         const searchTerm = document.getElementById('hotspotSearch').value.trim();
+
+        // Get dropdown values
+        const province = document.getElementById('province').value;
+        const minSeverity = document.getElementById('min_severity').value;
+        const minAccidents = document.getElementById('min_accidents').value;
+        const municipality = document.getElementById('municipality').value;
+
         let activeFiltersHTML = '';
 
         // Add search filter tag if search is active
@@ -855,20 +941,21 @@
             </div>`;
         }
 
-        if (params.get('province')) {
+        // Add province filter tag
+        if (province) {
             activeFiltersHTML += `<div class="filter-tag">
-                Province: ${params.get('province')}
+                Province: ${province}
                 <button onclick="removeFilter('province')">×</button>
             </div>`;
         }
 
-        if (params.get('min_severity')) {
-            const severity = params.get('min_severity');
+        // Add severity filter tag
+        if (minSeverity) {
             let level = 'All';
-            if (severity === '70') level = 'Critical (70+)';
-            else if (severity === '50') level = 'High (50+)';
-            else if (severity === '30') level = 'Medium (30+)';
-            else if (severity === '0') level = 'Low (0+)';
+            if (minSeverity === '70') level = 'Critical (70+)';
+            else if (minSeverity === '50') level = 'High (50+)';
+            else if (minSeverity === '30') level = 'Medium (30+)';
+            else if (minSeverity === '0') level = 'Low (0+)';
 
             activeFiltersHTML += `<div class="filter-tag">
                 Min Severity: ${level}
@@ -876,16 +963,18 @@
             </div>`;
         }
 
-        if (params.get('min_accidents')) {
+        // Add accidents filter tag
+        if (minAccidents) {
             activeFiltersHTML += `<div class="filter-tag">
-                Min Accidents: ${params.get('min_accidents')}+
+                Min Accidents: ${minAccidents}+
                 <button onclick="removeFilter('min_accidents')">×</button>
             </div>`;
         }
 
-        if (params.get('municipality')) {
+        // Add municipality filter tag
+        if (municipality) {
             activeFiltersHTML += `<div class="filter-tag">
-                Municipality: ${params.get('municipality')}
+                Municipality: ${municipality}
                 <button onclick="removeFilter('municipality')">×</button>
             </div>`;
         }
@@ -895,13 +984,13 @@
 
     function removeSearchFilter() {
         document.getElementById('hotspotSearch').value = '';
-        clearSearch();
+        applyClientSideFilters();
     }
 
     function removeFilter(filterName) {
-        const url = new URL(window.location);
-        url.searchParams.delete(filterName);
-        window.location.href = url.toString();
+        // Reset the specific dropdown filter
+        document.getElementById(filterName).value = '';
+        applyClientSideFilters();
     }
 
     function initializeHotspotCards() {
@@ -1066,77 +1155,10 @@
         document.getElementById('highSeverityCount').textContent = highSeverityCount;
     }
 
-    // SEARCH FUNCTIONALITY
+    // SEARCH FUNCTIONALITY - Now uses unified filtering
     function searchHotspots() {
-        const searchTerm = document.getElementById('hotspotSearch').value.toLowerCase().trim();
-        const cards = Array.from(document.getElementsByClassName('hotspot-card'));
-        let visibleCount = 0;
-
-        console.log('Search term:', searchTerm); // Debug
-
-        cards.forEach(card => {
-            // Get all searchable data
-            const location = (card.getAttribute('data-location') || '').toLowerCase();
-            const clusterId = (card.getAttribute('data-cluster') || '').toString().toLowerCase();
-            const municipalities = (card.getAttribute('data-municipalities') || '').toLowerCase();
-            const province = (card.getAttribute('data-province') || '').toLowerCase();
-
-            // Get text content from card as backup
-            const titleElement = card.querySelector('.hotspot-title');
-            const titleText = titleElement ? titleElement.textContent.toLowerCase() : '';
-
-            // Debug first card
-            if (cards.indexOf(card) === 0) {
-                console.log('First card data:', { location, clusterId, municipalities, province, titleText });
-            }
-
-            // Check if search term matches any field
-            const matches = searchTerm === '' ||
-                          location.includes(searchTerm) ||
-                          clusterId.includes(searchTerm) ||
-                          municipalities.includes(searchTerm) ||
-                          province.includes(searchTerm) ||
-                          titleText.includes(searchTerm);
-
-            if (matches) {
-                card.setAttribute('data-search-visible', 'true');
-                visibleCount++;
-            } else {
-                card.setAttribute('data-search-visible', 'false');
-            }
-        });
-
-        console.log('Visible count:', visibleCount); // Debug
-
-        // Show no results message if needed
-        if (visibleCount === 0 && searchTerm) {
-            showNoResultsMessage(searchTerm);
-        } else {
-            hideNoResultsMessage();
-        }
-
-        // Update active filters to show search tag
-        updateActiveFilters();
-
-        // Reset to page 1 and update pagination
-        currentPage = 1;
-        updatePagination();
-    }
-
-    function clearSearch() {
-        document.getElementById('hotspotSearch').value = '';
-        const cards = document.getElementsByClassName('hotspot-card');
-        Array.from(cards).forEach(card => {
-            card.setAttribute('data-search-visible', 'true');
-        });
-
-        hideNoResultsMessage();
-
-        // Update active filters to remove search tag
-        updateActiveFilters();
-
-        currentPage = 1;
-        updatePagination();
+        // Just call the unified filter function
+        applyClientSideFilters();
     }
 
     // PAGINATION FUNCTIONALITY
