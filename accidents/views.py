@@ -518,13 +518,27 @@ def hotspots_view(request):
     municipalities = Accident.objects.values_list('municipal', flat=True).distinct().order_by('municipal')
     municipalities = [m for m in municipalities if m and m.strip()]
     
-    # Add killed_count to each hotspot for display
+    # Add killed_count and provinces to each hotspot for display
     for hotspot in hotspots:
         hotspot.killed_count = Accident.objects.filter(
-            cluster_id=hotspot.cluster_id, 
+            cluster_id=hotspot.cluster_id,
             victim_killed=True
         ).count()
-    
+
+        # Get actual provinces for this hotspot
+        hotspot_provinces = Accident.objects.filter(
+            cluster_id=hotspot.cluster_id
+        ).values_list('province', flat=True).distinct()
+        hotspot.provinces = [p for p in hotspot_provinces if p and p.strip()]
+
+    # Create province-to-municipality mapping for cascade filtering
+    province_municipality_map = {}
+    for province in provinces:
+        munis = Accident.objects.filter(
+            province=province
+        ).values_list('municipal', flat=True).distinct().order_by('municipal')
+        province_municipality_map[province] = [m for m in munis if m and m.strip()]
+
     # Prepare hotspots data for JSON (for map preview)
     from django.core.serializers.json import DjangoJSONEncoder
     import json
@@ -532,7 +546,7 @@ def hotspots_view(request):
         'cluster_id', 'center_latitude', 'center_longitude',
         'primary_location', 'accident_count', 'severity_score'
     )), cls=DjangoJSONEncoder)
-    
+
     context = {
         'hotspots': hotspots,
         'total_accidents': total_accidents,
@@ -540,6 +554,7 @@ def hotspots_view(request):
         'critical_count': critical_count,
         'provinces': provinces,
         'municipalities': municipalities,
+        'province_municipality_map': json.dumps(province_municipality_map),
         'hotspots_json': hotspots_json,  # Add this for map preview
     }
     

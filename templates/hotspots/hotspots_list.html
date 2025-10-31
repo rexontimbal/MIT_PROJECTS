@@ -604,7 +604,7 @@
     <div class="filters-grid" id="hotspotFilters">
         <div class="filter-group">
             <label for="province">Province</label>
-            <select name="province" id="province" onchange="applyClientSideFilters()">
+            <select name="province" id="province" onchange="updateMunicipalityDropdown(); applyClientSideFilters();">
                 <option value="">All Provinces</option>
                 {% for prov in provinces %}
                 <option value="{{ prov }}">{{ prov }}</option>
@@ -680,7 +680,7 @@
         data-severity="{{ hotspot.severity_score }}"
         data-accidents="{{ hotspot.accident_count }}"
         data-casualties="{{ hotspot.total_casualties }}"
-        data-province="{{ hotspot.municipalities|join:',' }}"
+        data-provinces="{{ hotspot.provinces|join:',' }}"
         data-municipalities="{{ hotspot.municipalities|join:', ' }}"
         data-cluster="{{ hotspot.cluster_id }}"
         data-location="{{ hotspot.primary_location }}">
@@ -772,11 +772,44 @@
 
 {% block extra_js %}
 <script>
+    // Province to Municipality mapping for cascade filtering
+    const provinceMunicipalityMap = {{ province_municipality_map|safe }};
+    const allMunicipalities = {{ municipalities|safe }};
+
     // Initialize when page loads
     document.addEventListener('DOMContentLoaded', function() {
         updateActiveFilters();
         initializeHotspotCards();
     });
+
+    // CASCADE FILTERING - Update municipality dropdown when province changes
+    function updateMunicipalityDropdown() {
+        const provinceSelect = document.getElementById('province');
+        const municipalitySelect = document.getElementById('municipality');
+        const selectedProvince = provinceSelect.value;
+
+        // Clear current municipality selection
+        municipalitySelect.value = '';
+
+        // Remove all current options except "All Municipalities"
+        municipalitySelect.innerHTML = '<option value="">All Municipalities</option>';
+
+        // Get municipalities for selected province
+        let municipalitiesToShow = [];
+        if (selectedProvince) {
+            municipalitiesToShow = provinceMunicipalityMap[selectedProvince] || [];
+        } else {
+            municipalitiesToShow = allMunicipalities;
+        }
+
+        // Add municipality options
+        municipalitiesToShow.forEach(function(mun) {
+            const option = document.createElement('option');
+            option.value = mun;
+            option.textContent = mun;
+            municipalitySelect.appendChild(option);
+        });
+    }
 
     // CLIENT-SIDE FILTERING - No page reload!
     function applyClientSideFilters() {
@@ -796,7 +829,7 @@
             const location = (card.getAttribute('data-location') || '').toLowerCase();
             const clusterId = (card.getAttribute('data-cluster') || '').toString().toLowerCase();
             const municipalities = (card.getAttribute('data-municipalities') || '').toLowerCase();
-            const province = (card.getAttribute('data-province') || '').toLowerCase();
+            const provinces = (card.getAttribute('data-provinces') || '').toLowerCase();
             const titleElement = card.querySelector('.hotspot-title');
             const titleText = titleElement ? titleElement.textContent.toLowerCase() : '';
             const severity = parseFloat(card.getAttribute('data-severity')) || 0;
@@ -807,13 +840,12 @@
                               location.includes(searchTerm) ||
                               clusterId.includes(searchTerm) ||
                               municipalities.includes(searchTerm) ||
-                              province.includes(searchTerm) ||
+                              provinces.includes(searchTerm) ||
                               titleText.includes(searchTerm);
 
-            // Check province filter
+            // Check province filter - check if card's provinces include the selected province
             const provinceMatch = provinceFilter === '' ||
-                                province.includes(provinceFilter) ||
-                                municipalities.includes(provinceFilter);
+                                provinces.includes(provinceFilter);
 
             // Check severity filter
             const severityMatch = severityFilter === '' ||
@@ -863,6 +895,9 @@
         document.getElementById('min_severity').value = '';
         document.getElementById('min_accidents').value = '';
         document.getElementById('municipality').value = '';
+
+        // Reset municipality dropdown to show all municipalities
+        updateMunicipalityDropdown();
 
         // Clear sort
         currentSort = null;
@@ -1021,6 +1056,12 @@
     function removeFilter(filterName) {
         // Reset the specific dropdown filter
         document.getElementById(filterName).value = '';
+
+        // If province filter is removed, reset municipality dropdown
+        if (filterName === 'province') {
+            updateMunicipalityDropdown();
+        }
+
         applyClientSideFilters();
     }
 
