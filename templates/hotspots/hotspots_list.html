@@ -557,28 +557,6 @@
     <div class="view-option" onclick="switchView('list')">📋 List View</div>
 </div>
 
-<!-- Search Bar -->
-<div class="filters-section" style="margin-bottom: 1.5rem; padding: 1rem 1.5rem;">
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <div style="flex: 1; position: relative;">
-            <input type="text"
-                   id="hotspotSearch"
-                   placeholder="🔍 Search hotspots by location, cluster ID, or municipality..."
-                   style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; transition: all 0.3s ease;"
-                   oninput="searchHotspots()"
-                   onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 0 3px rgba(0,48,135,0.1)';"
-                   onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';">
-            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-medium); pointer-events: none;"></i>
-        </div>
-        <button onclick="clearSearch()" class="btn btn-outline btn-sm" style="white-space: nowrap;">
-            Clear Search
-        </button>
-    </div>
-    <div id="searchResults" style="margin-top: 0.75rem; color: var(--text-medium); font-size: 0.9rem; display: none;">
-        <span id="searchResultText"></span>
-    </div>
-</div>
-
 
 <!-- Summary Cards -->
 <div class="summary-cards">
@@ -603,12 +581,34 @@
 <!-- Enhanced Filters -->
 <div class="filters-section">
     <div class="filters-header">
-        <h3 style="margin: 0;">Filter Hotspots</h3>
-        <button type="button" class="btn btn-outline btn-sm" onclick="clearAllFilters()">
-            Clear All Filters
+        <h3 style="margin: 0;">Search & Filter Hotspots</h3>
+        <button type="button" class="btn btn-outline btn-sm" onclick="clearAllFiltersAndSearch()">
+            Clear All
         </button>
     </div>
-    
+
+    <!-- Search Bar - Inside Filters Section -->
+    <div style="margin-bottom: 1.5rem;">
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <div style="flex: 1; position: relative;">
+                <input type="text"
+                       id="hotspotSearch"
+                       placeholder="🔍 Search by location, cluster ID, or municipality..."
+                       style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; transition: all 0.3s ease;"
+                       oninput="searchHotspots()"
+                       onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 0 3px rgba(0,48,135,0.1)';"
+                       onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';">
+                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-medium); pointer-events: none;"></i>
+            </div>
+            <button onclick="clearSearch()" class="btn btn-outline btn-sm" style="white-space: nowrap;">
+                <i class="fas fa-times"></i> Clear Search
+            </button>
+        </div>
+        <div id="searchResults" style="margin-top: 0.75rem; color: var(--primary-blue); font-size: 0.9rem; font-weight: 600; display: none;">
+            <i class="fas fa-check-circle"></i> <span id="searchResultText"></span>
+        </div>
+    </div>
+
     <form method="get" class="filters-grid" id="hotspotFilters">
         <div class="filter-group">
             <label for="province">Province</label>
@@ -792,6 +792,15 @@
     }
 
     function clearAllFilters() {
+        window.location.href = '{% url "hotspots" %}';
+    }
+
+    function clearAllFiltersAndSearch() {
+        // Clear search
+        document.getElementById('hotspotSearch').value = '';
+        clearSearch();
+
+        // Clear URL filters and reload
         window.location.href = '{% url "hotspots" %}';
     }
 
@@ -1026,22 +1035,41 @@
         const cards = Array.from(document.getElementsByClassName('hotspot-card'));
         let visibleCount = 0;
 
+        console.log('Search term:', searchTerm); // Debug
+
         cards.forEach(card => {
-            const location = card.getAttribute('data-location').toLowerCase();
-            const clusterId = card.getAttribute('data-cluster');
-            const municipalities = card.getAttribute('data-municipalities').toLowerCase();
+            // Get all searchable data
+            const location = (card.getAttribute('data-location') || '').toLowerCase();
+            const clusterId = (card.getAttribute('data-cluster') || '').toString().toLowerCase();
+            const municipalities = (card.getAttribute('data-municipalities') || '').toLowerCase();
+            const province = (card.getAttribute('data-province') || '').toLowerCase();
 
-            const matches = location.includes(searchTerm) ||
+            // Get text content from card as backup
+            const titleElement = card.querySelector('.hotspot-title');
+            const titleText = titleElement ? titleElement.textContent.toLowerCase() : '';
+
+            // Debug first card
+            if (cards.indexOf(card) === 0) {
+                console.log('First card data:', { location, clusterId, municipalities, province, titleText });
+            }
+
+            // Check if search term matches any field
+            const matches = searchTerm === '' ||
+                          location.includes(searchTerm) ||
                           clusterId.includes(searchTerm) ||
-                          municipalities.includes(searchTerm);
+                          municipalities.includes(searchTerm) ||
+                          province.includes(searchTerm) ||
+                          titleText.includes(searchTerm);
 
-            if (matches || searchTerm === '') {
+            if (matches) {
                 card.setAttribute('data-search-visible', 'true');
                 visibleCount++;
             } else {
                 card.setAttribute('data-search-visible', 'false');
             }
         });
+
+        console.log('Visible count:', visibleCount); // Debug
 
         // Update search results display
         const searchResults = document.getElementById('searchResults');
