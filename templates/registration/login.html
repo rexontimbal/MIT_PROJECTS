@@ -455,29 +455,29 @@
             }
         }
 
-        /* Small Screen Height - ONLY enable scroll on very small heights */
-        @media (max-height: 650px) {
+        /* Small Screen Height - Scale down, NO SCROLL! */
+        @media (max-height: 700px) {
             .login-container {
                 min-height: auto;
-                max-height: none;
-                overflow: auto;
-                margin: 1rem auto;
+                margin: 0.5rem auto;
             }
 
             .login-left {
-                padding: 1.5rem 1rem;
-                overflow: auto;
+                padding: 1rem 1rem;
             }
 
             .login-right {
-                padding: 1.5rem 1rem;
-                overflow: auto;
+                padding: 1rem 1rem;
             }
 
             .pnp-seal {
-                width: 70px;
-                height: 70px;
+                width: 60px;
+                height: 60px;
                 margin-bottom: 0.5rem;
+            }
+
+            .login-left h1 {
+                font-size: clamp(16px, 2vh, 20px);
             }
 
             .features-list {
@@ -495,11 +495,16 @@
             .security-notice {
                 margin-bottom: 0.75rem;
                 padding: 0.4rem 0.6rem;
+                font-size: 0.7rem;
             }
 
             .login-footer {
                 margin-top: 0.75rem;
                 padding-top: 0.75rem;
+            }
+
+            .login-btn {
+                padding: 0.75rem;
             }
         }
 
