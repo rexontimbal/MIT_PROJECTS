@@ -121,15 +121,6 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon" style="background-color: #003087;">🔴</div>
-            <div class="stat-content">
-                <h3>{{ total_hotspots|default:0 }}</h3>
-                <p>Active Hotspots</p>
-                <span class="stat-trend">⚠️ Identified by AGNES</span>
-            </div>
-        </div>
-
-        <div class="stat-card">
             <div class="stat-icon" style="background-color: #FFA500;">⚕️</div>
             <div class="stat-content">
                 <h3>{{ total_casualties|default:0 }}</h3>
@@ -721,9 +712,15 @@
 
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 1.5rem;
         margin-bottom: 2rem;
+    }
+
+    @media (max-width: 992px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 
     .stat-card {
@@ -765,7 +762,8 @@
 
     .stat-trend {
         font-size: 0.85rem;
-        color: var(--text-light);
+        color: #666;
+        font-weight: 500;
     }
 
     .charts-section {
