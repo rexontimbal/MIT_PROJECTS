@@ -3,9 +3,13 @@
 
 {% block title %}Hotspot #{{ hotspot.cluster_id }}{% endblock %}
 
+{% block breadcrumb_items %}
+<span> / <a href="{% url 'hotspots' %}" style="color: inherit; text-decoration: none;">Hotspots</a> / Cluster #{{ hotspot.cluster_id }}</span>
+{% endblock %}
+
 {% block content %}
 <div style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
-    
+
     <!-- Header -->
     <div style="background: linear-gradient(135deg, #FFA500, #FF8C00); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
         <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -129,19 +133,29 @@
         </div>
         
         <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
+            <table id="accidentsTable" style="width: 100%; border-collapse: collapse;">
                 <thead style="background: #E8F0FE;">
                     <tr>
-                        <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600;">Date</th>
-                        <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600;">Time</th>
-                        <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600;">Location</th>
-                        <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600;">Type</th>
-                        <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600;">Casualties</th>
+                        <th onclick="sortTable(0)" style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600; cursor: pointer; user-select: none;">
+                            Date <span style="font-size: 0.7rem; opacity: 0.5;">▼▲</span>
+                        </th>
+                        <th onclick="sortTable(1)" style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600; cursor: pointer; user-select: none;">
+                            Time <span style="font-size: 0.7rem; opacity: 0.5;">▼▲</span>
+                        </th>
+                        <th onclick="sortTable(2)" style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600; cursor: pointer; user-select: none;">
+                            Location <span style="font-size: 0.7rem; opacity: 0.5;">▼▲</span>
+                        </th>
+                        <th onclick="sortTable(3)" style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600; cursor: pointer; user-select: none;">
+                            Type <span style="font-size: 0.7rem; opacity: 0.5;">▼▲</span>
+                        </th>
+                        <th onclick="sortTable(4)" style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600; cursor: pointer; user-select: none;">
+                            Casualties <span style="font-size: 0.7rem; opacity: 0.5;">▼▲</span>
+                        </th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="accidentsTableBody">
                     {% for accident in accidents %}
-                    <tr style="border-bottom: 1px solid #ddd;">
+                    <tr style="border-bottom: 1px solid #ddd;" data-date="{{ accident.date_committed|date:'Y-m-d' }}" data-casualties="{{ accident.victim_count }}">
                         <td style="padding: 0.75rem;">{{ accident.date_committed|date:"M d, Y" }}</td>
                         <td style="padding: 0.75rem;">{{ accident.time_committed|time:"g:i A" }}</td>
                         <td style="padding: 0.75rem;">{{ accident.barangay }}, {{ accident.municipal }}</td>
@@ -305,6 +319,62 @@ function createTrendChart() {
     } catch (error) {
         console.error('Error creating chart:', error);
     }
+}
+
+// Table Sorting Function
+let sortDirection = {};
+
+function sortTable(columnIndex) {
+    const table = document.getElementById('accidentsTable');
+    const tbody = document.getElementById('accidentsTableBody');
+    const rows = Array.from(tbody.getElementsByTagName('tr'));
+
+    // Skip if no data rows
+    if (rows.length === 0 || rows[0].cells.length === 0) return;
+
+    // Toggle sort direction
+    sortDirection[columnIndex] = !sortDirection[columnIndex];
+    const ascending = sortDirection[columnIndex];
+
+    rows.sort((rowA, rowB) => {
+        let cellA = rowA.cells[columnIndex].textContent.trim();
+        let cellB = rowB.cells[columnIndex].textContent.trim();
+
+        // Special handling for different columns
+        if (columnIndex === 0) {
+            // Date column - use data attribute
+            cellA = rowA.getAttribute('data-date');
+            cellB = rowB.getAttribute('data-date');
+        } else if (columnIndex === 4) {
+            // Casualties column - use data attribute
+            cellA = parseInt(rowA.getAttribute('data-casualties')) || 0;
+            cellB = parseInt(rowB.getAttribute('data-casualties')) || 0;
+            return ascending ? cellA - cellB : cellB - cellA;
+        }
+
+        // String comparison for other columns
+        if (cellA < cellB) return ascending ? -1 : 1;
+        if (cellA > cellB) return ascending ? 1 : -1;
+        return 0;
+    });
+
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+
+    // Visual feedback - update header arrows
+    const headers = table.querySelectorAll('th');
+    headers.forEach((header, index) => {
+        const arrow = header.querySelector('span');
+        if (arrow) {
+            if (index === columnIndex) {
+                arrow.textContent = ascending ? '▼' : '▲';
+                arrow.style.opacity = '1';
+            } else {
+                arrow.textContent = '▼▲';
+                arrow.style.opacity = '0.5';
+            }
+        }
+    });
 }
 </script>
 {% endblock %}

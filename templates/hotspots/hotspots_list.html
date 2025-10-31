@@ -557,6 +557,28 @@
     <div class="view-option" onclick="switchView('list')">📋 List View</div>
 </div>
 
+<!-- Search Bar -->
+<div class="filters-section" style="margin-bottom: 1.5rem; padding: 1rem 1.5rem;">
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <div style="flex: 1; position: relative;">
+            <input type="text"
+                   id="hotspotSearch"
+                   placeholder="🔍 Search hotspots by location, cluster ID, or municipality..."
+                   style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; transition: all 0.3s ease;"
+                   oninput="searchHotspots()"
+                   onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 0 3px rgba(0,48,135,0.1)';"
+                   onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';">
+            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-medium); pointer-events: none;"></i>
+        </div>
+        <button onclick="clearSearch()" class="btn btn-outline btn-sm" style="white-space: nowrap;">
+            Clear Search
+        </button>
+    </div>
+    <div id="searchResults" style="margin-top: 0.75rem; color: var(--text-medium); font-size: 0.9rem; display: none;">
+        <span id="searchResultText"></span>
+    </div>
+</div>
+
 
 <!-- Summary Cards -->
 <div class="summary-cards">
@@ -635,6 +657,28 @@
     <div class="active-filters" id="activeFilters">
         <!-- Active filters will be displayed here dynamically -->
     </div>
+</div>
+
+<!-- Pagination Controls -->
+<div style="background: white; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: var(--shadow-sm); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div style="color: var(--text-medium); font-size: 0.9rem;">
+        Showing <span id="showingCount">0</span> of <span id="totalCount">{{ hotspots.count }}</span> hotspots
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <button id="prevPage" onclick="changePage(-1)" class="btn btn-outline btn-sm" disabled>
+            ← Previous
+        </button>
+        <span id="pageInfo" style="padding: 0 1rem; font-weight: 600; color: var(--text-dark);">Page 1</span>
+        <button id="nextPage" onclick="changePage(1)" class="btn btn-outline btn-sm">
+            Next →
+        </button>
+    </div>
+    <select id="itemsPerPage" onchange="changeItemsPerPage()" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem;">
+        <option value="12">12 per page</option>
+        <option value="24">24 per page</option>
+        <option value="48">48 per page</option>
+        <option value="999999">Show all</option>
+    </select>
 </div>
 
 <!-- Hotspots Grid -->
@@ -976,17 +1020,110 @@
         }
     }
     
+    // SEARCH FUNCTIONALITY
+    function searchHotspots() {
+        const searchTerm = document.getElementById('hotspotSearch').value.toLowerCase().trim();
+        const cards = Array.from(document.getElementsByClassName('hotspot-card'));
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const location = card.getAttribute('data-location').toLowerCase();
+            const clusterId = card.getAttribute('data-cluster');
+            const municipalities = card.getAttribute('data-municipalities').toLowerCase();
+
+            const matches = location.includes(searchTerm) ||
+                          clusterId.includes(searchTerm) ||
+                          municipalities.includes(searchTerm);
+
+            if (matches || searchTerm === '') {
+                card.setAttribute('data-search-visible', 'true');
+                visibleCount++;
+            } else {
+                card.setAttribute('data-search-visible', 'false');
+            }
+        });
+
+        // Update search results display
+        const searchResults = document.getElementById('searchResults');
+        const searchResultText = document.getElementById('searchResultText');
+
+        if (searchTerm) {
+            searchResults.style.display = 'block';
+            searchResultText.textContent = `Found ${visibleCount} hotspot${visibleCount !== 1 ? 's' : ''} matching "${searchTerm}"`;
+        } else {
+            searchResults.style.display = 'none';
+        }
+
+        // Show no results message if needed
+        if (visibleCount === 0 && searchTerm) {
+            showNoResultsMessage(searchTerm);
+        } else {
+            hideNoResultsMessage();
+        }
+
+        // Reset to page 1 and update pagination
+        currentPage = 1;
+        updatePagination();
+    }
+
     function clearSearch() {
         document.getElementById('hotspotSearch').value = '';
         const cards = document.getElementsByClassName('hotspot-card');
         Array.from(cards).forEach(card => {
-            card.style.display = '';
+            card.setAttribute('data-search-visible', 'true');
         });
-        
-        const searchInfo = document.getElementById('searchInfo');
-        searchInfo.classList.remove('show');
+
+        document.getElementById('searchResults').style.display = 'none';
         hideNoResultsMessage();
-        updateRealTimeStats();
+        currentPage = 1;
+        updatePagination();
+    }
+
+    // PAGINATION FUNCTIONALITY
+    let currentPage = 1;
+    let itemsPerPage = 12;
+
+    function updatePagination() {
+        const cards = Array.from(document.getElementsByClassName('hotspot-card'));
+        const searchVisibleCards = cards.filter(card => card.getAttribute('data-search-visible') !== 'false');
+
+        const totalItems = searchVisibleCards.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+
+        // Hide all cards first
+        cards.forEach(card => card.style.display = 'none');
+
+        // Show only cards for current page
+        searchVisibleCards.forEach((card, index) => {
+            if (index >= startIndex && index < endIndex) {
+                card.style.display = '';
+            }
+        });
+
+        // Update pagination controls
+        document.getElementById('showingCount').textContent = Math.min(endIndex, totalItems);
+        document.getElementById('totalCount').textContent = totalItems;
+        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
+
+        // Enable/disable buttons
+        document.getElementById('prevPage').disabled = currentPage <= 1;
+        document.getElementById('nextPage').disabled = currentPage >= totalPages;
+
+        // Scroll to top when changing pages
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function changePage(direction) {
+        currentPage += direction;
+        updatePagination();
+    }
+
+    function changeItemsPerPage() {
+        itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+        currentPage = 1;
+        updatePagination();
     }
     
     // View Switching 
@@ -1008,39 +1145,9 @@
             // Grid view
             Array.from(cards).forEach(card => card.classList.remove('view-list'));
         }
-        
-        updateRealTimeStats();
     }
     
-    // Real-time Statistics 
-    function updateRealTimeStats() {
-        const visibleCards = Array.from(document.getElementsByClassName('hotspot-card'))
-            .filter(card => card.style.display !== 'none');
-        
-        let totalFatal = 0;
-        let totalInjured = 0;
-        let totalSeverity = 0;
-        
-        visibleCards.forEach(card => {
-            const severity = parseFloat(card.getAttribute('data-severity'));
-            const accidents = parseInt(card.getAttribute('data-accidents'));
-            
-            // Estimate fatal/injured based on severity
-            const fatalEstimate = Math.round(accidents * (severity / 100) * 0.3);
-            const injuredEstimate = Math.round(accidents * (severity / 100) * 0.6);
-            
-            totalFatal += fatalEstimate;
-            totalInjured += injuredEstimate;
-            totalSeverity += severity;
-        });
-        
-        const avgSeverity = visibleCards.length > 0 ? (totalSeverity / visibleCards.length).toFixed(1) : 0;
-        
-        // Update only the real-time stats display (not redundant ones)
-        document.getElementById('realTimeFatal').textContent = totalFatal;
-        document.getElementById('realTimeInjured').textContent = totalInjured;
-        document.getElementById('realTimeAvgSeverity').textContent = avgSeverity;
-    }
+    // Real-time Statistics (removed redundant code - elements don't exist)
     
             
     // Risk Analysis
@@ -1131,8 +1238,17 @@
         });
     }
     
-    // Call this temporarily to check the data
+    // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all cards as search-visible
+        const cards = document.getElementsByClassName('hotspot-card');
+        Array.from(cards).forEach(card => {
+            card.setAttribute('data-search-visible', 'true');
+        });
+
+        // Initialize pagination
+        updatePagination();
+
         // debugSearch(); // Uncomment to see debug info in console
     });
 </script>
