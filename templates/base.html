@@ -482,8 +482,27 @@
             }
 
             .quick-action-btn {
-                padding: 0.7rem 1rem;
-                font-size: 0.9rem;
+                padding: 0.7rem;
+                font-size: 1.1rem;
+                min-width: auto;
+                position: relative;
+            }
+
+            /* Show "Report Accident" on hover as tooltip */
+            .quick-action-btn:hover::after {
+                content: "Report Accident";
+                position: absolute;
+                bottom: -40px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 0.5rem 0.75rem;
+                border-radius: 4px;
+                font-size: 0.8rem;
+                white-space: nowrap;
+                z-index: 1000;
+                pointer-events: none;
             }
 
             .user-profile-btn {
