@@ -547,8 +547,8 @@
     <button class="action-btn" onclick="filterBySeverity('high')">🔴 High Severity Only</button>
     <button class="action-btn" onclick="filterBySeverity('critical')">💀 Critical Only</button>
     <button class="action-btn" onclick="showAllHotspots()">📊 Show All</button>
-    <button class="action-btn" onclick="sortByAccidents()">📈 Sort by Accidents</button>
-    <button class="action-btn" onclick="sortBySeverity()">⚡ Sort by Severity</button>
+    <button class="action-btn" onclick="applySortByAccidents()">📈 Sort by Accidents</button>
+    <button class="action-btn" onclick="applySortBySeverity()">⚡ Sort by Severity</button>
 </div>
 
 <!-- View Toggle & Progress -->
@@ -864,6 +864,9 @@
         document.getElementById('min_accidents').value = '';
         document.getElementById('municipality').value = '';
 
+        // Clear sort
+        currentSort = null;
+
         // Reset all cards to visible
         const cards = document.getElementsByClassName('hotspot-card');
         Array.from(cards).forEach(card => {
@@ -874,6 +877,11 @@
         updateActiveFilters();
         currentPage = 1;
         updatePagination();
+
+        // Reload to reset original order if there was sorting
+        if (currentSort) {
+            window.location.reload();
+        }
     }
 
     function filterBySeverity(level) {
@@ -891,34 +899,48 @@
         clearAllFiltersAndSearch();
     }
 
-    function sortByAccidents() {
-        // This would require backend implementation
-        // For now, we'll do client-side sorting
-        const container = document.getElementById('hotspotsContainer');
-        const cards = Array.from(container.getElementsByClassName('hotspot-card'));
-        
-        cards.sort((a, b) => {
-            const aAccidents = parseInt(a.getAttribute('data-accidents'));
-            const bAccidents = parseInt(b.getAttribute('data-accidents'));
-            return bAccidents - aAccidents;
-        });
-        
-        cards.forEach(card => container.appendChild(card));
-        showNotification('Sorted by accident count', 'info');
+    // SORT FUNCTIONS - Work with filter tags
+    function applySortByAccidents() {
+        currentSort = 'accidents';
+        applySorting();
+        updateActiveFilters();
     }
 
-    function sortBySeverity() {
+    function applySortBySeverity() {
+        currentSort = 'severity';
+        applySorting();
+        updateActiveFilters();
+    }
+
+    function applySorting() {
+        if (!currentSort) return;
+
         const container = document.getElementById('hotspotsContainer');
         const cards = Array.from(container.getElementsByClassName('hotspot-card'));
-        
+
         cards.sort((a, b) => {
-            const aSeverity = parseFloat(a.getAttribute('data-severity'));
-            const bSeverity = parseFloat(b.getAttribute('data-severity'));
-            return bSeverity - aSeverity;
+            if (currentSort === 'accidents') {
+                const aAccidents = parseInt(a.getAttribute('data-accidents'));
+                const bAccidents = parseInt(b.getAttribute('data-accidents'));
+                return bAccidents - aAccidents;
+            } else if (currentSort === 'severity') {
+                const aSeverity = parseFloat(a.getAttribute('data-severity'));
+                const bSeverity = parseFloat(b.getAttribute('data-severity'));
+                return bSeverity - aSeverity;
+            }
+            return 0;
         });
-        
+
         cards.forEach(card => container.appendChild(card));
-        showNotification('Sorted by severity score', 'info');
+
+        // Re-apply pagination after sorting
+        updatePagination();
+    }
+
+    function removeSortFilter() {
+        currentSort = null;
+        // Reload to original order
+        window.location.reload();
     }
 
     function updateActiveFilters() {
@@ -976,6 +998,15 @@
             activeFiltersHTML += `<div class="filter-tag">
                 Municipality: ${municipality}
                 <button onclick="removeFilter('municipality')">×</button>
+            </div>`;
+        }
+
+        // Add sort filter tag
+        if (currentSort) {
+            const sortLabel = currentSort === 'accidents' ? 'Sorted by Accidents' : 'Sorted by Severity';
+            activeFiltersHTML += `<div class="filter-tag">
+                ${sortLabel}
+                <button onclick="removeSortFilter()">×</button>
             </div>`;
         }
 
@@ -1165,6 +1196,9 @@
     let currentPage = 1;
     let itemsPerPage = 12;
 
+    // SORT STATE
+    let currentSort = null; // 'accidents' or 'severity' or null
+
     function updatePagination() {
         const cards = Array.from(document.getElementsByClassName('hotspot-card'));
         const searchVisibleCards = cards.filter(card => card.getAttribute('data-search-visible') !== 'false');
@@ -1235,56 +1269,7 @@
         }
     }
     
-    // Real-time Statistics (removed redundant code - elements don't exist)
-    
-            
-    // Risk Analysis
-    function analyzeRiskPatterns() {
-        const cards = Array.from(document.getElementsByClassName('hotspot-card'));
-        const severityScores = cards.map(card => parseFloat(card.getAttribute('data-severity')));
-        
-        if (severityScores.length === 0) return;
-        
-        const avgSeverity = severityScores.reduce((a, b) => a + b) / severityScores.length;
-        const maxSeverity = Math.max(...severityScores);
-        const highRiskPercentage = (severityScores.filter(s => s >= 50).length / severityScores.length * 100).toFixed(1);
-        
-        showNotification(
-            `Risk Analysis: Avg Severity ${avgSeverity.toFixed(1)}, ${highRiskPercentage}% High Risk Areas`, 
-            'info'
-        );
-    }
-    
-    // Export Enhanced Data
-    function exportEnhancedReport() {
-        const visibleCards = Array.from(document.getElementsByClassName('hotspot-card'))
-            .filter(card => card.style.display !== 'none');
-        
-        const data = visibleCards.map(card => {
-            const severity = parseFloat(card.getAttribute('data-severity'));
-            const accidents = parseInt(card.getAttribute('data-accidents'));
-            const location = card.querySelector('.hotspot-title').textContent;
-            const clusterId = card.querySelector('.stat-value').textContent.replace('#', '');
-            
-            return {
-                'Cluster ID': clusterId,
-                'Location': location,
-                'Accidents': accidents,
-                'Severity': severity,
-                'Risk Level': severity >= 70 ? 'CRITICAL' : severity >= 50 ? 'HIGH' : severity >= 30 ? 'MEDIUM' : 'LOW',
-                'Estimated Fatal': Math.round(accidents * (severity / 100) * 0.3),
-                'Estimated Injured': Math.round(accidents * (severity / 100) * 0.6),
-                'Priority': severity >= 70 ? 'URGENT' : severity >= 50 ? 'HIGH' : 'MEDIUM'
-            };
-        });
-        
-        if (typeof AGNESSystem !== 'undefined') {
-            AGNESSystem.exportToCSV(data, 'enhanced_hotspots_analysis.csv');
-            AGNESSystem.showNotification('Enhanced report exported successfully', 'success');
-        }
-    }
-    
-    // Initialize enhanced features when page loads
+    // Initialize page when DOM loads
     document.addEventListener('DOMContentLoaded', function() {
         updateActiveFilters();
         initializeHotspotCards();
@@ -1292,22 +1277,6 @@
         // Initialize summary cards with all visible cards
         const allCards = Array.from(document.getElementsByClassName('hotspot-card'));
         updateSummaryCards(allCards);
-
-        // Add risk analysis button to quick actions
-        const quickActions = document.querySelector('.quick-actions');
-        if (quickActions) {
-            const riskBtn = document.createElement('button');
-            riskBtn.className = 'action-btn';
-            riskBtn.innerHTML = '📊 Risk Analysis';
-            riskBtn.onclick = analyzeRiskPatterns;
-            quickActions.appendChild(riskBtn);
-
-            const exportBtn = document.createElement('button');
-            exportBtn.className = 'action-btn';
-            exportBtn.innerHTML = '📈 Enhanced Export';
-            exportBtn.onclick = exportEnhancedReport;
-            quickActions.appendChild(exportBtn);
-        }
     });
 
 
