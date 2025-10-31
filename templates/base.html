@@ -169,18 +169,43 @@
         .quick-action-btn {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 0.4rem;
-            padding: 0.6rem 1.1rem;
+            padding: 0.7rem;
             background: var(--accent-red);
             color: white;
             text-decoration: none;
             border-radius: var(--border-radius);
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 1.1rem;
             transition: var(--transition);
             border: none;
             cursor: pointer;
             white-space: nowrap;
+            position: relative;
+            min-width: auto;
+        }
+
+        /* ALWAYS hide text - show icon only */
+        .quick-action-btn .text {
+            display: none;
+        }
+
+        /* Show tooltip on hover */
+        .quick-action-btn:hover::after {
+            content: "Report Accident";
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 1000;
+            pointer-events: none;
         }
 
         .quick-action-btn:hover {
@@ -408,11 +433,6 @@
             .navbar-menu {
                 gap: 0.35rem;
             }
-            
-            .quick-action-btn {
-                padding: 0.65rem 1.2rem;
-                font-size: 0.9rem;
-            }
         }
         
         /* Smaller Laptops - Make navigation more compact */
@@ -477,34 +497,6 @@
                 gap: 0.25rem;
             }
 
-            .quick-action-btn .text {
-                display: none;
-            }
-
-            .quick-action-btn {
-                padding: 0.7rem;
-                font-size: 1.1rem;
-                min-width: auto;
-                position: relative;
-            }
-
-            /* Show "Report Accident" on hover as tooltip */
-            .quick-action-btn:hover::after {
-                content: "Report Accident";
-                position: absolute;
-                bottom: -40px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0, 0, 0, 0.9);
-                color: white;
-                padding: 0.5rem 0.75rem;
-                border-radius: 4px;
-                font-size: 0.8rem;
-                white-space: nowrap;
-                z-index: 1000;
-                pointer-events: none;
-            }
-
             .user-profile-btn {
                 padding: 0.5rem 0.75rem;
                 gap: 0.5rem;
@@ -543,11 +535,6 @@
             .navbar-menu {
                 gap: 0.2rem;
             }
-            
-            .quick-action-btn {
-                padding: 0.55rem 0.9rem;
-                font-size: 0.8rem;
-            }
         }
 
         /* Tablet Portrait - ICONS ONLY */
@@ -569,19 +556,7 @@
                 font-size: 1.2rem;
                 margin: 0;
             }
-            
-            .quick-action-btn span.text {
-                display: none;
-            }
-            
-            .quick-action-btn {
-                padding: 0.7rem;
-                border-radius: 50%;
-                width: 44px;
-                height: 44px;
-                justify-content: center;
-            }
-            
+
             .navbar-actions {
                 margin-left: 0.5rem;
             }
@@ -627,14 +602,6 @@
 
             .navbar-actions {
                 gap: 0.5rem;
-            }
-
-            .quick-action-btn .text {
-                display: none;
-            }
-
-            .quick-action-btn {
-                padding: 0.75rem;
             }
 
             .user-profile-btn {
