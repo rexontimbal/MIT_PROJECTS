@@ -589,23 +589,15 @@
 
     <!-- Search Bar - Inside Filters Section -->
     <div style="margin-bottom: 1.5rem;">
-        <div style="display: flex; gap: 1rem; align-items: center;">
-            <div style="flex: 1; position: relative;">
-                <input type="text"
-                       id="hotspotSearch"
-                       placeholder="🔍 Search by location, cluster ID, or municipality..."
-                       style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; transition: all 0.3s ease;"
-                       oninput="searchHotspots()"
-                       onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 0 3px rgba(0,48,135,0.1)';"
-                       onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';">
-                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-medium); pointer-events: none;"></i>
-            </div>
-            <button onclick="clearSearch()" class="btn btn-outline btn-sm" style="white-space: nowrap;">
-                <i class="fas fa-times"></i> Clear Search
-            </button>
-        </div>
-        <div id="searchResults" style="margin-top: 0.75rem; color: var(--primary-blue); font-size: 0.9rem; font-weight: 600; display: none;">
-            <i class="fas fa-check-circle"></i> <span id="searchResultText"></span>
+        <div style="position: relative;">
+            <input type="text"
+                   id="hotspotSearch"
+                   placeholder="🔍 Search by location, cluster ID, or municipality..."
+                   style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; transition: all 0.3s ease;"
+                   oninput="searchHotspots()"
+                   onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 0 3px rgba(0,48,135,0.1)';"
+                   onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';">
+            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-medium); pointer-events: none;"></i>
         </div>
     </div>
 
@@ -851,15 +843,24 @@
     function updateActiveFilters() {
         const activeFilters = document.getElementById('activeFilters');
         const params = new URLSearchParams(window.location.search);
+        const searchTerm = document.getElementById('hotspotSearch').value.trim();
         let activeFiltersHTML = '';
-        
+
+        // Add search filter tag if search is active
+        if (searchTerm) {
+            activeFiltersHTML += `<div class="filter-tag">
+                Search: "${searchTerm}"
+                <button onclick="removeSearchFilter()">×</button>
+            </div>`;
+        }
+
         if (params.get('province')) {
             activeFiltersHTML += `<div class="filter-tag">
                 Province: ${params.get('province')}
                 <button onclick="removeFilter('province')">×</button>
             </div>`;
         }
-        
+
         if (params.get('min_severity')) {
             const severity = params.get('min_severity');
             let level = 'All';
@@ -867,28 +868,33 @@
             else if (severity === '50') level = 'High (50+)';
             else if (severity === '30') level = 'Medium (30+)';
             else if (severity === '0') level = 'Low (0+)';
-            
+
             activeFiltersHTML += `<div class="filter-tag">
                 Min Severity: ${level}
                 <button onclick="removeFilter('min_severity')">×</button>
             </div>`;
         }
-        
+
         if (params.get('min_accidents')) {
             activeFiltersHTML += `<div class="filter-tag">
                 Min Accidents: ${params.get('min_accidents')}+
                 <button onclick="removeFilter('min_accidents')">×</button>
             </div>`;
         }
-        
+
         if (params.get('municipality')) {
             activeFiltersHTML += `<div class="filter-tag">
                 Municipality: ${params.get('municipality')}
                 <button onclick="removeFilter('municipality')">×</button>
             </div>`;
         }
-        
+
         activeFilters.innerHTML = activeFiltersHTML;
+    }
+
+    function removeSearchFilter() {
+        document.getElementById('hotspotSearch').value = '';
+        clearSearch();
     }
 
     function removeFilter(filterName) {
@@ -1071,23 +1077,15 @@
 
         console.log('Visible count:', visibleCount); // Debug
 
-        // Update search results display
-        const searchResults = document.getElementById('searchResults');
-        const searchResultText = document.getElementById('searchResultText');
-
-        if (searchTerm) {
-            searchResults.style.display = 'block';
-            searchResultText.textContent = `Found ${visibleCount} hotspot${visibleCount !== 1 ? 's' : ''} matching "${searchTerm}"`;
-        } else {
-            searchResults.style.display = 'none';
-        }
-
         // Show no results message if needed
         if (visibleCount === 0 && searchTerm) {
             showNoResultsMessage(searchTerm);
         } else {
             hideNoResultsMessage();
         }
+
+        // Update active filters to show search tag
+        updateActiveFilters();
 
         // Reset to page 1 and update pagination
         currentPage = 1;
@@ -1101,8 +1099,11 @@
             card.setAttribute('data-search-visible', 'true');
         });
 
-        document.getElementById('searchResults').style.display = 'none';
         hideNoResultsMessage();
+
+        // Update active filters to remove search tag
+        updateActiveFilters();
+
         currentPage = 1;
         updatePagination();
     }
