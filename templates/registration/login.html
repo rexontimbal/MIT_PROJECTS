@@ -15,7 +15,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #f5f7fa;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 25%, #90caf9 50%, #64b5f6 75%, #42a5f5 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -24,7 +24,7 @@
             position: relative;
         }
 
-        /* Subtle pattern background */
+        /* Light glass/shiny pattern background */
         body::before {
             content: '';
             position: absolute;
@@ -33,8 +33,21 @@
             right: 0;
             bottom: 0;
             background-image:
-                radial-gradient(circle at 20% 50%, rgba(0, 48, 135, 0.03) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(0, 86, 179, 0.03) 0%, transparent 50%);
+                radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+                repeating-linear-gradient(45deg, transparent, transparent 60px, rgba(255, 255, 255, 0.03) 60px, rgba(255, 255, 255, 0.03) 120px);
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
             pointer-events: none;
         }
 
@@ -44,13 +57,17 @@
             width: 100%;
             min-height: min(600px, 90vh);
             max-height: 95vh;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
             border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            box-shadow:
+                0 8px 32px rgba(0, 48, 135, 0.12),
+                0 2px 8px rgba(0, 48, 135, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
             overflow: hidden;
             position: relative;
             z-index: 1;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
         /* LEFT SIDE - PNP BRANDING */
@@ -102,6 +119,16 @@
             position: relative;
             z-index: 1;
             filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-12px);
+            }
         }
 
         .pnp-seal img {
