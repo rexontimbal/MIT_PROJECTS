@@ -681,6 +681,346 @@
         font-size: 0.7rem;
     }
 
+    /* ===== ENHANCED FLAT & CLEAN STYLING ===== */
+
+    /* Recent Accidents - Clean Row Styling */
+    .accident-row {
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+    }
+
+    .accident-row:hover {
+        background-color: #f8f9fa !important;
+        border-left-color: #0052CC;
+        transform: translateX(2px);
+    }
+
+    .accident-row.fatal {
+        border-left-color: #ff4757;
+        background-color: #fff5f6;
+    }
+
+    .accident-row.injury {
+        border-left-color: #ffa502;
+        background-color: #fff8f0;
+    }
+
+    .accident-row.property {
+        border-left-color: #70a1ff;
+        background-color: #f0f5ff;
+    }
+
+    /* DateTime Cell - Flat Clean Design */
+    .datetime-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .datetime-cell strong {
+        color: #2c3e50;
+        font-size: 0.8rem;
+    }
+
+    .datetime-cell small {
+        color: #95a5a6;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    /* Location Cell - Clean Typography */
+    .location-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .location-cell strong {
+        color: #2c3e50;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .location-cell span {
+        color: #7f8c8d;
+        font-size: 0.7rem;
+    }
+
+    /* Incident Type Badge */
+    .incident-type {
+        color: #5f6368;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    /* Casualty Indicator - Flat Modern Design */
+    .casualty-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .casualty-indicator.fatal {
+        background: linear-gradient(135deg, #ffe5e5, #ffd0d0);
+        color: #c0392b;
+        border: 1px solid #ffb3b3;
+    }
+
+    .casualty-indicator.injury {
+        background: linear-gradient(135deg, #fff4e5, #ffe8cc);
+        color: #d68910;
+        border: 1px solid #ffd699;
+    }
+
+    .casualty-indicator.property {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        color: #1565c0;
+        border: 1px solid #90caf9;
+    }
+
+    .casualty-count {
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
+
+    .casualty-icon {
+        font-size: 1rem;
+    }
+
+    /* Status Badge - Clean Flat Colors */
+    .status-badge {
+        display: inline-block;
+        padding: 0.3rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .status-investigated,
+    .status-under_investigation {
+        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+    }
+
+    .status-pending {
+        background: linear-gradient(135deg, #fff9e6, #ffecb3);
+        color: #f57c00;
+        border: 1px solid #ffd54f;
+    }
+
+    .status-closed {
+        background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
+        color: #424242;
+        border: 1px solid #9e9e9e;
+    }
+
+    /* Action Buttons - Modern Flat Design */
+    .action-buttons {
+        display: flex;
+        gap: 0.3rem;
+    }
+
+    .btn-icon {
+        background: #f5f6fa;
+        border: 1px solid #dfe4ea;
+        border-radius: 6px;
+        padding: 0.35rem 0.5rem;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-icon:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .view-btn:hover {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-color: #2196f3;
+    }
+
+    .map-btn:hover {
+        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+        border-color: #4caf50;
+    }
+
+    .analyze-btn:hover {
+        background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+        border-color: #ff9800;
+    }
+
+    /* Hotspot Row - Clean Design */
+    .hotspot-row {
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+    }
+
+    .hotspot-row:hover {
+        background-color: #f8f9fa !important;
+        border-left-color: #ff6348;
+        transform: translateX(2px);
+    }
+
+    .hotspot-row[data-severity] {
+        position: relative;
+    }
+
+    /* Hotspot Badge - Flat Modern */
+    .hotspot-badge {
+        background: linear-gradient(135deg, #fff0f0, #ffe0e0);
+        color: #d32f2f;
+        padding: 0.3rem 0.7rem;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        border: 1px solid #ffcdd2;
+        display: inline-block;
+    }
+
+    /* Accident Count - Clean Display */
+    .accident-count {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1rem;
+    }
+
+    .accident-count strong {
+        font-size: 1.1rem;
+        color: #2c3e50;
+        font-weight: 700;
+    }
+
+    .accident-count small {
+        font-size: 0.65rem;
+        color: #95a5a6;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    /* Severity Meter - Flat Progress Bar */
+    .severity-meter {
+        width: 100%;
+    }
+
+    .severity-track {
+        background: #e9ecef;
+        border-radius: 8px;
+        height: 24px;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid #dee2e6;
+    }
+
+    .severity-progress {
+        background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #ffa502 80%, #ff4757 100%);
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 0.5rem;
+        transition: all 0.5s ease;
+        position: relative;
+    }
+
+    .severity-value {
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    /* Risk Level Badges - Clean Flat Colors */
+    .risk-level {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .risk-critical {
+        background: linear-gradient(135deg, #ffe5e5, #ffcccc);
+        color: #c0392b;
+        border: 1.5px solid #ff9999;
+    }
+
+    .risk-high {
+        background: linear-gradient(135deg, #fff4e5, #ffe8cc);
+        color: #d68910;
+        border: 1.5px solid #ffd699;
+    }
+
+    .risk-medium {
+        background: linear-gradient(135deg, #fff9e6, #ffecb3);
+        color: #f39c12;
+        border: 1.5px solid #ffd54f;
+    }
+
+    .risk-low {
+        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+        color: #27ae60;
+        border: 1.5px solid #a5d6a7;
+    }
+
+    /* Empty State - Clean Design */
+    .empty-state {
+        padding: 3rem 1rem;
+        text-align: center;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        display: block;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state p {
+        color: #95a5a6;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* Card Header Enhanced */
+    .table-container .card-header {
+        background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .card-title {
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .casualty-indicator,
+        .risk-level,
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .accident-count strong {
+            font-size: 0.95rem;
+        }
+    }
+
     /* Keep your existing dashboard styles for other sections */
     .dashboard-container {
         max-width: 100%;
