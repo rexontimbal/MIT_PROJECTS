@@ -21,11 +21,15 @@
                 </div>
             </div>
             <div style="display: flex; gap: 0.5rem; flex-direction: column;">
-                <button onclick="window.location.href='/map/?lat={{ hotspot.center_latitude }}&lng={{ hotspot.center_longitude }}&zoom=14'" 
+                <button onclick="window.location.href='/map/?lat={{ hotspot.center_latitude }}&lng={{ hotspot.center_longitude }}&zoom=14'"
                         style="background: white; color: #003087; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
                     🗺️ View on Map
                 </button>
-                <button onclick="window.print()" 
+                <button onclick="exportAccidents()"
+                        style="background: white; color: #003087; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    📥 Export CSV
+                </button>
+                <button onclick="window.print()"
                         style="background: white; color: #003087; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
                     🖨️ Print Report
                 </button>
@@ -216,12 +220,14 @@ document.addEventListener('DOMContentLoaded', function() {
             maxZoom: 18
         }).addTo(map);
 
+        // Add hotspot boundary circle (lighter, in background)
         const circle = L.circle([{{ hotspot.center_latitude }}, {{ hotspot.center_longitude }}], {
             color: '#FFA500',
             fillColor: '#FFA500',
-            fillOpacity: 0.3,
+            fillOpacity: 0.15,
             radius: {{ hotspot.accident_count }} * 30,
-            weight: 2
+            weight: 2,
+            opacity: 0.5
         }).addTo(map);
 
         circle.bindPopup(`
@@ -233,7 +239,56 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `);
 
-        console.log('Map loaded successfully');
+        // Add individual accident markers with color coding
+        const accidents = {{ accidents_json|safe }};
+        const markers = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
+
+        accidents.forEach(function(accident) {
+            // Determine marker color based on severity
+            let markerColor = '#3388ff'; // Default blue
+            let severity = 'Property Damage';
+
+            if (accident.victim_killed) {
+                markerColor = '#DC143C'; // Red for fatal
+                severity = 'Fatal';
+            } else if (accident.victim_injured) {
+                markerColor = '#FFA500'; // Orange for injury
+                severity = 'Injury';
+            }
+
+            // Create custom icon
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
+                iconSize: [12, 12],
+                iconAnchor: [6, 6]
+            });
+
+            const marker = L.marker([accident.latitude, accident.longitude], {
+                icon: customIcon
+            });
+
+            marker.bindPopup(`
+                <div style="padding: 0.5rem; min-width: 200px;">
+                    <strong style="color: ${markerColor};">${severity} Accident</strong><br>
+                    <strong>Date:</strong> ${accident.date_committed}<br>
+                    <strong>Location:</strong> ${accident.barangay}, ${accident.municipal}<br>
+                    <strong>Type:</strong> ${accident.incident_type}<br>
+                    <strong>Casualties:</strong> ${accident.victim_count}
+                </div>
+            `);
+
+            markers.addLayer(marker);
+        });
+
+        map.addLayer(markers);
+
+        console.log('Map loaded successfully with ' + accidents.length + ' accident markers');
     } catch (error) {
         console.error('Map initialization error:', error);
     }
@@ -375,6 +430,47 @@ function sortTable(columnIndex) {
             }
         }
     });
+}
+
+// Export Accidents to CSV
+function exportAccidents() {
+    const accidents = {{ accidents_export|safe }};
+
+    if (!accidents || accidents.length === 0) {
+        alert('No accidents data to export');
+        return;
+    }
+
+    // Convert to CSV
+    const headers = Object.keys(accidents[0]);
+    const csvRows = [headers.join(',')];
+
+    for (const row of accidents) {
+        const values = headers.map(header => {
+            const value = row[header];
+            // Escape quotes and wrap in quotes if contains comma
+            const escaped = ('' + value).replace(/"/g, '""');
+            return `"${escaped}"`;
+        });
+        csvRows.push(values.join(','));
+    }
+
+    const csvString = csvRows.join('\n');
+
+    // Create download link
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'hotspot_{{ hotspot.cluster_id }}_accidents.csv');
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    console.log('Exported ' + accidents.length + ' accidents to CSV');
 }
 </script>
 {% endblock %}

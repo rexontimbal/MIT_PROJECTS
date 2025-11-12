@@ -525,23 +525,23 @@
 </div>
 
 
-<!-- Summary Cards - Dynamic Updates Based on Filters -->
+<!-- Summary Cards - Fixed Total Statistics -->
 <div class="summary-cards">
     <div class="summary-card">
-        <h3 id="totalHotspots">{{ hotspots.count }}</h3>
+        <h3>{{ hotspots.count }}</h3>
         <p>Total Hotspots</p>
     </div>
     <div class="summary-card">
-        <h3 id="totalAccidents">{{ total_accidents }}</h3>
-        <p>Accidents in Hotspots</p>
+        <h3>{{ total_accidents }}</h3>
+        <p>Total Accidents</p>
     </div>
     <div class="summary-card">
-        <h3 id="totalCasualties">{{ total_casualties }}</h3>
+        <h3>{{ total_casualties }}</h3>
         <p>Total Casualties</p>
     </div>
     <div class="summary-card">
-        <h3 id="highSeverityCount">0</h3>
-        <p>High Severity (50+)</p>
+        <h3>{{ critical_count }}</h3>
+        <p>Critical Severity (70+)</p>
     </div>
 </div>
 
@@ -627,10 +627,17 @@
     </div>
 </div>
 
+<!-- Results Summary -->
+<div style="background: white; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: var(--shadow-sm); margin-bottom: 1rem;">
+    <div style="color: var(--text-dark); font-size: 1rem; font-weight: 600;">
+        Showing <span id="currentlyShowing" style="color: var(--primary-blue);">0</span> of <span id="totalFiltered" style="color: var(--primary-blue);">{{ hotspots.count }}</span> hotspots
+    </div>
+</div>
+
 <!-- Pagination Controls -->
 <div style="background: white; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: var(--shadow-sm); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
     <div style="color: var(--text-medium); font-size: 0.9rem;">
-        Showing <span id="showingCount">0</span> of <span id="totalCount">{{ hotspots.count }}</span> hotspots
+        Page <span id="showingCount">0</span> of <span id="totalCount">{{ hotspots.count }}</span> items
     </div>
     <div style="display: flex; gap: 0.5rem; align-items: center;">
         <button id="prevPage" onclick="changePage(-1)" class="btn btn-outline btn-sm" disabled>
@@ -661,10 +668,6 @@
         data-cluster="{{ hotspot.cluster_id }}"
         data-location="{{ hotspot.primary_location }}">
         <div class="hotspot-header">
-            <span class="hotspot-rank">
-                {% if hotspot.severity_score >= 70 %}💀{% elif hotspot.severity_score >= 50 %}🔴{% else %}⚠️{% endif %}
-                Rank #{{ forloop.counter }}
-            </span>
             <h3 class="hotspot-title">{{ hotspot.primary_location }}</h3>
             <div style="margin-top: 0.5rem;">
                 <span class="risk-badge {% if hotspot.severity_score >= 70 %}risk-critical{% elif hotspot.severity_score >= 50 %}risk-high{% elif hotspot.severity_score >= 30 %}risk-medium{% else %}risk-low{% endif %}">
@@ -1156,36 +1159,6 @@
         }
     }
 
-    // UPDATE SUMMARY CARDS - Real-time stats based on filtered data
-    function updateSummaryCards(visibleCards) {
-        let totalHotspots = visibleCards.length;
-        let totalAccidents = 0;
-        let totalCasualties = 0;
-        let highSeverityCount = 0;
-
-        visibleCards.forEach(card => {
-            // Sum accidents
-            const accidents = parseInt(card.getAttribute('data-accidents')) || 0;
-            totalAccidents += accidents;
-
-            // Sum casualties
-            const casualties = parseInt(card.getAttribute('data-casualties')) || 0;
-            totalCasualties += casualties;
-
-            // Count high severity (50+)
-            const severity = parseFloat(card.getAttribute('data-severity')) || 0;
-            if (severity >= 50) {
-                highSeverityCount++;
-            }
-        });
-
-        // Update DOM elements
-        document.getElementById('totalHotspots').textContent = totalHotspots;
-        document.getElementById('totalAccidents').textContent = totalAccidents;
-        document.getElementById('totalCasualties').textContent = totalCasualties;
-        document.getElementById('highSeverityCount').textContent = highSeverityCount;
-    }
-
     // SEARCH FUNCTIONALITY - Now uses unified filtering
     function searchHotspots() {
         // Just call the unified filter function
@@ -1215,6 +1188,10 @@
             }
         });
 
+        // Update results summary at top
+        document.getElementById('currentlyShowing').textContent = Math.min(endIndex, totalItems);
+        document.getElementById('totalFiltered').textContent = totalItems;
+
         // Update pagination controls
         document.getElementById('showingCount').textContent = Math.min(endIndex, totalItems);
         document.getElementById('totalCount').textContent = totalItems;
@@ -1223,9 +1200,6 @@
         // Enable/disable buttons
         document.getElementById('prevPage').disabled = currentPage <= 1;
         document.getElementById('nextPage').disabled = currentPage >= totalPages;
-
-        // Update summary cards with filtered data
-        updateSummaryCards(searchVisibleCards);
     }
 
     function changePage(direction) {
@@ -1270,10 +1244,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         updateActiveFilters();
         initializeHotspotCards();
-
-        // Initialize summary cards with all visible cards
-        const allCards = Array.from(document.getElementsByClassName('hotspot-card'));
-        updateSummaryCards(allCards);
     });
 
 
