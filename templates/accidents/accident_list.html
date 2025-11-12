@@ -165,6 +165,91 @@
         border-color: var(--hotspot-red);
     }
 
+    /* Active Filters Tags */
+    .active-filters-section {
+        background: white;
+        padding: 15px 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+        display: none;
+    }
+
+    .active-filters-section.show {
+        display: block;
+    }
+
+    .active-filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .active-filters-title {
+        font-weight: 600;
+        color: var(--primary-blue);
+        font-size: 0.95rem;
+    }
+
+    .clear-all-btn {
+        padding: 6px 16px;
+        background: #f0f0f0;
+        border: none;
+        border-radius: 6px;
+        color: #666;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .clear-all-btn:hover {
+        background: #DC143C;
+        color: white;
+    }
+
+    .active-filters-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .filter-tag {
+        background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+        color: #0052CC;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid #90CAF9;
+    }
+
+    .filter-tag .remove-tag {
+        background: none;
+        border: none;
+        color: #0052CC;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 1.1rem;
+        padding: 0;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+    }
+
+    .filter-tag .remove-tag:hover {
+        background: #0052CC;
+        color: white;
+    }
+
     /* Statistics Cards */
     .stats-section {
         display: grid;
@@ -911,7 +996,142 @@ document.addEventListener('DOMContentLoaded', function() {
     } else if (urlParams.get('is_hotspot')) {
         document.querySelector('[onclick*="hotspot"]')?.classList.add('active');
     }
+
+    // Display active filters
+    displayActiveFilters();
 });
+
+// Display active filters from URL parameters
+function displayActiveFilters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterTagsContainer = document.getElementById('activeFiltersTags');
+    const filterSection = document.getElementById('activeFiltersSection');
+
+    let tagsHTML = '';
+    let hasFilters = false;
+
+    // Search filter
+    const searchTerm = urlParams.get('search');
+    if (searchTerm) {
+        hasFilters = true;
+        tagsHTML += `
+            <div class="filter-tag">
+                <i class="fas fa-search"></i> Search: "${searchTerm}"
+                <button class="remove-tag" onclick="removeFilter('search')" title="Remove search">×</button>
+            </div>
+        `;
+    }
+
+    // Province filter
+    const province = urlParams.get('province');
+    if (province) {
+        hasFilters = true;
+        tagsHTML += `
+            <div class="filter-tag">
+                <i class="fas fa-map-marker-alt"></i> Province: ${province}
+                <button class="remove-tag" onclick="removeFilter('province')" title="Remove province">×</button>
+            </div>
+        `;
+    }
+
+    // Municipal filter
+    const municipal = urlParams.get('municipal');
+    if (municipal) {
+        hasFilters = true;
+        tagsHTML += `
+            <div class="filter-tag">
+                <i class="fas fa-city"></i> Municipality: ${municipal}
+                <button class="remove-tag" onclick="removeFilter('municipal')" title="Remove municipality">×</button>
+            </div>
+        `;
+    }
+
+    // Year filter
+    const year = urlParams.get('year');
+    if (year) {
+        hasFilters = true;
+        tagsHTML += `
+            <div class="filter-tag">
+                <i class="fas fa-calendar"></i> Year: ${year}
+                <button class="remove-tag" onclick="removeFilter('year')" title="Remove year">×</button>
+            </div>
+        `;
+    }
+
+    // Fatal filter
+    if (urlParams.get('fatal') === 'true') {
+        hasFilters = true;
+        tagsHTML += `
+            <div class="filter-tag">
+                <i class="fas fa-skull-crossbones"></i> Fatal Only
+                <button class="remove-tag" onclick="removeFilter('fatal')" title="Remove fatal filter">×</button>
+            </div>
+        `;
+    }
+
+    // Injury filter
+    if (urlParams.get('injury') === 'true') {
+        hasFilters = true;
+        tagsHTML += `
+            <div class="filter-tag">
+                <i class="fas fa-ambulance"></i> Injury Only
+                <button class="remove-tag" onclick="removeFilter('injury')" title="Remove injury filter">×</button>
+            </div>
+        `;
+    }
+
+    // Hotspot filter
+    if (urlParams.get('is_hotspot') === 'true') {
+        hasFilters = true;
+        tagsHTML += `
+            <div class="filter-tag">
+                <i class="fas fa-fire"></i> Hotspots Only
+                <button class="remove-tag" onclick="removeFilter('is_hotspot')" title="Remove hotspot filter">×</button>
+            </div>
+        `;
+    }
+
+    // Standalone filter
+    if (urlParams.get('is_hotspot') === 'false') {
+        hasFilters = true;
+        tagsHTML += `
+            <div class="filter-tag">
+                <i class="fas fa-map-marker-alt"></i> Standalone Only
+                <button class="remove-tag" onclick="removeFilter('is_hotspot')" title="Remove standalone filter">×</button>
+            </div>
+        `;
+    }
+
+    // Show/hide filter section
+    if (hasFilters) {
+        filterTagsContainer.innerHTML = tagsHTML;
+        filterSection.classList.add('show');
+    } else {
+        filterSection.classList.remove('show');
+    }
+}
+
+// Remove individual filter
+function removeFilter(filterName) {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete(filterName);
+
+    // Show loading
+    document.querySelector('.loading-overlay').classList.add('active');
+
+    // Redirect to URL without this filter
+    window.location.href = currentUrl.toString();
+}
+
+// Clear all filters
+function clearAllFilters() {
+    // Show loading
+    document.querySelector('.loading-overlay').classList.add('active');
+
+    // Get base URL without any parameters
+    const baseUrl = window.location.pathname;
+    window.location.href = baseUrl;
+}
 </script>
 {% endblock %}
 
@@ -972,6 +1192,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     onclick="applyQuickFilter('standalone')">
                 <i class="fas fa-map-marker-alt"></i> Standalone Only
             </button>
+        </div>
+    </div>
+
+    <!-- Active Filters Display -->
+    <div class="active-filters-section" id="activeFiltersSection">
+        <div class="active-filters-header">
+            <span class="active-filters-title">
+                <i class="fas fa-filter"></i> Active Filters
+            </span>
+            <button class="clear-all-btn" onclick="clearAllFilters()">
+                <i class="fas fa-times"></i> Clear All
+            </button>
+        </div>
+        <div class="active-filters-tags" id="activeFiltersTags">
+            <!-- Filter tags will be added here dynamically -->
         </div>
     </div>
 
