@@ -249,6 +249,130 @@
         font-size: 1rem;
     }
 
+    /* Chart Modal Styles */
+    .chart-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 10000;
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .chart-modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .chart-modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 0;
+        width: 90%;
+        max-width: 1200px;
+        max-height: 90vh;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+        animation: slideUp 0.4s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chart-modal-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    }
+
+    .chart-modal-header h3 {
+        margin: 0;
+        color: var(--primary-blue);
+        font-size: 1.5rem;
+    }
+
+    .chart-modal-close {
+        background: #f0f0f0;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.5rem;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .chart-modal-close:hover {
+        background: #DC143C;
+        color: white;
+        transform: rotate(90deg);
+    }
+
+    .chart-modal-body {
+        padding: 2rem;
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .chart-modal-canvas-container {
+        width: 100%;
+        height: 600px;
+        position: relative;
+    }
+
+    .expand-btn {
+        background: none;
+        border: none;
+        color: var(--primary-blue);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .expand-btn:hover {
+        background: var(--light-blue);
+        transform: scale(1.1);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
     /* Active Filters Display */
     .active-filters-banner {
         background: #e8f0fe;
@@ -605,6 +729,9 @@
             <div class="chart-header">
                 <h3>📅 Accident Trends Over Time</h3>
                 <div class="chart-actions">
+                    <button class="expand-btn" onclick="expandChart('trendChart', '📅 Accident Trends Over Time')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
                     <button class="btn btn-outline btn-sm" onclick="exportChart('trendChart')">Export</button>
                 </div>
             </div>
@@ -618,6 +745,9 @@
             <div class="chart-header">
                 <h3>⚡ Accident Severity Distribution</h3>
                 <div class="chart-actions">
+                    <button class="expand-btn" onclick="expandChart('severityChart', '⚡ Accident Severity Distribution')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
                     <button class="btn btn-outline btn-sm" onclick="exportChart('severityChart')">Export</button>
                 </div>
             </div>
@@ -631,6 +761,9 @@
             <div class="chart-header">
                 <h3>🚗 Vehicle Types Involved</h3>
                 <div class="chart-actions">
+                    <button class="expand-btn" onclick="expandChart('vehicleChart', '🚗 Vehicle Types Involved')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
                     <button class="btn btn-outline btn-sm" onclick="exportChart('vehicleChart')">Export</button>
                 </div>
             </div>
@@ -644,6 +777,9 @@
             <div class="chart-header">
                 <h3>📆 Day of Week Analysis</h3>
                 <div class="chart-actions">
+                    <button class="expand-btn" onclick="expandChart('dowChart', '📆 Day of Week Analysis')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
                     <button class="btn btn-outline btn-sm" onclick="exportChart('dowChart')">Export</button>
                 </div>
             </div>
@@ -660,6 +796,9 @@
             <div class="chart-header">
                 <h3>🕐 Hourly Accident Patterns</h3>
                 <div class="chart-actions">
+                    <button class="expand-btn" onclick="expandChart('hourlyChart', '🕐 Hourly Distribution')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
                     <button class="btn btn-outline btn-sm" onclick="exportChart('hourlyChart')">Export</button>
                 </div>
             </div>
@@ -676,6 +815,9 @@
             <div class="chart-header">
                 <h3>🏛️ Province Comparison - Fatal vs Injury Accidents</h3>
                 <div class="chart-actions">
+                    <button class="expand-btn" onclick="expandChart('provinceComparisonChart', '🗺️ Province Comparison')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
                     <button class="btn btn-outline btn-sm" onclick="exportChart('provinceComparisonChart')">Export</button>
                 </div>
             </div>
@@ -691,6 +833,9 @@
             <div class="chart-header">
                 <h3>📋 Top 5 Incident Types</h3>
                 <div class="chart-actions">
+                    <button class="expand-btn" onclick="expandChart('incidentTypeChart', '💥 Incident Type Breakdown')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
                     <button class="btn btn-outline btn-sm" onclick="exportChart('incidentTypeChart')">Export</button>
                 </div>
             </div>
@@ -704,6 +849,9 @@
             <div class="chart-header">
                 <h3>📈 Accident Trends - Fatal vs Injury Over Time</h3>
                 <div class="chart-actions">
+                    <button class="expand-btn" onclick="expandChart('trendComparisonChart', '📈 Trend Comparison')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
                     <button class="btn btn-outline btn-sm" onclick="exportChart('trendComparisonChart')">Export</button>
                 </div>
             </div>
@@ -720,6 +868,9 @@
             <div class="chart-header">
                 <h3>📊 Monthly Comparison</h3>
                 <div class="chart-actions">
+                    <button class="expand-btn" onclick="expandChart('comparisonChart', '⚖️ Year-over-Year Comparison')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
                     <button class="btn btn-outline btn-sm" onclick="exportChart('comparisonChart')">Export</button>
                 </div>
             </div>
@@ -733,6 +884,9 @@
             <div class="chart-header">
                 <h3>🔮 30-Day Accident Forecast</h3>
                 <div class="chart-actions">
+                    <button class="expand-btn" onclick="expandChart('forecastChart', '🔮 Forecast & Predictions')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
                     <button class="btn btn-outline btn-sm" onclick="exportChart('forecastChart')">Export</button>
                 </div>
             </div>
@@ -795,6 +949,23 @@
             <button class="export-btn-enhanced" onclick="window.print()">
                 <i class="fas fa-print"></i> Print Report
             </button>
+        </div>
+    </div>
+
+    <!-- Chart Expand Modal -->
+    <div class="chart-modal" id="chartModal">
+        <div class="chart-modal-content">
+            <div class="chart-modal-header">
+                <h3 id="modalChartTitle">Chart View</h3>
+                <button class="chart-modal-close" onclick="closeChartModal()">
+                    ×
+                </button>
+            </div>
+            <div class="chart-modal-body">
+                <div class="chart-modal-canvas-container">
+                    <canvas id="modalChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1730,6 +1901,98 @@ window.addEventListener('scroll', function() {
         } else {
             controls.classList.remove('scrolled');
         }
+    }
+});
+
+// Chart Modal Functions
+let modalChartInstance = null;
+
+function expandChart(chartId, chartTitle) {
+    const modal = document.getElementById('chartModal');
+    const modalTitle = document.getElementById('modalChartTitle');
+    const modalCanvas = document.getElementById('modalChart');
+
+    // Set title
+    modalTitle.textContent = chartTitle;
+
+    // Show modal with animation
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+
+    // Get the original chart instance
+    const originalChart = window.charts[chartId];
+
+    if (!originalChart) {
+        console.error('Chart not found:', chartId);
+        return;
+    }
+
+    // Destroy previous modal chart if exists
+    if (modalChartInstance) {
+        modalChartInstance.destroy();
+    }
+
+    // Clone the chart configuration
+    const config = {
+        type: originalChart.config.type,
+        data: JSON.parse(JSON.stringify(originalChart.config.data)),
+        options: JSON.parse(JSON.stringify(originalChart.config.options))
+    };
+
+    // Enhance options for larger view
+    if (config.options) {
+        config.options.maintainAspectRatio = false;
+        config.options.responsive = true;
+        if (config.options.plugins) {
+            if (config.options.plugins.legend) {
+                config.options.plugins.legend.labels = config.options.plugins.legend.labels || {};
+                config.options.plugins.legend.labels.font = { size: 14 };
+            }
+            if (config.options.plugins.title) {
+                config.options.plugins.title.font = { size: 18, weight: 'bold' };
+            }
+        }
+        if (config.options.scales) {
+            Object.keys(config.options.scales).forEach(scale => {
+                if (config.options.scales[scale].ticks) {
+                    config.options.scales[scale].ticks.font = { size: 12 };
+                }
+            });
+        }
+    }
+
+    // Create new chart in modal
+    setTimeout(() => {
+        const ctx = modalCanvas.getContext('2d');
+        modalChartInstance = new Chart(ctx, config);
+    }, 100);
+}
+
+function closeChartModal() {
+    const modal = document.getElementById('chartModal');
+
+    // Hide modal with animation
+    modal.classList.remove('show');
+    document.body.style.overflow = ''; // Restore scrolling
+
+    // Destroy modal chart
+    if (modalChartInstance) {
+        modalChartInstance.destroy();
+        modalChartInstance = null;
+    }
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeChartModal();
+    }
+});
+
+// Close modal on background click
+document.getElementById('chartModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeChartModal();
     }
 });
 </script>
