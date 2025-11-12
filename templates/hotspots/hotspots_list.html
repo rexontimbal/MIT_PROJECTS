@@ -236,30 +236,6 @@
         font-size: 0.9rem;
     }
 
-    /* Quick Actions */
-    .quick-actions {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .action-btn {
-        padding: 0.5rem 1rem;
-        background: var(--light-blue);
-        color: var(--primary-blue);
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        transition: var(--transition);
-    }
-
-    .action-btn:hover {
-        background: var(--primary-blue);
-        color: white;
-    }
-
     /* Loading States */
     .loading {
         opacity: 0.6;
@@ -542,15 +518,6 @@
     </div>
 </div>
 
-<!-- Quick Actions -->
-<div class="quick-actions">
-    <button class="action-btn" onclick="filterBySeverity('high')">🔴 High Severity Only</button>
-    <button class="action-btn" onclick="filterBySeverity('critical')">💀 Critical Only</button>
-    <button class="action-btn" onclick="showAllHotspots()">📊 Show All</button>
-    <button class="action-btn" onclick="applySortByAccidents()">📈 Sort by Accidents</button>
-    <button class="action-btn" onclick="applySortBySeverity()">⚡ Sort by Severity</button>
-</div>
-
 <!-- View Toggle & Progress -->
 <div class="view-toggle">
     <div class="view-option active" onclick="switchView('grid')">📊 Grid View</div>
@@ -613,6 +580,16 @@
         </div>
 
         <div class="filter-group">
+            <label for="municipality">Municipality</label>
+            <select name="municipality" id="municipality" onchange="applyClientSideFilters()">
+                <option value="">All Municipalities</option>
+                {% for mun in municipalities %}
+                <option value="{{ mun }}">{{ mun }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
             <label for="min_severity">Minimum Severity</label>
             <select name="min_severity" id="min_severity" onchange="applyClientSideFilters()">
                 <option value="">All Levels</option>
@@ -635,12 +612,11 @@
         </div>
 
         <div class="filter-group">
-            <label for="municipality">Municipality</label>
-            <select name="municipality" id="municipality" onchange="applyClientSideFilters()">
-                <option value="">All Municipalities</option>
-                {% for mun in municipalities %}
-                <option value="{{ mun }}">{{ mun }}</option>
-                {% endfor %}
+            <label for="sort_by">Sort By</label>
+            <select name="sort_by" id="sort_by" onchange="handleSortChange()">
+                <option value="">Default Order</option>
+                <option value="severity">Severity (High to Low)</option>
+                <option value="accidents">Accidents (Most to Least)</option>
             </select>
         </div>
     </div>
@@ -895,12 +871,12 @@
         document.getElementById('min_severity').value = '';
         document.getElementById('min_accidents').value = '';
         document.getElementById('municipality').value = '';
+        const sortDropdown = document.getElementById('sort_by');
+        const wasSorted = sortDropdown.value !== '';
+        sortDropdown.value = '';
 
         // Reset municipality dropdown to show all municipalities
         updateMunicipalityDropdown();
-
-        // Clear sort
-        currentSort = null;
 
         // Reset all cards to visible
         const cards = document.getElementsByClassName('hotspot-card');
@@ -911,54 +887,34 @@
         hideNoResultsMessage();
         updateActiveFilters();
         currentPage = 1;
-        updatePagination();
 
         // Reload to reset original order if there was sorting
-        if (currentSort) {
+        if (wasSorted) {
             window.location.reload();
+        } else {
+            updatePagination();
         }
     }
 
-    function filterBySeverity(level) {
-        let minSeverity = '';
-        switch(level) {
-            case 'critical': minSeverity = '70'; break;
-            case 'high': minSeverity = '50'; break;
-            case 'medium': minSeverity = '30'; break;
+    // NEW UNIFIED SORT HANDLER
+    function handleSortChange() {
+        const sortValue = document.getElementById('sort_by').value;
+
+        if (!sortValue) {
+            // Reset to default order - reload page
+            window.location.reload();
+            return;
         }
-        document.getElementById('min_severity').value = minSeverity;
-        applyClientSideFilters();
-    }
-
-    function showAllHotspots() {
-        clearAllFiltersAndSearch();
-    }
-
-    // SORT FUNCTIONS - Work with filter tags
-    function applySortByAccidents() {
-        currentSort = 'accidents';
-        applySorting();
-        updateActiveFilters();
-    }
-
-    function applySortBySeverity() {
-        currentSort = 'severity';
-        applySorting();
-        updateActiveFilters();
-    }
-
-    function applySorting() {
-        if (!currentSort) return;
 
         const container = document.getElementById('hotspotsContainer');
         const cards = Array.from(container.getElementsByClassName('hotspot-card'));
 
         cards.sort((a, b) => {
-            if (currentSort === 'accidents') {
+            if (sortValue === 'accidents') {
                 const aAccidents = parseInt(a.getAttribute('data-accidents'));
                 const bAccidents = parseInt(b.getAttribute('data-accidents'));
                 return bAccidents - aAccidents;
-            } else if (currentSort === 'severity') {
+            } else if (sortValue === 'severity') {
                 const aSeverity = parseFloat(a.getAttribute('data-severity'));
                 const bSeverity = parseFloat(b.getAttribute('data-severity'));
                 return bSeverity - aSeverity;
@@ -968,14 +924,10 @@
 
         cards.forEach(card => container.appendChild(card));
 
-        // Re-apply pagination after sorting
+        // Reset to page 1 and update pagination after sorting
+        currentPage = 1;
         updatePagination();
-    }
-
-    function removeSortFilter() {
-        currentSort = null;
-        // Reload to original order
-        window.location.reload();
+        updateActiveFilters();
     }
 
     function updateActiveFilters() {
@@ -987,6 +939,7 @@
         const minSeverity = document.getElementById('min_severity').value;
         const minAccidents = document.getElementById('min_accidents').value;
         const municipality = document.getElementById('municipality').value;
+        const sortBy = document.getElementById('sort_by').value;
 
         let activeFiltersHTML = '';
 
@@ -1003,6 +956,14 @@
             activeFiltersHTML += `<div class="filter-tag">
                 Province: ${province}
                 <button onclick="removeFilter('province')">×</button>
+            </div>`;
+        }
+
+        // Add municipality filter tag
+        if (municipality) {
+            activeFiltersHTML += `<div class="filter-tag">
+                Municipality: ${municipality}
+                <button onclick="removeFilter('municipality')">×</button>
             </div>`;
         }
 
@@ -1028,20 +989,12 @@
             </div>`;
         }
 
-        // Add municipality filter tag
-        if (municipality) {
-            activeFiltersHTML += `<div class="filter-tag">
-                Municipality: ${municipality}
-                <button onclick="removeFilter('municipality')">×</button>
-            </div>`;
-        }
-
-        // Add sort filter tag
-        if (currentSort) {
-            const sortLabel = currentSort === 'accidents' ? 'Sorted by Accidents' : 'Sorted by Severity';
+        // Add sort filter tag from dropdown
+        if (sortBy) {
+            const sortLabel = sortBy === 'accidents' ? 'Sorted by Accidents' : 'Sorted by Severity';
             activeFiltersHTML += `<div class="filter-tag">
                 ${sortLabel}
-                <button onclick="removeSortFilter()">×</button>
+                <button onclick="removeFilter('sort_by')">×</button>
             </div>`;
         }
 
@@ -1060,6 +1013,12 @@
         // If province filter is removed, reset municipality dropdown
         if (filterName === 'province') {
             updateMunicipalityDropdown();
+        }
+
+        // If sort filter is removed, reload to restore default order
+        if (filterName === 'sort_by') {
+            window.location.reload();
+            return;
         }
 
         applyClientSideFilters();
@@ -1236,9 +1195,6 @@
     // PAGINATION FUNCTIONALITY
     let currentPage = 1;
     let itemsPerPage = 12;
-
-    // SORT STATE
-    let currentSort = null; // 'accidents' or 'severity' or null
 
     function updatePagination() {
         const cards = Array.from(document.getElementsByClassName('hotspot-card'));
