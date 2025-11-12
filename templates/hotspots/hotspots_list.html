@@ -272,16 +272,20 @@
         cursor: help;
         position: relative;
         border-bottom: 1px dotted var(--text-medium);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
     }
 
     .municipality-hover:hover {
         color: var(--primary-blue);
+        border-bottom-color: var(--primary-blue);
     }
 
     .info-icon {
-        font-size: 0.75rem;
-        opacity: 0.5;
-        margin-left: 0.25rem;
+        opacity: 0.6;
+        margin-left: 0.15rem;
+        transition: opacity 0.3s;
     }
 
     .municipality-hover:hover .info-icon {
@@ -299,11 +303,14 @@
         padding: 0.5rem 1rem;
         border-radius: 6px;
         font-size: 0.85rem;
-        white-space: nowrap;
+        white-space: normal;
+        max-width: 300px;
+        text-align: center;
+        line-height: 1.4;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.3s;
-        z-index: 100;
+        z-index: 1000;
         margin-bottom: 0.5rem;
     }
 
@@ -699,11 +706,11 @@
                 </span>
             </div>
             <div class="hotspot-stat">
-                <span class="stat-label">Coverage</span>
-                <span class="stat-value municipality-hover" 
-                      data-municipalities="{{ hotspot.municipalities|join:', ' }}">
-                    <strong>{{ hotspot.municipalities|length }}</strong> municipalities
-                    <span class="info-icon">ℹ️</span>
+                <span class="stat-label">Municipalities</span>
+                <span class="stat-value municipality-hover"
+                      data-municipalities="Areas: {{ hotspot.municipalities|join:', ' }}">
+                    <strong>{{ hotspot.municipalities|length }}</strong> area{% if hotspot.municipalities|length > 1 %}s{% endif %}
+                    <span class="info-icon" style="font-size: 0.9rem;">🔍</span>
                 </span>
             </div>
             

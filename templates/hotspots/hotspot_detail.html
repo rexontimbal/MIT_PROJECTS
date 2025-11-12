@@ -241,6 +241,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Add individual accident markers with color coding
         const accidents = {{ accidents_json|safe }};
+        const hotspotCenter = [{{ hotspot.center_latitude }}, {{ hotspot.center_longitude }}];
+        const circleRadius = {{ hotspot.accident_count }} * 30; // in meters
+
         const markers = L.markerClusterGroup({
             maxClusterRadius: 50,
             spiderfyOnMaxZoom: true,
@@ -248,47 +251,71 @@ document.addEventListener('DOMContentLoaded', function() {
             zoomToBoundsOnClick: true
         });
 
+        // Helper function to calculate distance between two points
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        let accidentsInCircle = 0;
         accidents.forEach(function(accident) {
-            // Determine marker color based on severity
-            let markerColor = '#3388ff'; // Default blue
-            let severity = 'Property Damage';
+            // Calculate distance from accident to hotspot center
+            const distance = getDistance(
+                hotspotCenter[0], hotspotCenter[1],
+                accident.latitude, accident.longitude
+            );
 
-            if (accident.victim_killed) {
-                markerColor = '#DC143C'; // Red for fatal
-                severity = 'Fatal';
-            } else if (accident.victim_injured) {
-                markerColor = '#FFA500'; // Orange for injury
-                severity = 'Injury';
+            // Only show accidents within the circle boundary
+            if (distance <= circleRadius) {
+                accidentsInCircle++;
+
+                // Determine marker color based on severity
+                let markerColor = '#3388ff'; // Default blue
+                let severity = 'Property Damage';
+
+                if (accident.victim_killed) {
+                    markerColor = '#DC143C'; // Red for fatal
+                    severity = 'Fatal';
+                } else if (accident.victim_injured) {
+                    markerColor = '#FFA500'; // Orange for injury
+                    severity = 'Injury';
+                }
+
+                // Create custom icon
+                const customIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
+                    iconSize: [12, 12],
+                    iconAnchor: [6, 6]
+                });
+
+                const marker = L.marker([accident.latitude, accident.longitude], {
+                    icon: customIcon
+                });
+
+                marker.bindPopup(`
+                    <div style="padding: 0.5rem; min-width: 200px;">
+                        <strong style="color: ${markerColor};">${severity} Accident</strong><br>
+                        <strong>Date:</strong> ${accident.date_committed}<br>
+                        <strong>Location:</strong> ${accident.barangay}, ${accident.municipal}<br>
+                        <strong>Type:</strong> ${accident.incident_type}<br>
+                        <strong>Casualties:</strong> ${accident.victim_count}
+                    </div>
+                `);
+
+                markers.addLayer(marker);
             }
-
-            // Create custom icon
-            const customIcon = L.divIcon({
-                className: 'custom-marker',
-                html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
-                iconSize: [12, 12],
-                iconAnchor: [6, 6]
-            });
-
-            const marker = L.marker([accident.latitude, accident.longitude], {
-                icon: customIcon
-            });
-
-            marker.bindPopup(`
-                <div style="padding: 0.5rem; min-width: 200px;">
-                    <strong style="color: ${markerColor};">${severity} Accident</strong><br>
-                    <strong>Date:</strong> ${accident.date_committed}<br>
-                    <strong>Location:</strong> ${accident.barangay}, ${accident.municipal}<br>
-                    <strong>Type:</strong> ${accident.incident_type}<br>
-                    <strong>Casualties:</strong> ${accident.victim_count}
-                </div>
-            `);
-
-            markers.addLayer(marker);
         });
 
         map.addLayer(markers);
 
-        console.log('Map loaded successfully with ' + accidents.length + ' accident markers');
+        console.log('Map loaded successfully with ' + accidentsInCircle + ' accidents inside circle (out of ' + accidents.length + ' total)');
     } catch (error) {
         console.error('Map initialization error:', error);
     }
