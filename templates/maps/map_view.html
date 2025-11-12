@@ -1572,6 +1572,9 @@ body.fullscreen-mode .search-info-panel {
             <button class="toggle-icon-btn" id="controlsToggle" data-tooltip="Map Controls" onclick="toggleMapControls()">
                 ⚙️
             </button>
+            <button class="toggle-icon-btn" id="layerToggle" data-tooltip="Map Layer: Street" onclick="toggleMapLayer()">
+                🛰️
+            </button>
         </div>
 
         <!-- INTELLIGENT SEARCH BAR -->
@@ -1900,6 +1903,11 @@ let map;
 let accidentMarkers = [];
 let hotspotCircles = [];
 let clusterMarkers = [];
+
+// Map layer variables
+let currentLayer = 'street'; // 'street' or 'satellite'
+let streetLayer;
+let satelliteLayer;
 let markerClusterGroup;
 let heatmapLayer;
 let allAccidents = {{ accidents_json|safe }};
@@ -2020,22 +2028,33 @@ function initializeEnhancedMap() {
         // Center on Caraga Region (approximate center)
         map = L.map('mainMap').setView([9.0, 125.5], 9);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // Create street (vector) layer
+        streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
             maxZoom: 18,
             minZoom: 7
-        }).addTo(map);
+        });
+
+        // Create satellite layer
+        satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+            maxZoom: 18,
+            minZoom: 7
+        });
+
+        // Add default layer (street)
+        streetLayer.addTo(map);
 
         // Initialize cluster group with default settings
         initializeClusterGroup(50);
 
         console.log('✅ Map initialized successfully');
-        
+
         // Force map to recalculate size
         setTimeout(() => {
             map.invalidateSize();
         }, 100);
-        
+
     } catch (error) {
         console.error('❌ Map initialization failed:', error);
         alert('Error loading map. Please refresh the page.');
@@ -3184,7 +3203,7 @@ function toggleMapControls() {
     const toggle = document.getElementById('controlsToggle');
     if (controls && toggle) {
         const isShowing = controls.classList.contains('show');
-        
+
         if (!isShowing) {
             controls.classList.add('show');
             toggle.classList.add('active');
@@ -3193,8 +3212,38 @@ function toggleMapControls() {
             controls.classList.remove('show');
             toggle.classList.remove('active');
         }
-        
+
         setTimeout(updateBadgePositions, 300);
+    }
+}
+
+function toggleMapLayer() {
+    const toggle = document.getElementById('layerToggle');
+
+    if (currentLayer === 'street') {
+        // Switch to satellite
+        map.removeLayer(streetLayer);
+        satelliteLayer.addTo(map);
+        currentLayer = 'satellite';
+
+        if (toggle) {
+            toggle.setAttribute('data-tooltip', 'Map Layer: Satellite');
+            toggle.classList.add('active');
+        }
+
+        console.log('🛰️ Switched to Satellite view');
+    } else {
+        // Switch to street
+        map.removeLayer(satelliteLayer);
+        streetLayer.addTo(map);
+        currentLayer = 'street';
+
+        if (toggle) {
+            toggle.setAttribute('data-tooltip', 'Map Layer: Street');
+            toggle.classList.remove('active');
+        }
+
+        console.log('🗺️ Switched to Street view');
     }
 }
 
