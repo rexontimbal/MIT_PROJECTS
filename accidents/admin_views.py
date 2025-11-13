@@ -105,7 +105,8 @@ def user_management(request):
     role_filter = request.GET.get('role', '')
     status_filter = request.GET.get('status', '')
 
-    users = User.objects.select_related('profile').all()
+    # Get all users with profiles, ordered by username
+    users = User.objects.select_related('profile').all().order_by('username')
 
     # Apply search
     if search_query:
