@@ -241,14 +241,20 @@ def user_create(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
         email = request.POST.get('email', '')
         first_name = request.POST.get('first_name', '')
         last_name = request.POST.get('last_name', '')
 
+        # Validate passwords match
+        if password != confirm_password:
+            messages.error(request, 'Passwords do not match! Please try again.')
+            return redirect('admin_panel:user_create')
+
         # Check if username already exists
         if User.objects.filter(username=username).exists():
             messages.error(request, f'Username "{username}" already exists!')
-            return redirect('admin_user_create')
+            return redirect('admin_panel:user_create')
 
         # Create user
         user = User.objects.create_user(

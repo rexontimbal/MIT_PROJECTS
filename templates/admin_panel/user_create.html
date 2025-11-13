@@ -35,7 +35,7 @@
 {% endif %}
 
 <div style="max-width: 900px; margin: 0 auto;">
-    <form method="post">
+    <form method="post" onsubmit="return validateForm()">
         {% csrf_token %}
 
         <!-- Account Details -->
@@ -53,10 +53,18 @@
                 <small style="color: var(--text-light);">Must be unique. Letters, digits, and @/./+/-/_ only.</small>
             </div>
 
-            <div class="form-group">
-                <label class="form-label" for="password">Password <span style="color: var(--accent-red);">*</span></label>
-                <input type="password" name="password" id="password" class="form-control" required minlength="8">
-                <small style="color: var(--text-light);">At least 8 characters. User will be required to change on first login.</small>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="password">Password <span style="color: var(--accent-red);">*</span></label>
+                    <input type="password" name="password" id="password" class="form-control" required minlength="8">
+                    <small style="color: var(--text-light);">At least 8 characters long.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Confirm Password <span style="color: var(--accent-red);">*</span></label>
+                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" required minlength="8">
+                    <small style="color: var(--text-light);">Re-type the password.</small>
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -113,37 +121,46 @@
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
-                    <label class="form-label" for="region">Region</label>
-                    <input type="text" name="region" id="region" class="form-control" value="Caraga">
+                    <label class="form-label" for="region">Region <span style="color: var(--accent-red);">*</span></label>
+                    <input type="text" name="region" id="region" class="form-control" value="Caraga" readonly style="background: #f5f5f5;">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="province">Province</label>
-                    <input type="text" name="province" id="province" class="form-control">
+                    <label class="form-label" for="province">Province <span style="color: var(--accent-red);">*</span></label>
+                    <select name="province" id="province" class="form-control" required onchange="updateStations()">
+                        <option value="">-- Select Province --</option>
+                        <option value="Agusan del Norte">Agusan del Norte</option>
+                        <option value="Agusan del Sur">Agusan del Sur</option>
+                        <option value="Surigao del Norte">Surigao del Norte</option>
+                        <option value="Surigao del Sur">Surigao del Sur</option>
+                        <option value="Dinagat Islands">Dinagat Islands</option>
+                    </select>
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
-                    <label class="form-label" for="station">Station</label>
-                    <input type="text" name="station" id="station" class="form-control">
+                    <label class="form-label" for="station">Station <span style="color: var(--accent-red);">*</span></label>
+                    <select name="station" id="station" class="form-control" required>
+                        <option value="">-- Select Province First --</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="unit">Unit</label>
-                    <input type="text" name="unit" id="unit" class="form-control">
+                    <input type="text" name="unit" id="unit" class="form-control" placeholder="e.g., Traffic Management Unit">
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label class="form-label" for="mobile_number">Mobile Number</label>
-                    <input type="text" name="mobile_number" id="mobile_number" class="form-control" placeholder="+63">
+                    <input type="text" name="mobile_number" id="mobile_number" class="form-control" placeholder="+639123456789">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="phone_number">Phone Number</label>
-                    <input type="text" name="phone_number" id="phone_number" class="form-control">
+                    <input type="text" name="phone_number" id="phone_number" class="form-control" placeholder="(085) 123-4567">
                 </div>
             </div>
         </div>
@@ -192,4 +209,166 @@
     </form>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Caraga Region Police Stations Database
+const stationsByProvince = {
+    'Agusan del Norte': [
+        'Butuan City Police Station',
+        'Cabadbaran City Police Station',
+        'Nasipit Municipal Police Station',
+        'Buenavista Municipal Police Station',
+        'Carmen Municipal Police Station',
+        'Jabonga Municipal Police Station',
+        'Kitcharao Municipal Police Station',
+        'Las Nieves Municipal Police Station',
+        'Magallanes Municipal Police Station',
+        'Remedios T. Romualdez Municipal Police Station',
+        'Santiago Municipal Police Station',
+        'Tubay Municipal Police Station',
+        'Provincial Police Office - Agusan del Norte'
+    ],
+    'Agusan del Sur': [
+        'Bayugan City Police Station',
+        'Prosperidad Municipal Police Station',
+        'San Francisco Municipal Police Station',
+        'Rosario Municipal Police Station',
+        'Bunawan Municipal Police Station',
+        'Trento Municipal Police Station',
+        'Veruela Municipal Police Station',
+        'La Paz Municipal Police Station',
+        'Loreto Municipal Police Station',
+        'Santa Josefa Municipal Police Station',
+        'Talacogon Municipal Police Station',
+        'Sibagat Municipal Police Station',
+        'Esperanza Municipal Police Station',
+        'Provincial Police Office - Agusan del Sur'
+    ],
+    'Surigao del Norte': [
+        'Surigao City Police Station',
+        'Alegria Municipal Police Station',
+        'Bacuag Municipal Police Station',
+        'Burgos Municipal Police Station',
+        'Claver Municipal Police Station',
+        'Dapa Municipal Police Station',
+        'Del Carmen Municipal Police Station',
+        'General Luna Municipal Police Station',
+        'Gigaquit Municipal Police Station',
+        'Mainit Municipal Police Station',
+        'Malimono Municipal Police Station',
+        'Pilar Municipal Police Station',
+        'Placer Municipal Police Station',
+        'San Benito Municipal Police Station',
+        'San Francisco Municipal Police Station',
+        'San Isidro Municipal Police Station',
+        'Santa Monica Municipal Police Station',
+        'Sison Municipal Police Station',
+        'Socorro Municipal Police Station',
+        'Surigao del Norte Provincial Police Station',
+        'Tagana-an Municipal Police Station',
+        'Tubod Municipal Police Station',
+        'Provincial Police Office - Surigao del Norte'
+    ],
+    'Surigao del Sur': [
+        'Tandag City Police Station',
+        'Bislig City Police Station',
+        'Barobo Municipal Police Station',
+        'Bayabas Municipal Police Station',
+        'Cagwait Municipal Police Station',
+        'Cantilan Municipal Police Station',
+        'Carmen Municipal Police Station',
+        'Carrascal Municipal Police Station',
+        'Cortes Municipal Police Station',
+        'Hinatuan Municipal Police Station',
+        'Lanuza Municipal Police Station',
+        'Lianga Municipal Police Station',
+        'Lingig Municipal Police Station',
+        'Madrid Municipal Police Station',
+        'Marihatag Municipal Police Station',
+        'San Agustin Municipal Police Station',
+        'San Miguel Municipal Police Station',
+        'Tagbina Municipal Police Station',
+        'Tago Municipal Police Station',
+        'Provincial Police Office - Surigao del Sur'
+    ],
+    'Dinagat Islands': [
+        'San Jose Municipal Police Station',
+        'Basilisa Municipal Police Station',
+        'Cagdianao Municipal Police Station',
+        'Dinagat Municipal Police Station',
+        'Libjo Municipal Police Station',
+        'Loreto Municipal Police Station',
+        'Tubajon Municipal Police Station',
+        'Provincial Police Office - Dinagat Islands'
+    ]
+};
+
+// Update stations dropdown based on selected province
+function updateStations() {
+    const provinceSelect = document.getElementById('province');
+    const stationSelect = document.getElementById('station');
+    const selectedProvince = provinceSelect.value;
+
+    // Clear current options
+    stationSelect.innerHTML = '<option value="">-- Select Station --</option>';
+
+    if (selectedProvince && stationsByProvince[selectedProvince]) {
+        // Add stations for selected province
+        stationsByProvince[selectedProvince].forEach(station => {
+            const option = document.createElement('option');
+            option.value = station;
+            option.textContent = station;
+            stationSelect.appendChild(option);
+        });
+    } else {
+        stationSelect.innerHTML = '<option value="">-- Select Province First --</option>';
+    }
+}
+
+// Password validation
+function validateForm() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+
+    if (password !== confirmPassword) {
+        alert('Passwords do not match! Please make sure both password fields are identical.');
+        document.getElementById('confirm_password').focus();
+        return false;
+    }
+
+    if (password.length < 8) {
+        alert('Password must be at least 8 characters long!');
+        document.getElementById('password').focus();
+        return false;
+    }
+
+    return true;
+}
+
+// Visual feedback for password matching
+document.addEventListener('DOMContentLoaded', function() {
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+
+    function checkPasswordMatch() {
+        if (confirmPassword.value === '') {
+            confirmPassword.style.borderColor = '';
+            return;
+        }
+
+        if (password.value === confirmPassword.value) {
+            confirmPassword.style.borderColor = '#28a745';
+            confirmPassword.style.borderWidth = '2px';
+        } else {
+            confirmPassword.style.borderColor = '#dc3545';
+            confirmPassword.style.borderWidth = '2px';
+        }
+    }
+
+    password.addEventListener('input', checkPasswordMatch);
+    confirmPassword.addEventListener('input', checkPasswordMatch);
+});
+</script>
 {% endblock %}
