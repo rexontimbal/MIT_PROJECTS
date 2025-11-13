@@ -35,7 +35,7 @@
 {% endif %}
 
 <div style="max-width: 900px; margin: 0 auto;">
-    <form method="post" onsubmit="return validateForm()">
+    <form method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
         {% csrf_token %}
 
         <!-- Account Details -->
@@ -82,6 +82,15 @@
             <div class="form-group">
                 <label class="form-label" for="email">Email Address</label>
                 <input type="email" name="email" id="email" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="profile_picture">Profile Picture</label>
+                <input type="file" name="profile_picture" id="profile_picture" class="form-control" accept="image/*" onchange="previewProfilePicture(event)">
+                <small style="color: var(--text-light);">Recommended: Square image (JPG, PNG). Max 5MB.</small>
+                <div id="image-preview" style="margin-top: 1rem; display: none;">
+                    <img id="preview-img" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border-color);">
+                </div>
             </div>
         </div>
 
@@ -369,5 +378,37 @@ document.addEventListener('DOMContentLoaded', function() {
     password.addEventListener('input', checkPasswordMatch);
     confirmPassword.addEventListener('input', checkPasswordMatch);
 });
+
+// Profile picture preview
+function previewProfilePicture(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size too large! Maximum 5MB allowed.');
+            event.target.value = '';
+            document.getElementById('image-preview').style.display = 'none';
+            return;
+        }
+
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file!');
+            event.target.value = '';
+            document.getElementById('image-preview').style.display = 'none';
+            return;
+        }
+
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('image-preview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('image-preview').style.display = 'none';
+    }
+}
 </script>
 {% endblock %}

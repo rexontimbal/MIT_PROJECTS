@@ -46,7 +46,7 @@
                 </h2>
             </div>
 
-            <form method="post">
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="update_basic">
 
@@ -71,6 +71,30 @@
                 <div class="form-group">
                     <label class="form-label" for="email">Email Address</label>
                     <input type="email" name="email" id="email" class="form-control" value="{{ target_user.email }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="profile_picture">Profile Picture</label>
+                    {% if profile.profile_picture %}
+                    <div style="margin-bottom: 1rem;">
+                        <img src="{{ profile.profile_picture.url }}" alt="Current Profile Picture"
+                             style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border-color);">
+                        <div style="margin-top: 0.5rem;">
+                            <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="remove_picture" value="1">
+                                <span style="color: var(--text-light);">Remove current picture</span>
+                            </label>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="color: var(--text-light); margin-bottom: 0.5rem;">No profile picture uploaded</p>
+                    {% endif %}
+                    <input type="file" name="profile_picture" id="profile_picture" class="form-control" accept="image/*" onchange="previewProfilePicture(event)">
+                    <small style="color: var(--text-light);">Upload new picture (JPG, PNG). Max 5MB.</small>
+                    <div id="image-preview" style="margin-top: 1rem; display: none;">
+                        <p style="color: var(--text-light); font-weight: 600; margin-bottom: 0.5rem;">New Picture Preview:</p>
+                        <img id="preview-img" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid var(--primary-blue);">
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary">
@@ -450,6 +474,38 @@ function toggleActive() {
         console.error('Error:', error);
         alert('An error occurred');
     });
+}
+
+// Profile picture preview
+function previewProfilePicture(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size too large! Maximum 5MB allowed.');
+            event.target.value = '';
+            document.getElementById('image-preview').style.display = 'none';
+            return;
+        }
+
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file!');
+            event.target.value = '';
+            document.getElementById('image-preview').style.display = 'none';
+            return;
+        }
+
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('image-preview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('image-preview').style.display = 'none';
+    }
 }
 </script>
 {% endblock %}

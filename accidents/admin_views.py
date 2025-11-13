@@ -169,6 +169,23 @@ def user_detail(request, user_id):
             user.email = request.POST.get('email', '')
             user.save()
 
+            # Handle profile picture
+            if profile:
+                # Check if user wants to remove current picture
+                if request.POST.get('remove_picture'):
+                    if profile.profile_picture:
+                        profile.profile_picture.delete(save=False)
+                        profile.profile_picture = None
+
+                # Handle new picture upload
+                if 'profile_picture' in request.FILES:
+                    # Delete old picture if exists
+                    if profile.profile_picture:
+                        profile.profile_picture.delete(save=False)
+                    profile.profile_picture = request.FILES['profile_picture']
+
+                profile.save()
+
             messages.success(request, f'User {user.username} updated successfully!')
 
             log_user_action(
@@ -279,6 +296,11 @@ def user_create(request):
             phone_number=request.POST.get('phone_number', ''),
             created_by=request.user
         )
+
+        # Handle profile picture upload
+        if 'profile_picture' in request.FILES:
+            profile.profile_picture = request.FILES['profile_picture']
+            profile.save()
 
         # Set permissions
         user.is_staff = request.POST.get('is_staff') == 'on'

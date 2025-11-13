@@ -87,6 +87,7 @@
     <table class="admin-table">
         <thead>
             <tr>
+                <th style="width: 60px;">Photo</th>
                 <th>Username</th>
                 <th>Name</th>
                 <th>Badge</th>
@@ -100,6 +101,16 @@
         <tbody>
             {% for user in page_obj %}
             <tr>
+                <td>
+                    {% if user.profile and user.profile.profile_picture %}
+                    <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}"
+                         style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; border: 2px solid var(--primary-blue);">
+                    {% else %}
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-blue); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px;">
+                        {{ user.username|first|upper }}
+                    </div>
+                    {% endif %}
+                </td>
                 <td>
                     <strong>{{ user.username }}</strong>
                     <br>

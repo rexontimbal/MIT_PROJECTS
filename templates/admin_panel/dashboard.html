@@ -166,9 +166,21 @@
                 <tr>
                     <td style="white-space: nowrap;">{{ log.timestamp|date:"M d, Y H:i" }}</td>
                     <td>
-                        <strong>{{ log.user.get_full_name|default:log.username }}</strong>
-                        <br>
-                        <small style="color: var(--text-light);">{{ log.ip_address }}</small>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            {% if log.user and log.user.profile and log.user.profile.profile_picture %}
+                            <img src="{{ log.user.profile.profile_picture.url }}" alt="{{ log.username }}"
+                                 style="width: 32px; height: 32px; object-fit: cover; border-radius: 50%; border: 2px solid var(--border-color);">
+                            {% else %}
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-blue); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                {{ log.username|first|upper }}
+                            </div>
+                            {% endif %}
+                            <div>
+                                <strong>{{ log.user.get_full_name|default:log.username }}</strong>
+                                <br>
+                                <small style="color: var(--text-light);">{{ log.ip_address }}</small>
+                            </div>
+                        </div>
                     </td>
                     <td>
                         <span class="badge {% if log.severity == 'critical' %}badge-danger{% elif log.severity == 'warning' %}badge-warning{% else %}badge-info{% endif %}">
