@@ -18,7 +18,7 @@ from .models import (
     UserProfile, AuditLog, ClusteringJob,
     Accident, AccidentCluster, AccidentReport
 )
-from .auth_utils import log_audit
+from .auth_utils import log_user_action
 
 
 # ============================================================================
@@ -81,7 +81,7 @@ def admin_dashboard(request):
         'recent_users': recent_users,
     }
 
-    log_audit(
+    log_user_action(
         request=request,
         action='admin_dashboard_view',
         description='Viewed admin dashboard',
@@ -171,7 +171,7 @@ def user_detail(request, user_id):
 
             messages.success(request, f'User {user.username} updated successfully!')
 
-            log_audit(
+            log_user_action(
                 request=request,
                 action='user_edit',
                 description=f'Updated basic info for user: {user.username}',
@@ -194,7 +194,7 @@ def user_detail(request, user_id):
 
                 messages.success(request, f'Profile for {user.username} updated successfully!')
 
-                log_audit(
+                log_user_action(
                     request=request,
                     action='user_profile_edit',
                     description=f'Updated profile for user: {user.username}',
@@ -210,7 +210,7 @@ def user_detail(request, user_id):
 
             messages.success(request, f'Permissions for {user.username} updated successfully!')
 
-            log_audit(
+            log_user_action(
                 request=request,
                 action='user_permissions_edit',
                 description=f'Updated permissions for user: {user.username} (Staff: {user.is_staff}, Superuser: {user.is_superuser}, Active: {user.is_active})',
@@ -281,7 +281,7 @@ def user_create(request):
 
         messages.success(request, f'User "{username}" created successfully!')
 
-        log_audit(
+        log_user_action(
             request=request,
             action='user_create',
             description=f'Created new user: {username} with role {profile.get_role_display()}',
@@ -318,7 +318,7 @@ def user_reset_password(request, user_id):
 
         messages.success(request, f'Password for {user.username} reset successfully! User will be required to change password on next login.')
 
-        log_audit(
+        log_user_action(
             request=request,
             action='password_reset',
             description=f'Reset password for user: {user.username}',
@@ -349,7 +349,7 @@ def user_toggle_active(request, user_id):
         status = 'activated' if user.is_active else 'deactivated'
         messages.success(request, f'User {user.username} {status} successfully!')
 
-        log_audit(
+        log_user_action(
             request=request,
             action='user_status_change',
             description=f'{status.capitalize()} user: {user.username}',
