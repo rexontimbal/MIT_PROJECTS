@@ -2035,12 +2035,25 @@ function initializeEnhancedMap() {
             minZoom: 7
         });
 
-        // Create satellite layer
-        satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-            maxZoom: 18,
-            minZoom: 7
-        });
+        // Create Mapbox satellite layer
+        const mapboxToken = '{{ mapbox_token }}';
+        if (mapboxToken && mapboxToken.trim() !== '') {
+            satelliteLayer = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=' + mapboxToken, {
+                attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                tileSize: 512,
+                zoomOffset: -1,
+                maxZoom: 18,
+                minZoom: 7
+            });
+        } else {
+            // Fallback to free Esri satellite if no Mapbox token is configured
+            satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; Esri',
+                maxZoom: 18,
+                minZoom: 7
+            });
+            console.warn('⚠️ No Mapbox token configured. Using Esri satellite as fallback. Get a free token at: https://account.mapbox.com/access-tokens/');
+        }
 
         // Add default layer (street)
         streetLayer.addTo(map);

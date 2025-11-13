@@ -495,6 +495,10 @@ ITEMS_PER_PAGE = 25
 MAP_DEFAULT_CENTER = [9.0, 125.5]  # Caraga Region center
 MAP_DEFAULT_ZOOM = 9
 
+# Mapbox API configuration
+# Get your free API token from: https://account.mapbox.com/access-tokens/
+MAPBOX_ACCESS_TOKEN = config('MAPBOX_ACCESS_TOKEN', default='')
+
 # ==============================================================================
 # MESSAGES FRAMEWORK
 # ==============================================================================

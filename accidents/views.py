@@ -6,6 +6,7 @@ from django.db.models.functions import TruncMonth, ExtractWeekDay
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
+from django.conf import settings
 from datetime import timedelta
 from datetime import time as dt_time
 import json
@@ -836,8 +837,9 @@ def map_view(request):
         'total_accidents': total_accidents,
         'total_hotspots': total_hotspots,
         'provinces': provinces,  # Now guaranteed to have data
+        'mapbox_token': settings.MAPBOX_ACCESS_TOKEN,
     }
-    
+
     return render(request, 'maps/map_view.html', context)
 
 @pnp_login_required
