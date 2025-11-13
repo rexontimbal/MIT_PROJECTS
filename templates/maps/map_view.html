@@ -410,11 +410,16 @@
     display: none;
     align-items: center;
     gap: 12px;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
     white-space: nowrap;
     max-width: 5000px; /* Limit maximum width */
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Move banners below search bar when search is active */
+.time-filter-badge.below-search {
+    top: 90px;
 }
 
 .time-filter-badge.show {
@@ -1467,11 +1472,16 @@ body.fullscreen-mode .search-info-panel {
     display: none;
     align-items: center;
     gap: 12px;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
     white-space: nowrap;
     max-width: 500px;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Move banner below search bar when search is active */
+.search-active-banner.below-search {
+    top: 90px;
 }
 
 .search-active-banner.show {
@@ -3334,14 +3344,15 @@ function toggleSearchBar() {
     const container = document.getElementById('mapSearchContainer');
     const btn = document.getElementById('floatingSearchBtn');
     const input = document.getElementById('mapSearchInput');
-    
+
     if (container.style.display === 'none' || !container.classList.contains('active')) {
         container.style.display = 'block';
         setTimeout(() => {
             container.classList.add('active');
             btn.classList.add('active');
+            adjustBannerPositions(true); // Move banners below search bar
         }, 10);
-        
+
         setTimeout(() => {
             if (input) input.focus();
         }, 400);
@@ -3350,25 +3361,50 @@ function toggleSearchBar() {
     }
 }
 
+// Helper function to adjust banner positions when search bar toggles
+function adjustBannerPositions(searchBarActive) {
+    const timeFilterBadge = document.getElementById('timeFilterBadge');
+    const searchActiveBanner = document.getElementById('searchActiveBanner');
+
+    if (searchBarActive) {
+        // Move banners below search bar
+        if (timeFilterBadge) {
+            timeFilterBadge.classList.add('below-search');
+        }
+        if (searchActiveBanner) {
+            searchActiveBanner.classList.add('below-search');
+        }
+    } else {
+        // Move banners back to top
+        if (timeFilterBadge) {
+            timeFilterBadge.classList.remove('below-search');
+        }
+        if (searchActiveBanner) {
+            searchActiveBanner.classList.remove('below-search');
+        }
+    }
+}
+
 function closeSearchBar() {
     const container = document.getElementById('mapSearchContainer');
     const btn = document.getElementById('floatingSearchBtn');
-    
+
     container.classList.remove('active');
     btn.classList.remove('active');
-    
+    adjustBannerPositions(false); // Move banners back to top
+
     hideSearchSuggestions();
     hideSearchHistory();
-    
+
     setTimeout(() => {
         container.style.display = 'none';
     }, 400);
-    
+
     const input = document.getElementById('mapSearchInput');
     if (input && !currentFilters.searchQuery) {
         input.value = '';
     }
-    
+
     updateBadgePositions();
 }
 
