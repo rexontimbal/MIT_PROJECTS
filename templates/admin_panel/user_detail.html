@@ -131,9 +131,10 @@
                             <option value="">-- Select Province --</option>
                             <option value="Agusan del Norte" {% if profile.province == 'Agusan del Norte' %}selected{% endif %}>Agusan del Norte</option>
                             <option value="Agusan del Sur" {% if profile.province == 'Agusan del Sur' %}selected{% endif %}>Agusan del Sur</option>
+                            <option value="Butuan City" {% if profile.province == 'Butuan City' %}selected{% endif %}>Butuan City</option>
+                            <option value="Dinagat Islands" {% if profile.province == 'Dinagat Islands' %}selected{% endif %}>Dinagat Islands</option>
                             <option value="Surigao del Norte" {% if profile.province == 'Surigao del Norte' %}selected{% endif %}>Surigao del Norte</option>
                             <option value="Surigao del Sur" {% if profile.province == 'Surigao del Sur' %}selected{% endif %}>Surigao del Sur</option>
-                            <option value="Dinagat Islands" {% if profile.province == 'Dinagat Islands' %}selected{% endif %}>Dinagat Islands</option>
                         </select>
                     </div>
                 </div>
@@ -349,11 +350,12 @@
 <script>
 // Caraga Region Police Stations Database (Real PNP Data)
 const stationsByProvince = {
-    'Agusan del Norte': ['Santiago MPS', 'Las Nieves MPS', 'Remedios T Romualdes MPS', 'Buenavista MPS', 'Jabonga MPS', 'Cabadbaran City PS', 'Tubay MPS', 'Kitcharao MPS', 'Magallanes MPS', 'Nasipit MPS', 'Carmen MPS', 'Butuan City PS 1', 'Butuan City PS 2', 'Butuan City PS 3', 'Butuan City PS 4', 'Butuan City PS 5'],
+    'Agusan del Norte': ['Santiago MPS', 'Las Nieves MPS', 'Remedios T Romualdes MPS', 'Buenavista MPS', 'Jabonga MPS', 'Cabadbaran City PS', 'Tubay MPS', 'Kitcharao MPS', 'Magallanes MPS', 'Nasipit MPS', 'Carmen MPS'],
     'Agusan del Sur': ['Bayugan CPS', 'Prosperidad MPS', 'San Francisco MPS', 'Rosario MPS', 'La Paz MPS', 'Bunawan MPS', 'Veruela MPS', 'Loreto MPS', 'Sibagat MPS', 'San Luis MPS', 'Esperanza MPS', 'Talacogon MPS', 'Sta Josefa MPS'],
+    'Butuan City': ['Butuan City PS 1', 'Butuan City PS 2', 'Butuan City PS 3', 'Butuan City PS 4', 'Butuan City PS 5'],
+    'Dinagat Islands': ['San Jose MPS', 'Libjo MPS', 'Dinagat MPS', 'Loreto MPS', 'Basilisa MPS', 'Tubajon MPS'],
     'Surigao del Norte': ['Placer MPS', 'Gen. Luna MPS', 'Sison MPS', 'Surigao City PS', 'Mainit MPS', 'Gigaquit MPS', 'Malimono MPS', 'Claver MPS', 'Bacuag MPS', 'Taganaan MPS', 'Dapa MPS', 'Alegria MPS', 'Del Carmen MPS', 'Sta. Monica MPS', 'Tubod MPS', 'San Isidro MPS', 'Burgos MPS', 'Socorro MPS', 'San Francisco MPS', 'Pilar MPS', 'San Benito MPS'],
-    'Surigao del Sur': ['Bislig City PS', 'Hinatuan MPS', 'Lingig MPS', 'Tago MPS', 'Lianga MPS', 'Tandag City PS', 'Barobo MPS', 'Cortes MPS', 'Lanuza MPS', 'Cantilan MPS', 'Tagbina MPS', 'Marihatag MPS', 'Carascal MPS', 'San Agustin MPS', 'Madrid MPS', 'Bayabas MPS', 'San Miguel MPS', 'Carmen MPS'],
-    'Dinagat Islands': ['San Jose MPS', 'Libjo MPS', 'Dinagat MPS', 'Loreto MPS', 'Basilisa MPS', 'Tubajon MPS']
+    'Surigao del Sur': ['Bislig City PS', 'Hinatuan MPS', 'Lingig MPS', 'Tago MPS', 'Lianga MPS', 'Tandag City PS', 'Barobo MPS', 'Cortes MPS', 'Lanuza MPS', 'Cantilan MPS', 'Tagbina MPS', 'Marihatag MPS', 'Carascal MPS', 'San Agustin MPS', 'Madrid MPS', 'Bayabas MPS', 'San Miguel MPS', 'Carmen MPS']
 };
 
 // Update stations dropdown
