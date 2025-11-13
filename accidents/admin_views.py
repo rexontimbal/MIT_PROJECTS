@@ -235,7 +235,7 @@ def user_detail(request, user_id):
                 severity='warning'
             )
 
-        return redirect('admin_user_detail', user_id=user.id)
+        return redirect('admin_panel:user_detail', user_id=user.id)
 
     # Get user's recent audit logs
     recent_logs = AuditLog.objects.filter(user=user).order_by('-timestamp')[:20]
@@ -317,7 +317,7 @@ def user_create(request):
             severity='info'
         )
 
-        return redirect('admin_user_detail', user_id=user.id)
+        return redirect('admin_panel:user_detail', user_id=user.id)
 
     context = {
         'ranks': UserProfile.RANK_CHOICES,
