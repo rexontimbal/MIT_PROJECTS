@@ -1,0 +1,286 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">
+            <i class="fas fa-tachometer-alt"></i>
+            Admin Dashboard
+        </h1>
+        <div class="admin-breadcrumb">
+            <a href="{% url 'dashboard' %}"><i class="fas fa-home"></i> Main Site</a>
+            <span>/</span>
+            <span>Admin Dashboard</span>
+        </div>
+    </div>
+</div>
+
+<!-- Messages -->
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        <i class="fas fa-info-circle"></i>
+        {{ message }}
+    </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Statistics Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Total Users</span>
+            <i class="fas fa-users stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ stats.total_users }}</div>
+        <div class="stat-label">Registered accounts</div>
+    </div>
+
+    <div class="stat-card green">
+        <div class="stat-header">
+            <span class="stat-title">Active Users</span>
+            <i class="fas fa-user-check stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ stats.active_users }}</div>
+        <div class="stat-label">Currently active</div>
+    </div>
+
+    <div class="stat-card orange">
+        <div class="stat-header">
+            <span class="stat-title">Total Accidents</span>
+            <i class="fas fa-car-crash stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ stats.total_accidents }}</div>
+        <div class="stat-label">Records in database</div>
+    </div>
+
+    <div class="stat-card red">
+        <div class="stat-header">
+            <span class="stat-title">Hotspots Detected</span>
+            <i class="fas fa-fire stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ stats.total_hotspots }}</div>
+        <div class="stat-label">Active clusters</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Pending Reports</span>
+            <i class="fas fa-clock stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ stats.pending_reports }}</div>
+        <div class="stat-label">Awaiting verification</div>
+    </div>
+
+    <div class="stat-card green">
+        <div class="stat-header">
+            <span class="stat-title">Logins (7 days)</span>
+            <i class="fas fa-sign-in-alt stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ stats.recent_logins }}</div>
+        <div class="stat-label">Last 7 days</div>
+    </div>
+</div>
+
+<!-- Quick Actions & Recent Activity -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Quick Actions -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2 class="admin-card-title">
+                <i class="fas fa-bolt"></i>
+                Quick Actions
+            </h2>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% if user.is_superuser %}
+            <a href="{% url 'admin_panel:user_create' %}" class="btn btn-primary" style="justify-content: center;">
+                <i class="fas fa-user-plus"></i>
+                Create New User
+            </a>
+            <a href="{% url 'admin_panel:users' %}" class="btn btn-outline" style="justify-content: center;">
+                <i class="fas fa-users"></i>
+                Manage Users
+            </a>
+            {% endif %}
+            <a href="{% url 'admin_panel:audit_logs' %}" class="btn btn-outline" style="justify-content: center;">
+                <i class="fas fa-clipboard-list"></i>
+                View Audit Logs
+            </a>
+            <a href="{% url 'admin_panel:system_monitoring' %}" class="btn btn-outline" style="justify-content: center;">
+                <i class="fas fa-server"></i>
+                System Status
+            </a>
+        </div>
+    </div>
+
+    <!-- User Role Distribution -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2 class="admin-card-title">
+                <i class="fas fa-chart-pie"></i>
+                User Roles Distribution
+            </h2>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for item in role_distribution %}
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                <span style="font-weight: 600; color: var(--text-dark);">{{ item.role|title|default:"Unknown" }}</span>
+                <span class="badge badge-info">{{ item.count }} user{{ item.count|pluralize }}</span>
+            </div>
+            {% empty %}
+            <p style="color: var(--text-light); text-align: center;">No users yet</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h2 class="admin-card-title">
+            <i class="fas fa-history"></i>
+            Recent Activity
+        </h2>
+        <a href="{% url 'admin_panel:audit_logs' %}" class="btn btn-sm btn-outline">View All</a>
+    </div>
+
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in recent_activity %}
+                <tr>
+                    <td style="white-space: nowrap;">{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                    <td>
+                        <strong>{{ log.user.get_full_name|default:log.username }}</strong>
+                        <br>
+                        <small style="color: var(--text-light);">{{ log.ip_address }}</small>
+                    </td>
+                    <td>
+                        <span class="badge {% if log.severity == 'critical' %}badge-danger{% elif log.severity == 'warning' %}badge-warning{% else %}badge-info{% endif %}">
+                            {{ log.action|title }}
+                        </span>
+                    </td>
+                    <td>{{ log.action_description|truncatewords:10 }}</td>
+                    <td>
+                        {% if log.success %}
+                        <span class="badge badge-success"><i class="fas fa-check"></i> Success</span>
+                        {% else %}
+                        <span class="badge badge-danger"><i class="fas fa-times"></i> Failed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-light);">No recent activity</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Clustering Jobs -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h2 class="admin-card-title">
+            <i class="fas fa-project-diagram"></i>
+            Recent Clustering Jobs
+        </h2>
+        <a href="{% url 'admin_panel:system_monitoring' %}" class="btn btn-sm btn-outline">View Details</a>
+    </div>
+
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Started</th>
+                    <th>Status</th>
+                    <th>Total Accidents</th>
+                    <th>Clusters Found</th>
+                    <th>Method</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in recent_jobs %}
+                <tr>
+                    <td><strong>#{{ job.id }}</strong></td>
+                    <td style="white-space: nowrap;">{{ job.started_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        {% if job.status == 'completed' %}
+                        <span class="badge badge-success">Completed</span>
+                        {% elif job.status == 'running' %}
+                        <span class="badge badge-warning">Running</span>
+                        {% else %}
+                        <span class="badge badge-danger">Failed</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ job.total_accidents }}</td>
+                    <td>{{ job.clusters_found|default:"N/A" }}</td>
+                    <td><span class="badge badge-secondary">{{ job.linkage_method|upper }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-light);">No clustering jobs yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Users -->
+{% if recent_users %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h2 class="admin-card-title">
+            <i class="fas fa-user-plus"></i>
+            Recently Added Users (Last 7 Days)
+        </h2>
+    </div>
+
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Rank</th>
+                    <th>Role</th>
+                    <th>Station</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in recent_users %}
+                <tr>
+                    <td><strong>{{ u.username }}</strong></td>
+                    <td>{{ u.get_full_name|default:"-" }}</td>
+                    <td>{{ u.profile.get_rank_display|default:"-" }}</td>
+                    <td><span class="badge badge-info">{{ u.profile.get_role_display|default:"N/A" }}</span></td>
+                    <td>{{ u.profile.station|default:"-" }}</td>
+                    <td style="white-space: nowrap;">{{ u.date_joined|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

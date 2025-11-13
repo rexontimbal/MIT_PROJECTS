@@ -1,0 +1,661 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %} - AGNES System</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/pnp-logo.png' %}">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    <style>
+        /* Admin Panel Styles */
+        :root {
+            --primary-blue: #003087;
+            --secondary-blue: #0052CC;
+            --accent-red: #DC143C;
+            --text-dark: #333;
+            --text-light: #666;
+            --bg-light: #F8F9FA;
+            --border-color: #DDD;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 8px rgba(0,0,0,0.15);
+            --shadow-lg: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        body {
+            background: var(--bg-light);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        /* Admin Container */
+        .admin-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, var(--primary-blue) 0%, #001F3F 100%);
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 60px;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+
+        .admin-sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-sidebar-header h2 {
+            font-size: 1.25rem;
+            margin: 0 0 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .admin-sidebar-header p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin: 0;
+        }
+
+        .admin-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .admin-nav-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .admin-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1.5rem;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .admin-nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: var(--accent-red);
+        }
+
+        .admin-nav-link.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border-left-color: var(--accent-red);
+            font-weight: 600;
+        }
+
+        .admin-nav-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .admin-nav-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 1rem 1.5rem;
+        }
+
+        /* Main Content */
+        .admin-main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Page Header */
+        .admin-page-header {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .admin-page-title {
+            margin: 0;
+            font-size: 1.75rem;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .admin-page-title i {
+            font-size: 1.5rem;
+        }
+
+        .admin-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        .admin-breadcrumb a {
+            color: var(--secondary-blue);
+            text-decoration: none;
+        }
+
+        .admin-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #00256B;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #B71C1C;
+        }
+
+        .btn-secondary {
+            background: #6C757D;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5A6268;
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        /* Cards */
+        .admin-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-card-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .admin-card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--primary-blue);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-card.red {
+            border-left-color: var(--accent-red);
+        }
+
+        .stat-card.green {
+            border-left-color: #28a745;
+        }
+
+        .stat-card.orange {
+            border-left-color: #FFA500;
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-title {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-icon {
+            font-size: 1.75rem;
+            opacity: 0.2;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        /* Tables */
+        .admin-table-container {
+            overflow-x: auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table thead {
+            background: var(--bg-light);
+        }
+
+        .admin-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .admin-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .admin-table tbody tr:hover {
+            background: rgba(0, 48, 135, 0.02);
+        }
+
+        .admin-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-success {
+            background: #D4EDDA;
+            color: #155724;
+        }
+
+        .badge-danger {
+            background: #F8D7DA;
+            color: #721C24;
+        }
+
+        .badge-warning {
+            background: #FFF3CD;
+            color: #856404;
+        }
+
+        .badge-info {
+            background: #D1ECF1;
+            color: #0C5460;
+        }
+
+        .badge-secondary {
+            background: #E2E3E5;
+            color: #383D41;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-success {
+            background: #D4EDDA;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-danger {
+            background: #F8D7DA;
+            color: #721C24;
+            border-left: 4px solid var(--accent-red);
+        }
+
+        .alert-warning {
+            background: #FFF3CD;
+            color: #856404;
+            border-left: 4px solid #FFA500;
+        }
+
+        .alert-info {
+            background: #D1ECF1;
+            color: #0C5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.1);
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .pagination a, .pagination span {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+
+        .pagination a:hover {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        .pagination .current {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .admin-sidebar {
+                width: 220px;
+            }
+
+            .admin-main {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                flex-direction: column;
+            }
+
+            .admin-sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation from main site -->
+    <nav class="navbar" style="background: linear-gradient(135deg, #003087 0%, #001F3F 100%); padding: 0.75rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 1000;">
+        <div class="navbar-container" style="display: flex; align-items: center; justify-content: space-between; max-width: 1600px; margin: 0 auto; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <img src="{% static 'images/pnp-logo.png' %}" alt="PNP Logo" style="width: 40px; height: 40px; border-radius: 8px; background: white; padding: 4px;">
+                <div style="color: white;">
+                    <h1 style="margin: 0; font-size: 1.1rem; font-weight: 700;">AGNES Admin Panel</h1>
+                    <p style="margin: 0; font-size: 0.75rem; opacity: 0.9;">System Administration Dashboard</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <a href="{% url 'dashboard' %}" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 8px; transition: all 0.3s;">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Main Site</span>
+                </a>
+                <div style="color: white; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                    <i class="fas fa-user-shield"></i>
+                    <strong>{{ user.get_full_name|default:user.username }}</strong>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <h2><i class="fas fa-tools"></i> Admin Tools</h2>
+                <p>System Management</p>
+            </div>
+
+            <ul class="admin-nav">
+                <li class="admin-nav-item">
+                    <a href="{% url 'admin_panel:dashboard' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                {% if user.is_superuser %}
+                <li class="admin-nav-item">
+                    <a href="{% url 'admin_panel:users' %}" class="admin-nav-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="fas fa-users"></i>
+                        <span>User Management</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="admin-nav-item">
+                    <a href="{% url 'admin_panel:audit_logs' %}" class="admin-nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Audit Logs</span>
+                    </a>
+                </li>
+
+                <li class="admin-nav-item">
+                    <a href="{% url 'admin_panel:system_monitoring' %}" class="admin-nav-link {% if 'system' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="fas fa-server"></i>
+                        <span>System Monitoring</span>
+                    </a>
+                </li>
+
+                <div class="admin-nav-divider"></div>
+
+                {% if user.is_superuser %}
+                <li class="admin-nav-item">
+                    <a href="/admin/" class="admin-nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Django Admin</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="admin-nav-item">
+                    <a href="{% url 'dashboard' %}" class="admin-nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Main Site</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // CSRF Token for AJAX requests
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

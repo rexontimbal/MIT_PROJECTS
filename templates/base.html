@@ -797,9 +797,16 @@
                         </a>
 
                         {% if user.is_staff %}
-                        <a href="/admin/" class="dropdown-item">
+                        <a href="{% url 'admin_panel:dashboard' %}" class="dropdown-item">
                             <i class="fas fa-cog"></i>
                             <span>Admin Panel</span>
+                        </a>
+                        {% endif %}
+
+                        {% if user.is_superuser %}
+                        <a href="/admin/" class="dropdown-item">
+                            <i class="fas fa-tools"></i>
+                            <span>Django Admin</span>
                         </a>
                         {% endif %}
 

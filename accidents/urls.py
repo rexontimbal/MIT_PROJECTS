@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
@@ -8,6 +8,9 @@ urlpatterns = [
 
     # Dashboard
     path('', views.dashboard, name='dashboard'),
+
+    # Custom Admin Panel (PNP-themed, user-friendly)
+    path('admin-panel/', include('accidents.admin_urls')),
 
     # Accidents
     path('accidents/', views.accident_list, name='accident_list'),
