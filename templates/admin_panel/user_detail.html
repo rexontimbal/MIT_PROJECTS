@@ -68,9 +68,9 @@
                 <div class="form-group">
                     <label class="form-label" for="username">
                         Username
-                        {% if target_user.is_superuser and target_user.profile.role == 'super_admin' %}
+                        {% if user.is_superuser and user.profile.role == 'super_admin' %}
                         <span class="badge badge-info" style="margin-left: var(--space-2); font-size: 0.75rem;">
-                            <i class="fas fa-shield-alt"></i> Super Admin
+                            <i class="fas fa-lock"></i> Protected - Password Required
                         </span>
                         {% endif %}
                     </label>
@@ -78,14 +78,14 @@
                         <div style="flex: 1;">
                             <input type="text" name="username" id="username" class="form-control" value="{{ target_user.username }}" disabled>
                             <small style="color: var(--text-light);" id="usernameHelpText">
-                                {% if target_user.is_superuser and target_user.profile.role == 'super_admin' %}
-                                    Username editing requires password confirmation - click "Edit Username" button
+                                {% if user.is_superuser and user.profile.role == 'super_admin' %}
+                                    Click "Edit Username" button to enable editing (password confirmation required)
                                 {% else %}
-                                    Username cannot be changed for this user type
+                                    Username editing is restricted to Super Admin accounts only
                                 {% endif %}
                             </small>
                         </div>
-                        {% if target_user.is_superuser and target_user.profile.role == 'super_admin' %}
+                        {% if user.is_superuser and user.profile.role == 'super_admin' %}
                         <button type="button" class="btn btn-outline btn-sm" onclick="enableUsernameEdit()" id="editUsernameBtn" style="margin-top: 0;">
                             <i class="fas fa-edit"></i>
                             Edit Username
@@ -94,13 +94,13 @@
                     </div>
                 </div>
 
-                <!-- Password Reset Section (For Super Admin Accounts) -->
-                {% if target_user.is_superuser and target_user.profile.role == 'super_admin' %}
+                <!-- Password Reset Section (For Super Admin Users) -->
+                {% if user.is_superuser and user.profile.role == 'super_admin' %}
                 <div class="form-group">
                     <label class="form-label">
                         Password
                         <span class="badge badge-warning" style="margin-left: var(--space-2); font-size: 0.75rem;">
-                            <i class="fas fa-shield-alt"></i> Super Admin Account
+                            <i class="fas fa-shield-alt"></i> Super Admin Only
                         </span>
                     </label>
                     <div style="display: flex; gap: var(--space-3); align-items: center;">
@@ -111,7 +111,7 @@
                         </button>
                     </div>
                     <small style="color: var(--text-light); display: block; margin-top: var(--space-2);">
-                        This is a Super Admin account. Click "Reset Password" to set a new password.
+                        You can reset this user's password (your password will be required for confirmation)
                     </small>
                 </div>
                 {% endif %}
