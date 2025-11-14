@@ -12,84 +12,269 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
 
     <style>
-        /* Admin Panel Styles */
+        /* ============================================
+           MODERN FLAT ADMIN PANEL - PNP THEME
+           Clean, Smooth, Professional Design
+        ============================================ */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            --primary-blue: #003087;
-            --secondary-blue: #0052CC;
-            --accent-red: #DC143C;
-            --text-dark: #333;
-            --text-light: #666;
-            --bg-light: #F8F9FA;
-            --border-color: #DDD;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
-            --shadow-md: 0 4px 8px rgba(0,0,0,0.15);
-            --shadow-lg: 0 8px 16px rgba(0,0,0,0.2);
+            /* PNP Color Palette */
+            --pnp-blue: #003087;
+            --pnp-blue-light: #0047AB;
+            --pnp-blue-dark: #00206B;
+            --pnp-red: #DC143C;
+            --pnp-gold: #FFD700;
+
+            /* UI Colors */
+            --primary: #003087;
+            --primary-light: #E3F2FD;
+            --secondary: #6C757D;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --info: #3B82F6;
+
+            /* Neutrals */
+            --white: #FFFFFF;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-300: #D1D5DB;
+            --gray-400: #9CA3AF;
+            --gray-500: #6B7280;
+            --gray-600: #4B5563;
+            --gray-700: #374151;
+            --gray-800: #1F2937;
+            --gray-900: #111827;
+
+            /* Shadows - Flat Design (minimal shadows) */
+            --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+
+            /* Spacing */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+            --space-12: 3rem;
+
+            /* Transitions */
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
-            background: var(--bg-light);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Admin Container */
+        /* ============================================
+           TOP NAVBAR - Modern Flat Design
+        ============================================ */
+        .admin-navbar {
+            background: linear-gradient(135deg, var(--pnp-blue) 0%, var(--pnp-blue-dark) 100%);
+            padding: var(--space-4) var(--space-6);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid var(--pnp-red);
+        }
+
+        .admin-navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .admin-navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .admin-navbar-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            background: var(--white);
+            padding: 6px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .admin-navbar-title h1 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--white);
+            margin: 0;
+        }
+
+        .admin-navbar-title p {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
+            margin: 0;
+        }
+
+        .admin-navbar-user {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .admin-navbar-back {
+            color: var(--white);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .admin-navbar-back:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-2px);
+        }
+
+        .admin-navbar-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-4);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+        }
+
+        .admin-navbar-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--white);
+        }
+
+        .admin-navbar-avatar-placeholder {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--pnp-blue);
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .admin-navbar-info h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--white);
+            margin: 0;
+        }
+
+        .admin-navbar-role {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* ============================================
+           CONTAINER LAYOUT
+        ============================================ */
         .admin-container {
             display: flex;
-            min-height: calc(100vh - 60px);
+            min-height: calc(100vh - 72px);
         }
 
-        /* Sidebar */
+        /* ============================================
+           SIDEBAR - Modern Flat Design
+        ============================================ */
         .admin-sidebar {
             width: 260px;
-            background: linear-gradient(180deg, var(--primary-blue) 0%, #001F3F 100%);
-            color: white;
-            padding: 1.5rem 0;
-            box-shadow: var(--shadow-lg);
+            background: var(--white);
+            border-right: 1px solid var(--gray-200);
+            padding: var(--space-6) 0;
             position: sticky;
-            top: 60px;
-            height: calc(100vh - 60px);
+            top: 72px;
+            height: calc(100vh - 72px);
             overflow-y: auto;
             overflow-x: hidden;
         }
 
-        /* Custom scrollbar for sidebar */
         .admin-sidebar::-webkit-scrollbar {
             width: 6px;
         }
 
         .admin-sidebar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
+            background: transparent;
         }
 
         .admin-sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--gray-300);
             border-radius: 3px;
         }
 
         .admin-sidebar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: var(--gray-400);
         }
 
         .admin-sidebar-header {
-            padding: 0 1.5rem 1.5rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 1.5rem;
+            padding: 0 var(--space-6) var(--space-6);
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: var(--space-6);
         }
 
         .admin-sidebar-header h2 {
-            font-size: 1.25rem;
-            margin: 0 0 0.5rem 0;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 var(--space-2) 0;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: var(--space-2);
         }
 
         .admin-sidebar-header p {
-            font-size: 0.85rem;
-            opacity: 0.8;
+            font-size: 0.75rem;
+            color: var(--gray-500);
             margin: 0;
         }
 
@@ -100,75 +285,83 @@
         }
 
         .admin-nav-item {
-            margin-bottom: 0.25rem;
+            margin-bottom: var(--space-1);
         }
 
         .admin-nav-link {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.85rem 1.5rem;
-            color: rgba(255,255,255,0.9);
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-6);
+            color: var(--gray-700);
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: all var(--transition-fast);
             border-left: 3px solid transparent;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
 
         .admin-nav-link:hover {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border-left-color: var(--accent-red);
+            background: var(--gray-50);
+            color: var(--pnp-blue);
+            border-left-color: var(--gray-200);
         }
 
         .admin-nav-link.active {
-            background: rgba(255,255,255,0.15);
-            color: white;
-            border-left-color: var(--accent-red);
+            background: var(--primary-light);
+            color: var(--pnp-blue);
+            border-left-color: var(--pnp-blue);
             font-weight: 600;
         }
 
         .admin-nav-link i {
             width: 20px;
             text-align: center;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
         .admin-nav-divider {
             height: 1px;
-            background: rgba(255,255,255,0.1);
-            margin: 1rem 1.5rem;
+            background: var(--gray-200);
+            margin: var(--space-4) var(--space-6);
         }
 
-        /* Main Content */
+        /* ============================================
+           MAIN CONTENT AREA
+        ============================================ */
         .admin-main {
             flex: 1;
-            padding: 2rem;
-            max-width: 1600px;
+            padding: var(--space-8);
+            max-width: 1400px;
             margin: 0 auto;
             width: 100%;
         }
 
-        /* Page Header */
+        /* ============================================
+           PAGE HEADER - Clean & Flat
+        ============================================ */
         .admin-page-header {
-            background: white;
-            padding: 1.5rem 2rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 2rem;
+            background: var(--white);
+            padding: var(--space-6) var(--space-8);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xs);
+            margin-bottom: var(--space-8);
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: var(--space-4);
+            border: 1px solid var(--gray-100);
         }
 
         .admin-page-title {
             margin: 0;
-            font-size: 1.75rem;
-            color: var(--primary-blue);
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--pnp-blue);
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: var(--space-3);
         }
 
         .admin-page-title i {
@@ -178,103 +371,116 @@
         .admin-breadcrumb {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            color: var(--text-light);
-            margin-top: 0.5rem;
+            gap: var(--space-2);
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-top: var(--space-2);
         }
 
         .admin-breadcrumb a {
-            color: var(--secondary-blue);
+            color: var(--pnp-blue);
             text-decoration: none;
+            transition: color var(--transition-fast);
         }
 
         .admin-breadcrumb a:hover {
-            text-decoration: underline;
+            color: var(--pnp-blue-light);
         }
 
-        /* Buttons */
+        /* ============================================
+           BUTTONS - Modern Flat Design
+        ============================================ */
         .btn {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.65rem 1.25rem;
+            gap: var(--space-2);
+            padding: var(--space-3) var(--space-5);
             border: none;
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all var(--transition-fast);
             text-decoration: none;
+            white-space: nowrap;
         }
 
         .btn-primary {
-            background: var(--primary-blue);
-            color: white;
+            background: var(--pnp-blue);
+            color: var(--white);
         }
 
         .btn-primary:hover {
-            background: #00256B;
+            background: var(--pnp-blue-light);
             transform: translateY(-1px);
             box-shadow: var(--shadow-md);
         }
 
         .btn-success {
-            background: #28a745;
-            color: white;
+            background: var(--success);
+            color: var(--white);
         }
 
         .btn-success:hover {
-            background: #218838;
+            background: #059669;
+            transform: translateY(-1px);
         }
 
         .btn-danger {
-            background: var(--accent-red);
-            color: white;
+            background: var(--danger);
+            color: var(--white);
         }
 
         .btn-danger:hover {
-            background: #B71C1C;
+            background: #DC2626;
+            transform: translateY(-1px);
         }
 
         .btn-secondary {
-            background: #6C757D;
-            color: white;
+            background: var(--secondary);
+            color: var(--white);
         }
 
         .btn-secondary:hover {
-            background: #5A6268;
+            background: var(--gray-600);
         }
 
         .btn-outline {
-            background: white;
-            color: var(--primary-blue);
-            border: 2px solid var(--primary-blue);
+            background: var(--white);
+            color: var(--pnp-blue);
+            border: 2px solid var(--pnp-blue);
         }
 
         .btn-outline:hover {
-            background: var(--primary-blue);
-            color: white;
+            background: var(--pnp-blue);
+            color: var(--white);
         }
 
         .btn-sm {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.85rem;
+            padding: var(--space-2) var(--space-3);
+            font-size: 0.8125rem;
         }
 
-        /* Cards */
+        .btn i {
+            font-size: 1rem;
+        }
+
+        /* ============================================
+           CARDS - Clean Flat Design
+        ============================================ */
         .admin-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: var(--shadow-sm);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xs);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+            border: 1px solid var(--gray-100);
         }
 
         .admin-card-header {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--bg-light);
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-4);
+            border-bottom: 1px solid var(--gray-200);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -283,85 +489,135 @@
         .admin-card-title {
             font-size: 1.25rem;
             font-weight: 700;
-            color: var(--primary-blue);
+            color: var(--gray-900);
             margin: 0;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: var(--space-3);
         }
 
-        /* Stats Grid */
+        .admin-card-title i {
+            color: var(--pnp-blue);
+        }
+
+        /* ============================================
+           STATS GRID - Modern Cards
+        ============================================ */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
         }
 
         .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow-sm);
-            border-left: 4px solid var(--primary-blue);
-            transition: all 0.3s ease;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-xs);
+            border: 1px solid var(--gray-100);
+            border-left: 4px solid var(--pnp-blue);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(0, 48, 135, 0.05) 0%, transparent 70%);
+            pointer-events: none;
         }
 
         .stat-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-4px);
             box-shadow: var(--shadow-md);
+            border-left-width: 6px;
         }
 
         .stat-card.red {
-            border-left-color: var(--accent-red);
+            border-left-color: var(--danger);
+        }
+
+        .stat-card.red::before {
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.05) 0%, transparent 70%);
         }
 
         .stat-card.green {
-            border-left-color: #28a745;
+            border-left-color: var(--success);
+        }
+
+        .stat-card.green::before {
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
         }
 
         .stat-card.orange {
-            border-left-color: #FFA500;
+            border-left-color: var(--warning);
+        }
+
+        .stat-card.orange::before {
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.05) 0%, transparent 70%);
         }
 
         .stat-header {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
-            margin-bottom: 0.75rem;
+            margin-bottom: var(--space-4);
         }
 
         .stat-title {
-            font-size: 0.85rem;
-            color: var(--text-light);
+            font-size: 0.8125rem;
+            color: var(--gray-600);
             text-transform: uppercase;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 0.5px;
         }
 
         .stat-icon {
-            font-size: 1.75rem;
-            opacity: 0.2;
+            font-size: 2rem;
+            color: var(--pnp-blue);
+            opacity: 0.15;
+        }
+
+        .stat-card.red .stat-icon {
+            color: var(--danger);
+        }
+
+        .stat-card.green .stat-icon {
+            color: var(--success);
+        }
+
+        .stat-card.orange .stat-icon {
+            color: var(--warning);
         }
 
         .stat-value {
-            font-size: 2rem;
+            font-size: 2.25rem;
             font-weight: 700;
-            color: var(--text-dark);
+            color: var(--gray-900);
+            line-height: 1;
         }
 
         .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-light);
-            margin-top: 0.25rem;
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+            margin-top: var(--space-2);
         }
 
-        /* Tables */
+        /* ============================================
+           TABLES - Clean Modern Design
+        ============================================ */
         .admin-table-container {
             overflow-x: auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: var(--shadow-sm);
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xs);
+            border: 1px solid var(--gray-100);
         }
 
         .admin-table {
@@ -370,174 +626,215 @@
         }
 
         .admin-table thead {
-            background: var(--bg-light);
+            background: var(--gray-50);
         }
 
         .admin-table th {
-            padding: 1rem;
+            padding: var(--space-4) var(--space-4);
             text-align: left;
-            font-weight: 600;
-            color: var(--text-dark);
-            border-bottom: 2px solid var(--border-color);
-            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--gray-700);
+            border-bottom: 2px solid var(--gray-200);
+            font-size: 0.8125rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .admin-table td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-dark);
-            font-size: 0.9rem;
+            padding: var(--space-4) var(--space-4);
+            border-bottom: 1px solid var(--gray-100);
+            color: var(--gray-700);
+            font-size: 0.875rem;
+        }
+
+        .admin-table tbody tr {
+            transition: background var(--transition-fast);
         }
 
         .admin-table tbody tr:hover {
-            background: rgba(0, 48, 135, 0.02);
+            background: var(--gray-50);
         }
 
         .admin-table tbody tr:last-child td {
             border-bottom: none;
         }
 
-        /* Badges */
+        /* ============================================
+           BADGES - Flat Modern Style
+        ============================================ */
         .badge {
             display: inline-block;
-            padding: 0.35rem 0.65rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
 
         .badge-success {
-            background: #D4EDDA;
-            color: #155724;
+            background: #D1FAE5;
+            color: #065F46;
         }
 
         .badge-danger {
-            background: #F8D7DA;
-            color: #721C24;
+            background: #FEE2E2;
+            color: #991B1B;
         }
 
         .badge-warning {
-            background: #FFF3CD;
-            color: #856404;
+            background: #FEF3C7;
+            color: #92400E;
         }
 
         .badge-info {
-            background: #D1ECF1;
-            color: #0C5460;
+            background: #DBEAFE;
+            color: #1E40AF;
         }
 
         .badge-secondary {
-            background: #E2E3E5;
-            color: #383D41;
+            background: var(--gray-200);
+            color: var(--gray-700);
         }
 
-        /* Alerts */
+        /* ============================================
+           ALERTS - Clean Flat Design
+        ============================================ */
         .alert {
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
+            padding: var(--space-4) var(--space-5);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-6);
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: var(--space-3);
+            border: 1px solid;
         }
 
         .alert-success {
-            background: #D4EDDA;
-            color: #155724;
-            border-left: 4px solid #28a745;
+            background: #D1FAE5;
+            color: #065F46;
+            border-color: #6EE7B7;
         }
 
         .alert-danger {
-            background: #F8D7DA;
-            color: #721C24;
-            border-left: 4px solid var(--accent-red);
+            background: #FEE2E2;
+            color: #991B1B;
+            border-color: #FCA5A5;
         }
 
         .alert-warning {
-            background: #FFF3CD;
-            color: #856404;
-            border-left: 4px solid #FFA500;
+            background: #FEF3C7;
+            color: #92400E;
+            border-color: #FCD34D;
         }
 
         .alert-info {
-            background: #D1ECF1;
-            color: #0C5460;
-            border-left: 4px solid #17a2b8;
+            background: #DBEAFE;
+            color: #1E40AF;
+            border-color: #93C5FD;
         }
 
-        /* Forms */
+        .alert i {
+            font-size: 1.125rem;
+        }
+
+        /* ============================================
+           FORMS - Modern Clean Style
+        ============================================ */
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: var(--space-5);
         }
 
         .form-label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--space-2);
             font-weight: 600;
-            color: var(--text-dark);
-            font-size: 0.9rem;
+            color: var(--gray-700);
+            font-size: 0.875rem;
         }
 
         .form-control {
             width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
+            padding: var(--space-3) var(--space-4);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            transition: all var(--transition-fast);
+            background: var(--white);
+            color: var(--gray-900);
         }
 
         .form-control:focus {
             outline: none;
-            border-color: var(--primary-blue);
+            border-color: var(--pnp-blue);
             box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.1);
+        }
+
+        .form-control:disabled {
+            background: var(--gray-100);
+            cursor: not-allowed;
         }
 
         select.form-control {
             cursor: pointer;
         }
 
-        /* Pagination */
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* ============================================
+           PAGINATION - Clean Flat Design
+        ============================================ */
         .pagination {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: var(--space-2);
             justify-content: center;
-            margin-top: 2rem;
+            margin-top: var(--space-8);
         }
 
-        .pagination a, .pagination span {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
+        .pagination a,
+        .pagination span {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-sm);
             text-decoration: none;
-            color: var(--text-dark);
-            transition: all 0.3s ease;
+            color: var(--gray-700);
+            transition: all var(--transition-fast);
+            font-size: 0.875rem;
+            min-width: 38px;
+            text-align: center;
         }
 
         .pagination a:hover {
-            background: var(--primary-blue);
-            color: white;
-            border-color: var(--primary-blue);
+            background: var(--pnp-blue);
+            color: var(--white);
+            border-color: var(--pnp-blue);
         }
 
         .pagination .current {
-            background: var(--primary-blue);
-            color: white;
-            border-color: var(--primary-blue);
+            background: var(--pnp-blue);
+            color: var(--white);
+            border-color: var(--pnp-blue);
             font-weight: 600;
         }
 
-        /* Responsive */
+        /* ============================================
+           RESPONSIVE DESIGN
+        ============================================ */
         @media (max-width: 1024px) {
             .admin-sidebar {
                 width: 220px;
             }
 
             .admin-main {
-                padding: 1.5rem;
+                padding: var(--space-6);
+            }
+
+            .admin-page-title {
+                font-size: 1.5rem;
             }
         }
 
@@ -550,6 +847,8 @@
                 width: 100%;
                 height: auto;
                 position: static;
+                border-right: none;
+                border-bottom: 1px solid var(--gray-200);
             }
 
             .stats-grid {
@@ -559,41 +858,82 @@
             .admin-page-header {
                 flex-direction: column;
                 align-items: flex-start;
+                padding: var(--space-4);
+            }
+
+            .admin-main {
+                padding: var(--space-4);
+            }
+
+            .admin-navbar-container {
+                flex-wrap: wrap;
+            }
+
+            .admin-navbar-info {
+                display: none;
             }
         }
+
+        /* ============================================
+           UTILITIES
+        ============================================ */
+        .text-muted {
+            color: var(--gray-500);
+        }
+
+        .text-primary {
+            color: var(--pnp-blue);
+        }
+
+        .text-danger {
+            color: var(--danger);
+        }
+
+        .text-success {
+            color: var(--success);
+        }
+
+        .mb-0 { margin-bottom: 0 !important; }
+        .mb-2 { margin-bottom: var(--space-2); }
+        .mb-4 { margin-bottom: var(--space-4); }
+        .mb-6 { margin-bottom: var(--space-6); }
+
+        .mt-0 { margin-top: 0 !important; }
+        .mt-2 { margin-top: var(--space-2); }
+        .mt-4 { margin-top: var(--space-4); }
+        .mt-6 { margin-top: var(--space-6); }
     </style>
 
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation from main site -->
-    <nav class="navbar" style="background: linear-gradient(135deg, #003087 0%, #001F3F 100%); padding: 0.75rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 1000;">
-        <div class="navbar-container" style="display: flex; align-items: center; justify-content: space-between; max-width: 1600px; margin: 0 auto; width: 100%;">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <img src="{% static 'images/pnp-logo.png' %}" alt="PNP Logo" style="width: 40px; height: 40px; border-radius: 8px; background: white; padding: 4px;">
-                <div style="color: white;">
-                    <h1 style="margin: 0; font-size: 1.1rem; font-weight: 700;">AGNES Admin Panel</h1>
-                    <p style="margin: 0; font-size: 0.75rem; opacity: 0.9;">System Administration Dashboard</p>
+    <!-- Top Navbar -->
+    <nav class="admin-navbar">
+        <div class="admin-navbar-container">
+            <div class="admin-navbar-brand">
+                <img src="{% static 'images/pnp-logo.png' %}" alt="PNP Logo" class="admin-navbar-logo">
+                <div class="admin-navbar-title">
+                    <h1>AGNES Admin Panel</h1>
+                    <p>Philippine National Police - CARAGA Region</p>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <a href="{% url 'dashboard' %}" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 8px; transition: all 0.3s;">
+            <div class="admin-navbar-user">
+                <a href="{% url 'dashboard' %}" class="admin-navbar-back">
                     <i class="fas fa-arrow-left"></i>
-                    <span>Back to Main Site</span>
+                    <span>Main Site</span>
                 </a>
-                <div style="color: white; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; gap: 0.75rem;">
+                <div class="admin-navbar-profile">
                     {% if user.profile and user.profile.profile_picture %}
-                    <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}"
-                         style="width: 32px; height: 32px; object-fit: cover; border-radius: 50%; border: 2px solid white;">
+                    <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="admin-navbar-avatar">
                     {% else %}
-                    <div style="width: 32px; height: 32px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; color: var(--primary-blue); font-weight: 700; font-size: 14px;">
+                    <div class="admin-navbar-avatar-placeholder">
                         {{ user.username|first|upper }}
                     </div>
                     {% endif %}
-                    <div>
-                        <div style="font-size: 0.9rem; font-weight: 600;">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="admin-navbar-info">
+                        <h3>{{ user.get_full_name|default:user.username }}</h3>
                         {% if user.profile %}
-                        <div style="font-size: 0.75rem; opacity: 0.8;">{{ user.profile.get_role_display }}</div>
+                        <p class="admin-navbar-role">{{ user.profile.get_role_display }}</p>
                         {% endif %}
                     </div>
                 </div>
@@ -601,12 +941,13 @@
         </div>
     </nav>
 
+    <!-- Main Container -->
     <div class="admin-container">
         <!-- Sidebar -->
         <aside class="admin-sidebar">
             <div class="admin-sidebar-header">
-                <h2><i class="fas fa-tools"></i> Admin Tools</h2>
-                <p>System Management</p>
+                <h2><i class="fas fa-cog"></i> Management</h2>
+                <p>System Controls</p>
             </div>
 
             <ul class="admin-nav">
@@ -619,7 +960,7 @@
 
                 {% if user.is_superuser %}
                 <li class="admin-nav-item">
-                    <a href="{% url 'admin_panel:users' %}" class="admin-nav-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'admin_panel:users' %}" class="admin-nav-link {% if 'users' in request.path %}active{% endif %}">
                         <i class="fas fa-users"></i>
                         <span>User Management</span>
                     </a>
@@ -627,14 +968,14 @@
                 {% endif %}
 
                 <li class="admin-nav-item">
-                    <a href="{% url 'admin_panel:audit_logs' %}" class="admin-nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'admin_panel:audit_logs' %}" class="admin-nav-link {% if 'audit' in request.path %}active{% endif %}">
                         <i class="fas fa-clipboard-list"></i>
                         <span>Audit Logs</span>
                     </a>
                 </li>
 
                 <li class="admin-nav-item">
-                    <a href="{% url 'admin_panel:system_monitoring' %}" class="admin-nav-link {% if 'system' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'admin_panel:system_monitoring' %}" class="admin-nav-link {% if 'system-monitoring' in request.path %}active{% endif %}">
                         <i class="fas fa-server"></i>
                         <span>System Monitoring</span>
                     </a>
@@ -642,19 +983,42 @@
 
                 <div class="admin-nav-divider"></div>
 
-                {% if user.is_superuser %}
                 <li class="admin-nav-item">
-                    <a href="/admin/" class="admin-nav-link">
-                        <i class="fas fa-cog"></i>
+                    <a href="{% url 'accident_list' %}" class="admin-nav-link">
+                        <i class="fas fa-car-crash"></i>
+                        <span>Accidents</span>
+                    </a>
+                </li>
+
+                <li class="admin-nav-item">
+                    <a href="{% url 'hotspots' %}" class="admin-nav-link">
+                        <i class="fas fa-fire"></i>
+                        <span>Hotspots</span>
+                    </a>
+                </li>
+
+                <li class="admin-nav-item">
+                    <a href="{% url 'analytics' %}" class="admin-nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+
+                <div class="admin-nav-divider"></div>
+
+                {% if user.is_staff %}
+                <li class="admin-nav-item">
+                    <a href="/admin/" class="admin-nav-link" target="_blank">
+                        <i class="fas fa-tools"></i>
                         <span>Django Admin</span>
                     </a>
                 </li>
                 {% endif %}
 
                 <li class="admin-nav-item">
-                    <a href="{% url 'dashboard' %}" class="admin-nav-link">
-                        <i class="fas fa-home"></i>
-                        <span>Main Site</span>
+                    <a href="{% url 'logout' %}" class="admin-nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
                     </a>
                 </li>
             </ul>
@@ -665,27 +1029,6 @@
             {% block content %}{% endblock %}
         </main>
     </div>
-
-    <!-- JavaScript -->
-    <script>
-        // CSRF Token for AJAX requests
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        const csrftoken = getCookie('csrftoken');
-    </script>
 
     {% block extra_js %}{% endblock %}
 </body>
