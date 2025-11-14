@@ -958,7 +958,7 @@
                     </a>
                 </li>
 
-                {% if user.is_superuser %}
+                {% if user.is_superuser or user.profile.role == 'super_admin' %}
                 <li class="admin-nav-item">
                     <a href="{% url 'admin_panel:users' %}" class="admin-nav-link {% if 'users' in request.path %}active{% endif %}">
                         <i class="fas fa-users"></i>

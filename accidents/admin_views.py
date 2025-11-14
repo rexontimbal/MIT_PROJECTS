@@ -26,8 +26,23 @@ from .auth_utils import log_user_action
 # ============================================================================
 
 def is_superuser(user):
-    """Check if user is superuser"""
+    """Check if user is Django superuser"""
     return user.is_authenticated and user.is_superuser
+
+def is_admin(user):
+    """Check if user is admin (Django superuser OR has super_admin role)"""
+    if not user.is_authenticated:
+        return False
+
+    # Django superusers always have access
+    if user.is_superuser:
+        return True
+
+    # Check if user has super_admin role in their profile
+    if hasattr(user, 'profile'):
+        return user.profile.role == 'super_admin'
+
+    return False
 
 
 def is_staff_or_superuser(user):
@@ -96,7 +111,7 @@ def admin_dashboard(request):
 # ============================================================================
 
 @login_required
-@user_passes_test(is_superuser)
+@user_passes_test(is_admin)
 def user_management(request):
     """User management page - list all users"""
 
@@ -153,7 +168,7 @@ def user_management(request):
 
 
 @login_required
-@user_passes_test(is_superuser)
+@user_passes_test(is_admin)
 def user_detail(request, user_id):
     """View and edit user details"""
 
@@ -252,7 +267,7 @@ def user_detail(request, user_id):
 
 
 @login_required
-@user_passes_test(is_superuser)
+@user_passes_test(is_admin)
 def user_create(request):
     """Create new user"""
 
@@ -328,7 +343,7 @@ def user_create(request):
 
 
 @login_required
-@user_passes_test(is_superuser)
+@user_passes_test(is_admin)
 def user_reset_password(request, user_id):
     """Reset user password"""
 
@@ -360,7 +375,7 @@ def user_reset_password(request, user_id):
 
 
 @login_required
-@user_passes_test(is_superuser)
+@user_passes_test(is_admin)
 def user_toggle_active(request, user_id):
     """Activate or deactivate user"""
 
