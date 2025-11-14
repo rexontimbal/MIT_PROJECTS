@@ -22,14 +22,13 @@
     </a>
 </div>
 
-<!-- Messages -->
+<!-- Messages (handled by notification system in base.html) -->
 {% if messages %}
+    <div style="display: none;">
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">
-        <i class="fas fa-info-circle"></i>
-        {{ message }}
-    </div>
+        <!-- {{ message.tags }}: {{ message }} -->
     {% endfor %}
+    </div>
 {% endif %}
 
 <!-- Filters Card -->
