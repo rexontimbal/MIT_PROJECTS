@@ -2,6 +2,18 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
+from .validators import (
+    validate_philippine_latitude,
+    validate_philippine_longitude,
+    validate_date_not_future,
+    validate_casualty_count,
+    validate_year_range,
+    validate_severity_score,
+    validate_cluster_distance_threshold,
+    validate_image_file_size,
+    validate_image_file_extension
+)
 
 class Accident(models.Model):
     """Main accident record model"""
@@ -20,15 +32,38 @@ class Accident(models.Model):
     type_of_place = models.CharField(max_length=200, verbose_name="Type of Place", blank=True, null=True)  # INCREASED
     
     # Coordinates (critical for GIS and AGNES clustering)
-    latitude = models.DecimalField(max_digits=10, decimal_places=7)
-    longitude = models.DecimalField(max_digits=10, decimal_places=7)
+    latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        validators=[validate_philippine_latitude],
+        help_text="Latitude in decimal degrees (Philippine bounds: 4.0° to 22.0° N)"
+    )
+    longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        validators=[validate_philippine_longitude],
+        help_text="Longitude in decimal degrees (Philippine bounds: 115.0° to 128.0° E)"
+    )
     
     # Temporal Information
-    date_reported = models.DateField(null=True, blank=True)  # ADDED null=True
-    time_reported = models.TimeField(null=True, blank=True)  # ADDED null=True
-    date_committed = models.DateField()
-    time_committed = models.TimeField(null=True, blank=True)  # ADDED null=True
-    year = models.IntegerField(null=True, blank=True)  # ADDED null=True
+    date_reported = models.DateField(
+        null=True,
+        blank=True,
+        validators=[validate_date_not_future],
+        help_text="Date when accident was reported"
+    )
+    time_reported = models.TimeField(null=True, blank=True, help_text="Time when accident was reported")
+    date_committed = models.DateField(
+        validators=[validate_date_not_future],
+        help_text="Date when accident occurred"
+    )
+    time_committed = models.TimeField(null=True, blank=True, help_text="Time when accident occurred")
+    year = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[validate_year_range],
+        help_text="Year of accident (1950-present)"
+    )
     
     # Incident Details
     incident_type = models.CharField(max_length=500, blank=True, null=True)  # INCREASED - incident types can be long
@@ -37,11 +72,19 @@ class Accident(models.Model):
     stage_of_felony = models.CharField(max_length=100, blank=True, null=True)  # INCREASED
     
     # Casualties
-    victim_killed = models.BooleanField(default=False)
-    victim_injured = models.BooleanField(default=False)
-    victim_unharmed = models.BooleanField(default=False)
-    victim_count = models.IntegerField(default=0)
-    suspect_count = models.IntegerField(default=0)
+    victim_killed = models.BooleanField(default=False, help_text="At least one victim was killed")
+    victim_injured = models.BooleanField(default=False, help_text="At least one victim was injured")
+    victim_unharmed = models.BooleanField(default=False, help_text="No victims were harmed")
+    victim_count = models.IntegerField(
+        default=0,
+        validators=[validate_casualty_count, MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Total number of victims (0-100)"
+    )
+    suspect_count = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(50)],
+        help_text="Total number of suspects (0-50)"
+    )
     
     # Vehicle Information
     vehicle_kind = models.CharField(max_length=500, null=True, blank=True)  # INCREASED - multiple vehicles
@@ -91,9 +134,21 @@ class AccidentCluster(models.Model):
     center_longitude = models.DecimalField(max_digits=10, decimal_places=7)
     
     # Cluster statistics
-    accident_count = models.IntegerField(default=0)
-    total_casualties = models.IntegerField(default=0)
-    severity_score = models.FloatField(default=0.0)
+    accident_count = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0)],
+        help_text="Number of accidents in this cluster"
+    )
+    total_casualties = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0)],
+        help_text="Total casualties across all accidents in cluster"
+    )
+    severity_score = models.FloatField(
+        default=0.0,
+        validators=[validate_severity_score],
+        help_text="Calculated severity score (0-1000)"
+    )
     
     # Geographic bounds
     min_latitude = models.DecimalField(max_digits=10, decimal_places=7)
@@ -113,7 +168,10 @@ class AccidentCluster(models.Model):
     algorithm_version = models.CharField(max_length=50, default="AGNES")
     computed_at = models.DateTimeField(auto_now=True)
     linkage_method = models.CharField(max_length=20, default="complete")
-    distance_threshold = models.FloatField()
+    distance_threshold = models.FloatField(
+        validators=[validate_cluster_distance_threshold],
+        help_text="Distance threshold in decimal degrees (0.001-1.0)"
+    )
     
     class Meta:
         db_table = 'accident_clusters'
@@ -140,29 +198,68 @@ class AccidentReport(models.Model):
     reporter_contact = models.CharField(max_length=50)
     
     # Incident Basic Info
-    incident_date = models.DateField()
-    incident_time = models.TimeField()
-    
+    incident_date = models.DateField(
+        validators=[validate_date_not_future],
+        help_text="Date of the accident"
+    )
+    incident_time = models.TimeField(help_text="Time of the accident")
+
     # Location
-    latitude = models.DecimalField(max_digits=10, decimal_places=7)
-    longitude = models.DecimalField(max_digits=10, decimal_places=7)
+    latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        validators=[validate_philippine_latitude],
+        help_text="Latitude coordinate"
+    )
+    longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        validators=[validate_philippine_longitude],
+        help_text="Longitude coordinate"
+    )
     province = models.CharField(max_length=100)
     municipal = models.CharField(max_length=100)
     barangay = models.CharField(max_length=100)
     street_address = models.CharField(max_length=200)
     
     # Incident Details
-    incident_description = models.TextField()
-    casualties_killed = models.IntegerField(default=0)
-    casualties_injured = models.IntegerField(default=0)
+    incident_description = models.TextField(help_text="Detailed description of the accident")
+    casualties_killed = models.IntegerField(
+        default=0,
+        validators=[validate_casualty_count, MinValueValidator(0)],
+        help_text="Number of fatalities"
+    )
+    casualties_injured = models.IntegerField(
+        default=0,
+        validators=[validate_casualty_count, MinValueValidator(0)],
+        help_text="Number of injured persons"
+    )
     
     # Vehicle involved
     vehicles_involved = models.JSONField(default=list)  # List of vehicle details
     
     # Media attachments
-    photo_1 = models.ImageField(upload_to='accident_reports/', null=True, blank=True)
-    photo_2 = models.ImageField(upload_to='accident_reports/', null=True, blank=True)
-    photo_3 = models.ImageField(upload_to='accident_reports/', null=True, blank=True)
+    photo_1 = models.ImageField(
+        upload_to='accident_reports/',
+        null=True,
+        blank=True,
+        validators=[validate_image_file_size, validate_image_file_extension],
+        help_text="Photo of accident scene (max 5MB, jpg/png)"
+    )
+    photo_2 = models.ImageField(
+        upload_to='accident_reports/',
+        null=True,
+        blank=True,
+        validators=[validate_image_file_size, validate_image_file_extension],
+        help_text="Additional photo (max 5MB, jpg/png)"
+    )
+    photo_3 = models.ImageField(
+        upload_to='accident_reports/',
+        null=True,
+        blank=True,
+        validators=[validate_image_file_size, validate_image_file_extension],
+        help_text="Additional photo (max 5MB, jpg/png)"
+    )
     
     # Status and Processing
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')

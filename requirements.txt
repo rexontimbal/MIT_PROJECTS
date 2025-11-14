@@ -15,6 +15,7 @@ scipy==1.13.1
 # API & Serialization
 djangorestframework==3.15.1
 django-cors-headers==4.3.1
+drf-spectacular==0.27.2
 
 # Image handling
 Pillow==10.3.0
