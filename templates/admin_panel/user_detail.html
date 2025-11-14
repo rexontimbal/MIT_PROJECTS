@@ -66,10 +66,51 @@
                 <input type="hidden" name="action" value="update_basic">
 
                 <div class="form-group">
-                    <label class="form-label" for="username">Username</label>
-                    <input type="text" id="username" class="form-control" value="{{ target_user.username }}" disabled>
-                    <small style="color: var(--text-light);">Username cannot be changed</small>
+                    <label class="form-label" for="username">
+                        Username
+                        {% if user.is_superuser or user.profile.role == 'super_admin' %}
+                        <span class="badge badge-info" style="margin-left: var(--space-2); font-size: 0.75rem;">
+                            <i class="fas fa-lock"></i> Protected
+                        </span>
+                        {% endif %}
+                    </label>
+                    <div style="display: flex; gap: var(--space-3); align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <input type="text" name="username" id="username" class="form-control" value="{{ target_user.username }}" disabled>
+                            <small style="color: var(--text-light);" id="usernameHelpText">
+                                Username editing requires password confirmation
+                            </small>
+                        </div>
+                        {% if user.is_superuser or user.profile.role == 'super_admin' %}
+                        <button type="button" class="btn btn-outline btn-sm" onclick="enableUsernameEdit()" id="editUsernameBtn" style="margin-top: 0;">
+                            <i class="fas fa-edit"></i>
+                            Edit Username
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
+
+                <!-- Password Reset Section (Superusers Only) -->
+                {% if user.is_superuser or user.profile.role == 'super_admin' %}
+                <div class="form-group">
+                    <label class="form-label">
+                        Password
+                        <span class="badge badge-warning" style="margin-left: var(--space-2); font-size: 0.75rem;">
+                            <i class="fas fa-key"></i> Superuser Only
+                        </span>
+                    </label>
+                    <div style="display: flex; gap: var(--space-3); align-items: center;">
+                        <input type="password" class="form-control" value="••••••••••••" disabled style="flex: 1;">
+                        <button type="button" class="btn btn-warning btn-sm" onclick="openResetPasswordModal()" style="margin-top: 0;">
+                            <i class="fas fa-key"></i>
+                            Reset Password
+                        </button>
+                    </div>
+                    <small style="color: var(--text-light); display: block; margin-top: var(--space-2);">
+                        Click "Reset Password" to set a new password for this user
+                    </small>
+                </div>
+                {% endif %}
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">

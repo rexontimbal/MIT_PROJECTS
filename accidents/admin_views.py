@@ -250,6 +250,32 @@ def user_detail(request, user_id):
                 severity='warning'
             )
 
+        elif action == 'update_username':
+            # Handle username editing (after password confirmation on frontend)
+            old_username = user.username
+            new_username = request.POST.get('username', '').strip()
+
+            # Validate new username
+            if not new_username:
+                messages.error(request, 'Username cannot be empty!')
+            elif new_username == old_username:
+                messages.info(request, 'Username was not changed.')
+            elif User.objects.filter(username=new_username).exists():
+                messages.error(request, f'Username "{new_username}" is already taken!')
+            else:
+                # Update username
+                user.username = new_username
+                user.save()
+
+                messages.success(request, f'Username changed from "{old_username}" to "{new_username}" successfully!')
+
+                log_user_action(
+                    request=request,
+                    action='username_change',
+                    description=f'Changed username from "{old_username}" to "{new_username}"',
+                    severity='warning'
+                )
+
         return redirect('admin_panel:user_detail', user_id=user.id)
 
     # Get user's recent audit logs
@@ -349,7 +375,20 @@ def user_reset_password(request, user_id):
 
     if request.method == 'POST':
         user = get_object_or_404(User, pk=user_id)
-        new_password = request.POST.get('new_password')
+
+        # Handle both JSON and form data
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+            new_password = data.get('new_password')
+        else:
+            new_password = request.POST.get('new_password')
+
+        # Validate password
+        if not new_password:
+            return JsonResponse({'success': False, 'error': 'Password is required'})
+
+        if len(new_password) < 8:
+            return JsonResponse({'success': False, 'error': 'Password must be at least 8 characters long'})
 
         # Set new password
         user.set_password(new_password)
