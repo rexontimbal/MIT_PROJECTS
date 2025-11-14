@@ -149,25 +149,145 @@
 
                 <div class="form-group">
                     <label class="form-label" for="profile_picture">Profile Picture</label>
-                    {% if profile.profile_picture %}
-                    <div style="margin-bottom: 1rem;">
-                        <img src="{{ profile.profile_picture.url }}" alt="Current Profile Picture"
-                             style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border-color);">
-                        <div style="margin-top: 0.5rem;">
-                            <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="checkbox" name="remove_picture" value="1">
-                                <span style="color: var(--text-light);">Remove current picture</span>
+
+                    <!-- Modern Drag & Drop Area -->
+                    <div id="profilePictureUpload" style="
+                        border: 2px dashed var(--border-color);
+                        border-radius: 16px;
+                        padding: 2rem;
+                        text-align: center;
+                        background: var(--gray-50);
+                        transition: all 0.3s ease;
+                        cursor: pointer;
+                        position: relative;
+                        overflow: hidden;
+                    "
+                    onclick="document.getElementById('profile_picture').click()"
+                    ondragover="handleDragOver(event)"
+                    ondragleave="handleDragLeave(event)"
+                    ondrop="handleDrop(event)">
+
+                        {% if profile.profile_picture %}
+                        <!-- Current Picture Display -->
+                        <div id="currentPicture" style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                            <div style="position: relative;">
+                                <img src="{{ profile.profile_picture.url }}"
+                                     alt="Profile Picture"
+                                     style="width: 120px;
+                                            height: 120px;
+                                            object-fit: cover;
+                                            border-radius: 50%;
+                                            border: 4px solid white;
+                                            box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                <div style="
+                                    position: absolute;
+                                    bottom: 0;
+                                    right: 0;
+                                    background: var(--pnp-blue);
+                                    color: white;
+                                    width: 36px;
+                                    height: 36px;
+                                    border-radius: 50%;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    border: 3px solid white;
+                                    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                                ">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <p style="margin: 0; font-weight: 600; color: var(--text-primary);">Click or drag to change</p>
+                                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: var(--text-light);">JPG, PNG • Max 5MB</p>
+                            </div>
+                            <label style="
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                                padding: 0.5rem 1rem;
+                                background: rgba(239, 68, 68, 0.1);
+                                border: 1px solid rgba(239, 68, 68, 0.3);
+                                border-radius: 8px;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                                color: #991b1b;
+                                font-size: 0.875rem;
+                                font-weight: 500;
+                            "
+                            onmouseover="this.style.background='rgba(239, 68, 68, 0.15)'"
+                            onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'"
+                            onclick="event.stopPropagation()">
+                                <input type="checkbox" name="remove_picture" value="1" style="margin: 0;">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>Remove Picture</span>
                             </label>
                         </div>
+                        {% else %}
+                        <!-- Empty State -->
+                        <div id="emptyState">
+                            <div style="
+                                width: 80px;
+                                height: 80px;
+                                margin: 0 auto 1rem;
+                                background: linear-gradient(135deg, var(--pnp-blue) 0%, #0047BB 100%);
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                box-shadow: 0 8px 16px rgba(0, 48, 135, 0.2);
+                            ">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: white;"></i>
+                            </div>
+                            <p style="margin: 0; font-weight: 600; font-size: 1.125rem; color: var(--text-primary);">Upload Profile Picture</p>
+                            <p style="margin: 0.5rem 0 0 0; color: var(--text-light);">Click to browse or drag and drop</p>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: var(--text-light);">JPG, PNG • Max 5MB</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Hidden File Input -->
+                        <input type="file"
+                               name="profile_picture"
+                               id="profile_picture"
+                               class="form-control"
+                               accept="image/*"
+                               onchange="previewProfilePicture(event)"
+                               style="display: none;">
                     </div>
-                    {% else %}
-                    <p style="color: var(--text-light); margin-bottom: 0.5rem;">No profile picture uploaded</p>
-                    {% endif %}
-                    <input type="file" name="profile_picture" id="profile_picture" class="form-control" accept="image/*" onchange="previewProfilePicture(event)">
-                    <small style="color: var(--text-light);">Upload new picture (JPG, PNG). Max 5MB.</small>
-                    <div id="image-preview" style="margin-top: 1rem; display: none;">
-                        <p style="color: var(--text-light); font-weight: 600; margin-bottom: 0.5rem;">New Picture Preview:</p>
-                        <img id="preview-img" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid var(--primary-blue);">
+
+                    <!-- New Picture Preview -->
+                    <div id="image-preview" style="
+                        margin-top: 1rem;
+                        display: none;
+                        padding: 1.5rem;
+                        background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%);
+                        border: 2px solid rgba(16, 185, 129, 0.3);
+                        border-radius: 12px;
+                        text-align: center;
+                    ">
+                        <p style="
+                            margin: 0 0 1rem 0;
+                            font-weight: 600;
+                            color: #065f46;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.5rem;
+                        ">
+                            <i class="fas fa-check-circle"></i>
+                            New Picture Preview
+                        </p>
+                        <img id="preview-img" style="
+                            width: 120px;
+                            height: 120px;
+                            object-fit: cover;
+                            border-radius: 50%;
+                            border: 4px solid white;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                        ">
+                        <p style="margin: 1rem 0 0 0; font-size: 0.875rem; color: var(--text-light);">
+                            <i class="fas fa-info-circle"></i> Click "Save Basic Info" to upload
+                        </p>
                     </div>
                 </div>
 
@@ -556,7 +676,7 @@ function previewProfilePicture(event) {
     if (file) {
         // Check file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            alert('File size too large! Maximum 5MB allowed.');
+            showNotification('File size too large! Maximum 5MB allowed.', 'error', 5000);
             event.target.value = '';
             document.getElementById('image-preview').style.display = 'none';
             return;
@@ -564,7 +684,7 @@ function previewProfilePicture(event) {
 
         // Check file type
         if (!file.type.startsWith('image/')) {
-            alert('Please select a valid image file!');
+            showNotification('Please select a valid image file!', 'error', 5000);
             event.target.value = '';
             document.getElementById('image-preview').style.display = 'none';
             return;
@@ -575,10 +695,52 @@ function previewProfilePicture(event) {
         reader.onload = function(e) {
             document.getElementById('preview-img').src = e.target.result;
             document.getElementById('image-preview').style.display = 'block';
+            document.getElementById('image-preview').style.animation = 'slideDown 0.3s ease';
         };
         reader.readAsDataURL(file);
     } else {
         document.getElementById('image-preview').style.display = 'none';
+    }
+}
+
+// Drag & Drop Handlers
+function handleDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const uploadArea = document.getElementById('profilePictureUpload');
+    uploadArea.style.borderColor = 'var(--pnp-blue)';
+    uploadArea.style.background = 'rgba(0, 48, 135, 0.05)';
+    uploadArea.style.transform = 'scale(1.02)';
+}
+
+function handleDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const uploadArea = document.getElementById('profilePictureUpload');
+    uploadArea.style.borderColor = 'var(--border-color)';
+    uploadArea.style.background = 'var(--gray-50)';
+    uploadArea.style.transform = 'scale(1)';
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const uploadArea = document.getElementById('profilePictureUpload');
+    uploadArea.style.borderColor = 'var(--border-color)';
+    uploadArea.style.background = 'var(--gray-50)';
+    uploadArea.style.transform = 'scale(1)';
+
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+        const fileInput = document.getElementById('profile_picture');
+        fileInput.files = files;
+
+        // Trigger preview
+        const changeEvent = new Event('change', { bubbles: true });
+        fileInput.dispatchEvent(changeEvent);
+
+        showNotification('Image selected! Click "Save Basic Info" to upload.', 'success', 4000);
     }
 }
 
