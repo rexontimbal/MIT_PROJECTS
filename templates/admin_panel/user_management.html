@@ -147,9 +147,9 @@
                 <td>
                     <div style="display: flex; flex-direction: column; gap: 0.25rem;">
                         {% if user.is_active %}
-                        <span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>
+                        <span class="badge badge-success" id="status-badge-{{ user.id }}"><i class="fas fa-check-circle"></i> Active</span>
                         {% else %}
-                        <span class="badge badge-danger"><i class="fas fa-times-circle"></i> Inactive</span>
+                        <span class="badge badge-danger" id="status-badge-{{ user.id }}"><i class="fas fa-times-circle"></i> Inactive</span>
                         {% endif %}
 
                         {% if user.is_superuser %}
@@ -233,14 +233,60 @@ function toggleUserActive(userId, username, isActive) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            // Update button
+            const btn = document.getElementById(`toggle-btn-${userId}`);
+            const statusBadge = document.getElementById(`status-badge-${userId}`);
+            const newIsActive = data.is_active;
+
+            if (btn) {
+                if (newIsActive) {
+                    // Active - show red deactivate button
+                    btn.className = 'btn btn-sm btn-danger';
+                    btn.title = 'Deactivate';
+                    btn.innerHTML = '<i class="fas fa-ban"></i>';
+                } else {
+                    // Inactive - show green activate button
+                    btn.className = 'btn btn-sm btn-success';
+                    btn.title = 'Activate';
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                }
+
+                // Update the onclick to reflect new state
+                btn.setAttribute('onclick', `toggleUserActive(${userId}, '${username}', ${newIsActive})`);
+            }
+
+            if (statusBadge) {
+                if (newIsActive) {
+                    statusBadge.className = 'badge badge-success';
+                    statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> Active';
+                } else {
+                    statusBadge.className = 'badge badge-danger';
+                    statusBadge.innerHTML = '<i class="fas fa-times-circle"></i> Inactive';
+                }
+            }
+
+            // Show beautiful notification
+            const status = newIsActive ? 'activated' : 'deactivated';
+            showNotification(
+                `User "${username}" ${status} successfully!`,
+                newIsActive ? 'success' : 'warning',
+                4000
+            );
         } else {
-            alert('Error: ' + (data.error || 'Unknown error'));
+            showNotification(
+                data.error || 'Failed to update user status',
+                'error',
+                5000
+            );
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred');
+        showNotification(
+            'An error occurred while updating user status',
+            'error',
+            5000
+        );
     });
 }
 </script>
