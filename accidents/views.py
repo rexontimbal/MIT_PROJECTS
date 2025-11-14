@@ -7,13 +7,16 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
 from django.conf import settings
+from django.http import JsonResponse
+from django.contrib.auth import authenticate, logout
+from django.views.decorators.http import require_http_methods
+import json
 from datetime import timedelta
 from datetime import time as dt_time
-import json
 from .models import Accident, AccidentCluster, AccidentReport
 from datetime import datetime
 from django.contrib.auth.views import LoginView
-from .auth_utils import pnp_login_required
+from .auth_utils import pnp_login_required, log_user_action
 
 @pnp_login_required
 def dashboard(request):
@@ -1453,3 +1456,82 @@ def logout_view(request):
         messages.success(request, f'You have been logged out successfully. Stay safe, officer!')
 
     return redirect('login')
+
+
+@require_http_methods(["POST"])
+@login_required
+def change_username(request):
+    """
+    Change username with password confirmation
+    - Requires current password for security
+    - Validates new username
+    - Checks for duplicates
+    - Logs the action
+    """
+    try:
+        # Parse JSON body
+        data = json.loads(request.body)
+        new_username = data.get('new_username', '').strip()
+        password = data.get('password', '')
+
+        # Validate inputs
+        if not new_username:
+            return JsonResponse({'success': False, 'error': 'Username cannot be empty'}, status=400)
+
+        if not password:
+            return JsonResponse({'success': False, 'error': 'Password is required'}, status=400)
+
+        # Validate password
+        user = authenticate(username=request.user.username, password=password)
+        if user is None:
+            log_user_action(
+                request,
+                'FAILED_USERNAME_CHANGE',
+                f'Failed username change attempt - incorrect password',
+                severity='warning'
+            )
+            return JsonResponse({'success': False, 'error': 'Incorrect password'}, status=403)
+
+        # Validate new username
+        if len(new_username) < 3:
+            return JsonResponse({'success': False, 'error': 'Username must be at least 3 characters'}, status=400)
+
+        if len(new_username) > 150:
+            return JsonResponse({'success': False, 'error': 'Username is too long'}, status=400)
+
+        # Check if username already exists
+        from django.contrib.auth.models import User
+        if User.objects.filter(username=new_username).exclude(id=request.user.id).exists():
+            return JsonResponse({'success': False, 'error': 'Username already taken'}, status=400)
+
+        # Save old username for logging
+        old_username = request.user.username
+
+        # Update username
+        request.user.username = new_username
+        request.user.save()
+
+        # Log the action
+        log_user_action(
+            request,
+            'CHANGE_USERNAME',
+            f'Username changed from "{old_username}" to "{new_username}"',
+            severity='warning'
+        )
+
+        # Logout user for security (they need to login with new username)
+        logout(request)
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Username changed successfully. Please login with your new username.',
+            'new_username': new_username
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Error changing username: {str(e)}')
+        return JsonResponse({'success': False, 'error': 'An error occurred. Please try again.'}, status=500)
