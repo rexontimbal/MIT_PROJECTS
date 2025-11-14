@@ -1,0 +1,290 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}System Monitoring{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">
+            <i class="fas fa-server"></i>
+            System Monitoring
+        </h1>
+        <div class="admin-breadcrumb">
+            <a href="{% url 'admin_panel:dashboard' %}"><i class="fas fa-tachometer-alt"></i> Admin</a>
+            <span>/</span>
+            <span>System Monitoring</span>
+        </div>
+    </div>
+</div>
+
+<!-- System Health -->
+<div class="stats-grid">
+    <div class="stat-card green">
+        <div class="stat-header">
+            <span class="stat-title">Database</span>
+            <i class="fas fa-database stat-icon"></i>
+        </div>
+        <div class="stat-value" style="font-size: 1.5rem;">
+            {% if health.database == 'healthy' %}
+            <span class="badge badge-success" style="font-size: 1rem;">
+                <i class="fas fa-check-circle"></i> Healthy
+            </span>
+            {% else %}
+            <span class="badge badge-danger" style="font-size: 1rem;">
+                <i class="fas fa-exclamation-circle"></i> Error
+            </span>
+            {% endif %}
+        </div>
+        <div class="stat-label">Connection status</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Celery Workers</span>
+            <i class="fas fa-cogs stat-icon"></i>
+        </div>
+        <div class="stat-value" style="font-size: 1.5rem;">
+            <span class="badge badge-secondary" style="font-size: 1rem;">
+                <i class="fas fa-question-circle"></i> {{ health.celery|title }}
+            </span>
+        </div>
+        <div class="stat-label">Task queue status</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Cache System</span>
+            <i class="fas fa-memory stat-icon"></i>
+        </div>
+        <div class="stat-value" style="font-size: 1.5rem;">
+            <span class="badge badge-secondary" style="font-size: 1rem;">
+                <i class="fas fa-question-circle"></i> {{ health.cache|title }}
+            </span>
+        </div>
+        <div class="stat-label">Cache backend status</div>
+    </div>
+</div>
+
+<!-- Clustering Jobs Stats -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Total Jobs</span>
+            <i class="fas fa-tasks stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ jobs_stats.total }}</div>
+        <div class="stat-label">All time</div>
+    </div>
+
+    <div class="stat-card orange">
+        <div class="stat-header">
+            <span class="stat-title">Running</span>
+            <i class="fas fa-spinner stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ jobs_stats.running }}</div>
+        <div class="stat-label">Currently processing</div>
+    </div>
+
+    <div class="stat-card green">
+        <div class="stat-header">
+            <span class="stat-title">Completed</span>
+            <i class="fas fa-check-circle stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ jobs_stats.completed }}</div>
+        <div class="stat-label">Successfully finished</div>
+    </div>
+
+    <div class="stat-card red">
+        <div class="stat-header">
+            <span class="stat-title">Failed</span>
+            <i class="fas fa-exclamation-triangle stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ jobs_stats.failed }}</div>
+        <div class="stat-label">Errors encountered</div>
+    </div>
+</div>
+
+<!-- Recent Clustering Jobs -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h2 class="admin-card-title">
+            <i class="fas fa-project-diagram"></i>
+            Recent Clustering Jobs
+        </h2>
+    </div>
+
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Started</th>
+                    <th>Completed</th>
+                    <th>Status</th>
+                    <th>Method</th>
+                    <th>Threshold</th>
+                    <th>Min Cluster Size</th>
+                    <th>Total Accidents</th>
+                    <th>Clusters Found</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in recent_jobs %}
+                <tr>
+                    <td><strong>#{{ job.id }}</strong></td>
+                    <td style="white-space: nowrap; font-size: 0.85rem;">{{ job.started_at|date:"M d, Y H:i" }}</td>
+                    <td style="white-space: nowrap; font-size: 0.85rem;">
+                        {% if job.completed_at %}
+                        {{ job.completed_at|date:"M d, Y H:i" }}
+                        {% else %}
+                        <span style="color: var(--text-light);">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if job.status == 'completed' %}
+                        <span class="badge badge-success">
+                            <i class="fas fa-check"></i> Completed
+                        </span>
+                        {% elif job.status == 'running' %}
+                        <span class="badge badge-warning">
+                            <i class="fas fa-spinner fa-spin"></i> Running
+                        </span>
+                        {% else %}
+                        <span class="badge badge-danger">
+                            <i class="fas fa-times"></i> Failed
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge badge-secondary">{{ job.linkage_method|upper }}</span></td>
+                    <td>{{ job.distance_threshold }}</td>
+                    <td>{{ job.min_cluster_size }}</td>
+                    <td>{{ job.total_accidents }}</td>
+                    <td>
+                        {% if job.clusters_found %}
+                        <strong>{{ job.clusters_found }}</strong>
+                        {% else %}
+                        <span style="color: var(--text-light);">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-light);">
+                        <i class="fas fa-project-diagram" style="font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 0.5rem;"></i>
+                        No clustering jobs found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Error Logs -->
+{% if error_logs %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h2 class="admin-card-title">
+            <i class="fas fa-exclamation-triangle"></i>
+            Recent Critical Errors
+        </h2>
+        <a href="{% url 'admin_panel:audit_logs' %}?severity=critical" class="btn btn-sm btn-danger">View All Errors</a>
+    </div>
+
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Description</th>
+                    <th>Error Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in error_logs %}
+                <tr>
+                    <td style="white-space: nowrap; font-size: 0.85rem;">{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                    <td>{{ log.user.get_full_name|default:log.username }}</td>
+                    <td>
+                        <span class="badge badge-danger">
+                            {{ log.action|title }}
+                        </span>
+                    </td>
+                    <td>{{ log.action_description|truncatewords:10 }}</td>
+                    <td>
+                        <small style="color: var(--accent-red); font-family: monospace;">
+                            {{ log.error_message|truncatewords:15 }}
+                        </small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- System Information -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2 class="admin-card-title">
+                <i class="fas fa-info-circle"></i>
+                System Information
+            </h2>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--bg-light);">
+                <strong style="color: var(--text-light);">Django Version:</strong>
+                <span>5.0.6</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--bg-light);">
+                <strong style="color: var(--text-light);">Database:</strong>
+                <span>PostgreSQL</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--bg-light);">
+                <strong style="color: var(--text-light);">Python Version:</strong>
+                <span>3.x</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                <strong style="color: var(--text-light);">AGNES Version:</strong>
+                <span>1.0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2 class="admin-card-title">
+                <i class="fas fa-tools"></i>
+                Maintenance Tools
+            </h2>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <a href="/admin/" class="btn btn-outline" style="justify-content: center;">
+                <i class="fas fa-cog"></i>
+                Django Admin
+            </a>
+
+            <button onclick="alert('Cache clearing feature would be implemented here')" class="btn btn-outline" style="justify-content: center;">
+                <i class="fas fa-broom"></i>
+                Clear Cache
+            </button>
+
+            <button onclick="alert('Database backup feature would be implemented here')" class="btn btn-outline" style="justify-content: center;">
+                <i class="fas fa-download"></i>
+                Database Backup
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

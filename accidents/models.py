@@ -270,6 +270,9 @@ class UserProfile(models.Model):
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     mobile_number = models.CharField(max_length=20)
 
+    # Profile Picture
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True, verbose_name="Profile Picture")
+
     # Security
     is_active = models.BooleanField(default=True)
     failed_login_attempts = models.IntegerField(default=0)

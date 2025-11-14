@@ -1,13 +1,17 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
     # Authentication
     path('login/', views.login, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('change-password/', views.change_password, name='change_password'),
 
     # Dashboard
     path('', views.dashboard, name='dashboard'),
+
+    # Custom Admin Panel (PNP-themed, user-friendly)
+    path('admin-panel/', include('accidents.admin_urls')),
 
     # Accidents
     path('accidents/', views.accident_list, name='accident_list'),

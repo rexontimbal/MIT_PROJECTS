@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncMonth, ExtractWeekDay
@@ -721,12 +722,63 @@ def profile(request):
     user_reports = AccidentReport.objects.filter(
         reported_by=request.user
     ).order_by('-created_at')
-    
+
     context = {
         'user_reports': user_reports,
     }
-    
+
     return render(request, 'accounts/profile.html', context)
+
+@login_required
+def change_password(request):
+    """Change password page - required for new users"""
+    from .auth_utils import log_user_action
+
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        # Validate current password
+        if not request.user.check_password(current_password):
+            messages.error(request, 'Current password is incorrect.')
+            return redirect('change_password')
+
+        # Validate new passwords match
+        if new_password != confirm_password:
+            messages.error(request, 'New passwords do not match.')
+            return redirect('change_password')
+
+        # Validate password length
+        if len(new_password) < 8:
+            messages.error(request, 'Password must be at least 8 characters long.')
+            return redirect('change_password')
+
+        # Update password
+        request.user.set_password(new_password)
+        request.user.save()
+
+        # Update profile
+        if hasattr(request.user, 'profile'):
+            request.user.profile.must_change_password = False
+            request.user.profile.password_changed_at = timezone.now()
+            request.user.profile.save()
+
+        # Keep user logged in after password change
+        update_session_auth_hash(request, request.user)
+
+        # Log action
+        log_user_action(
+            request=request,
+            action='password_change',
+            description='User changed password',
+            severity='info'
+        )
+
+        messages.success(request, 'Password changed successfully!')
+        return redirect('dashboard')
+
+    return render(request, 'accounts/change_password.html')
 
 @pnp_login_required
 def map_view(request):
