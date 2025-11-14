@@ -405,6 +405,46 @@ def user_toggle_active(request, user_id):
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
+@login_required
+def verify_password(request):
+    """Verify user password for sensitive operations"""
+    import json
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            password = data.get('password')
+
+            if not password:
+                return JsonResponse({'valid': False, 'error': 'Password required'})
+
+            # Check if user's password matches
+            if request.user.check_password(password):
+                # Log the verification attempt
+                log_user_action(
+                    request=request,
+                    action='password_verify',
+                    description='User verified password for sensitive operation',
+                    severity='info'
+                )
+                return JsonResponse({'valid': True})
+            else:
+                # Log failed attempt
+                log_user_action(
+                    request=request,
+                    action='password_verify',
+                    description='Failed password verification attempt',
+                    severity='warning',
+                    success=False
+                )
+                return JsonResponse({'valid': False, 'error': 'Incorrect password'})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'valid': False, 'error': 'Invalid request'})
+
+    return JsonResponse({'valid': False, 'error': 'Invalid request method'})
+
+
 # ============================================================================
 # AUDIT LOG VIEWER
 # ============================================================================

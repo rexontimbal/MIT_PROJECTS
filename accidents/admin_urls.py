@@ -27,4 +27,5 @@ urlpatterns = [
     # AJAX Endpoints
     path('api/user-stats/', admin_views.get_user_stats, name='api_user_stats'),
     path('api/system-health/', admin_views.get_system_health, name='api_system_health'),
+    path('api/verify-password/', admin_views.verify_password, name='verify_password'),
 ]

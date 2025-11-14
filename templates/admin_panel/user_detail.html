@@ -34,6 +34,16 @@
     {% endfor %}
 {% endif %}
 
+<!-- Superuser Warning -->
+{% if target_user.is_superuser %}
+<div class="alert alert-warning" style="margin-bottom: var(--space-6);">
+    <i class="fas fa-shield-alt"></i>
+    <div>
+        <strong>Protected Account:</strong> This is a superuser account. For security, you'll be asked to confirm your password before making changes.
+    </div>
+</div>
+{% endif %}
+
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
     <!-- Main Content -->
     <div>
@@ -43,10 +53,15 @@
                 <h2 class="admin-card-title">
                     <i class="fas fa-id-card"></i>
                     Basic Information
+                    {% if target_user.is_superuser %}
+                    <span class="badge badge-danger" style="margin-left: var(--space-2);">
+                        <i class="fas fa-crown"></i> SUPERUSER
+                    </span>
+                    {% endif %}
                 </h2>
             </div>
 
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" id="basicInfoForm" onsubmit="return handleSuperuserSubmit(event, this, 'basicInfoForm')">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="update_basic">
 
@@ -114,7 +129,7 @@
                 </h2>
             </div>
 
-            <form method="post">
+            <form method="post" id="profileForm" onsubmit="return handleSuperuserSubmit(event, this, 'profileForm')">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="update_profile">
 
@@ -206,7 +221,7 @@
                 </h2>
             </div>
 
-            <form method="post">
+            <form method="post" id="permissionsForm" onsubmit="return handleSuperuserSubmit(event, this, 'permissionsForm')">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="update_permissions">
 
@@ -506,6 +521,21 @@ function previewProfilePicture(event) {
     } else {
         document.getElementById('image-preview').style.display = 'none';
     }
+}
+
+// =========================================
+// SUPERUSER PROTECTION HANDLER
+// =========================================
+const isSuperuser = {{ target_user.is_superuser|lower }};
+
+function handleSuperuserSubmit(event, form, formId) {
+    // If editing a superuser account, require password confirmation
+    if (isSuperuser) {
+        event.preventDefault();
+        openPasswordModal(null, form);
+        return false;
+    }
+    return true;
 }
 </script>
 {% endblock %}
