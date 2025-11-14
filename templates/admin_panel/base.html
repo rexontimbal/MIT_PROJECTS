@@ -1362,21 +1362,35 @@
             const modal = document.getElementById('passwordModal');
             const passwordInput = document.getElementById('confirmPassword');
             const errorDiv = document.getElementById('passwordError');
+            const modalTitle = modal.querySelector('.modal-title');
+            const modalBody = modal.querySelector('.modal-body .alert');
 
             // Reset form
             passwordInput.value = '';
             errorDiv.style.display = 'none';
 
+            // Update modal text based on context
+            if (modalTitle) {
+                modalTitle.innerHTML = '<i class="fas fa-shield-alt"></i> Confirm Your Password';
+            }
+            if (modalBody) {
+                modalBody.innerHTML = '<i class="fas fa-shield-alt"></i> For security, please confirm your password to save these changes.';
+            }
+
             // Show modal with animation
-            modal.classList.add('active');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
 
             // Focus password input
-            setTimeout(() => passwordInput.focus(), 300);
+            setTimeout(() => passwordInput.focus(), 100);
         }
 
         function closePasswordModal() {
             const modal = document.getElementById('passwordModal');
             modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300); // Wait for animation to complete
             pendingAction = null;
             pendingForm = null;
         }
@@ -1449,65 +1463,34 @@
         });
 
         // =============================================================================
-        // USERNAME EDITING WITH PASSWORD PROTECTION
+        // FORM SUBMIT HANDLER WITH USERNAME CHANGE DETECTION
         // =============================================================================
 
-        function enableUsernameEdit() {
-            // Show password confirmation modal first
-            const modal = document.getElementById('passwordModal');
-            const modalTitle = modal.querySelector('.modal-title');
-            const modalBody = modal.querySelector('.modal-body .alert');
+        function handleSuperuserSubmit(event, form, formId) {
+            event.preventDefault();
 
-            // Update modal text
-            modalTitle.innerHTML = '<i class="fas fa-lock"></i> Confirm Password to Edit Username';
-            if (modalBody) {
-                modalBody.innerHTML = '<i class="fas fa-shield-alt"></i> For security, please confirm your password before editing the username.';
+            // Check if username was changed
+            const usernameInput = document.getElementById('username');
+            if (usernameInput) {
+                const originalUsername = usernameInput.getAttribute('data-original');
+                const currentUsername = usernameInput.value;
+
+                // If username changed, update action and show password modal
+                if (originalUsername !== currentUsername) {
+                    const actionInput = form.querySelector('input[name="action"]');
+                    if (actionInput) {
+                        actionInput.value = 'update_username';
+                    }
+
+                    // Show password modal before submitting
+                    openPasswordModal(null, form);
+                    return false;
+                }
             }
 
-            // Set pending action to enable username editing
-            pendingAction = function() {
-                const usernameInput = document.getElementById('username');
-                const editBtn = document.getElementById('editUsernameBtn');
-                const helpText = document.getElementById('usernameHelpText');
-                const form = document.getElementById('basicInfoForm');
-                const actionInput = form.querySelector('input[name="action"]');
-
-                if (usernameInput) {
-                    usernameInput.disabled = false;
-                    usernameInput.focus();
-                    usernameInput.style.borderColor = 'var(--pnp-blue)';
-                    usernameInput.style.backgroundColor = '#fff';
-                }
-
-                if (editBtn) {
-                    editBtn.innerHTML = '<i class="fas fa-check"></i> Enabled';
-                    editBtn.disabled = true;
-                    editBtn.style.opacity = '0.6';
-                }
-
-                if (helpText) {
-                    helpText.textContent = '✓ Username editing is now enabled. Make your changes and save.';
-                    helpText.style.color = 'var(--success)';
-                }
-
-                // Change form action to update_username
-                if (actionInput) {
-                    actionInput.value = 'update_username';
-                }
-
-                // Show success message
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'alert alert-success';
-                messageDiv.style.marginTop = 'var(--space-4)';
-                messageDiv.innerHTML = '<i class="fas fa-check-circle"></i> Username editing is now enabled! Change the username and click Save Changes.';
-                usernameInput.parentElement.parentElement.appendChild(messageDiv);
-
-                setTimeout(() => messageDiv.remove(), 5000);
-            };
-
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('active'), 10);
-            document.getElementById('confirmPassword').focus();
+            // If username not changed, submit normally
+            form.submit();
+            return false;
         }
 
         // =============================================================================

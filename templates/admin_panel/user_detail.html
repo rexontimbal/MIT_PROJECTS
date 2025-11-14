@@ -70,27 +70,42 @@
                         Username
                         {% if user.is_superuser and user.profile.role == 'super_admin' %}
                         <span class="badge badge-info" style="margin-left: var(--space-2); font-size: 0.75rem;">
-                            <i class="fas fa-lock"></i> Protected - Password Required
+                            <i class="fas fa-shield-alt"></i> Editable
                         </span>
                         {% endif %}
                     </label>
-                    <div style="display: flex; gap: var(--space-3); align-items: flex-start;">
-                        <div style="flex: 1;">
-                            <input type="text" name="username" id="username" class="form-control" value="{{ target_user.username }}" disabled>
-                            <small style="color: var(--text-light);" id="usernameHelpText">
-                                {% if user.is_superuser and user.profile.role == 'super_admin' %}
-                                    Click "Edit Username" button to enable editing (password confirmation required)
-                                {% else %}
-                                    Username editing is restricted to Super Admin accounts only
-                                {% endif %}
-                            </small>
-                        </div>
+                    <div style="position: relative;">
+                        <input type="text"
+                               name="username"
+                               id="username"
+                               class="form-control"
+                               value="{{ target_user.username }}"
+                               data-original="{{ target_user.username }}"
+                               {% if not user.is_superuser or user.profile.role != 'super_admin' %}disabled{% endif %}
+                               style="{% if user.is_superuser and user.profile.role == 'super_admin' %}padding-right: 45px;{% endif %}">
                         {% if user.is_superuser and user.profile.role == 'super_admin' %}
-                        <button type="button" class="btn btn-outline btn-sm" onclick="enableUsernameEdit()" id="editUsernameBtn" style="margin-top: 0;">
-                            <i class="fas fa-edit"></i>
-                            Edit Username
-                        </button>
+                        <i class="fas fa-edit"
+                           style="position: absolute;
+                                  right: 15px;
+                                  top: 50%;
+                                  transform: translateY(-50%);
+                                  color: var(--pnp-blue);
+                                  cursor: pointer;
+                                  font-size: 1rem;
+                                  opacity: 0.6;
+                                  transition: opacity 0.2s;"
+                           onmouseover="this.style.opacity='1'"
+                           onmouseout="this.style.opacity='0.6'"
+                           onclick="document.getElementById('username').focus()"
+                           title="Click to edit username"></i>
                         {% endif %}
+                        <small style="color: var(--text-light); display: block; margin-top: var(--space-2);">
+                            {% if user.is_superuser and user.profile.role == 'super_admin' %}
+                                Click to edit. Password confirmation will be required when saving changes.
+                            {% else %}
+                                Username editing is restricted to Super Admin accounts only
+                            {% endif %}
+                        </small>
                     </div>
                 </div>
 
