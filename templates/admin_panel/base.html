@@ -1653,15 +1653,27 @@
                     console.log('DEBUG: Password valid, closing modal and submitting form');
                     console.log('DEBUG: pendingAction:', pendingAction);
                     console.log('DEBUG: pendingForm:', pendingForm);
+
+                    // CRITICAL FIX: Save references BEFORE closing modal
+                    // closePasswordModal() clears these variables!
+                    const actionToExecute = pendingAction;
+                    const formToSubmit = pendingForm;
+
+                    console.log('DEBUG: Saved actionToExecute:', actionToExecute);
+                    console.log('DEBUG: Saved formToSubmit:', formToSubmit);
+
+                    // Now close the modal (this will clear pendingAction and pendingForm)
                     closePasswordModal();
-                    if (pendingAction) {
-                        console.log('DEBUG: Executing pendingAction');
-                        pendingAction();
-                    } else if (pendingForm) {
-                        console.log('DEBUG: Submitting pendingForm');
-                        pendingForm.submit();
+
+                    // Execute the saved action or submit the saved form
+                    if (actionToExecute) {
+                        console.log('DEBUG: Executing saved action');
+                        actionToExecute();
+                    } else if (formToSubmit) {
+                        console.log('DEBUG: Submitting saved form');
+                        formToSubmit.submit();
                     } else {
-                        console.log('DEBUG: WARNING - No pendingAction or pendingForm to execute!');
+                        console.log('DEBUG: WARNING - No action or form to execute!');
                     }
                 } else {
                     // Password incorrect
