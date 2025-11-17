@@ -155,11 +155,17 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if user.is_active %}
-                    <span class="badge badge-success" id="status-badge-{{ user.id }}"><i class="fas fa-check-circle"></i> Active</span>
-                    {% else %}
-                    <span class="badge badge-danger" id="status-badge-{{ user.id }}"><i class="fas fa-times-circle"></i> Inactive</span>
-                    {% endif %}
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        {% if user.is_active %}
+                        <span class="badge badge-success" id="status-badge-{{ user.id }}"><i class="fas fa-check-circle"></i> Active</span>
+                        {% else %}
+                        <span class="badge badge-danger" id="status-badge-{{ user.id }}"><i class="fas fa-times-circle"></i> Inactive</span>
+                        {% endif %}
+
+                        {% if user.id == request.user.id %}
+                        <span class="badge badge-own"><i class="fas fa-user-circle"></i> Own</span>
+                        {% endif %}
+                    </div>
                 </td>
                 <td>
                     <div style="display: flex; gap: 0.5rem;">
