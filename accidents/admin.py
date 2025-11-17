@@ -146,7 +146,7 @@ class AccidentClusterAdmin(admin.ModelAdmin):
     search_fields = ['primary_location', 'cluster_id']
 
     readonly_fields = ['cluster_id', 'computed_at', 'accident_count', 'total_casualties', 'severity_score',
-                       'center_latitude', 'center_longitude', 'radius', 'avg_distance', 'max_distance']
+                       'center_latitude', 'center_longitude']
 
     fieldsets = (
         ('Cluster Identification', {
@@ -157,7 +157,7 @@ class AccidentClusterAdmin(admin.ModelAdmin):
         }),
         ('Geographic Info', {
             'fields': ('center_latitude', 'center_longitude', 'min_latitude', 'max_latitude',
-                      'min_longitude', 'max_longitude', 'radius', 'avg_distance', 'max_distance')
+                      'min_longitude', 'max_longitude')
         }),
         ('Temporal', {
             'fields': ('date_range_start', 'date_range_end', 'computed_at')
