@@ -152,10 +152,20 @@
                         <span class="badge badge-danger" id="status-badge-{{ user.id }}"><i class="fas fa-times-circle"></i> Inactive</span>
                         {% endif %}
 
-                        {% if user.is_superuser %}
-                        <span class="badge badge-danger"><i class="fas fa-crown"></i> Superuser</span>
-                        {% elif user.is_staff %}
-                        <span class="badge badge-warning"><i class="fas fa-user-shield"></i> Staff</span>
+                        {% if user.profile and user.profile.role %}
+                            {% if user.profile.role == 'super_admin' %}
+                            <span class="badge badge-superadmin"><i class="fas fa-crown"></i> Super Admin</span>
+                            {% elif user.profile.role == 'regional_director' %}
+                            <span class="badge badge-primary"><i class="fas fa-user-tie"></i> Regional Director</span>
+                            {% elif user.profile.role == 'provincial_chief' %}
+                            <span class="badge badge-teal"><i class="fas fa-user-shield"></i> Provincial Chief</span>
+                            {% elif user.profile.role == 'station_commander' %}
+                            <span class="badge badge-bluegray"><i class="fas fa-user-cog"></i> Station Commander</span>
+                            {% elif user.profile.role == 'traffic_officer' %}
+                            <span class="badge badge-secondary"><i class="fas fa-traffic-light"></i> Traffic Officer</span>
+                            {% elif user.profile.role == 'data_encoder' %}
+                            <span class="badge badge-secondary"><i class="fas fa-keyboard"></i> Data Encoder</span>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </td>
