@@ -130,14 +130,16 @@ def user_management(request):
     # Get all users with profiles, ordered by username
     users = User.objects.select_related('profile').all().order_by('username')
 
-    # Apply search
+    # Apply search - searches across multiple fields
     if search_query:
         users = users.filter(
             Q(username__icontains=search_query) |
             Q(first_name__icontains=search_query) |
             Q(last_name__icontains=search_query) |
             Q(email__icontains=search_query) |
-            Q(profile__badge_number__icontains=search_query)
+            Q(profile__badge_number__icontains=search_query) |
+            Q(profile__rank__icontains=search_query) |
+            Q(profile__station__icontains=search_query)
         )
 
     # Apply role filter
@@ -149,10 +151,6 @@ def user_management(request):
         users = users.filter(is_active=True)
     elif status_filter == 'inactive':
         users = users.filter(is_active=False)
-    elif status_filter == 'staff':
-        users = users.filter(is_staff=True)
-    elif status_filter == 'superuser':
-        users = users.filter(is_superuser=True)
 
     # Pagination
     paginator = Paginator(users, 20)  # 20 users per page
