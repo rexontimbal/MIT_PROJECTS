@@ -697,6 +697,67 @@
                 font-size: 20px;
             }
         }
+
+        /* ========== POPUP NOTIFICATION STYLES ========== */
+        .popup-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            z-index: 10001;
+            padding: 1.25rem 1.75rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            min-width: 350px;
+            max-width: 600px;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .popup-notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .popup-notification.success {
+            background: rgba(16, 185, 129, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .popup-notification.error {
+            background: rgba(239, 68, 68, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .popup-notification.warning {
+            background: rgba(245, 158, 11, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .popup-notification.info {
+            background: rgba(59, 130, 246, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .popup-notification-icon {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .popup-notification-content {
+            flex: 1;
+            font-weight: 500;
+        }
+
     </style>
 </head>
 <body>
@@ -861,17 +922,11 @@
         </div>
         {% endblock %}
         
-        <!-- Messages/Alerts -->
+        <!-- Messages/Alerts (Hidden - will be shown as popup) -->
         {% if messages %}
-        <div class="messages-container">
+        <div style="display: none;">
             {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
-                <span class="alert-icon">
-                    {% if message.tags == 'success' %}✓{% elif message.tags == 'error' %}✕{% elif message.tags == 'warning' %}⚠{% else %}ℹ{% endif %}
-                </span>
-                <span class="alert-message">{{ message }}</span>
-                <button class="alert-close" onclick="this.parentElement.remove()">×</button>
-            </div>
+                <!-- {{ message.tags }}: {{ message }} -->
             {% endfor %}
         </div>
         {% endif %}
@@ -947,6 +1002,58 @@
                     mobileMenuToggle.classList.remove('active');
                 });
             });
+        });
+
+        // =========================================
+        // POPUP NOTIFICATION SYSTEM
+        // =========================================
+        function showPopupNotification(message, type = 'success', duration = 5000) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `popup-notification ${type}`;
+
+            // Set icon based on type
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-circle',
+                info: 'fa-info-circle'
+            };
+
+            notification.innerHTML = `
+                <div class="popup-notification-icon">
+                    <i class="fas ${icons[type] || icons.success}"></i>
+                </div>
+                <div class="popup-notification-content">${message}</div>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                notification.classList.add('show');
+            });
+
+            // Auto remove after duration
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 400);
+            }, duration);
+        }
+
+        // Display Django messages as popup notifications
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if messages %}
+                {% for message in messages %}
+                    showPopupNotification(
+                        "{{ message|escapejs }}",
+                        "{{ message.tags|default:'info' }}",
+                        5000
+                    );
+                {% endfor %}
+            {% endif %}
         });
 
         // Scroll to Top Button - Show/Hide on scroll
