@@ -1,0 +1,413 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Create New User{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">
+            <i class="fas fa-user-plus"></i>
+            Create New User
+        </h1>
+        <div class="admin-breadcrumb">
+            <a href="{% url 'admin_panel:dashboard' %}"><i class="fas fa-tachometer-alt"></i> Admin</a>
+            <span>/</span>
+            <a href="{% url 'admin_panel:users' %}">Users</a>
+            <span>/</span>
+            <span>Create</span>
+        </div>
+    </div>
+    <a href="{% url 'admin_panel:users' %}" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i>
+        Back to Users
+    </a>
+</div>
+
+<!-- Messages (handled by notification system in base.html) -->
+{% if messages %}
+    <div style="display: none;">
+    {% for message in messages %}
+        <!-- {{ message.tags }}: {{ message }} -->
+    {% endfor %}
+    </div>
+{% endif %}
+
+<div style="max-width: 900px; margin: 0 auto;">
+    <form method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
+        {% csrf_token %}
+
+        <!-- Account Details -->
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2 class="admin-card-title">
+                    <i class="fas fa-user"></i>
+                    Account Details
+                </h2>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="username">Username <span style="color: var(--accent-red);">*</span></label>
+                <input type="text" name="username" id="username" class="form-control" required>
+                <small style="color: var(--text-light);">Must be unique. Letters, digits, and @/./+/-/_ only.</small>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="password">Password <span style="color: var(--accent-red);">*</span></label>
+                    <input type="password" name="password" id="password" class="form-control" required minlength="8">
+                    <small style="color: var(--text-light);">At least 8 characters long.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Confirm Password <span style="color: var(--accent-red);">*</span></label>
+                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" required minlength="8">
+                    <small style="color: var(--text-light);">Re-type the password.</small>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="first_name">First Name <span style="color: var(--accent-red);">*</span></label>
+                    <input type="text" name="first_name" id="first_name" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="last_name">Last Name <span style="color: var(--accent-red);">*</span></label>
+                    <input type="text" name="last_name" id="last_name" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" name="email" id="email" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="profile_picture">Profile Picture</label>
+                <input type="file" name="profile_picture" id="profile_picture" class="form-control" accept="image/*" onchange="previewProfilePicture(event)">
+                <small style="color: var(--text-light);">Recommended: Square image (JPG, PNG). Max 5MB.</small>
+                <div id="image-preview" style="margin-top: 1rem; display: none;">
+                    <img id="preview-img" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border-color);">
+                </div>
+            </div>
+        </div>
+
+        <!-- PNP Profile -->
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2 class="admin-card-title">
+                    <i class="fas fa-shield-alt"></i>
+                    PNP Profile
+                </h2>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="badge_number">Badge Number <span style="color: var(--accent-red);">*</span></label>
+                <input type="text" name="badge_number" id="badge_number" class="form-control" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="rank">Rank <span style="color: var(--accent-red);">*</span></label>
+                    <select name="rank" id="rank" class="form-control" required>
+                        {% for value, label in ranks %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="role">Role <span style="color: var(--accent-red);">*</span></label>
+                    <select name="role" id="role" class="form-control" required>
+                        {% for value, label in roles %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="region">Region <span style="color: var(--accent-red);">*</span></label>
+                    <input type="text" name="region" id="region" class="form-control" value="Caraga" readonly style="background: #f5f5f5;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="province">Province <span style="color: var(--accent-red);">*</span></label>
+                    <select name="province" id="province" class="form-control" required onchange="updateStations()">
+                        <option value="">-- Select Province --</option>
+                        <option value="Agusan del Norte">Agusan del Norte</option>
+                        <option value="Agusan del Sur">Agusan del Sur</option>
+                        <option value="Butuan City">Butuan City</option>
+                        <option value="Dinagat Islands">Dinagat Islands</option>
+                        <option value="Surigao del Norte">Surigao del Norte</option>
+                        <option value="Surigao del Sur">Surigao del Sur</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="station">Station <span style="color: var(--accent-red);">*</span></label>
+                    <select name="station" id="station" class="form-control" required>
+                        <option value="">-- Select Province First --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="unit">Unit</label>
+                    <input type="text" name="unit" id="unit" class="form-control" placeholder="e.g., Traffic Management Unit">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="mobile_number">Mobile Number</label>
+                    <input type="text" name="mobile_number" id="mobile_number" class="form-control" placeholder="+639123456789">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phone_number">Phone Number</label>
+                    <input type="text" name="phone_number" id="phone_number" class="form-control" placeholder="(085) 123-4567">
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissions -->
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2 class="admin-card-title">
+                    <i class="fas fa-lock"></i>
+                    Permissions
+                </h2>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                    <input type="checkbox" name="is_staff" style="width: 20px; height: 20px;">
+                    <div>
+                        <strong style="color: var(--text-dark);">Staff Status</strong>
+                        <br>
+                        <small style="color: var(--text-light);">User can access admin panel</small>
+                    </div>
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                    <input type="checkbox" name="is_superuser" style="width: 20px; height: 20px;">
+                    <div>
+                        <strong style="color: var(--text-dark);">Superuser Status</strong>
+                        <br>
+                        <small style="color: var(--text-light);">Full system access - use with extreme caution!</small>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <a href="{% url 'admin_panel:users' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i>
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-user-plus"></i>
+                Create User
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Caraga Region Police Stations Database (Real PNP Data)
+const stationsByProvince = {
+    'Agusan del Norte': [
+        'Santiago MPS',
+        'Las Nieves MPS',
+        'Remedios T Romualdes MPS',
+        'Buenavista MPS',
+        'Jabonga MPS',
+        'Cabadbaran City PS',
+        'Tubay MPS',
+        'Kitcharao MPS',
+        'Magallanes MPS',
+        'Nasipit MPS',
+        'Carmen MPS'
+    ],
+    'Agusan del Sur': [
+        'Bayugan CPS',
+        'Prosperidad MPS',
+        'San Francisco MPS',
+        'Rosario MPS',
+        'La Paz MPS',
+        'Bunawan MPS',
+        'Veruela MPS',
+        'Loreto MPS',
+        'Sibagat MPS',
+        'San Luis MPS',
+        'Esperanza MPS',
+        'Talacogon MPS',
+        'Sta Josefa MPS'
+    ],
+    'Butuan City': [
+        'Butuan City PS 1',
+        'Butuan City PS 2',
+        'Butuan City PS 3',
+        'Butuan City PS 4',
+        'Butuan City PS 5'
+    ],
+    'Dinagat Islands': [
+        'San Jose MPS',
+        'Libjo MPS',
+        'Dinagat MPS',
+        'Loreto MPS',
+        'Basilisa MPS',
+        'Tubajon MPS'
+    ],
+    'Surigao del Norte': [
+        'Placer MPS',
+        'Gen. Luna MPS',
+        'Sison MPS',
+        'Surigao City PS',
+        'Mainit MPS',
+        'Gigaquit MPS',
+        'Malimono MPS',
+        'Claver MPS',
+        'Bacuag MPS',
+        'Taganaan MPS',
+        'Dapa MPS',
+        'Alegria MPS',
+        'Del Carmen MPS',
+        'Sta. Monica MPS',
+        'Tubod MPS',
+        'San Isidro MPS',
+        'Burgos MPS',
+        'Socorro MPS',
+        'San Francisco MPS',
+        'Pilar MPS',
+        'San Benito MPS'
+    ],
+    'Surigao del Sur': [
+        'Bislig City PS',
+        'Hinatuan MPS',
+        'Lingig MPS',
+        'Tago MPS',
+        'Lianga MPS',
+        'Tandag City PS',
+        'Barobo MPS',
+        'Cortes MPS',
+        'Lanuza MPS',
+        'Cantilan MPS',
+        'Tagbina MPS',
+        'Marihatag MPS',
+        'Carascal MPS',
+        'San Agustin MPS',
+        'Madrid MPS',
+        'Bayabas MPS',
+        'San Miguel MPS',
+        'Carmen MPS'
+    ]
+};
+
+// Update stations dropdown based on selected province
+function updateStations() {
+    const provinceSelect = document.getElementById('province');
+    const stationSelect = document.getElementById('station');
+    const selectedProvince = provinceSelect.value;
+
+    // Clear current options
+    stationSelect.innerHTML = '<option value="">-- Select Station --</option>';
+
+    if (selectedProvince && stationsByProvince[selectedProvince]) {
+        // Add stations for selected province
+        stationsByProvince[selectedProvince].forEach(station => {
+            const option = document.createElement('option');
+            option.value = station;
+            option.textContent = station;
+            stationSelect.appendChild(option);
+        });
+    } else {
+        stationSelect.innerHTML = '<option value="">-- Select Province First --</option>';
+    }
+}
+
+// Password validation
+function validateForm() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+
+    if (password !== confirmPassword) {
+        alert('Passwords do not match! Please make sure both password fields are identical.');
+        document.getElementById('confirm_password').focus();
+        return false;
+    }
+
+    if (password.length < 8) {
+        alert('Password must be at least 8 characters long!');
+        document.getElementById('password').focus();
+        return false;
+    }
+
+    return true;
+}
+
+// Visual feedback for password matching
+document.addEventListener('DOMContentLoaded', function() {
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+
+    function checkPasswordMatch() {
+        if (confirmPassword.value === '') {
+            confirmPassword.style.borderColor = '';
+            return;
+        }
+
+        if (password.value === confirmPassword.value) {
+            confirmPassword.style.borderColor = '#28a745';
+            confirmPassword.style.borderWidth = '2px';
+        } else {
+            confirmPassword.style.borderColor = '#dc3545';
+            confirmPassword.style.borderWidth = '2px';
+        }
+    }
+
+    password.addEventListener('input', checkPasswordMatch);
+    confirmPassword.addEventListener('input', checkPasswordMatch);
+});
+
+// Profile picture preview
+function previewProfilePicture(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size too large! Maximum 5MB allowed.');
+            event.target.value = '';
+            document.getElementById('image-preview').style.display = 'none';
+            return;
+        }
+
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file!');
+            event.target.value = '';
+            document.getElementById('image-preview').style.display = 'none';
+            return;
+        }
+
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('image-preview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('image-preview').style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
