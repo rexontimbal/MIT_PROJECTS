@@ -354,9 +354,91 @@
     background: #059669;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
+
+/* Center Notification Styles */
+.center-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    z-index: 10001;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    min-width: 320px;
+    max-width: 500px;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.center-notification.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.center-notification.success {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+}
+
+.center-notification.warning {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    color: white;
+}
+
+.center-notification.error {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    color: white;
+}
+
+.center-notification i {
+    font-size: 20px;
+}
+
+.center-notification-content {
+    flex: 1;
+}
 </style>
 
 <script>
+// Custom centered notification
+function showCenterNotification(message, type = 'success', duration = 4000) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `center-notification ${type}`;
+
+    const icons = {
+        success: 'fa-check-circle',
+        warning: 'fa-exclamation-circle',
+        error: 'fa-times-circle'
+    };
+
+    notification.innerHTML = `
+        <i class="fas ${icons[type]}"></i>
+        <div class="center-notification-content">${message}</div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Animate in
+    requestAnimationFrame(() => {
+        notification.classList.add('show');
+    });
+
+    // Auto remove after duration
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 400);
+    }, duration);
+}
+
 // Custom confirmation modal
 function showConfirmModal(options) {
     return new Promise((resolve) => {
@@ -494,15 +576,15 @@ async function toggleUserActive(userId, username, isActive) {
                 }
             }
 
-            // Show beautiful notification
+            // Show beautiful centered notification
             const status = newIsActive ? 'activated' : 'deactivated';
-            showNotification(
+            showCenterNotification(
                 `User "${username}" ${status} successfully!`,
                 newIsActive ? 'success' : 'warning',
                 4000
             );
         } else {
-            showNotification(
+            showCenterNotification(
                 data.error || 'Failed to update user status',
                 'error',
                 5000
@@ -511,7 +593,7 @@ async function toggleUserActive(userId, username, isActive) {
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification(
+        showCenterNotification(
             'An error occurred while updating user status',
             'error',
             5000
