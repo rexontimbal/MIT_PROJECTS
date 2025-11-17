@@ -684,18 +684,9 @@ function handleDrop(event) {
 }
 
 // =========================================
-// SUPERUSER PROTECTION HANDLER
+// SUPERUSER PROTECTION FLAG
 // =========================================
+// Set global flag so base.html handleSuperuserSubmit knows if editing superuser
 const isSuperuser = {{ target_user.is_superuser|lower }};
-
-function handleSuperuserSubmit(event, form, formId) {
-    // If editing a superuser account, require password confirmation
-    if (isSuperuser) {
-        event.preventDefault();
-        openPasswordModal(null, form);
-        return false;
-    }
-    return true;
-}
 </script>
 {% endblock %}

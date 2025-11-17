@@ -1685,26 +1685,36 @@
         function handleSuperuserSubmit(event, form, formId) {
             event.preventDefault();
 
+            // Check if editing a superuser account (check if isSuperuser variable exists)
+            const editingSuperuser = typeof isSuperuser !== 'undefined' && isSuperuser === true;
+
             // Check if username was changed
             const usernameInput = document.getElementById('username');
+            let usernameChanged = false;
+
             if (usernameInput) {
                 const originalUsername = usernameInput.getAttribute('data-original');
                 const currentUsername = usernameInput.value;
+                usernameChanged = (originalUsername !== currentUsername);
 
-                // If username changed, update action and show password modal
-                if (originalUsername !== currentUsername) {
+                // If username changed, update action
+                if (usernameChanged) {
                     const actionInput = form.querySelector('input[name="action"]');
                     if (actionInput) {
                         actionInput.value = 'update_username';
                     }
-
-                    // Show password modal before submitting
-                    openPasswordModal(null, form);
-                    return false;
                 }
             }
 
-            // If username not changed, submit normally
+            // Show password modal if:
+            // 1. Editing a superuser account, OR
+            // 2. Username was changed
+            if (editingSuperuser || usernameChanged) {
+                openPasswordModal(null, form);
+                return false;
+            }
+
+            // Otherwise, submit normally
             form.submit();
             return false;
         }
