@@ -391,51 +391,79 @@
         </div>
         {% endif %}
 
-        <!-- Permissions -->
+        <!-- Account Status & Role-Based Permissions -->
         <div class="admin-card">
             <div class="admin-card-header">
                 <h2 class="admin-card-title">
                     <i class="fas fa-lock"></i>
-                    Permissions & Status
+                    Account Status & Permissions
                 </h2>
             </div>
 
+            <!-- Role-Based Permissions Info -->
+            <div style="background: linear-gradient(135deg, #E3F2FD 0%, #F3E5F5 100%); padding: 1rem; border-radius: 8px; border-left: 4px solid #003087; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: start; gap: 0.75rem;">
+                    <i class="fas fa-info-circle" style="font-size: 18px; color: #003087; margin-top: 2px;"></i>
+                    <div>
+                        <strong style="color: #003087; display: block; margin-bottom: 0.25rem;">Role-Based Access Control</strong>
+                        <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.5;">
+                            Access permissions are automatically managed based on the user's <strong>Role</strong>:
+                        </p>
+                        <div style="margin-top: 0.5rem; font-size: 13px; color: #374151;">
+                            {% if profile %}
+                                {% if profile.role == 'super_admin' %}
+                                <div style="padding: 0.5rem; background: rgba(0, 48, 135, 0.1); border-radius: 6px; margin-top: 0.5rem;">
+                                    <i class="fas fa-crown" style="color: #003087;"></i>
+                                    <strong style="color: #003087;">Super Admin</strong> → Full access to Django Admin & Admin Panel
+                                </div>
+                                {% elif profile.role == 'regional_director' %}
+                                <div style="padding: 0.5rem; background: rgba(0, 71, 171, 0.1); border-radius: 6px; margin-top: 0.5rem;">
+                                    <i class="fas fa-user-shield" style="color: #0047AB;"></i>
+                                    <strong style="color: #0047AB;">Regional Director</strong> → Access to Admin Panel only
+                                </div>
+                                {% else %}
+                                <div style="padding: 0.5rem; background: rgba(107, 114, 128, 0.1); border-radius: 6px; margin-top: 0.5rem;">
+                                    <i class="fas fa-user" style="color: #6B7280;"></i>
+                                    <strong style="color: #6B7280;">{{ profile.get_role_display }}</strong> → View profile only
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                            <small style="display: block; margin-top: 0.5rem; color: #6B7280;">
+                                To change access level, update the user's Role in the PNP Profile section above.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Status Form -->
             <form method="post" id="permissionsForm" onsubmit="return handleSuperuserSubmit(event, this, 'permissionsForm')">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="update_permissions">
 
-                <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
-                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; border: 2px solid {% if target_user.is_active %}#10B981{% else %}#EF4444{% endif %}; background: {% if target_user.is_active %}rgba(16, 185, 129, 0.05){% else %}rgba(239, 68, 68, 0.05){% endif %};">
                         <input type="checkbox" name="is_active" {% if target_user.is_active %}checked{% endif %} style="width: 20px; height: 20px;">
                         <div>
-                            <strong style="color: var(--text-dark);">Active Account</strong>
+                            <strong style="color: var(--text-dark);">
+                                <i class="fas {% if target_user.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}" style="color: {% if target_user.is_active %}#10B981{% else %}#EF4444{% endif %};"></i>
+                                Active Account
+                            </strong>
                             <br>
-                            <small style="color: var(--text-light);">User can log in and access the system</small>
-                        </div>
-                    </label>
-
-                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
-                        <input type="checkbox" name="is_staff" {% if target_user.is_staff %}checked{% endif %} style="width: 20px; height: 20px;">
-                        <div>
-                            <strong style="color: var(--text-dark);">Staff Status</strong>
-                            <br>
-                            <small style="color: var(--text-light);">User can access admin panel</small>
-                        </div>
-                    </label>
-
-                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
-                        <input type="checkbox" name="is_superuser" {% if target_user.is_superuser %}checked{% endif %} style="width: 20px; height: 20px;">
-                        <div>
-                            <strong style="color: var(--text-dark);">Superuser Status</strong>
-                            <br>
-                            <small style="color: var(--text-light);">Full system access - use with caution!</small>
+                            <small style="color: var(--text-light);">
+                                {% if target_user.is_active %}
+                                User can log in and access the system
+                                {% else %}
+                                User is currently blocked from logging in
+                                {% endif %}
+                            </small>
                         </div>
                     </label>
                 </div>
 
-                <button type="submit" class="btn btn-danger">
-                    <i class="fas fa-shield-alt"></i>
-                    Update Permissions
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Update Status
                 </button>
             </form>
         </div>

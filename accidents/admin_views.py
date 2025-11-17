@@ -22,21 +22,17 @@ from .auth_utils import log_user_action
 
 
 # ============================================================================
-# PERMISSION CHECKS
+# PERMISSION CHECKS (ROLE-BASED)
 # ============================================================================
 
 def is_superuser(user):
     """Check if user is Django superuser"""
     return user.is_authenticated and user.is_superuser
 
-def is_admin(user):
-    """Check if user is admin (Django superuser OR has super_admin role)"""
+def is_super_admin(user):
+    """Check if user has super_admin role - can access Django admin and Admin Panel"""
     if not user.is_authenticated:
         return False
-
-    # Django superusers always have access
-    if user.is_superuser:
-        return True
 
     # Check if user has super_admin role in their profile
     if hasattr(user, 'profile'):
@@ -44,10 +40,21 @@ def is_admin(user):
 
     return False
 
+def is_admin(user):
+    """Check if user can access Admin Panel (super_admin or regional_director)"""
+    if not user.is_authenticated:
+        return False
+
+    # Check if user has admin role in their profile
+    if hasattr(user, 'profile'):
+        return user.profile.role in ['super_admin', 'regional_director']
+
+    return False
+
 
 def is_staff_or_superuser(user):
-    """Check if user is staff or superuser"""
-    return user.is_authenticated and (user.is_staff or user.is_superuser)
+    """Check if user can access admin features (super_admin or regional_director)"""
+    return is_admin(user)
 
 
 # ============================================================================
@@ -214,6 +221,7 @@ def user_detail(request, user_id):
         elif action == 'update_profile':
             # Update user profile
             if profile:
+                old_role = profile.role
                 profile.badge_number = request.POST.get('badge_number', '')
                 profile.rank = request.POST.get('rank', '')
                 profile.role = request.POST.get('role', '')
@@ -225,28 +233,38 @@ def user_detail(request, user_id):
                 profile.phone_number = request.POST.get('phone_number', '')
                 profile.save()
 
+                # Automatically update permissions based on role
+                if profile.role == 'super_admin':
+                    user.is_staff = True
+                    user.is_superuser = True
+                elif profile.role == 'regional_director':
+                    user.is_staff = True
+                    user.is_superuser = False
+                else:
+                    user.is_staff = False
+                    user.is_superuser = False
+                user.save()
+
                 messages.success(request, f'Profile for {user.username} updated successfully!')
 
                 log_user_action(
                     request=request,
                     action='user_profile_edit',
-                    description=f'Updated profile for user: {user.username}',
+                    description=f'Updated profile for user: {user.username} (Role changed from {old_role} to {profile.role})',
                     severity='info'
                 )
 
         elif action == 'update_permissions':
-            # Update permissions
-            user.is_staff = request.POST.get('is_staff') == 'on'
-            user.is_superuser = request.POST.get('is_superuser') == 'on'
+            # Update active status only (permissions are role-based now)
             user.is_active = request.POST.get('is_active') == 'on'
             user.save()
 
-            messages.success(request, f'Permissions for {user.username} updated successfully!')
+            messages.success(request, f'Status for {user.username} updated successfully!')
 
             log_user_action(
                 request=request,
-                action='user_permissions_edit',
-                description=f'Updated permissions for user: {user.username} (Staff: {user.is_staff}, Superuser: {user.is_superuser}, Active: {user.is_active})',
+                action='user_status_edit',
+                description=f'Updated status for user: {user.username} (Active: {user.is_active})',
                 severity='warning'
             )
 
@@ -344,9 +362,16 @@ def user_create(request):
             profile.profile_picture = request.FILES['profile_picture']
             profile.save()
 
-        # Set permissions
-        user.is_staff = request.POST.get('is_staff') == 'on'
-        user.is_superuser = request.POST.get('is_superuser') == 'on'
+        # Automatically set permissions based on role
+        if profile.role == 'super_admin':
+            user.is_staff = True
+            user.is_superuser = True
+        elif profile.role == 'regional_director':
+            user.is_staff = True
+            user.is_superuser = False
+        else:
+            user.is_staff = False
+            user.is_superuser = False
         user.save()
 
         messages.success(request, f'User "{username}" created successfully!')
