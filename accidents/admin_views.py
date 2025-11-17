@@ -199,15 +199,33 @@ def user_detail(request, user_id):
                     if profile.profile_picture:
                         profile.profile_picture.delete(save=False)
                         profile.profile_picture = None
+                        print(f"DEBUG: Removed profile picture for user: {user.username}")
 
                 # Handle new picture upload
                 if 'profile_picture' in request.FILES:
-                    # Delete old picture if exists
-                    if profile.profile_picture:
-                        profile.profile_picture.delete(save=False)
-                    profile.profile_picture = request.FILES['profile_picture']
+                    try:
+                        import os
+                        from django.conf import settings
+
+                        # Ensure media directories exist
+                        media_root = settings.MEDIA_ROOT
+                        profile_pics_dir = os.path.join(media_root, 'profile_pictures')
+                        os.makedirs(profile_pics_dir, exist_ok=True)
+
+                        # Delete old picture if exists
+                        if profile.profile_picture:
+                            profile.profile_picture.delete(save=False)
+
+                        uploaded_file = request.FILES['profile_picture']
+                        profile.profile_picture = uploaded_file
+                        print(f"DEBUG: Profile picture received for edit - Name: {uploaded_file.name}, Size: {uploaded_file.size} bytes")
+
+                    except Exception as e:
+                        print(f"DEBUG: Profile picture upload failed for {user.username} - {str(e)}")
+                        messages.warning(request, f'Profile picture upload failed: {str(e)}')
 
                 profile.save()
+                print(f"DEBUG: Profile saved for user: {user.username}")
 
             messages.success(request, f'User {user.username} updated successfully!')
 
