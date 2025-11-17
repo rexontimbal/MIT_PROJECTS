@@ -322,7 +322,7 @@ class ClusteringJobAdmin(admin.ModelAdmin):
             'fields': ('started_by', 'started_at', 'completed_at', 'status')
         }),
         ('Parameters', {
-            'fields': ('linkage_method', 'distance_threshold', 'min_cluster_size', 'date_range_start', 'date_range_end')
+            'fields': ('linkage_method', 'distance_threshold', 'min_cluster_size', 'date_from', 'date_to')
         }),
         ('Results', {
             'fields': ('clusters_found', 'total_accidents', 'error_message')

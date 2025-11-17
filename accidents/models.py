@@ -8,11 +8,14 @@ from .validators import (
     validate_philippine_longitude,
     validate_date_not_future,
     validate_casualty_count,
+    validate_suspect_count,
     validate_year_range,
     validate_severity_score,
     validate_cluster_distance_threshold,
+    validate_cluster_size,
     validate_image_file_size,
-    validate_image_file_extension
+    validate_image_file_extension,
+    validate_narrative_length,
 )
 
 class Accident(models.Model):
@@ -82,7 +85,7 @@ class Accident(models.Model):
     )
     suspect_count = models.IntegerField(
         default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(50)],
+        validators=[validate_suspect_count, MinValueValidator(0), MaxValueValidator(50)],
         help_text="Total number of suspects (0-50)"
     )
     
@@ -234,10 +237,10 @@ class AccidentReport(models.Model):
         validators=[validate_casualty_count, MinValueValidator(0)],
         help_text="Number of injured persons"
     )
-    
+
     # Vehicle involved
     vehicles_involved = models.JSONField(default=list)  # List of vehicle details
-    
+
     # Media attachments
     photo_1 = models.ImageField(
         upload_to='accident_reports/',
@@ -366,6 +369,9 @@ class UserProfile(models.Model):
     # Contact
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     mobile_number = models.CharField(max_length=20)
+
+    # Profile Picture
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True, verbose_name="Profile Picture")
 
     # Security
     is_active = models.BooleanField(default=True)
