@@ -471,28 +471,6 @@
 
     <!-- Sidebar -->
     <div>
-        <!-- Quick Actions -->
-        <div class="admin-card">
-            <div class="admin-card-header">
-                <h2 class="admin-card-title">
-                    <i class="fas fa-bolt"></i>
-                    Quick Actions
-                </h2>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <button onclick="resetPassword()" class="btn btn-warning" style="justify-content: center;">
-                    <i class="fas fa-key"></i>
-                    Reset Password
-                </button>
-
-                <button onclick="toggleActive()" class="btn {% if target_user.is_active %}btn-danger{% else %}btn-success{% endif %}" style="justify-content: center;">
-                    <i class="fas {% if target_user.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
-                    {% if target_user.is_active %}Deactivate Account{% else %}Activate Account{% endif %}
-                </button>
-            </div>
-        </div>
-
         <!-- User Info -->
         <div class="admin-card">
             <div class="admin-card-header">
@@ -630,73 +608,6 @@ function updateStations() {
 document.addEventListener('DOMContentLoaded', function() {
     updateStations();
 });
-
-function resetPassword() {
-    const newPassword = prompt('Enter new password for {{ target_user.username }}:');
-
-    if (!newPassword) {
-        return;
-    }
-
-    if (newPassword.length < 8) {
-        alert('Password must be at least 8 characters long');
-        return;
-    }
-
-    if (!confirm(`Reset password for {{ target_user.username }}?\n\nThe user will be required to change this password on next login.`)) {
-        return;
-    }
-
-    fetch('/admin-panel/users/{{ target_user.id }}/reset-password/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken
-        },
-        body: JSON.stringify({ new_password: newPassword })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Password reset successfully!');
-        } else {
-            alert('Error: ' + (data.error || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred');
-    });
-}
-
-function toggleActive() {
-    const isActive = {{ target_user.is_active|lower }};
-    const action = isActive ? 'deactivate' : 'activate';
-
-    if (!confirm(`Are you sure you want to ${action} this account?`)) {
-        return;
-    }
-
-    fetch('/admin-panel/users/{{ target_user.id }}/toggle-active/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('Error: ' + (data.error || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred');
-    });
-}
 
 // Profile picture preview
 function previewProfilePicture(event) {
