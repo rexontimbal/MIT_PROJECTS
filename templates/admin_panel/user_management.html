@@ -131,8 +131,20 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if user.profile %}
-                    <span class="badge badge-info">{{ user.profile.get_role_display }}</span>
+                    {% if user.profile and user.profile.role %}
+                        {% if user.profile.role == 'super_admin' %}
+                        <span class="badge badge-superadmin"><i class="fas fa-crown"></i> Super Admin</span>
+                        {% elif user.profile.role == 'regional_director' %}
+                        <span class="badge badge-primary"><i class="fas fa-user-tie"></i> Regional Director</span>
+                        {% elif user.profile.role == 'provincial_chief' %}
+                        <span class="badge badge-teal"><i class="fas fa-user-shield"></i> Provincial Chief</span>
+                        {% elif user.profile.role == 'station_commander' %}
+                        <span class="badge badge-bluegray"><i class="fas fa-user-cog"></i> Station Commander</span>
+                        {% elif user.profile.role == 'traffic_officer' %}
+                        <span class="badge badge-secondary"><i class="fas fa-traffic-light"></i> Traffic Officer</span>
+                        {% elif user.profile.role == 'data_encoder' %}
+                        <span class="badge badge-secondary"><i class="fas fa-keyboard"></i> Data Encoder</span>
+                        {% endif %}
                     {% else %}
                     -
                     {% endif %}
@@ -145,29 +157,11 @@
                     {% endif %}
                 </td>
                 <td>
-                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                        {% if user.is_active %}
-                        <span class="badge badge-success" id="status-badge-{{ user.id }}"><i class="fas fa-check-circle"></i> Active</span>
-                        {% else %}
-                        <span class="badge badge-danger" id="status-badge-{{ user.id }}"><i class="fas fa-times-circle"></i> Inactive</span>
-                        {% endif %}
-
-                        {% if user.profile and user.profile.role %}
-                            {% if user.profile.role == 'super_admin' %}
-                            <span class="badge badge-superadmin"><i class="fas fa-crown"></i> Super Admin</span>
-                            {% elif user.profile.role == 'regional_director' %}
-                            <span class="badge badge-primary"><i class="fas fa-user-tie"></i> Regional Director</span>
-                            {% elif user.profile.role == 'provincial_chief' %}
-                            <span class="badge badge-teal"><i class="fas fa-user-shield"></i> Provincial Chief</span>
-                            {% elif user.profile.role == 'station_commander' %}
-                            <span class="badge badge-bluegray"><i class="fas fa-user-cog"></i> Station Commander</span>
-                            {% elif user.profile.role == 'traffic_officer' %}
-                            <span class="badge badge-secondary"><i class="fas fa-traffic-light"></i> Traffic Officer</span>
-                            {% elif user.profile.role == 'data_encoder' %}
-                            <span class="badge badge-secondary"><i class="fas fa-keyboard"></i> Data Encoder</span>
-                            {% endif %}
-                        {% endif %}
-                    </div>
+                    {% if user.is_active %}
+                    <span class="badge badge-success" id="status-badge-{{ user.id }}"><i class="fas fa-check-circle"></i> Active</span>
+                    {% else %}
+                    <span class="badge badge-danger" id="status-badge-{{ user.id }}"><i class="fas fa-times-circle"></i> Inactive</span>
+                    {% endif %}
                 </td>
                 <td>
                     <div style="display: flex; gap: 0.5rem;">
