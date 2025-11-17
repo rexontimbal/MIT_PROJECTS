@@ -430,7 +430,8 @@ def user_toggle_active(request, user_id):
         user.save()
 
         status = 'activated' if user.is_active else 'deactivated'
-        messages.success(request, f'User {user.username} {status} successfully!')
+        # Note: Don't use messages.success() here since this is AJAX
+        # The frontend JavaScript handles the notification display
 
         log_user_action(
             request=request,
