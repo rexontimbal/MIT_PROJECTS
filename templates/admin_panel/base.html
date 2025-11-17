@@ -173,12 +173,19 @@
         }
 
         .admin-navbar-profile {
+            position: relative;
             display: flex;
             align-items: center;
             gap: var(--space-3);
             padding: var(--space-2) var(--space-4);
             background: rgba(255, 255, 255, 0.1);
             border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .admin-navbar-profile:hover {
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .admin-navbar-avatar {
@@ -212,6 +219,104 @@
         .admin-navbar-role {
             font-size: 0.75rem;
             color: rgba(255, 255, 255, 0.8);
+        }
+
+        .admin-dropdown-arrow {
+            font-size: 0.65rem;
+            color: var(--white);
+            margin-left: var(--space-2);
+            transition: transform var(--transition-fast);
+        }
+
+        .admin-navbar-profile.active .admin-dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Admin Profile Dropdown Menu */
+        .admin-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 0.75rem);
+            right: 0;
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            min-width: 240px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all var(--transition-fast);
+            z-index: 1000;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .admin-navbar-profile.active .admin-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .admin-dropdown-header {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .admin-dropdown-header-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--pnp-blue);
+            margin-bottom: 0.25rem;
+        }
+
+        .admin-dropdown-header-rank {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .admin-dropdown-header-badge {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+
+        .admin-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--gray-700);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            border-left: 3px solid transparent;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .admin-dropdown-item:hover {
+            background: var(--gray-50);
+            color: var(--pnp-blue);
+            border-left-color: var(--pnp-blue);
+        }
+
+        .admin-dropdown-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .admin-dropdown-divider {
+            height: 1px;
+            background: rgba(0,0,0,0.1);
+            margin: 0.5rem 0;
+        }
+
+        .admin-dropdown-item.logout {
+            color: var(--danger);
+        }
+
+        .admin-dropdown-item.logout:hover {
+            background: #FEF2F2;
+            color: #DC2626;
+            border-left-color: var(--danger);
         }
 
         /* ============================================
@@ -1112,7 +1217,7 @@
                     <i class="fas fa-arrow-left"></i>
                     <span>Main Site</span>
                 </a>
-                <div class="admin-navbar-profile">
+                <div class="admin-navbar-profile" id="adminProfileDropdown" onclick="toggleAdminDropdown()">
                     {% if user.profile and user.profile.profile_picture %}
                     <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="admin-navbar-avatar">
                     {% else %}
@@ -1125,6 +1230,42 @@
                         {% if user.profile %}
                         <p class="admin-navbar-role">{{ user.profile.get_role_display }}</p>
                         {% endif %}
+                    </div>
+                    <i class="fas fa-chevron-down admin-dropdown-arrow"></i>
+
+                    <!-- Dropdown Menu -->
+                    <div class="admin-dropdown-menu">
+                        <div class="admin-dropdown-header">
+                            <div class="admin-dropdown-header-name">{{ user.get_full_name|default:user.username }}</div>
+                            <div class="admin-dropdown-header-rank">
+                                {% if user.profile %}
+                                    <i class="fas fa-id-badge"></i>
+                                    {{ user.profile.get_rank_display }}
+                                {% endif %}
+                            </div>
+                            {% if user.profile.badge_number %}
+                            <div class="admin-dropdown-header-badge">Badge: {{ user.profile.badge_number }}</div>
+                            {% endif %}
+                        </div>
+
+                        <a href="{% url 'profile' %}" class="admin-dropdown-item">
+                            <i class="fas fa-user"></i>
+                            <span>My Profile</span>
+                        </a>
+
+                        {% if user.is_superuser %}
+                        <a href="/admin/" class="admin-dropdown-item" target="_blank">
+                            <i class="fas fa-tools"></i>
+                            <span>Django Admin</span>
+                        </a>
+                        {% endif %}
+
+                        <div class="admin-dropdown-divider"></div>
+
+                        <a href="{% url 'logout' %}" class="admin-dropdown-item logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -1194,23 +1335,6 @@
                     </a>
                 </li>
 
-                <div class="admin-nav-divider"></div>
-
-                {% if user.is_staff %}
-                <li class="admin-nav-item">
-                    <a href="/admin/" class="admin-nav-link" target="_blank">
-                        <i class="fas fa-tools"></i>
-                        <span>Django Admin</span>
-                    </a>
-                </li>
-                {% endif %}
-
-                <li class="admin-nav-item">
-                    <a href="{% url 'logout' %}" class="admin-nav-link">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </a>
-                </li>
             </ul>
         </aside>
 
@@ -1393,6 +1517,24 @@
                     sidebarOverlay.classList.remove('active');
                 }
             });
+        });
+
+        // =========================================
+        // ADMIN PROFILE DROPDOWN
+        // =========================================
+        function toggleAdminDropdown() {
+            const dropdown = document.getElementById('adminProfileDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('adminProfileDropdown');
+            const isClickInside = dropdown && dropdown.contains(event.target);
+
+            if (!isClickInside && dropdown && dropdown.classList.contains('active')) {
+                dropdown.classList.remove('active');
+            }
         });
 
         // =========================================
