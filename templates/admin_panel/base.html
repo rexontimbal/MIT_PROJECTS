@@ -1918,34 +1918,28 @@
 
             // Validate form
             if (!newPassword || !confirmPassword) {
-                alert('Please fill in all fields');
+                showCenterNotification('Please fill in all fields', 'warning', 4000);
                 return;
             }
 
             if (newPassword.length < 8) {
-                alert('Password must be at least 8 characters long');
+                showCenterNotification('Password must be at least 8 characters long', 'warning', 4000);
                 return;
             }
 
             if (newPassword !== confirmPassword) {
-                alert('Passwords do not match');
+                showCenterNotification('Passwords do not match', 'error', 4000);
                 return;
             }
 
             // Close reset modal first
             closeResetPasswordModal();
 
-            // Show password confirmation modal
+            // Wait for modal close animation, then open password confirmation
             setTimeout(() => {
-                const modal = document.getElementById('passwordModal');
-                const modalTitle = modal.querySelector('.modal-title');
-                const modalBody = modal.querySelector('.modal-body p');
-
-                modalTitle.innerHTML = '<i class="fas fa-shield-alt"></i> Confirm Your Password';
-                modalBody.textContent = 'To reset this user\'s password, please confirm your own password first.';
-
-                // Set pending action to actually reset the password
-                pendingAction = function() {
+                // Define the action to execute after password confirmation
+                const resetAction = function() {
+                    console.log('DEBUG: Executing password reset for user ID:', resetTargetUserId);
                     // Send password reset request
                     fetch('{% url "admin_panel:user_reset_password" user_id=0 %}'.replace('0', resetTargetUserId), {
                         method: 'POST',
@@ -1984,9 +1978,20 @@
                     });
                 };
 
-                modal.style.display = 'flex';
-                setTimeout(() => modal.classList.add('active'), 10);
-                document.getElementById('confirmPassword').focus();
+                // Use the openPasswordModal helper function
+                openPasswordModal(resetAction, null);
+
+                // Update modal text for password reset context
+                const modal = document.getElementById('passwordModal');
+                const modalTitle = modal.querySelector('.modal-title');
+                const modalBody = modal.querySelector('.modal-body .alert');
+
+                if (modalTitle) {
+                    modalTitle.innerHTML = '<i class="fas fa-shield-alt"></i> Confirm Your Password';
+                }
+                if (modalBody) {
+                    modalBody.innerHTML = '<i class="fas fa-shield-alt"></i> To reset this user\'s password, please confirm your own password first.';
+                }
             }, 400);
         }
 
