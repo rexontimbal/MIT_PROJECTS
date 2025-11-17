@@ -1578,8 +1578,12 @@
         let pendingForm = null;
 
         function openPasswordModal(action, form) {
+            console.log('DEBUG: openPasswordModal called with action:', action, 'form:', form);
             pendingAction = action;
             pendingForm = form;
+            console.log('DEBUG: Set pendingAction to:', pendingAction);
+            console.log('DEBUG: Set pendingForm to:', pendingForm);
+
             const modal = document.getElementById('passwordModal');
             const passwordInput = document.getElementById('confirmPassword');
             const errorDiv = document.getElementById('passwordError');
@@ -1604,6 +1608,7 @@
 
             // Focus password input
             setTimeout(() => passwordInput.focus(), 100);
+            console.log('DEBUG: Password modal opened and displayed');
         }
 
         function closePasswordModal() {
@@ -1621,11 +1626,15 @@
             const errorDiv = document.getElementById('passwordError');
             const errorText = document.getElementById('passwordErrorText');
 
+            console.log('DEBUG: confirmPassword called');
+
             if (!password) {
                 errorDiv.style.display = 'flex';
                 errorText.textContent = 'Please enter your password';
                 return;
             }
+
+            console.log('DEBUG: Verifying password via AJAX...');
 
             // Verify password via AJAX
             fetch('{% url "admin_panel:verify_password" %}', {
@@ -1638,16 +1647,25 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log('DEBUG: Password verification response:', data);
                 if (data.valid) {
                     // Password correct, proceed with action
+                    console.log('DEBUG: Password valid, closing modal and submitting form');
+                    console.log('DEBUG: pendingAction:', pendingAction);
+                    console.log('DEBUG: pendingForm:', pendingForm);
                     closePasswordModal();
                     if (pendingAction) {
+                        console.log('DEBUG: Executing pendingAction');
                         pendingAction();
                     } else if (pendingForm) {
+                        console.log('DEBUG: Submitting pendingForm');
                         pendingForm.submit();
+                    } else {
+                        console.log('DEBUG: WARNING - No pendingAction or pendingForm to execute!');
                     }
                 } else {
                     // Password incorrect
+                    console.log('DEBUG: Password invalid');
                     errorDiv.style.display = 'flex';
                     errorText.textContent = 'Incorrect password. Please try again.';
                     document.getElementById('confirmPassword').value = '';
@@ -1655,7 +1673,7 @@
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('DEBUG: Password verification error:', error);
                 errorDiv.style.display = 'flex';
                 errorText.textContent = 'An error occurred. Please try again.';
             });
@@ -1689,9 +1707,11 @@
 
         function handleSuperuserSubmit(event, form, formId) {
             event.preventDefault();
+            console.log('DEBUG: handleSuperuserSubmit called for form:', formId);
 
             // Check if editing a superuser account (check if isSuperuser variable exists)
             const editingSuperuser = typeof isSuperuser !== 'undefined' && isSuperuser === true;
+            console.log('DEBUG: editingSuperuser:', editingSuperuser, 'isSuperuser:', typeof isSuperuser !== 'undefined' ? isSuperuser : 'undefined');
 
             // Check if username was changed
             const usernameInput = document.getElementById('username');
@@ -1701,12 +1721,14 @@
                 const originalUsername = usernameInput.getAttribute('data-original');
                 const currentUsername = usernameInput.value;
                 usernameChanged = (originalUsername !== currentUsername);
+                console.log('DEBUG: Username changed:', usernameChanged, 'from', originalUsername, 'to', currentUsername);
 
                 // If username changed, update action
                 if (usernameChanged) {
                     const actionInput = form.querySelector('input[name="action"]');
                     if (actionInput) {
                         actionInput.value = 'update_username';
+                        console.log('DEBUG: Updated action to update_username');
                     }
                 }
             }
@@ -1715,11 +1737,13 @@
             // 1. Editing a superuser account, OR
             // 2. Username was changed
             if (editingSuperuser || usernameChanged) {
+                console.log('DEBUG: Opening password modal, setting pendingForm');
                 openPasswordModal(null, form);
                 return false;
             }
 
             // Otherwise, submit normally
+            console.log('DEBUG: Submitting form normally (no password required)');
             form.submit();
             return false;
         }
