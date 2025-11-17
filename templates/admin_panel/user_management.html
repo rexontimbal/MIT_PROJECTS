@@ -214,14 +214,243 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-function toggleUserActive(userId, username, isActive) {
-    const action = isActive ? 'deactivate' : 'activate';
-    const confirmMsg = `Are you sure you want to ${action} user "${username}"?`;
+<style>
+/* Confirmation Modal Styles */
+.confirm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 80px;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
 
-    if (!confirm(confirmMsg)) {
+.confirm-modal-overlay.show {
+    opacity: 1;
+}
+
+.confirm-modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 450px;
+    width: 90%;
+    transform: translateY(-30px);
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    overflow: hidden;
+}
+
+.confirm-modal-overlay.show .confirm-modal {
+    transform: translateY(0);
+}
+
+.confirm-modal-header {
+    padding: 24px;
+    background: linear-gradient(135deg, #003087 0%, #0047AB 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.confirm-modal-header i {
+    font-size: 24px;
+}
+
+.confirm-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.confirm-modal-body {
+    padding: 24px;
+}
+
+.confirm-modal-body p {
+    margin: 0 0 8px 0;
+    color: #374151;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.confirm-modal-user {
+    background: #F3F4F6;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.confirm-modal-user i {
+    color: #003087;
+    font-size: 18px;
+}
+
+.confirm-modal-user strong {
+    color: #003087;
+    font-size: 16px;
+}
+
+.confirm-modal-footer {
+    padding: 16px 24px;
+    background: #F9FAFB;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    border-top: 1px solid #E5E7EB;
+}
+
+.confirm-modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.confirm-modal-btn-cancel {
+    background: white;
+    color: #6B7280;
+    border: 1px solid #D1D5DB;
+}
+
+.confirm-modal-btn-cancel:hover {
+    background: #F9FAFB;
+    border-color: #9CA3AF;
+}
+
+.confirm-modal-btn-confirm {
+    background: #EF4444;
+    color: white;
+}
+
+.confirm-modal-btn-confirm:hover {
+    background: #DC2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.confirm-modal-btn-confirm.activate {
+    background: #10B981;
+}
+
+.confirm-modal-btn-confirm.activate:hover {
+    background: #059669;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+</style>
+
+<script>
+// Custom confirmation modal
+function showConfirmModal(options) {
+    return new Promise((resolve) => {
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'confirm-modal-overlay';
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.className = 'confirm-modal';
+
+        const actionClass = options.isActivate ? 'activate' : '';
+        const actionIcon = options.isActivate ? 'fa-check-circle' : 'fa-exclamation-triangle';
+
+        modal.innerHTML = `
+            <div class="confirm-modal-header">
+                <i class="fas ${actionIcon}"></i>
+                <h3>${options.title}</h3>
+            </div>
+            <div class="confirm-modal-body">
+                <p>${options.message}</p>
+                <div class="confirm-modal-user">
+                    <i class="fas fa-user-circle"></i>
+                    <strong>${options.username}</strong>
+                </div>
+            </div>
+            <div class="confirm-modal-footer">
+                <button class="confirm-modal-btn confirm-modal-btn-cancel" onclick="closeConfirmModal(false)">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button class="confirm-modal-btn confirm-modal-btn-confirm ${actionClass}" onclick="closeConfirmModal(true)">
+                    <i class="fas ${options.isActivate ? 'fa-check' : 'fa-ban'}"></i>
+                    ${options.confirmText}
+                </button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            overlay.classList.add('show');
+        });
+
+        // Store resolve function globally
+        window.confirmModalResolve = resolve;
+
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                closeConfirmModal(false);
+            }
+        });
+    });
+}
+
+function closeConfirmModal(confirmed) {
+    const overlay = document.querySelector('.confirm-modal-overlay');
+    if (overlay) {
+        overlay.classList.remove('show');
+        setTimeout(() => {
+            overlay.remove();
+            if (window.confirmModalResolve) {
+                window.confirmModalResolve(confirmed);
+                window.confirmModalResolve = null;
+            }
+        }, 300);
+    }
+}
+
+async function toggleUserActive(userId, username, isActive) {
+    const action = isActive ? 'deactivate' : 'activate';
+    const actionTitle = isActive ? 'Deactivate User' : 'Activate User';
+    const actionMessage = isActive
+        ? 'This will prevent the user from logging in and accessing the system.'
+        : 'This will allow the user to log in and access the system.';
+
+    const confirmed = await showConfirmModal({
+        title: actionTitle,
+        message: actionMessage,
+        username: username,
+        confirmText: action.charAt(0).toUpperCase() + action.slice(1),
+        isActivate: !isActive
+    });
+
+    if (!confirmed) {
         return;
     }
+
+    // Get CSRF token
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                     document.querySelector('[name=csrf-token]')?.content;
 
     fetch(`/admin-panel/users/${userId}/toggle-active/`, {
         method: 'POST',
