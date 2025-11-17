@@ -1364,7 +1364,74 @@
         });
 
         // =========================================
-        // MODERN NOTIFICATION SYSTEM
+        // CENTERED NOTIFICATION SYSTEM (NEW)
+        // =========================================
+        function showCenterNotification(message, type = 'success', duration = 4000) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%) translateY(-100px);
+                z-index: 10001;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 15px;
+                font-weight: 500;
+                min-width: 320px;
+                max-width: 500px;
+                opacity: 0;
+                transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                color: white;
+            `;
+
+            // Set background based on type
+            const gradients = {
+                success: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                warning: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                error: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                info: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+            };
+
+            const icons = {
+                success: 'fa-check-circle',
+                warning: 'fa-exclamation-circle',
+                error: 'fa-times-circle',
+                info: 'fa-info-circle'
+            };
+
+            notification.style.background = gradients[type] || gradients.success;
+
+            notification.innerHTML = `
+                <i class="fas ${icons[type] || icons.success}" style="font-size: 20px;"></i>
+                <div style="flex: 1;">${message}</div>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                notification.style.transform = 'translateX(-50%) translateY(0)';
+                notification.style.opacity = '1';
+            });
+
+            // Auto remove after duration
+            setTimeout(() => {
+                notification.style.transform = 'translateX(-50%) translateY(-100px)';
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.remove();
+                }, 400);
+            }, duration);
+        }
+
+        // =========================================
+        // MODERN NOTIFICATION SYSTEM (SIDE - LEGACY)
         // =========================================
         function showNotification(message, type = 'success', duration = 4000) {
             const container = document.getElementById('notificationContainer');
@@ -1811,13 +1878,13 @@
                     .then(data => {
                         if (data.success) {
                             // Show success notification
-                            showNotification(
+                            showCenterNotification(
                                 'Password reset successfully! User must change password on next login.',
                                 'success',
                                 5000
                             );
                         } else {
-                            showNotification(
+                            showCenterNotification(
                                 data.error || 'Failed to reset password',
                                 'error',
                                 6000
@@ -1826,7 +1893,7 @@
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        showNotification(
+                        showCenterNotification(
                             'An error occurred while resetting the password',
                             'error',
                             6000
@@ -1858,13 +1925,13 @@
         });
 
         // =========================================
-        // DJANGO MESSAGES TO NOTIFICATIONS
+        // DJANGO MESSAGES TO CENTERED NOTIFICATIONS
         // =========================================
         document.addEventListener('DOMContentLoaded', function() {
-            // Get Django messages from template
+            // Get Django messages from template and show in center
             {% if messages %}
                 {% for message in messages %}
-                    showNotification(
+                    showCenterNotification(
                         "{{ message|escapejs }}",
                         "{{ message.tags|default:'info' }}",
                         5000
