@@ -323,6 +323,14 @@ def user_create(request):
         first_name = request.POST.get('first_name', '')
         last_name = request.POST.get('last_name', '')
 
+        # Debug: Log if profile picture is in request
+        has_picture = 'profile_picture' in request.FILES
+        if has_picture:
+            file_info = request.FILES['profile_picture']
+            print(f"DEBUG: Profile picture received - Name: {file_info.name}, Size: {file_info.size} bytes")
+        else:
+            print("DEBUG: No profile picture in request.FILES")
+
         # Validate passwords match
         if password != confirm_password:
             messages.error(request, 'Passwords do not match! Please try again.')
@@ -359,8 +367,38 @@ def user_create(request):
 
         # Handle profile picture upload
         if 'profile_picture' in request.FILES:
-            profile.profile_picture = request.FILES['profile_picture']
-            profile.save()
+            try:
+                import os
+                from django.conf import settings
+
+                # Ensure media directories exist
+                media_root = settings.MEDIA_ROOT
+                profile_pics_dir = os.path.join(media_root, 'profile_pictures')
+                os.makedirs(profile_pics_dir, exist_ok=True)
+
+                uploaded_file = request.FILES['profile_picture']
+                profile.profile_picture = uploaded_file
+                profile.save()
+
+                print(f"DEBUG: Profile picture saved successfully to {profile.profile_picture.path}")
+
+                log_user_action(
+                    request=request,
+                    action='profile_picture_upload',
+                    description=f'Uploaded profile picture for new user: {username} (Size: {uploaded_file.size} bytes)',
+                    severity='info'
+                )
+            except Exception as e:
+                # Log the error but don't fail user creation
+                print(f"DEBUG: Profile picture upload failed - {str(e)}")
+                log_user_action(
+                    request=request,
+                    action='profile_picture_upload',
+                    description=f'Failed to upload profile picture for user {username}: {str(e)}',
+                    severity='warning',
+                    success=False
+                )
+                messages.warning(request, f'User created but profile picture upload failed: {str(e)}')
 
         # Automatically set permissions based on role
         if profile.role == 'super_admin':
