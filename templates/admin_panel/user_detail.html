@@ -363,13 +363,31 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
-                        <label class="form-label" for="mobile_number">Mobile Number</label>
-                        <input type="text" name="mobile_number" id="mobile_number" class="form-control" value="{{ profile.mobile_number }}">
+                        <label class="form-label" for="mobile_number">
+                            Mobile Number
+                            <small style="color: var(--text-light); font-weight: 400;">(Format: 63+XXXXXXXXXX)</small>
+                        </label>
+                        <input type="text"
+                               name="mobile_number"
+                               id="mobile_number"
+                               class="form-control"
+                               value="{{ profile.mobile_number }}"
+                               placeholder="63+9XXXXXXXXX"
+                               maxlength="13">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="phone_number">Phone Number</label>
-                        <input type="text" name="phone_number" id="phone_number" class="form-control" value="{{ profile.phone_number }}">
+                        <label class="form-label" for="phone_number">
+                            Phone Number
+                            <small style="color: var(--text-light); font-weight: 400;">(Format: 63+XXXXXXXXXX)</small>
+                        </label>
+                        <input type="text"
+                               name="phone_number"
+                               id="phone_number"
+                               class="form-control"
+                               value="{{ profile.phone_number }}"
+                               placeholder="63+9XXXXXXXXX"
+                               maxlength="13">
                     </div>
                 </div>
 
@@ -671,6 +689,152 @@ function handleDrop(event) {
 
         showNotification('Image selected! Click "Save Basic Info" to upload.', 'success', 4000);
     }
+}
+
+// =========================================
+// PHILIPPINE PHONE NUMBER FORMATTING
+// =========================================
+function formatPhilippineNumber(input) {
+    let value = input.value;
+
+    // Remove all non-digit characters except + at the beginning
+    let digitsOnly = value.replace(/[^\d+]/g, '');
+
+    // If user clears the field, set to '63+'
+    if (!digitsOnly || digitsOnly === '') {
+        input.value = '63+';
+        return;
+    }
+
+    // If user types without 63+, add it
+    if (!digitsOnly.startsWith('63+')) {
+        if (digitsOnly.startsWith('63')) {
+            // User typed 63 without +, add the +
+            digitsOnly = '63+' + digitsOnly.substring(2);
+        } else if (digitsOnly.startsWith('0')) {
+            // User typed 0 (like 09123456789), convert to 63+9123456789
+            digitsOnly = '63+' + digitsOnly.substring(1);
+        } else if (digitsOnly.startsWith('+63')) {
+            // User typed +63, convert to 63+
+            digitsOnly = '63+' + digitsOnly.substring(3);
+        } else {
+            // User typed other numbers, prepend 63+
+            digitsOnly = '63+' + digitsOnly;
+        }
+    }
+
+    // Extract the prefix and the actual number
+    let prefix = '63+';
+    let numberPart = digitsOnly.substring(3); // Get everything after '63+'
+
+    // Remove any non-digit characters from numberPart
+    numberPart = numberPart.replace(/\D/g, '');
+
+    // Limit to 10 digits after '63+'
+    if (numberPart.length > 10) {
+        numberPart = numberPart.substring(0, 10);
+    }
+
+    // Set the formatted value
+    input.value = prefix + numberPart;
+}
+
+// Apply to mobile number field
+const mobileNumberInput = document.getElementById('mobile_number');
+if (mobileNumberInput) {
+    // Initialize with 63+ if empty
+    if (!mobileNumberInput.value || mobileNumberInput.value.trim() === '') {
+        mobileNumberInput.value = '63+';
+    } else {
+        // Format existing value
+        formatPhilippineNumber(mobileNumberInput);
+    }
+
+    // Format on input
+    mobileNumberInput.addEventListener('input', function() {
+        formatPhilippineNumber(this);
+    });
+
+    // Prevent deletion of '63+' prefix
+    mobileNumberInput.addEventListener('keydown', function(e) {
+        const cursorPos = this.selectionStart;
+        const value = this.value;
+
+        // Prevent backspace/delete if cursor is at position 0-3 (within '63+')
+        if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPos <= 3) {
+            e.preventDefault();
+        }
+
+        // Prevent cursor from moving before position 3
+        setTimeout(() => {
+            if (this.selectionStart < 3) {
+                this.setSelectionRange(3, 3);
+            }
+        }, 0);
+    });
+
+    // Prevent cursor from being placed before '63+'
+    mobileNumberInput.addEventListener('click', function() {
+        if (this.selectionStart < 3) {
+            this.setSelectionRange(3, 3);
+        }
+    });
+
+    // Focus at the end when field is focused
+    mobileNumberInput.addEventListener('focus', function() {
+        setTimeout(() => {
+            this.setSelectionRange(this.value.length, this.value.length);
+        }, 0);
+    });
+}
+
+// Apply to phone number field
+const phoneNumberInput = document.getElementById('phone_number');
+if (phoneNumberInput) {
+    // Initialize with 63+ if empty
+    if (!phoneNumberInput.value || phoneNumberInput.value.trim() === '') {
+        phoneNumberInput.value = '63+';
+    } else {
+        // Format existing value
+        formatPhilippineNumber(phoneNumberInput);
+    }
+
+    // Format on input
+    phoneNumberInput.addEventListener('input', function() {
+        formatPhilippineNumber(this);
+    });
+
+    // Prevent deletion of '63+' prefix
+    phoneNumberInput.addEventListener('keydown', function(e) {
+        const cursorPos = this.selectionStart;
+        const value = this.value;
+
+        // Prevent backspace/delete if cursor is at position 0-3 (within '63+')
+        if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPos <= 3) {
+            e.preventDefault();
+        }
+
+        // Prevent cursor from moving before position 3
+        setTimeout(() => {
+            if (this.selectionStart < 3) {
+                this.setSelectionRange(3, 3);
+            }
+        }, 0);
+    });
+
+    // Prevent cursor from being placed before '63+'
+    phoneNumberInput.addEventListener('click', function() {
+        if (this.selectionStart < 3) {
+            this.setSelectionRange(3, 3);
+        }
+    });
+
+    // Focus at the end when field is focused
+    phoneNumberInput.addEventListener('focus', function() {
+        setTimeout(() => {
+            this.setSelectionRange(this.value.length, this.value.length);
+        }, 0);
+    });
 }
 
 // =========================================
