@@ -1367,6 +1367,8 @@
         // CENTERED NOTIFICATION SYSTEM (NEW)
         // =========================================
         function showCenterNotification(message, type = 'success', duration = 4000) {
+            console.log(`DEBUG: showCenterNotification called - Message: "${message}", Type: "${type}"`);
+
             // Create notification element
             const notification = document.createElement('div');
             notification.style.cssText = `
@@ -1413,11 +1415,13 @@
             `;
 
             document.body.appendChild(notification);
+            console.log('DEBUG: Notification element added to DOM');
 
             // Animate in
             requestAnimationFrame(() => {
                 notification.style.transform = 'translateX(-50%) translateY(0)';
                 notification.style.opacity = '1';
+                console.log('DEBUG: Notification animated in');
             });
 
             // Auto remove after duration
@@ -1426,6 +1430,7 @@
                 notification.style.opacity = '0';
                 setTimeout(() => {
                     notification.remove();
+                    console.log('DEBUG: Notification removed from DOM');
                 }, 400);
             }, duration);
         }
@@ -1939,14 +1944,19 @@
         // =========================================
         document.addEventListener('DOMContentLoaded', function() {
             // Get Django messages from template and show in center
+            console.log('DEBUG: Checking for Django messages...');
             {% if messages %}
+                console.log('DEBUG: Found Django messages, displaying...');
                 {% for message in messages %}
+                    console.log('DEBUG: Message - Type: "{{ message.tags|default:'info' }}", Text: "{{ message|escapejs }}"');
                     showCenterNotification(
                         "{{ message|escapejs }}",
                         "{{ message.tags|default:'info' }}",
                         5000
                     );
                 {% endfor %}
+            {% else %}
+                console.log('DEBUG: No Django messages to display');
             {% endif %}
         });
     </script>
