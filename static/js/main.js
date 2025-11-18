@@ -4,7 +4,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     const navbarMenu = document.querySelector('.navbar-menu');
-    
+
     if (mobileMenuToggle) {
         mobileMenuToggle.addEventListener('click', function() {
             navbarMenu.classList.toggle('active');
@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => alert.remove(), 300);
         }, 5000);
     });
+
+    initializePopupNotifications();
 });
 
 // ===== UTILITY FUNCTIONS =====
@@ -125,6 +127,111 @@ function createMessagesContainer() {
     const mainContent = document.querySelector('.main-content');
     mainContent.insertBefore(container, mainContent.firstChild);
     return container;
+}
+
+// Modern popup notifications
+function getPopupContainer() {
+    let container = document.querySelector('.popup-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'popup-container';
+        container.setAttribute('role', 'status');
+        container.setAttribute('aria-live', 'polite');
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
+function showPopupNotification(message, type = 'info') {
+    const container = getPopupContainer();
+    const normalizedMessage = (message || '').toString().trim();
+    if (!normalizedMessage) return null;
+
+    const normalizedType = ['success', 'warning', 'error', 'info'].includes(type) ? type : 'info';
+
+    // Avoid duplicates showing at the same time
+    const existing = Array.from(container.children).find(
+        node => node.dataset.message === normalizedMessage && node.dataset.type === normalizedType
+    );
+
+    if (existing) {
+        existing.classList.remove('show');
+        // Trigger reflow to restart animation
+        void existing.offsetWidth;
+        existing.classList.add('show');
+        return existing;
+    }
+
+    const icons = {
+        success: '✓',
+        error: '✕',
+        warning: '⚠',
+        info: 'ℹ'
+    };
+
+    const titles = {
+        success: 'Success',
+        error: 'Error',
+        warning: 'Heads up',
+        info: 'Notice'
+    };
+
+    const popup = document.createElement('div');
+    popup.className = `popup-notification ${normalizedType}`;
+    popup.dataset.type = normalizedType;
+    popup.dataset.message = normalizedMessage;
+    popup.innerHTML = `
+        <div class="popup-icon">${icons[normalizedType]}</div>
+        <div class="popup-content">
+            <div class="popup-title">${titles[normalizedType]}</div>
+            <div class="popup-message">${normalizedMessage}</div>
+        </div>
+        <button class="popup-close" aria-label="Dismiss notification">×</button>
+    `;
+
+    const close = () => {
+        popup.classList.remove('show');
+        setTimeout(() => popup.remove(), 250);
+    };
+
+    popup.querySelector('.popup-close').addEventListener('click', close);
+    container.appendChild(popup);
+
+    // Animate in after insertion
+    requestAnimationFrame(() => popup.classList.add('show'));
+
+    // Auto-dismiss
+    setTimeout(close, 5000);
+
+    return popup;
+}
+
+function initializePopupNotifications() {
+    const severityWeight = { error: 3, warning: 2, success: 1, info: 0 };
+    const normalizeType = (rawType) => {
+        const type = (rawType || '').toLowerCase();
+        return ['success', 'warning', 'error', 'info'].includes(type) ? type : 'info';
+    };
+
+    const messageNodes = Array.from(document.querySelectorAll('[data-popup-message]'));
+    const dedupedMessages = new Map();
+
+    messageNodes.forEach(node => {
+        const text = (node.dataset.popupMessage || '').trim();
+        if (!text) return;
+
+        const normalizedType = normalizeType(node.dataset.popupType);
+        const existingType = dedupedMessages.get(text);
+
+        // Keep the highest severity message if duplicates exist
+        if (!existingType || severityWeight[normalizedType] > severityWeight[existingType]) {
+            dedupedMessages.set(text, normalizedType);
+        }
+    });
+
+    dedupedMessages.forEach((type, message) => {
+        showPopupNotification(message, type);
+    });
 }
 
 // ===== FORM VALIDATION =====
