@@ -767,8 +767,8 @@ def change_password(request):
             request.user.profile.password_changed_at = timezone.now()
             request.user.profile.save()
 
-            # Refresh the profile to ensure changes are reflected
-            request.user.refresh_from_db()
+            # Refresh the profile to ensure changes are reflected immediately
+            request.user.profile.refresh_from_db()
 
         # Keep user logged in after password change
         update_session_auth_hash(request, request.user)
@@ -1662,8 +1662,8 @@ def change_password_api(request):
             request.user.profile.password_changed_at = timezone.now()
             request.user.profile.save()
 
-            # Refresh the profile to ensure changes are reflected
-            request.user.refresh_from_db()
+            # Refresh the profile to ensure changes are reflected immediately
+            request.user.profile.refresh_from_db()
 
         # Update session to prevent logout
         update_session_auth_hash(request, request.user)
