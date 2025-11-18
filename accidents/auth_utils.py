@@ -55,7 +55,9 @@ def pnp_login_required(view_func):
             messages.error(request, 'Your account is not properly configured. Please contact administrator.')
             return redirect('login')
 
+        # Reload profile from database to ensure we have the latest data
         profile = request.user.profile
+        profile.refresh_from_db()
 
         # Check if account is active
         if not profile.is_active:

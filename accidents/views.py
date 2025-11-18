@@ -758,23 +758,20 @@ def change_password(request):
             messages.error(request, 'Password must be at least 8 characters long.')
             return redirect('change_password')
 
-        # Update password
-        request.user.set_password(new_password)
-        request.user.save()
+        # Use atomic transaction to ensure changes are committed before redirect
+        with transaction.atomic():
+            # Update password
+            request.user.set_password(new_password)
+            request.user.save()
 
-        # Update profile and ensure database commit
-        if hasattr(request.user, 'profile'):
-            profile = request.user.profile
-            profile.must_change_password = False
-            profile.password_changed_at = timezone.now()
-            profile.save()
+            # Update profile
+            if hasattr(request.user, 'profile'):
+                profile = request.user.profile
+                profile.must_change_password = False
+                profile.password_changed_at = timezone.now()
+                profile.save()
 
-            # Force database commit to ensure changes are visible to next request
-            transaction.commit()
-
-            # Clear any cached profile data
-            if hasattr(request.user, '_profile_cache'):
-                delattr(request.user, '_profile_cache')
+        # Transaction is now committed - changes are in database
 
         # Keep user logged in after password change
         update_session_auth_hash(request, request.user)
@@ -1658,23 +1655,20 @@ def change_password_api(request):
         except ValidationError as e:
             return JsonResponse({'success': False, 'error': '; '.join(e.messages)}, status=400)
 
-        # Update password
-        request.user.set_password(new_password1)
-        request.user.save()
+        # Use atomic transaction to ensure changes are committed
+        with transaction.atomic():
+            # Update password
+            request.user.set_password(new_password1)
+            request.user.save()
 
-        # Update profile - mark password as changed and ensure database commit
-        if hasattr(request.user, 'profile'):
-            profile = request.user.profile
-            profile.must_change_password = False
-            profile.password_changed_at = timezone.now()
-            profile.save()
+            # Update profile - mark password as changed
+            if hasattr(request.user, 'profile'):
+                profile = request.user.profile
+                profile.must_change_password = False
+                profile.password_changed_at = timezone.now()
+                profile.save()
 
-            # Force database commit to ensure changes are visible to next request
-            transaction.commit()
-
-            # Clear any cached profile data
-            if hasattr(request.user, '_profile_cache'):
-                delattr(request.user, '_profile_cache')
+        # Transaction is now committed - changes are in database
 
         # Update session to prevent logout
         update_session_auth_hash(request, request.user)
