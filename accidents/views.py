@@ -4,6 +4,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncMonth, ExtractWeekDay
+from django.db import transaction
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
@@ -761,14 +762,19 @@ def change_password(request):
         request.user.set_password(new_password)
         request.user.save()
 
-        # Update profile
+        # Update profile and ensure database commit
         if hasattr(request.user, 'profile'):
-            request.user.profile.must_change_password = False
-            request.user.profile.password_changed_at = timezone.now()
-            request.user.profile.save()
+            profile = request.user.profile
+            profile.must_change_password = False
+            profile.password_changed_at = timezone.now()
+            profile.save()
 
-            # Refresh the profile to ensure changes are reflected immediately
-            request.user.profile.refresh_from_db()
+            # Force database commit to ensure changes are visible to next request
+            transaction.commit()
+
+            # Clear any cached profile data
+            if hasattr(request.user, '_profile_cache'):
+                delattr(request.user, '_profile_cache')
 
         # Keep user logged in after password change
         update_session_auth_hash(request, request.user)
@@ -1656,14 +1662,19 @@ def change_password_api(request):
         request.user.set_password(new_password1)
         request.user.save()
 
-        # Update profile - mark password as changed
+        # Update profile - mark password as changed and ensure database commit
         if hasattr(request.user, 'profile'):
-            request.user.profile.must_change_password = False
-            request.user.profile.password_changed_at = timezone.now()
-            request.user.profile.save()
+            profile = request.user.profile
+            profile.must_change_password = False
+            profile.password_changed_at = timezone.now()
+            profile.save()
 
-            # Refresh the profile to ensure changes are reflected immediately
-            request.user.profile.refresh_from_db()
+            # Force database commit to ensure changes are visible to next request
+            transaction.commit()
+
+            # Clear any cached profile data
+            if hasattr(request.user, '_profile_cache'):
+                delattr(request.user, '_profile_cache')
 
         # Update session to prevent logout
         update_session_auth_hash(request, request.user)
