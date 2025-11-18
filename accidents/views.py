@@ -767,6 +767,9 @@ def change_password(request):
             request.user.profile.password_changed_at = timezone.now()
             request.user.profile.save()
 
+            # Refresh the profile to ensure changes are reflected
+            request.user.refresh_from_db()
+
         # Keep user logged in after password change
         update_session_auth_hash(request, request.user)
 
@@ -1470,7 +1473,10 @@ def login(request):
             if not remember:
                 request.session.set_expiry(0)  # Expire when browser closes
 
-            messages.success(request, f'Welcome back, {profile.get_full_name_with_rank()}!')
+            # Only show welcome message if user doesn't need to change password
+            # (New users will be redirected to password change by decorator)
+            if not profile.must_change_password:
+                messages.success(request, f'Welcome back, {profile.get_full_name_with_rank()}!')
 
             # Redirect to next page or dashboard
             next_url = request.GET.get('next', 'dashboard')
@@ -1655,6 +1661,9 @@ def change_password_api(request):
             request.user.profile.must_change_password = False
             request.user.profile.password_changed_at = timezone.now()
             request.user.profile.save()
+
+            # Refresh the profile to ensure changes are reflected
+            request.user.refresh_from_db()
 
         # Update session to prevent logout
         update_session_auth_hash(request, request.user)
