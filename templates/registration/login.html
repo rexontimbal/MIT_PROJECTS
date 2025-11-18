@@ -699,16 +699,6 @@
             <h2>Welcome Back</h2>
             <p class="subtitle">Sign in to access the command center</p>
 
-            <!-- Messages -->
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">
-                        <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
-                        <span>{{ message }}</span>
-                    </div>
-                {% endfor %}
-            {% endif %}
-
             <!-- Security Notice -->
             <div class="security-notice">
                 <i class="fas fa-shield-alt"></i>
