@@ -68,29 +68,17 @@
                     <label class="form-label" for="username">
                         Username
                     </label>
-                    <div style="position: relative;">
+                    <div>
                         <input type="text"
                                name="username"
                                id="username"
                                class="form-control"
                                value="{{ target_user.username }}"
                                data-original="{{ target_user.username }}"
-                               {% if not user.is_superuser or user.profile.role != 'super_admin' %}disabled{% endif %}
-                               style="{% if user.is_superuser and user.profile.role == 'super_admin' %}padding-right: 40px;{% endif %}">
-                        {% if user.is_superuser and user.profile.role == 'super_admin' %}
-                        <i class="fas fa-edit"
-                           style="position: absolute;
-                                  right: 12px;
-                                  top: 50%;
-                                  transform: translateY(-50%);
-                                  color: var(--pnp-blue);
-                                  pointer-events: none;
-                                  font-size: 0.875rem;
-                                  opacity: 0.5;"></i>
-                        {% endif %}
+                               {% if not user.is_superuser or user.profile.role != 'super_admin' %}disabled{% endif %}>
                         <small style="color: var(--text-light); display: block; margin-top: var(--space-2);">
                             {% if user.is_superuser and user.profile.role == 'super_admin' %}
-                                Click to edit. Password confirmation will be required when saving changes.
+                                Password confirmation will be required when saving changes.
                             {% else %}
                                 Username editing is restricted to Super Admin accounts only
                             {% endif %}

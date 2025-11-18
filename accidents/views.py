@@ -1591,9 +1591,9 @@ def change_username(request):
 
 @login_required
 @require_http_methods(["POST"])
-def change_password(request):
+def change_password_api(request):
     """
-    Change user password with validation
+    API endpoint for password change from modal
     - Requires current password for security
     - Validates new password strength
     - Updates password and maintains session
@@ -1649,6 +1649,12 @@ def change_password(request):
         # Update password
         request.user.set_password(new_password1)
         request.user.save()
+
+        # Update profile - mark password as changed
+        if hasattr(request.user, 'profile'):
+            request.user.profile.must_change_password = False
+            request.user.profile.password_changed_at = timezone.now()
+            request.user.profile.save()
 
         # Update session to prevent logout
         update_session_auth_hash(request, request.user)

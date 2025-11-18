@@ -96,30 +96,6 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
-    .change-picture-btn {
-        position: absolute;
-        bottom: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: white;
-        color: #003087;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        transition: all 0.2s;
-        white-space: nowrap;
-    }
-
-    .change-picture-btn:hover {
-        background: #f8f9fa;
-        transform: translateX(-50%) translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-    }
-
     /* Profile Info Section */
     .profile-info-section {
         color: white;
@@ -471,9 +447,6 @@
                         <i class="fas fa-shield-alt"></i>
                     </div>
                 </div>
-                <button class="change-picture-btn" onclick="alert('Profile picture change coming soon!')">
-                    <i class="fas fa-camera"></i> Change Photo
-                </button>
             </div>
 
             <!-- Profile Info -->
@@ -1032,7 +1005,7 @@
         submitBtn.disabled = true;
 
         try {
-            const response = await fetch('{% url "change_password" %}', {
+            const response = await fetch('{% url "change_password_api" %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
