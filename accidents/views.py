@@ -1587,3 +1587,89 @@ def change_username(request):
         logger = logging.getLogger(__name__)
         logger.error(f'Error changing username: {str(e)}')
         return JsonResponse({'success': False, 'error': 'An error occurred. Please try again.'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def change_password(request):
+    """
+    Change user password with validation
+    - Requires current password for security
+    - Validates new password strength
+    - Updates password and maintains session
+    - Logs the action
+    """
+    try:
+        # Parse JSON body
+        data = json.loads(request.body)
+        old_password = data.get('old_password', '')
+        new_password1 = data.get('new_password1', '')
+        new_password2 = data.get('new_password2', '')
+
+        # Validate inputs
+        if not old_password or not new_password1 or not new_password2:
+            return JsonResponse({'success': False, 'error': 'All fields are required'}, status=400)
+
+        # Verify current password
+        user = authenticate(username=request.user.username, password=old_password)
+        if user is None:
+            log_user_action(
+                request,
+                'FAILED_PASSWORD_CHANGE',
+                'Failed password change attempt - incorrect current password',
+                severity='warning'
+            )
+            return JsonResponse({'success': False, 'error': 'Current password is incorrect'}, status=403)
+
+        # Validate new passwords match
+        if new_password1 != new_password2:
+            return JsonResponse({'success': False, 'error': 'New passwords do not match'}, status=400)
+
+        # Validate password is not the same as old password
+        if old_password == new_password1:
+            return JsonResponse({'success': False, 'error': 'New password must be different from current password'}, status=400)
+
+        # Validate password length
+        if len(new_password1) < 8:
+            return JsonResponse({'success': False, 'error': 'Password must be at least 8 characters long'}, status=400)
+
+        # Validate password is not entirely numeric
+        if new_password1.isdigit():
+            return JsonResponse({'success': False, 'error': 'Password cannot be entirely numeric'}, status=400)
+
+        # Use Django's password validators for additional security
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError
+
+        try:
+            validate_password(new_password1, user=request.user)
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'error': '; '.join(e.messages)}, status=400)
+
+        # Update password
+        request.user.set_password(new_password1)
+        request.user.save()
+
+        # Update session to prevent logout
+        update_session_auth_hash(request, request.user)
+
+        # Log the action
+        log_user_action(
+            request,
+            'CHANGE_PASSWORD',
+            'Password changed successfully',
+            severity='warning'
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Password changed successfully!'
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Error changing password: {str(e)}')
+        return JsonResponse({'success': False, 'error': 'An error occurred. Please try again.'}, status=500)

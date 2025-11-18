@@ -499,7 +499,7 @@
 
             <!-- Quick Actions -->
             <div class="profile-quick-actions">
-                <button class="quick-action-btn" onclick="window.location.href='{% url 'password_change' %}'">
+                <button class="quick-action-btn" onclick="openPasswordChangeModal()">
                     <i class="fas fa-key"></i> Change Password
                 </button>
             </div>
@@ -716,6 +716,81 @@
     </div>
 </div>
 
+<!-- Password Change Modal -->
+<div class="modal-overlay" id="passwordChangeModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.2); position: relative; z-index: 9999;">
+        <div class="modal-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; color: #003087;">
+            <i class="fas fa-key" style="font-size: 1.5rem;"></i>
+            <h3 style="margin: 0; font-size: 1.3rem;">Change Password</h3>
+        </div>
+        <div class="modal-body" style="margin-bottom: 1.5rem;">
+            <div class="info-box" style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; color: #0d47a1;">
+                <i class="fas fa-info-circle"></i> <strong>Security Notice</strong><br>
+                Your password must be at least 8 characters long and cannot be entirely numeric.
+            </div>
+
+            <div id="passwordChangeError" style="display: none; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;"></div>
+
+            <form id="passwordChangeForm" onsubmit="return false;">
+                {% csrf_token %}
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="oldPassword" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555;">
+                        <i class="fas fa-lock"></i> Current Password
+                    </label>
+                    <input
+                        type="password"
+                        id="oldPassword"
+                        name="old_password"
+                        required
+                        placeholder="Enter your current password"
+                        autocomplete="current-password"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box;"
+                    >
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="newPassword1" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555;">
+                        <i class="fas fa-key"></i> New Password
+                    </label>
+                    <input
+                        type="password"
+                        id="newPassword1"
+                        name="new_password1"
+                        required
+                        placeholder="Enter new password"
+                        autocomplete="new-password"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box;"
+                    >
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="newPassword2" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555;">
+                        <i class="fas fa-check-double"></i> Confirm New Password
+                    </label>
+                    <input
+                        type="password"
+                        id="newPassword2"
+                        name="new_password2"
+                        required
+                        placeholder="Re-type new password"
+                        autocomplete="new-password"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box;"
+                    >
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button type="button" class="btn btn-cancel" onclick="closePasswordChangeModal()" style="padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; background: #6c757d; color: white;">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button type="button" class="btn btn-save" onclick="submitPasswordChange()" id="passwordChangeSubmitBtn" style="padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; background: #28a745; color: white;">
+                <i class="fas fa-check"></i> Change Password
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     let originalUsername = "{{ user.username }}";
     let newUsernameValue = "";
@@ -864,6 +939,140 @@
         if (e.key === 'Enter') {
             confirmChange();
         }
+    });
+
+    // Password Change Modal Functions
+    function openPasswordChangeModal() {
+        const modal = document.getElementById('passwordChangeModal');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        // Clear form and errors
+        document.getElementById('passwordChangeForm').reset();
+        document.getElementById('passwordChangeError').style.display = 'none';
+        document.getElementById('oldPassword').focus();
+
+        // Close on Escape key
+        document.addEventListener('keydown', passwordModalEscapeHandler);
+    }
+
+    function closePasswordChangeModal() {
+        const modal = document.getElementById('passwordChangeModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', passwordModalEscapeHandler);
+
+        // Reset form
+        document.getElementById('passwordChangeForm').reset();
+        document.getElementById('passwordChangeError').style.display = 'none';
+
+        // Reset button state
+        const submitBtn = document.getElementById('passwordChangeSubmitBtn');
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Change Password';
+        submitBtn.disabled = false;
+    }
+
+    function passwordModalEscapeHandler(e) {
+        if (e.key === 'Escape') {
+            closePasswordChangeModal();
+        }
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('passwordChangeModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePasswordChangeModal();
+        }
+    });
+
+    async function submitPasswordChange() {
+        const oldPassword = document.getElementById('oldPassword').value;
+        const newPassword1 = document.getElementById('newPassword1').value;
+        const newPassword2 = document.getElementById('newPassword2').value;
+        const errorDiv = document.getElementById('passwordChangeError');
+
+        // Clear previous errors
+        errorDiv.style.display = 'none';
+
+        // Client-side validation
+        if (!oldPassword || !newPassword1 || !newPassword2) {
+            errorDiv.textContent = 'All fields are required.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (newPassword1 !== newPassword2) {
+            errorDiv.textContent = 'New passwords do not match.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (newPassword1.length < 8) {
+            errorDiv.textContent = 'Password must be at least 8 characters long.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (/^\d+$/.test(newPassword1)) {
+            errorDiv.textContent = 'Password cannot be entirely numeric.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (oldPassword === newPassword1) {
+            errorDiv.textContent = 'New password must be different from current password.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        // Show loading state
+        const submitBtn = document.getElementById('passwordChangeSubmitBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing...';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch('{% url "change_password" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    old_password: oldPassword,
+                    new_password1: newPassword1,
+                    new_password2: newPassword2
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                // Success - close modal and show popup
+                closePasswordChangeModal();
+                showPopupNotification('Password changed successfully!', 'success', 5000);
+            } else {
+                // Show error
+                errorDiv.textContent = data.error || 'Failed to change password. Please try again.';
+                errorDiv.style.display = 'block';
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            errorDiv.style.display = 'block';
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    // Allow Enter key to submit password change
+    ['oldPassword', 'newPassword1', 'newPassword2'].forEach(id => {
+        document.getElementById(id).addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitPasswordChange();
+            }
+        });
     });
 </script>
 {% endblock %}
