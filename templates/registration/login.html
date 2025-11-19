@@ -707,16 +707,6 @@
                 </div>
             </div>
 
-            <!-- Display Messages/Alerts -->
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags|default:'info' }}">
-                        <i class="fas fa-{% if message.tags == 'error' %}times-circle{% elif message.tags == 'warning' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
-                        <span>{{ message }}</span>
-                    </div>
-                {% endfor %}
-            {% endif %}
-
             <!-- Login Form -->
             <form method="post" action="{% url 'login' %}" id="loginForm">
                 {% csrf_token %}
@@ -868,16 +858,6 @@
                     );
                 {% endfor %}
             {% endif %}
-
-            // Also auto-dismiss alert divs after 5 seconds
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert');
-                alerts.forEach(alert => {
-                    alert.style.transition = 'opacity 0.5s';
-                    alert.style.opacity = '0';
-                    setTimeout(() => alert.remove(), 500);
-                });
-            }, 5000);
         });
     </script>
 </body>
