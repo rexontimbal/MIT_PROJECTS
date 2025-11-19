@@ -159,36 +159,28 @@
         }
 
         .sidebar-toggle-btn {
-            display: none;
-            color: var(--white);
-            background: rgba(255, 255, 255, 0.1);
+            background: none;
             border: none;
-            border-radius: var(--radius-md);
-            padding: var(--space-2) var(--space-3);
+            color: var(--gray-600);
             cursor: pointer;
-            transition: all var(--transition-fast);
-            font-size: 1.25rem;
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: var(--space-2);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+            font-size: 1rem;
+            flex-shrink: 0;
         }
 
         .sidebar-toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
+            background: var(--gray-100);
+            color: var(--gray-900);
         }
 
         .sidebar-toggle-btn:active {
             transform: scale(0.95);
-        }
-
-        @media (max-width: 1024px) {
-            .sidebar-toggle-btn {
-                display: flex !important;
-            }
         }
 
         .admin-navbar-back {
@@ -409,20 +401,27 @@
         }
 
         .admin-sidebar-header {
-            padding: 0 var(--space-6) var(--space-6);
+            padding: var(--space-3) var(--space-6) var(--space-6);
             border-bottom: 1px solid var(--gray-200);
             margin-bottom: var(--space-6);
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-3);
         }
 
         .admin-sidebar.collapsed .admin-sidebar-header {
-            padding: 0 var(--space-3) var(--space-4);
+            padding: var(--space-3);
             margin-bottom: var(--space-4);
-            text-align: center;
         }
 
-        .admin-sidebar.collapsed .admin-sidebar-header h2,
-        .admin-sidebar.collapsed .admin-sidebar-header p {
+        .admin-sidebar-header-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .admin-sidebar.collapsed .admin-sidebar-header-content {
             display: none;
         }
 
@@ -1340,9 +1339,6 @@
                 </div>
             </div>
             <div class="admin-navbar-user">
-                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle sidebar" title="Toggle Sidebar">
-                    <i class="fas fa-bars"></i>
-                </button>
                 <a href="{% url 'dashboard' %}" class="admin-navbar-back">
                     <i class="fas fa-arrow-left"></i>
                     <span>Main Site</span>
@@ -1407,8 +1403,13 @@
         <!-- Sidebar -->
         <aside class="admin-sidebar">
             <div class="admin-sidebar-header">
-                <h2><i class="fas fa-cog"></i> Management</h2>
-                <p>System Controls</p>
+                <div class="admin-sidebar-header-content">
+                    <h2><i class="fas fa-cog"></i> Management</h2>
+                    <p>System Controls</p>
+                </div>
+                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle sidebar" title="Collapse/Expand sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
             </div>
 
             <ul class="admin-nav">
@@ -1648,11 +1649,13 @@
                 const icon = sidebarToggleBtn.querySelector('i');
                 if (icon) {
                     if (isCollapsed) {
-                        icon.classList.remove('fa-bars');
+                        // Sidebar is collapsed, show icon to expand (point right)
+                        icon.classList.remove('fa-chevron-left');
                         icon.classList.add('fa-chevron-right');
                     } else {
+                        // Sidebar is expanded, show icon to collapse (point left)
                         icon.classList.remove('fa-chevron-right');
-                        icon.classList.add('fa-bars');
+                        icon.classList.add('fa-chevron-left');
                     }
                 }
             }
