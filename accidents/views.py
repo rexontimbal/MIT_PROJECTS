@@ -745,16 +745,25 @@ def change_password(request):
 
         # Validate current password
         if not request.user.check_password(current_password):
+            # Clear all messages before adding new error
+            storage = messages.get_messages(request)
+            storage.used = True
             messages.error(request, 'Current password is incorrect.')
             return redirect('change_password')
 
         # Validate new passwords match
         if new_password != confirm_password:
+            # Clear all messages before adding new error
+            storage = messages.get_messages(request)
+            storage.used = True
             messages.error(request, 'New passwords do not match.')
             return redirect('change_password')
 
         # Validate password length
         if len(new_password) < 8:
+            # Clear all messages before adding new error
+            storage = messages.get_messages(request)
+            storage.used = True
             messages.error(request, 'Password must be at least 8 characters long.')
             return redirect('change_password')
 
@@ -784,6 +793,9 @@ def change_password(request):
             severity='info'
         )
 
+        # Clear all old messages before showing success message
+        storage = messages.get_messages(request)
+        storage.used = True
         messages.success(request, 'Password changed successfully!')
         return redirect('dashboard')
 
@@ -1480,6 +1492,11 @@ def login(request):
             # (New users will be redirected to password change by decorator)
             if not profile.must_change_password:
                 messages.success(request, f'Welcome back, {profile.get_full_name_with_rank()}!')
+            else:
+                # For new users, clear any existing messages and show only password change requirement
+                storage = messages.get_messages(request)
+                storage.used = True
+                messages.warning(request, 'Your password has expired. Please change it before continuing.')
 
             # Redirect to next page or dashboard
             next_url = request.GET.get('next', 'dashboard')

@@ -699,12 +699,19 @@
         }
 
         /* ========== POPUP NOTIFICATION STYLES ========== */
-        .popup-notification {
+        .notification-container {
             position: fixed;
             top: 20px;
             left: 50%;
-            transform: translateX(-50%) translateY(-100px);
+            transform: translateX(-50%);
             z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .popup-notification {
             padding: 1.25rem 1.75rem;
             border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
@@ -719,10 +726,10 @@
             transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             color: white;
             backdrop-filter: blur(10px);
+            pointer-events: auto;
         }
 
         .popup-notification.show {
-            transform: translateX(-50%) translateY(0);
             opacity: 1;
         }
 
@@ -1007,7 +1014,22 @@
         // =========================================
         // POPUP NOTIFICATION SYSTEM
         // =========================================
+
+        // Get or create notification container
+        function getNotificationContainer() {
+            let container = document.querySelector('.notification-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'notification-container';
+                document.body.appendChild(container);
+            }
+            return container;
+        }
+
         function showPopupNotification(message, type = 'success', duration = 5000) {
+            // Get or create the container for notifications
+            const container = getNotificationContainer();
+
             // Create notification element
             const notification = document.createElement('div');
             notification.className = `popup-notification ${type}`;
@@ -1027,7 +1049,8 @@
                 <div class="popup-notification-content">${message}</div>
             `;
 
-            document.body.appendChild(notification);
+            // Add to container instead of body
+            container.appendChild(notification);
 
             // Animate in
             requestAnimationFrame(() => {
@@ -1039,6 +1062,10 @@
                 notification.classList.remove('show');
                 setTimeout(() => {
                     notification.remove();
+                    // Clean up empty container
+                    if (container.children.length === 0) {
+                        container.remove();
+                    }
                 }, 400);
             }, duration);
         }

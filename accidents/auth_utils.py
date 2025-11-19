@@ -71,7 +71,11 @@ def pnp_login_required(view_func):
 
         # Check if must change password
         if profile.must_change_password and request.path != '/change-password/':
-            messages.warning(request, 'You must change your password before continuing.')
+            # Clear existing messages to avoid duplicates and show only password change requirement
+            from django.contrib.messages import get_messages
+            storage = get_messages(request)
+            storage.used = True
+            messages.warning(request, 'Your password has expired. Please change it before continuing.')
             return redirect('change_password')
 
         return view_func(request, *args, **kwargs)
