@@ -780,24 +780,29 @@ function formatPhilippineNumber(input) {
         digitsOnly = digitsOnly.substring(0, 10);
     }
 
-    // Pad with leading zeros if less than 10 digits
-    while (digitsOnly.length < 10) {
-        digitsOnly = '0' + digitsOnly;
+    // Format with spaces based on actual digit count (no padding with zeros)
+    let formatted = '';
+
+    if (digitsOnly.length <= 3) {
+        // Just the prefix: 917
+        formatted = digitsOnly;
+    } else if (digitsOnly.length <= 6) {
+        // Prefix + first part: 917 555
+        formatted = `${digitsOnly.substring(0, 3)} ${digitsOnly.substring(3)}`;
+    } else {
+        // Full format: 917 555 0123
+        formatted = `${digitsOnly.substring(0, 3)} ${digitsOnly.substring(3, 6)} ${digitsOnly.substring(6)}`;
     }
-
-    // Extract mobile prefix (first 3 digits) and local number (last 7 digits)
-    const mobilePrefix = digitsOnly.substring(0, 3);
-    const localNumber = digitsOnly.substring(3, 10);
-
-    // Format with spaces: 917 555 0123 (without +63, it's in the prefix area)
-    const formatted = `${mobilePrefix} ${localNumber.substring(0, 3)} ${localNumber.substring(3)}`;
 
     input.value = formatted;
 
-    // Validate and show warning if prefix is not recognized
-    const isValidPrefix = philippineMobilePrefixes.includes(mobilePrefix);
-    if (input.value.length > 0 && digitsOnly.length === 10 && !isValidPrefix) {
-        console.warn(`Warning: "${mobilePrefix}" is not a recognized Philippine mobile prefix`);
+    // Validate and show warning if prefix is not recognized (only when complete)
+    if (digitsOnly.length === 10) {
+        const mobilePrefix = digitsOnly.substring(0, 3);
+        const isValidPrefix = philippineMobilePrefixes.includes(mobilePrefix);
+        if (!isValidPrefix) {
+            console.warn(`Warning: "${mobilePrefix}" is not a recognized Philippine mobile prefix`);
+        }
     }
 }
 
@@ -901,6 +906,20 @@ if (profileForm) {
         // Valid, allow form submission
         mobileNumberGroup.classList.remove('error');
         mobileNumberHint.style.display = 'none';
+
+        // Store the current value to restore it after successful save
+        const savedMobileValue = mobileNumberInput.value;
+
+        // After a short delay to allow form submission to complete,
+        // check if a success message was shown and restore the value
+        setTimeout(() => {
+            const successMessages = document.querySelectorAll('.popup-notification.success');
+            if (successMessages.length > 0) {
+                // Form was saved successfully, restore the formatted value
+                mobileNumberInput.value = savedMobileValue;
+            }
+        }, 500);
+
         return true;
     });
 }
