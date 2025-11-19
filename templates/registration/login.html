@@ -829,8 +829,8 @@
             `;
 
             notification.innerHTML = `
-                <i class="fas ${icons[type] || icons.info}" style="font-size: 1.5rem;"></i>
-                <span>${message}</span>
+                <i class="fas ${icons[type] || icons.info}" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                <span style="flex: 1; line-height: 1.4;">${message}</span>
             `;
 
             if (!document.querySelector('div[style*="position: fixed"][style*="top: 20px"]')) {
@@ -847,7 +847,7 @@
             }, duration);
         }
 
-        // Display Django messages as popup notifications
+        // Display Django messages as popup notifications with smart focus
         document.addEventListener('DOMContentLoaded', function() {
             {% if messages %}
                 {% for message in messages %}
@@ -856,6 +856,14 @@
                         "{{ message.tags|default:'info' }}",
                         5000
                     );
+
+                    // Smart focus: Set focus based on error type
+                    const tags = "{{ message.tags }}";
+                    if (tags.includes('focus-password')) {
+                        document.getElementById('password').focus();
+                    } else if (tags.includes('focus-username')) {
+                        document.getElementById('username').focus();
+                    }
                 {% endfor %}
             {% endif %}
         });

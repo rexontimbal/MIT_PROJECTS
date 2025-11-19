@@ -1506,9 +1506,20 @@ def login(request):
             next_url = request.GET.get('next', 'dashboard')
             return redirect(next_url)
         else:
-            # Failed login
-            error_message = handle_failed_login(username, get_client_ip(request))
-            messages.error(request, error_message)
+            # Failed login - determine which field is incorrect
+            from django.contrib.auth.models import User
+
+            # Check if user exists
+            user_exists = User.objects.filter(username=username).exists()
+
+            if user_exists:
+                # User exists but password is wrong
+                error_message = handle_failed_login(username, get_client_ip(request))
+                messages.error(request, error_message, extra_tags='focus-password')
+            else:
+                # User doesn't exist
+                error_message = handle_failed_login(username, get_client_ip(request))
+                messages.error(request, error_message, extra_tags='focus-username')
 
     return render(request, 'registration/login.html')
 
