@@ -1513,13 +1513,18 @@ def login(request):
             user_exists = User.objects.filter(username=username).exists()
 
             if user_exists:
-                # User exists but password is wrong
+                # User exists but password is wrong - keep username, focus on password
                 error_message = handle_failed_login(username, get_client_ip(request))
                 messages.error(request, error_message, extra_tags='focus-password')
+                # Pass the username to template to retain it in the form
+                return render(request, 'registration/login.html', {
+                    'retained_username': username  # Retain username for user convenience
+                })
             else:
-                # User doesn't exist
+                # User doesn't exist - clear both fields, focus on username
                 error_message = handle_failed_login(username, get_client_ip(request))
                 messages.error(request, error_message, extra_tags='focus-username')
+                # Don't pass username - both fields will be cleared for security
 
     return render(request, 'registration/login.html')
 
