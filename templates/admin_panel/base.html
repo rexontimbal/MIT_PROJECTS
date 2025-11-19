@@ -171,6 +171,7 @@
             border-radius: var(--radius-md);
             font-size: 1rem;
             flex-shrink: 0;
+            transition: all 0.2s ease;
         }
 
         .sidebar-toggle-btn:hover {
@@ -374,6 +375,7 @@
             z-index: 999;
             overflow-y: auto;
             overflow-x: hidden;
+            transition: width 0.3s ease, padding 0.3s ease;
         }
 
         .admin-sidebar.collapsed {
@@ -406,6 +408,7 @@
             align-items: center;
             justify-content: space-between;
             gap: var(--space-3);
+            transition: padding 0.3s ease, margin-bottom 0.3s ease;
         }
 
         .admin-sidebar.collapsed .admin-sidebar-header {
@@ -416,10 +419,12 @@
         .admin-sidebar-header-content {
             flex: 1;
             min-width: 0;
+            transition: opacity 0.3s ease;
         }
 
         .admin-sidebar.collapsed .admin-sidebar-header-content {
             display: none;
+            opacity: 0;
         }
 
         .admin-sidebar-header h2 {
@@ -481,6 +486,7 @@
             width: 20px;
             text-align: center;
             font-size: 1rem;
+            transition: all 0.3s ease;
         }
 
         /* Collapsed Sidebar Styles */
@@ -553,6 +559,7 @@
             margin: 0 auto;
             width: 100%;
             min-width: 0;
+            transition: all 0.3s ease;
         }
 
         /* ============================================
