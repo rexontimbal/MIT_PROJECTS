@@ -70,6 +70,7 @@ def admin_dashboard(request):
     stats = {
         'total_users': User.objects.count(),
         'active_users': User.objects.filter(is_active=True).count(),
+        'inactive_users': User.objects.filter(is_active=False).count(),
         'total_accidents': Accident.objects.count(),
         'total_hotspots': AccidentCluster.objects.count(),
         'pending_reports': AccidentReport.objects.filter(status='pending').count(),

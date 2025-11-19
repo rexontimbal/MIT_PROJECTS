@@ -47,31 +47,13 @@
         <div class="stat-label">Currently active</div>
     </div>
 
-    <div class="stat-card orange" style="opacity: 0.5; pointer-events: none;">
+    <div class="stat-card orange">
         <div class="stat-header">
-            <span class="stat-title">Total Accidents</span>
-            <i class="fas fa-car-crash stat-icon"></i>
+            <span class="stat-title">Inactive Accounts</span>
+            <i class="fas fa-user-slash stat-icon"></i>
         </div>
-        <div class="stat-value" style="color: #999;">-</div>
-        <div class="stat-label" style="color: #999;">Unavailable</div>
-    </div>
-
-    <div class="stat-card red" style="opacity: 0.5; pointer-events: none;">
-        <div class="stat-header">
-            <span class="stat-title">Hotspots Detected</span>
-            <i class="fas fa-fire stat-icon"></i>
-        </div>
-        <div class="stat-value" style="color: #999;">-</div>
-        <div class="stat-label" style="color: #999;">Unavailable</div>
-    </div>
-
-    <div class="stat-card" style="opacity: 0.5; pointer-events: none;">
-        <div class="stat-header">
-            <span class="stat-title">Pending Reports</span>
-            <i class="fas fa-clock stat-icon"></i>
-        </div>
-        <div class="stat-value" style="color: #999;">-</div>
-        <div class="stat-label" style="color: #999;">Unavailable</div>
+        <div class="stat-value">{{ stats.inactive_users }}</div>
+        <div class="stat-label">Deactivated users</div>
     </div>
 
     <div class="stat-card green">
