@@ -3,6 +3,36 @@
 {% block title %}User: {{ target_user.username }}{% endblock %}
 
 {% block content %}
+<style>
+    /* =========================================
+       PHILIPPINE PHONE NUMBER INPUT STYLING
+       ========================================= */
+    .phone-input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .phone-prefix {
+        position: absolute;
+        left: 12px;
+        font-size: 1rem;
+        font-weight: 500;
+        pointer-events: none;
+        transition: color 0.3s ease;
+        color: #c0c0c0; /* Light gray initially */
+        z-index: 2;
+    }
+
+    .phone-prefix.active {
+        color: #1f2937; /* Solid black when user inputs */
+    }
+
+    .phone-input-field {
+        padding-left: 50px;
+        letter-spacing: 0.05em;
+    }
+</style>
 <!-- Page Header -->
 <div class="admin-page-header">
     <div>
@@ -355,13 +385,16 @@
                             Mobile Number
                             <small style="color: var(--text-light); font-weight: 400;">(Format: +63 917 555 0123)</small>
                         </label>
-                        <input type="text"
-                               name="mobile_number"
-                               id="mobile_number"
-                               class="form-control"
-                               value="{{ profile.mobile_number }}"
-                               placeholder="+63 917 555 0123"
-                               maxlength="18">
+                        <div class="phone-input-group">
+                            <span class="phone-prefix" id="mobile_prefix">+63</span>
+                            <input type="text"
+                                   name="mobile_number"
+                                   id="mobile_number"
+                                   class="form-control phone-input-field"
+                                   value="{{ profile.mobile_number }}"
+                                   placeholder="917 555 0123"
+                                   maxlength="18">
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -369,13 +402,16 @@
                             Phone Number
                             <small style="color: var(--text-light); font-weight: 400;">(Format: +63 917 555 0123)</small>
                         </label>
-                        <input type="text"
-                               name="phone_number"
-                               id="phone_number"
-                               class="form-control"
-                               value="{{ profile.phone_number }}"
-                               placeholder="+63 917 555 0123"
-                               maxlength="18">
+                        <div class="phone-input-group">
+                            <span class="phone-prefix" id="phone_prefix">+63</span>
+                            <input type="text"
+                                   name="phone_number"
+                                   id="phone_number"
+                                   class="form-control phone-input-field"
+                                   value="{{ profile.phone_number }}"
+                                   placeholder="917 555 0123"
+                                   maxlength="18">
+                        </div>
                     </div>
                 </div>
 
@@ -692,11 +728,20 @@ const philippineMobilePrefixes = [
     '940', '941', '942', '943', '944', '945', '946', '947', '948', '949'  // Various operators
 ];
 
-function formatPhilippineNumber(input) {
+function formatPhilippineNumber(input, prefixElement = null) {
     let value = input.value;
 
     // Remove all non-digit characters
     let digitsOnly = value.replace(/\D/g, '');
+
+    // Update prefix color based on input
+    if (prefixElement) {
+        if (digitsOnly.length > 0) {
+            prefixElement.classList.add('active');
+        } else {
+            prefixElement.classList.remove('active');
+        }
+    }
 
     // If user clears the field, return empty
     if (!digitsOnly) {
@@ -743,15 +788,16 @@ function formatPhilippineNumber(input) {
 
 // Apply to mobile number field
 const mobileNumberInput = document.getElementById('mobile_number');
+const mobilePrefixElement = document.getElementById('mobile_prefix');
 if (mobileNumberInput) {
     // Format existing value on page load
     if (mobileNumberInput.value && mobileNumberInput.value.trim() !== '') {
-        formatPhilippineNumber(mobileNumberInput);
+        formatPhilippineNumber(mobileNumberInput, mobilePrefixElement);
     }
 
     // Format on input
     mobileNumberInput.addEventListener('input', function() {
-        formatPhilippineNumber(this);
+        formatPhilippineNumber(this, mobilePrefixElement);
     });
 
     // Handle backspace to maintain format
@@ -760,7 +806,9 @@ if (mobileNumberInput) {
         if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
             setTimeout(() => {
                 if (this.value) {
-                    formatPhilippineNumber(this);
+                    formatPhilippineNumber(this, mobilePrefixElement);
+                } else {
+                    formatPhilippineNumber(this, mobilePrefixElement);
                 }
             }, 0);
         }
@@ -776,15 +824,16 @@ if (mobileNumberInput) {
 
 // Apply to phone number field
 const phoneNumberInput = document.getElementById('phone_number');
+const phonePrefixElement = document.getElementById('phone_prefix');
 if (phoneNumberInput) {
     // Format existing value on page load
     if (phoneNumberInput.value && phoneNumberInput.value.trim() !== '') {
-        formatPhilippineNumber(phoneNumberInput);
+        formatPhilippineNumber(phoneNumberInput, phonePrefixElement);
     }
 
     // Format on input
     phoneNumberInput.addEventListener('input', function() {
-        formatPhilippineNumber(this);
+        formatPhilippineNumber(this, phonePrefixElement);
     });
 
     // Handle backspace to maintain format
@@ -793,7 +842,9 @@ if (phoneNumberInput) {
         if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
             setTimeout(() => {
                 if (this.value) {
-                    formatPhilippineNumber(this);
+                    formatPhilippineNumber(this, phonePrefixElement);
+                } else {
+                    formatPhilippineNumber(this, phonePrefixElement);
                 }
             }, 0);
         }
