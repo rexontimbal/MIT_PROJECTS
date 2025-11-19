@@ -353,6 +353,31 @@ class UserProfile(models.Model):
         ('CIVILIAN', 'Civilian Personnel'),
     ]
 
+    UNIT_CHOICES = [
+        ('', '--- Select Unit ---'),
+        # Regional Divisions
+        ('R1 - Regional Personnel and Records Management Division', 'R1 - Regional Personnel and Records Management Division'),
+        ('R2 - Regional Intelligence Division', 'R2 - Regional Intelligence Division'),
+        ('R3 - Regional Operation Management Division', 'R3 - Regional Operation Management Division'),
+        ('R4 - Regional Logistics Research Development Division', 'R4 - Regional Logistics Research Development Division'),
+        ('R5 - Regional Community Affairs Development Division', 'R5 - Regional Community Affairs Development Division'),
+        ('R6 - Regional Comptrollership Division', 'R6 - Regional Comptrollership Division'),
+        ('R7 - Regional Investigation Detective Management Division', 'R7 - Regional Investigation Detective Management Division'),
+        ('R8 - Regional Learning and Doctrine Development Division', 'R8 - Regional Learning and Doctrine Development Division'),
+        ('R9 - Regional Plans and Strategy Management Division', 'R9 - Regional Plans and Strategy Management Division'),
+        # Support Units
+        ('Regional Headquarters Support Unit', 'Regional Headquarters Support Unit'),
+        ('Regional Information and Communication Technology Management Division', 'Regional Information and Communication Technology Management Division'),
+        ('Regional Health Service', 'Regional Health Service'),
+        ('Public Information Office', 'Public Information Office'),
+        # Provincial/City Police Offices
+        ('Surigao del Norte Police Provincial Office', 'Surigao del Norte Police Provincial Office'),
+        ('Surigao del Sur Police Provincial Office', 'Surigao del Sur Police Provincial Office'),
+        ('Agusan del Norte Police Provincial Office', 'Agusan del Norte Police Provincial Office'),
+        ('Agusan del Sur Police Provincial Office', 'Agusan del Sur Police Provincial Office'),
+        ('Butuan City Police Office', 'Butuan City Police Office'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
 
     # PNP-specific fields
@@ -364,7 +389,7 @@ class UserProfile(models.Model):
     region = models.CharField(max_length=100, default="CARAGA")
     province = models.CharField(max_length=100, blank=True, null=True)
     station = models.CharField(max_length=200, blank=True, null=True)
-    unit = models.CharField(max_length=200, blank=True, null=True, verbose_name="Unit/Office")
+    unit = models.CharField(max_length=200, blank=True, null=True, verbose_name="Unit/Office", choices=UNIT_CHOICES)
 
     # Contact
     phone_number = models.CharField(max_length=20, blank=True, null=True)

@@ -413,8 +413,28 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="unit">Unit</label>
-                        <input type="text" name="unit" id="unit" class="form-control" value="{{ profile.unit }}">
+                        <label class="form-label" for="unit">Unit/Office</label>
+                        <select name="unit" id="unit" class="form-control">
+                            <option value="">--- Select Unit ---</option>
+                            <option value="R1 - Regional Personnel and Records Management Division" {% if profile.unit == 'R1 - Regional Personnel and Records Management Division' %}selected{% endif %}>R1 - Regional Personnel and Records Management Division</option>
+                            <option value="R2 - Regional Intelligence Division" {% if profile.unit == 'R2 - Regional Intelligence Division' %}selected{% endif %}>R2 - Regional Intelligence Division</option>
+                            <option value="R3 - Regional Operation Management Division" {% if profile.unit == 'R3 - Regional Operation Management Division' %}selected{% endif %}>R3 - Regional Operation Management Division</option>
+                            <option value="R4 - Regional Logistics Research Development Division" {% if profile.unit == 'R4 - Regional Logistics Research Development Division' %}selected{% endif %}>R4 - Regional Logistics Research Development Division</option>
+                            <option value="R5 - Regional Community Affairs Development Division" {% if profile.unit == 'R5 - Regional Community Affairs Development Division' %}selected{% endif %}>R5 - Regional Community Affairs Development Division</option>
+                            <option value="R6 - Regional Comptrollership Division" {% if profile.unit == 'R6 - Regional Comptrollership Division' %}selected{% endif %}>R6 - Regional Comptrollership Division</option>
+                            <option value="R7 - Regional Investigation Detective Management Division" {% if profile.unit == 'R7 - Regional Investigation Detective Management Division' %}selected{% endif %}>R7 - Regional Investigation Detective Management Division</option>
+                            <option value="R8 - Regional Learning and Doctrine Development Division" {% if profile.unit == 'R8 - Regional Learning and Doctrine Development Division' %}selected{% endif %}>R8 - Regional Learning and Doctrine Development Division</option>
+                            <option value="R9 - Regional Plans and Strategy Management Division" {% if profile.unit == 'R9 - Regional Plans and Strategy Management Division' %}selected{% endif %}>R9 - Regional Plans and Strategy Management Division</option>
+                            <option value="Regional Headquarters Support Unit" {% if profile.unit == 'Regional Headquarters Support Unit' %}selected{% endif %}>Regional Headquarters Support Unit</option>
+                            <option value="Regional Information and Communication Technology Management Division" {% if profile.unit == 'Regional Information and Communication Technology Management Division' %}selected{% endif %}>Regional Information and Communication Technology Management Division</option>
+                            <option value="Regional Health Service" {% if profile.unit == 'Regional Health Service' %}selected{% endif %}>Regional Health Service</option>
+                            <option value="Public Information Office" {% if profile.unit == 'Public Information Office' %}selected{% endif %}>Public Information Office</option>
+                            <option value="Surigao del Norte Police Provincial Office" {% if profile.unit == 'Surigao del Norte Police Provincial Office' %}selected{% endif %}>Surigao del Norte Police Provincial Office</option>
+                            <option value="Surigao del Sur Police Provincial Office" {% if profile.unit == 'Surigao del Sur Police Provincial Office' %}selected{% endif %}>Surigao del Sur Police Provincial Office</option>
+                            <option value="Agusan del Norte Police Provincial Office" {% if profile.unit == 'Agusan del Norte Police Provincial Office' %}selected{% endif %}>Agusan del Norte Police Provincial Office</option>
+                            <option value="Agusan del Sur Police Provincial Office" {% if profile.unit == 'Agusan del Sur Police Provincial Office' %}selected{% endif %}>Agusan del Sur Police Provincial Office</option>
+                            <option value="Butuan City Police Office" {% if profile.unit == 'Butuan City Police Office' %}selected{% endif %}>Butuan City Police Office</option>
+                        </select>
                     </div>
                 </div>
 
