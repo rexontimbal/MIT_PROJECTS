@@ -3,6 +3,76 @@
 {% block title %}Create New User{% endblock %}
 
 {% block content %}
+<style>
+    /* =========================================
+       PHILIPPINE PHONE NUMBER INPUT STYLING
+       ========================================= */
+    .phone-input-group {
+        display: flex;
+        align-items: stretch;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+        transition: border-color 0.3s ease;
+    }
+
+    .phone-input-group:focus-within {
+        border-color: #003087;
+        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.1);
+    }
+
+    .phone-prefix-area {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: #f9fafb;
+        border-right: 1px solid #d1d5db;
+        font-weight: 600;
+        color: #003087;
+        min-width: max-content;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .phone-input-field {
+        flex: 1;
+        border: none;
+        padding: 0.75rem 1rem;
+        padding-left: 0.75rem;
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        outline: none;
+        background: white;
+        color: #1f2937;
+    }
+
+    .phone-input-field:hover {
+        color: #1f2937;
+    }
+
+    .phone-input-field:focus {
+        background: white;
+        color: #1f2937;
+    }
+
+    .phone-input-field::placeholder {
+        color: #9ca3af !important;
+        opacity: 1;
+    }
+
+    /* Validation error state */
+    .phone-input-group.error {
+        border-color: #ef4444;
+    }
+
+    .phone-input-group.error:focus-within {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+</style>
+
 <!-- Page Header -->
 <div class="admin-page-header">
     <div>
@@ -239,32 +309,24 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label class="form-label" for="mobile_number">
-                        Mobile Number
-                        <small style="color: var(--text-light); font-weight: 400;">(Format: 63+XXXXXXXXXX)</small>
-                    </label>
+            <div class="form-group">
+                <label class="form-label" for="mobile_number">
+                    Mobile Number
+                    <small style="color: var(--text-light); font-weight: 400;">(10-digit format: 917 555 0123)</small>
+                </label>
+                <div class="phone-input-group" id="mobileNumberGroup">
+                    <div class="phone-prefix-area">+63</div>
                     <input type="text"
                            name="mobile_number"
                            id="mobile_number"
-                           class="form-control"
-                           placeholder="63+9XXXXXXXXX"
-                           maxlength="13">
+                           class="form-control phone-input-field"
+                           placeholder=""
+                           maxlength="18"
+                           inputmode="numeric">
                 </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="phone_number">
-                        Phone Number
-                        <small style="color: var(--text-light); font-weight: 400;">(Format: 63+XXXXXXXXXX)</small>
-                    </label>
-                    <input type="text"
-                           name="phone_number"
-                           id="phone_number"
-                           class="form-control"
-                           placeholder="63+9XXXXXXXXX"
-                           maxlength="13">
-                </div>
+                <small id="mobileNumberHint" style="color: var(--text-light); display: none; margin-top: 0.5rem;">
+                    <i class="fas fa-info-circle"></i> Please enter exactly 10 digits
+                </small>
             </div>
         </div>
 
@@ -418,11 +480,12 @@ function updateStations() {
     }
 }
 
-// Password validation
+// Form validation
 function validateForm() {
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirm_password').value;
 
+    // Validate passwords
     if (password !== confirmPassword) {
         alert('Passwords do not match! Please make sure both password fields are identical.');
         document.getElementById('confirm_password').focus();
@@ -435,6 +498,24 @@ function validateForm() {
         return false;
     }
 
+    // Validate mobile number if field has a value
+    const mobileValue = mobileNumberInput.value.trim();
+    if (mobileValue !== '') {
+        const digitsOnly = mobileValue.replace(/\D/g, '');
+
+        if (digitsOnly.length !== 10) {
+            alert('Please enter exactly 10 digits for the mobile number (e.g., 917 555 0123)');
+            mobileNumberInput.focus();
+            mobileNumberInput.setSelectionRange(mobileNumberInput.value.length, mobileNumberInput.value.length);
+            mobileNumberGroup.classList.add('error');
+            mobileNumberHint.style.display = 'block';
+            return false;
+        }
+    }
+
+    // All validation passed
+    mobileNumberGroup.classList.remove('error');
+    mobileNumberHint.style.display = 'none';
     return true;
 }
 
@@ -542,88 +623,100 @@ function previewProfilePicture(event) {
 // =========================================
 // PHILIPPINE PHONE NUMBER FORMATTING
 // =========================================
+// Valid Philippine mobile prefixes
+const philippineMobilePrefixes = [
+    '905', '906', '907', '908', '909', // Globe
+    '910', '911', '912', '913', '914', '915', '916', '917', // Smart/TNT
+    '918', '919', // Smart
+    '920', '921', '922', '923', '924', '925', '926', '927', '928', '929', // Dito
+    '930', '931', '932', '933', '934', '935', '936', '937', '938', '939', // Various operators
+    '940', '941', '942', '943', '944', '945', '946', '947', '948', '949'  // Various operators
+];
+
 function formatPhilippineNumber(input) {
     let value = input.value;
 
-    // Remove all non-digit characters except + at the beginning
-    let digitsOnly = value.replace(/[^\d+]/g, '');
+    // Remove all non-digit characters
+    let digitsOnly = value.replace(/\D/g, '');
 
-    // If user clears the field, set to '63+'
-    if (!digitsOnly || digitsOnly === '') {
-        input.value = '63+';
+    // If user clears the field, return empty
+    if (!digitsOnly) {
+        input.value = '';
         return;
     }
 
-    // If user types without 63+, add it
-    if (!digitsOnly.startsWith('63+')) {
-        if (digitsOnly.startsWith('63')) {
-            // User typed 63 without +, add the +
-            digitsOnly = '63+' + digitsOnly.substring(2);
-        } else if (digitsOnly.startsWith('0')) {
-            // User typed 0 (like 09123456789), convert to 63+9123456789
-            digitsOnly = '63+' + digitsOnly.substring(1);
-        } else if (digitsOnly.startsWith('+63')) {
-            // User typed +63, convert to 63+
-            digitsOnly = '63+' + digitsOnly.substring(3);
-        } else {
-            // User typed other numbers, prepend 63+
-            digitsOnly = '63+' + digitsOnly;
+    // Convert different formats to standard 10-digit format
+    if (digitsOnly.startsWith('63')) {
+        // User typed 63... format, remove the 63
+        digitsOnly = digitsOnly.substring(2);
+    }
+
+    if (digitsOnly.startsWith('0')) {
+        // User typed 0... format (domestic), remove the leading 0
+        digitsOnly = digitsOnly.substring(1);
+    }
+
+    // Limit to 10 digits (mobile prefix 3 digits + local number 7 digits)
+    if (digitsOnly.length > 10) {
+        digitsOnly = digitsOnly.substring(0, 10);
+    }
+
+    // Format with spaces based on actual digit count (no padding with zeros)
+    let formatted = '';
+
+    if (digitsOnly.length <= 3) {
+        // Just the prefix: 917
+        formatted = digitsOnly;
+    } else if (digitsOnly.length <= 6) {
+        // Prefix + first part: 917 555
+        formatted = `${digitsOnly.substring(0, 3)} ${digitsOnly.substring(3)}`;
+    } else {
+        // Full format: 917 555 0123
+        formatted = `${digitsOnly.substring(0, 3)} ${digitsOnly.substring(3, 6)} ${digitsOnly.substring(6)}`;
+    }
+
+    input.value = formatted;
+
+    // Validate and show warning if prefix is not recognized (only when complete)
+    if (digitsOnly.length === 10) {
+        const mobilePrefix = digitsOnly.substring(0, 3);
+        const isValidPrefix = philippineMobilePrefixes.includes(mobilePrefix);
+        if (!isValidPrefix) {
+            console.warn(`Warning: "${mobilePrefix}" is not a recognized Philippine mobile prefix`);
         }
     }
-
-    // Extract the prefix and the actual number
-    let prefix = '63+';
-    let numberPart = digitsOnly.substring(3); // Get everything after '63+'
-
-    // Remove any non-digit characters from numberPart
-    numberPart = numberPart.replace(/\D/g, '');
-
-    // Limit to 10 digits after '63+'
-    if (numberPart.length > 10) {
-        numberPart = numberPart.substring(0, 10);
-    }
-
-    // Set the formatted value
-    input.value = prefix + numberPart;
 }
 
 // Apply to mobile number field
 const mobileNumberInput = document.getElementById('mobile_number');
+const mobileNumberGroup = document.getElementById('mobileNumberGroup');
+const mobileNumberHint = document.getElementById('mobileNumberHint');
+
 if (mobileNumberInput) {
-    // Initialize with 63+ if empty
-    if (!mobileNumberInput.value || mobileNumberInput.value.trim() === '') {
-        mobileNumberInput.value = '63+';
-    } else {
-        // Format existing value
+    // Format existing value on page load
+    if (mobileNumberInput.value && mobileNumberInput.value.trim() !== '') {
         formatPhilippineNumber(mobileNumberInput);
     }
 
     // Format on input
     mobileNumberInput.addEventListener('input', function() {
         formatPhilippineNumber(this);
+        // Clear error state while typing
+        mobileNumberGroup.classList.remove('error');
+        mobileNumberHint.style.display = 'none';
     });
 
-    // Prevent deletion of '63+' prefix
+    // Handle backspace to maintain format
     mobileNumberInput.addEventListener('keydown', function(e) {
-        const cursorPos = this.selectionStart;
-
-        // Prevent backspace/delete if cursor is at position 0-3 (within '63+')
-        if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPos <= 3) {
-            e.preventDefault();
-        }
-
-        // Prevent cursor from moving before position 3
-        setTimeout(() => {
-            if (this.selectionStart < 3) {
-                this.setSelectionRange(3, 3);
-            }
-        }, 0);
-    });
-
-    // Prevent cursor from being placed before '63+'
-    mobileNumberInput.addEventListener('click', function() {
-        if (this.selectionStart < 3) {
-            this.setSelectionRange(3, 3);
+        // Allow standard key operations
+        if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+            setTimeout(() => {
+                if (this.value) {
+                    formatPhilippineNumber(this);
+                } else {
+                    formatPhilippineNumber(this);
+                }
+            }, 0);
         }
     });
 
@@ -633,54 +726,35 @@ if (mobileNumberInput) {
             this.setSelectionRange(this.value.length, this.value.length);
         }, 0);
     });
+
+    // Validate before blur
+    mobileNumberInput.addEventListener('blur', function() {
+        validateMobileNumber(this);
+    });
 }
 
-// Apply to phone number field
-const phoneNumberInput = document.getElementById('phone_number');
-if (phoneNumberInput) {
-    // Initialize with 63+ if empty
-    if (!phoneNumberInput.value || phoneNumberInput.value.trim() === '') {
-        phoneNumberInput.value = '63+';
-    } else {
-        // Format existing value
-        formatPhilippineNumber(phoneNumberInput);
+// Validation function
+function validateMobileNumber(input) {
+    const digitsOnly = input.value.replace(/\D/g, '');
+
+    if (input.value.trim() === '') {
+        // Empty field is allowed (optional field)
+        mobileNumberGroup.classList.remove('error');
+        mobileNumberHint.style.display = 'none';
+        return true;
     }
 
-    // Format on input
-    phoneNumberInput.addEventListener('input', function() {
-        formatPhilippineNumber(this);
-    });
+    if (digitsOnly.length !== 10) {
+        // Invalid length
+        mobileNumberGroup.classList.add('error');
+        mobileNumberHint.style.display = 'block';
+        return false;
+    }
 
-    // Prevent deletion of '63+' prefix
-    phoneNumberInput.addEventListener('keydown', function(e) {
-        const cursorPos = this.selectionStart;
-
-        // Prevent backspace/delete if cursor is at position 0-3 (within '63+')
-        if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPos <= 3) {
-            e.preventDefault();
-        }
-
-        // Prevent cursor from moving before position 3
-        setTimeout(() => {
-            if (this.selectionStart < 3) {
-                this.setSelectionRange(3, 3);
-            }
-        }, 0);
-    });
-
-    // Prevent cursor from being placed before '63+'
-    phoneNumberInput.addEventListener('click', function() {
-        if (this.selectionStart < 3) {
-            this.setSelectionRange(3, 3);
-        }
-    });
-
-    // Focus at the end when field is focused
-    phoneNumberInput.addEventListener('focus', function() {
-        setTimeout(() => {
-            this.setSelectionRange(this.value.length, this.value.length);
-        }, 0);
-    });
+    // Valid
+    mobileNumberGroup.classList.remove('error');
+    mobileNumberHint.style.display = 'none';
+    return true;
 }
 </script>
 {% endblock %}
