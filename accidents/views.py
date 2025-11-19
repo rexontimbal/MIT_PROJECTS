@@ -1447,6 +1447,10 @@ def login(request):
         # User is authenticated with valid profile - redirect to dashboard
         return redirect('dashboard')
 
+    # Clear any lingering messages from previous logout to avoid duplication
+    storage = messages.get_messages(request)
+    storage.used = True
+
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
