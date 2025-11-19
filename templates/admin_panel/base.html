@@ -158,6 +158,39 @@
             gap: var(--space-4);
         }
 
+        .sidebar-toggle-btn {
+            display: none;
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: var(--radius-md);
+            padding: var(--space-2) var(--space-3);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 1.25rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: var(--space-2);
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .sidebar-toggle-btn:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar-toggle-btn {
+                display: flex !important;
+            }
+        }
+
         .admin-navbar-back {
             color: var(--white);
             text-decoration: none;
@@ -350,6 +383,12 @@
             z-index: 999;
             overflow-y: auto;
             overflow-x: hidden;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .admin-sidebar.collapsed {
+            width: 70px;
+            padding: var(--space-4) 0;
         }
 
         .admin-sidebar::-webkit-scrollbar {
@@ -373,6 +412,18 @@
             padding: 0 var(--space-6) var(--space-6);
             border-bottom: 1px solid var(--gray-200);
             margin-bottom: var(--space-6);
+            transition: all 0.3s ease;
+        }
+
+        .admin-sidebar.collapsed .admin-sidebar-header {
+            padding: 0 var(--space-3) var(--space-4);
+            margin-bottom: var(--space-4);
+            text-align: center;
+        }
+
+        .admin-sidebar.collapsed .admin-sidebar-header h2,
+        .admin-sidebar.collapsed .admin-sidebar-header p {
+            display: none;
         }
 
         .admin-sidebar-header h2 {
@@ -385,12 +436,14 @@
             display: flex;
             align-items: center;
             gap: var(--space-2);
+            transition: opacity 0.3s ease;
         }
 
         .admin-sidebar-header p {
             font-size: 0.75rem;
             color: var(--gray-500);
             margin: 0;
+            transition: opacity 0.3s ease;
         }
 
         .admin-nav {
@@ -414,6 +467,7 @@
             border-left: 3px solid transparent;
             font-size: 0.875rem;
             font-weight: 500;
+            position: relative;
         }
 
         .admin-nav-link:hover {
@@ -433,6 +487,61 @@
             width: 20px;
             text-align: center;
             font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        /* Collapsed Sidebar Styles */
+        .admin-sidebar.collapsed .admin-nav-link {
+            padding: var(--space-3);
+            justify-content: center;
+            border-left: 3px solid transparent;
+            border-radius: var(--radius-md);
+            margin: 0 var(--space-2) var(--space-2) var(--space-2);
+            position: relative;
+        }
+
+        .admin-sidebar.collapsed .admin-nav-link span {
+            display: none;
+        }
+
+        .admin-sidebar.collapsed .admin-nav-link {
+            border-left: none;
+            border-radius: var(--radius-md);
+        }
+
+        .admin-sidebar.collapsed .admin-nav-link:hover {
+            background: var(--primary-light);
+            color: var(--pnp-blue);
+        }
+
+        .admin-sidebar.collapsed .admin-nav-link.active {
+            background: var(--primary-light);
+            color: var(--pnp-blue);
+            border-left: none;
+        }
+
+        /* Tooltip for collapsed sidebar */
+        .admin-sidebar.collapsed .admin-nav-link::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: var(--space-2);
+            background: var(--gray-900);
+            color: var(--white);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            white-space: nowrap;
+            font-size: 0.75rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .admin-sidebar.collapsed .admin-nav-link:hover::after {
+            opacity: 1;
         }
 
         .admin-nav-divider {
@@ -451,6 +560,7 @@
             margin: 0 auto;
             width: 100%;
             min-width: 0;
+            transition: all 0.3s ease;
         }
 
         /* ============================================
@@ -1230,6 +1340,9 @@
                 </div>
             </div>
             <div class="admin-navbar-user">
+                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle sidebar" title="Toggle Sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <a href="{% url 'dashboard' %}" class="admin-navbar-back">
                     <i class="fas fa-arrow-left"></i>
                     <span>Main Site</span>
@@ -1300,7 +1413,7 @@
 
             <ul class="admin-nav">
                 <li class="admin-nav-item">
-                    <a href="{% url 'admin_panel:dashboard' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <a href="{% url 'admin_panel:dashboard' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" data-tooltip="Dashboard">
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Dashboard</span>
                     </a>
@@ -1308,7 +1421,7 @@
 
                 {% if user.is_superuser or user.profile.role == 'super_admin' %}
                 <li class="admin-nav-item">
-                    <a href="{% url 'admin_panel:users' %}" class="admin-nav-link {% if 'users' in request.path %}active{% endif %}">
+                    <a href="{% url 'admin_panel:users' %}" class="admin-nav-link {% if 'users' in request.path %}active{% endif %}" data-tooltip="User Management">
                         <i class="fas fa-users"></i>
                         <span>User Management</span>
                     </a>
@@ -1316,14 +1429,14 @@
                 {% endif %}
 
                 <li class="admin-nav-item">
-                    <a href="{% url 'admin_panel:audit_logs' %}" class="admin-nav-link {% if 'audit' in request.path %}active{% endif %}">
+                    <a href="{% url 'admin_panel:audit_logs' %}" class="admin-nav-link {% if 'audit' in request.path %}active{% endif %}" data-tooltip="Audit Logs">
                         <i class="fas fa-clipboard-list"></i>
                         <span>Audit Logs</span>
                     </a>
                 </li>
 
                 <li class="admin-nav-item">
-                    <a href="{% url 'admin_panel:system_monitoring' %}" class="admin-nav-link {% if 'system-monitoring' in request.path %}active{% endif %}">
+                    <a href="{% url 'admin_panel:system_monitoring' %}" class="admin-nav-link {% if 'system-monitoring' in request.path %}active{% endif %}" data-tooltip="System Monitoring">
                         <i class="fas fa-server"></i>
                         <span>System Monitoring</span>
                     </a>
@@ -1512,6 +1625,54 @@
                     sidebarOverlay.classList.remove('active');
                 }
             });
+        });
+
+        // =========================================
+        // DESKTOP SIDEBAR COLLAPSE TOGGLE
+        // =========================================
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const SIDEBAR_STORAGE_KEY = 'agnes_admin_sidebar_collapsed';
+
+        // Initialize sidebar state from localStorage
+        function initializeSidebarState() {
+            const isCollapsed = localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true';
+            if (isCollapsed && sidebar) {
+                sidebar.classList.add('collapsed');
+                updateToggleButton(true);
+            }
+        }
+
+        // Update toggle button icon
+        function updateToggleButton(isCollapsed) {
+            if (sidebarToggleBtn) {
+                const icon = sidebarToggleBtn.querySelector('i');
+                if (icon) {
+                    if (isCollapsed) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-chevron-right');
+                    } else {
+                        icon.classList.remove('fa-chevron-right');
+                        icon.classList.add('fa-bars');
+                    }
+                }
+            }
+        }
+
+        // Toggle sidebar collapse/expand
+        if (sidebarToggleBtn) {
+            sidebarToggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (sidebar) {
+                    const isCollapsed = sidebar.classList.toggle('collapsed');
+                    updateToggleButton(isCollapsed);
+                    localStorage.setItem(SIDEBAR_STORAGE_KEY, isCollapsed ? 'true' : 'false');
+                }
+            });
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            initializeSidebarState();
         });
 
         // =========================================
