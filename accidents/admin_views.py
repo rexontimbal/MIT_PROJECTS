@@ -580,7 +580,7 @@ def audit_logs(request):
     severity_filter = request.GET.get('severity', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
-    user_filter = request.GET.get('user', '')
+    status_filter = request.GET.get('status', '')  # success or failed
 
     logs = AuditLog.objects.select_related('user').all()
 
@@ -598,8 +598,10 @@ def audit_logs(request):
     if severity_filter:
         logs = logs.filter(severity=severity_filter)
 
-    if user_filter:
-        logs = logs.filter(user_id=user_filter)
+    if status_filter == 'success':
+        logs = logs.filter(success=True)
+    elif status_filter == 'failed':
+        logs = logs.filter(success=False)
 
     if date_from:
         logs = logs.filter(timestamp__gte=date_from)
@@ -615,9 +617,9 @@ def audit_logs(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Get unique actions and users for filters
-    actions = AuditLog.objects.values_list('action', flat=True).distinct()
-    severities = ['info', 'warning', 'critical']
+    # Get action choices from model
+    action_choices = AuditLog.ACTION_CHOICES
+    severities = [choice[0] for choice in AuditLog.SEVERITY_CHOICES]
 
     context = {
         'page_obj': page_obj,
@@ -626,7 +628,8 @@ def audit_logs(request):
         'severity_filter': severity_filter,
         'date_from': date_from,
         'date_to': date_to,
-        'actions': actions,
+        'status_filter': status_filter,
+        'action_choices': action_choices,
         'severities': severities,
         'total_count': logs.count(),
     }
