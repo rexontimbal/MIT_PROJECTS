@@ -355,7 +355,7 @@
                 </h2>
             </div>
 
-            <form method="post" id="profileForm" onsubmit="return handleSuperuserSubmit(event, this, 'profileForm')">
+            <form method="post" id="profileForm" onsubmit="return validateMobileAndProceed(event) && handleSuperuserSubmit(event, this, 'profileForm')">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="update_profile">
 
@@ -876,52 +876,50 @@ function validateMobileNumber(input) {
     return true;
 }
 
-// Form submission validation
-const profileForm = document.getElementById('profileForm');
-if (profileForm) {
-    profileForm.addEventListener('submit', function(e) {
-        const mobileValue = mobileNumberInput.value.trim();
+// Mobile number validation function for form submission
+function validateMobileAndProceed(event) {
+    const mobileValue = mobileNumberInput.value.trim();
 
-        // If field has value, validate it
-        if (mobileValue !== '') {
-            const digitsOnly = mobileValue.replace(/\D/g, '');
+    // If field has value, validate it
+    if (mobileValue !== '') {
+        const digitsOnly = mobileValue.replace(/\D/g, '');
 
-            if (digitsOnly.length !== 10) {
-                e.preventDefault();
-                // Keep focus in the field
-                mobileNumberInput.focus();
-                mobileNumberInput.setSelectionRange(mobileNumberInput.value.length, mobileNumberInput.value.length);
+        if (digitsOnly.length !== 10) {
+            // Prevent form submission
+            event.preventDefault();
+            // Keep focus in the field
+            mobileNumberInput.focus();
+            mobileNumberInput.setSelectionRange(mobileNumberInput.value.length, mobileNumberInput.value.length);
 
-                // Show error state
-                mobileNumberGroup.classList.add('error');
-                mobileNumberHint.style.display = 'block';
+            // Show error state
+            mobileNumberGroup.classList.add('error');
+            mobileNumberHint.style.display = 'block';
 
-                // Show popup alert
-                showNotification('Please enter exactly 10 digits for the mobile number (e.g., 917 555 0123)', 'error', 5000);
+            // Show popup alert
+            showNotification('Please enter exactly 10 digits for the mobile number (e.g., 917 555 0123)', 'error', 5000);
 
-                return false;
-            }
+            return false;
         }
+    }
 
-        // Valid, allow form submission
-        mobileNumberGroup.classList.remove('error');
-        mobileNumberHint.style.display = 'none';
+    // Valid, allow form submission
+    mobileNumberGroup.classList.remove('error');
+    mobileNumberHint.style.display = 'none';
 
-        // Store the current value to restore it after successful save
-        const savedMobileValue = mobileNumberInput.value;
+    // Store the current value to restore it after successful save
+    const savedMobileValue = mobileNumberInput.value;
 
-        // After a short delay to allow form submission to complete,
-        // check if a success message was shown and restore the value
-        setTimeout(() => {
-            const successMessages = document.querySelectorAll('.popup-notification.success');
-            if (successMessages.length > 0) {
-                // Form was saved successfully, restore the formatted value
-                mobileNumberInput.value = savedMobileValue;
-            }
-        }, 500);
+    // After a short delay to allow form submission to complete,
+    // check if a success message was shown and restore the value
+    setTimeout(() => {
+        const successMessages = document.querySelectorAll('.popup-notification.success');
+        if (successMessages.length > 0) {
+            // Form was saved successfully, restore the formatted value
+            mobileNumberInput.value = savedMobileValue;
+        }
+    }, 500);
 
-        return true;
-    });
+    return true;
 }
 
 
