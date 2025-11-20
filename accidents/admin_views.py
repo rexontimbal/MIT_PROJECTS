@@ -339,6 +339,7 @@ def user_create(request):
         email = request.POST.get('email', '')
         first_name = request.POST.get('first_name', '')
         last_name = request.POST.get('last_name', '')
+        badge_number = request.POST.get('badge_number', '')
 
         # Debug: Log if profile picture is in request
         has_picture = 'profile_picture' in request.FILES
@@ -358,87 +359,102 @@ def user_create(request):
             messages.error(request, f'Username "{username}" already exists!')
             return redirect('admin_panel:user_create')
 
-        # Create user
-        user = User.objects.create_user(
-            username=username,
-            password=password,
-            email=email,
-            first_name=first_name,
-            last_name=last_name
-        )
+        # Check if badge_number already exists
+        if UserProfile.objects.filter(badge_number=badge_number).exists():
+            messages.error(request, f'Badge/ID number "{badge_number}" already exists! Please use a unique badge number.')
+            return redirect('admin_panel:user_create')
 
-        # Create profile
-        profile = UserProfile.objects.create(
-            user=user,
-            badge_number=request.POST.get('badge_number', ''),
-            rank=request.POST.get('rank', 'pcpl'),
-            role=request.POST.get('role', 'traffic_officer'),
-            region=request.POST.get('region', 'Caraga'),
-            province=request.POST.get('province', ''),
-            station=request.POST.get('station', ''),
-            unit=request.POST.get('unit', ''),
-            mobile_number=request.POST.get('mobile_number', ''),
-            phone_number=request.POST.get('phone_number', ''),
-            created_by=request.user
-        )
+        # Create user and profile in a transaction to ensure both succeed or both fail
+        from django.db import transaction
+        try:
+            with transaction.atomic():
+                # Create user
+                user = User.objects.create_user(
+                    username=username,
+                    password=password,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name
+                )
 
-        # Handle profile picture upload
-        if 'profile_picture' in request.FILES:
-            try:
-                import os
-                from django.conf import settings
+                # Create profile
+                profile = UserProfile.objects.create(
+                    user=user,
+                    badge_number=badge_number,
+                    rank=request.POST.get('rank', 'pcpl'),
+                    role=request.POST.get('role', 'traffic_officer'),
+                    region=request.POST.get('region', 'Caraga'),
+                    province=request.POST.get('province', ''),
+                    station=request.POST.get('station', ''),
+                    unit=request.POST.get('unit', ''),
+                    mobile_number=request.POST.get('mobile_number', ''),
+                    phone_number=request.POST.get('phone_number', ''),
+                    created_by=request.user
+                )
 
-                # Ensure media directories exist
-                media_root = settings.MEDIA_ROOT
-                profile_pics_dir = os.path.join(media_root, 'profile_pictures')
-                os.makedirs(profile_pics_dir, exist_ok=True)
+                # Handle profile picture upload
+                if 'profile_picture' in request.FILES:
+                    try:
+                        import os
+                        from django.conf import settings
 
-                uploaded_file = request.FILES['profile_picture']
-                profile.profile_picture = uploaded_file
-                profile.save()
+                        # Ensure media directories exist
+                        media_root = settings.MEDIA_ROOT
+                        profile_pics_dir = os.path.join(media_root, 'profile_pictures')
+                        os.makedirs(profile_pics_dir, exist_ok=True)
 
-                print(f"DEBUG: Profile picture saved successfully to {profile.profile_picture.path}")
+                        uploaded_file = request.FILES['profile_picture']
+                        profile.profile_picture = uploaded_file
+                        profile.save()
+
+                        print(f"DEBUG: Profile picture saved successfully to {profile.profile_picture.path}")
+
+                        log_user_action(
+                            request=request,
+                            action='profile_picture_upload',
+                            description=f'Uploaded profile picture for new user: {username} (Size: {uploaded_file.size} bytes)',
+                            severity='info'
+                        )
+                    except Exception as e:
+                        # Log the error but don't fail user creation
+                        print(f"DEBUG: Profile picture upload failed - {str(e)}")
+                        log_user_action(
+                            request=request,
+                            action='profile_picture_upload',
+                            description=f'Failed to upload profile picture for user {username}: {str(e)}',
+                            severity='warning',
+                            success=False
+                        )
+                        messages.warning(request, f'User created but profile picture upload failed: {str(e)}')
+
+                # Automatically set permissions based on role
+                if profile.role == 'super_admin':
+                    user.is_staff = True
+                    user.is_superuser = True
+                elif profile.role == 'regional_director':
+                    user.is_staff = True
+                    user.is_superuser = False
+                else:
+                    user.is_staff = False
+                    user.is_superuser = False
+                user.save()
+
+                messages.success(request, f'User "{username}" created successfully!')
 
                 log_user_action(
                     request=request,
-                    action='profile_picture_upload',
-                    description=f'Uploaded profile picture for new user: {username} (Size: {uploaded_file.size} bytes)',
+                    action='user_create',
+                    description=f'Created new user: {username} with role {profile.get_role_display()}',
                     severity='info'
                 )
-            except Exception as e:
-                # Log the error but don't fail user creation
-                print(f"DEBUG: Profile picture upload failed - {str(e)}")
-                log_user_action(
-                    request=request,
-                    action='profile_picture_upload',
-                    description=f'Failed to upload profile picture for user {username}: {str(e)}',
-                    severity='warning',
-                    success=False
-                )
-                messages.warning(request, f'User created but profile picture upload failed: {str(e)}')
 
-        # Automatically set permissions based on role
-        if profile.role == 'super_admin':
-            user.is_staff = True
-            user.is_superuser = True
-        elif profile.role == 'regional_director':
-            user.is_staff = True
-            user.is_superuser = False
-        else:
-            user.is_staff = False
-            user.is_superuser = False
-        user.save()
+                return redirect('admin_panel:user_detail', user_id=user.id)
 
-        messages.success(request, f'User "{username}" created successfully!')
-
-        log_user_action(
-            request=request,
-            action='user_create',
-            description=f'Created new user: {username} with role {profile.get_role_display()}',
-            severity='info'
-        )
-
-        return redirect('admin_panel:user_detail', user_id=user.id)
+        except Exception as e:
+            # Catch any other errors and show a user-friendly message
+            messages.error(request, f'Error creating user: {str(e)}')
+            print(f"DEBUG: User creation failed - {str(e)}")
+            return redirect('admin_panel:user_create')
 
     context = {
         'ranks': UserProfile.RANK_CHOICES,
