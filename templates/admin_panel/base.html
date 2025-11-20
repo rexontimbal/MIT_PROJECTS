@@ -378,15 +378,6 @@
             transition: width var(--transition-base), padding var(--transition-base);
         }
 
-        /* Disable transitions during initial page load */
-        .admin-sidebar.no-transition {
-            transition: none !important;
-        }
-
-        .admin-sidebar.no-transition * {
-            transition: none !important;
-        }
-
         .admin-sidebar.collapsed {
             width: 70px;
             padding: var(--space-4) 0;
@@ -1458,6 +1449,34 @@
             </ul>
         </aside>
 
+        <!-- CRITICAL: Apply collapsed state IMMEDIATELY to prevent any flash -->
+        <script>
+            (function() {
+                // This script runs synchronously right after sidebar renders
+                // Check localStorage and apply collapsed state before any CSS transitions
+                const SIDEBAR_KEY = 'agnes_admin_sidebar_collapsed';
+                const isCollapsed = localStorage.getItem(SIDEBAR_KEY) === 'true';
+
+                if (isCollapsed) {
+                    const sidebar = document.querySelector('.admin-sidebar');
+                    if (sidebar) {
+                        // Add collapsed class immediately, before any rendering/transitions
+                        sidebar.classList.add('collapsed');
+
+                        // Also update the toggle button icon immediately
+                        const toggleBtn = document.getElementById('sidebarToggleBtn');
+                        if (toggleBtn) {
+                            const icon = toggleBtn.querySelector('i');
+                            if (icon) {
+                                icon.classList.remove('fa-chevron-left');
+                                icon.classList.add('fa-chevron-right');
+                            }
+                        }
+                    }
+                }
+            })();
+        </script>
+
         <!-- Sidebar Overlay for Mobile -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -1652,26 +1671,6 @@
         const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
         const SIDEBAR_STORAGE_KEY = 'agnes_admin_sidebar_collapsed';
 
-        // Initialize sidebar state from localStorage WITHOUT transition on page load
-        function initializeSidebarState() {
-            const isCollapsed = localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true';
-            if (isCollapsed && sidebar) {
-                // Add no-transition class to prevent flash
-                sidebar.classList.add('no-transition');
-                // Apply collapsed state immediately
-                sidebar.classList.add('collapsed');
-                updateToggleButton(true);
-
-                // Remove no-transition class after state is applied
-                // Use requestAnimationFrame to ensure the class is applied first
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        sidebar.classList.remove('no-transition');
-                    });
-                });
-            }
-        }
-
         // Update toggle button icon
         function updateToggleButton(isCollapsed) {
             if (sidebarToggleBtn) {
@@ -1700,15 +1699,6 @@
                     localStorage.setItem(SIDEBAR_STORAGE_KEY, isCollapsed ? 'true' : 'false');
                 }
             });
-        }
-
-        // Initialize IMMEDIATELY on DOMContentLoaded (before 'load' event)
-        // This prevents the flash/transition when page loads with collapsed sidebar
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeSidebarState);
-        } else {
-            // DOM is already loaded, run immediately
-            initializeSidebarState();
         }
 
         // =========================================
