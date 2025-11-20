@@ -430,6 +430,7 @@ def user_create(request):
                     unit=request.POST.get('unit', ''),
                     mobile_number=mobile_number,
                     phone_number=request.POST.get('phone_number', ''),
+                    must_change_password='must_change_password' in request.POST,  # True if checkbox is checked
                     created_by=request.user
                 )
 
