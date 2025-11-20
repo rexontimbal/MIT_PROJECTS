@@ -523,8 +523,10 @@ def user_reset_password(request, user_id):
         if request.content_type == 'application/json':
             data = json.loads(request.body)
             new_password = data.get('new_password')
+            must_change_password = data.get('must_change_password', True)
         else:
             new_password = request.POST.get('new_password')
+            must_change_password = request.POST.get('must_change_password', 'on') == 'on'
 
         # Validate password
         if not new_password:
@@ -537,12 +539,13 @@ def user_reset_password(request, user_id):
         user.set_password(new_password)
         user.save()
 
-        # Update profile to force password change
+        # Update profile with must_change_password setting from checkbox
         if hasattr(user, 'profile'):
-            user.profile.must_change_password = True
+            user.profile.must_change_password = must_change_password
             user.profile.save()
 
-        messages.success(request, f'Password for {user.username} reset successfully! User will be required to change password on next login.')
+        status_msg = 'User will be required to change password on next login.' if must_change_password else 'Password reset successfully. User can log in with new password immediately.'
+        messages.success(request, f'Password for {user.username} reset successfully! {status_msg}')
 
         log_user_action(
             request=request,
