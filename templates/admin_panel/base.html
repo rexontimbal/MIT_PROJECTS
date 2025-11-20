@@ -378,6 +378,15 @@
             transition: width var(--transition-base), padding var(--transition-base);
         }
 
+        /* Disable transitions during initial page load */
+        .admin-sidebar.no-transition {
+            transition: none !important;
+        }
+
+        .admin-sidebar.no-transition * {
+            transition: none !important;
+        }
+
         .admin-sidebar.collapsed {
             width: 70px;
             padding: var(--space-4) 0;
@@ -1643,12 +1652,23 @@
         const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
         const SIDEBAR_STORAGE_KEY = 'agnes_admin_sidebar_collapsed';
 
-        // Initialize sidebar state from localStorage
+        // Initialize sidebar state from localStorage WITHOUT transition on page load
         function initializeSidebarState() {
             const isCollapsed = localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true';
             if (isCollapsed && sidebar) {
+                // Add no-transition class to prevent flash
+                sidebar.classList.add('no-transition');
+                // Apply collapsed state immediately
                 sidebar.classList.add('collapsed');
                 updateToggleButton(true);
+
+                // Remove no-transition class after state is applied
+                // Use requestAnimationFrame to ensure the class is applied first
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        sidebar.classList.remove('no-transition');
+                    });
+                });
             }
         }
 
@@ -1682,10 +1702,14 @@
             });
         }
 
-        // Initialize on page load
-        window.addEventListener('load', function() {
+        // Initialize IMMEDIATELY on DOMContentLoaded (before 'load' event)
+        // This prevents the flash/transition when page loads with collapsed sidebar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeSidebarState);
+        } else {
+            // DOM is already loaded, run immediately
             initializeSidebarState();
-        });
+        }
 
         // =========================================
         // ADMIN PROFILE DROPDOWN
