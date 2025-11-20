@@ -1500,7 +1500,7 @@ def login(request):
                 # For new users, clear any existing messages and show only password change requirement
                 storage = messages.get_messages(request)
                 storage.used = True
-                messages.warning(request, 'Your password has expired. Please change it before continuing.')
+                messages.warning(request, 'You must change your password before continuing.')
 
             # Redirect to next page or dashboard
             next_url = request.GET.get('next', 'dashboard')
