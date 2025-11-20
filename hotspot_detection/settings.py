@@ -167,7 +167,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ==============================================================================
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
+    'accidents.backends.UsernameOrBadgeBackend',  # Custom: allows login with username or badge number
+    'django.contrib.auth.backends.ModelBackend',  # Default Django backend (fallback)
 ]
 
 LOGIN_URL = '/login/'

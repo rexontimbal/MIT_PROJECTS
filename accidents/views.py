@@ -1509,8 +1509,11 @@ def login(request):
             # Failed login - determine which field is incorrect
             from django.contrib.auth.models import User
 
-            # Check if user exists
+            # Check if user exists (by username or badge number)
             user_exists = User.objects.filter(username=username).exists()
+            if not user_exists:
+                # Check if it's a badge number
+                user_exists = UserProfile.objects.filter(badge_number=username).exists()
 
             if user_exists:
                 # User exists but password is wrong - keep username, focus on password

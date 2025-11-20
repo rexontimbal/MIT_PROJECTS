@@ -145,51 +145,78 @@ def role_required(*allowed_roles):
     return decorator
 
 
-def handle_failed_login(username, ip_address):
-    """Handle failed login attempt - increment counter and lock if needed"""
+def handle_failed_login(username_or_badge, ip_address):
+    """Handle failed login attempt - increment counter and lock if needed
+
+    Args:
+        username_or_badge: Can be either username or badge number
+        ip_address: Client IP address for audit logging
+    """
     try:
-        user = User.objects.get(username=username)
-        profile = user.profile
+        # Try to find user by username first
+        user = None
+        try:
+            user = User.objects.get(username=username_or_badge)
+        except User.DoesNotExist:
+            # Not found by username, try badge number
+            try:
+                profile = UserProfile.objects.select_related('user').get(badge_number=username_or_badge)
+                user = profile.user
+            except UserProfile.DoesNotExist:
+                pass
 
-        profile.failed_login_attempts += 1
+        if user:
+            profile = user.profile
+            profile.failed_login_attempts += 1
 
-        # Lock account after 5 failed attempts for 30 minutes
-        if profile.failed_login_attempts >= 5:
-            profile.account_locked_until = timezone.now() + timedelta(minutes=30)
-            profile.save()
+            # Lock account after 5 failed attempts for 30 minutes
+            if profile.failed_login_attempts >= 5:
+                profile.account_locked_until = timezone.now() + timedelta(minutes=30)
+                profile.save()
 
-            AuditLog.objects.create(
-                user=user,
-                username=username,
-                action='login_failed',
-                action_description=f'Account locked due to {profile.failed_login_attempts} failed attempts',
-                severity='warning',
-                ip_address=ip_address,
-                success=False
-            )
+                AuditLog.objects.create(
+                    user=user,
+                    username=user.username,
+                    action='login_failed',
+                    action_description=f'Account locked due to {profile.failed_login_attempts} failed attempts (attempted with: {username_or_badge})',
+                    severity='warning',
+                    ip_address=ip_address,
+                    success=False
+                )
 
-            return f'Account locked for 30 minutes due to multiple failed attempts.'
+                return f'Account locked for 30 minutes due to multiple failed attempts.'
+            else:
+                profile.save()
+
+                AuditLog.objects.create(
+                    user=user,
+                    username=user.username,
+                    action='login_failed',
+                    action_description=f'Failed login attempt ({profile.failed_login_attempts}/5) - attempted with: {username_or_badge}',
+                    severity='info',
+                    ip_address=ip_address,
+                    success=False
+                )
+
+                return f'Invalid credentials. {5 - profile.failed_login_attempts} attempts remaining.'
         else:
-            profile.save()
-
+            # User doesn't exist (neither by username nor badge number)
             AuditLog.objects.create(
-                user=user,
-                username=username,
+                username=username_or_badge,
                 action='login_failed',
-                action_description=f'Failed login attempt ({profile.failed_login_attempts}/5)',
+                action_description=f'Failed login attempt - username/badge not found: {username_or_badge}',
                 severity='info',
                 ip_address=ip_address,
                 success=False
             )
-
-            return f'Invalid credentials. {5 - profile.failed_login_attempts} attempts remaining.'
-    except:
-        # User doesn't exist
+            return 'Invalid credentials.'
+    except Exception as e:
+        # Unexpected error
         AuditLog.objects.create(
-            username=username,
+            username=username_or_badge,
             action='login_failed',
-            action_description='Failed login attempt - username not found',
-            severity='info',
+            action_description=f'Failed login attempt - error: {str(e)}',
+            severity='warning',
             ip_address=ip_address,
             success=False
         )
