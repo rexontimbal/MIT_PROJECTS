@@ -118,7 +118,7 @@
 
             <div class="form-group">
                 <label class="form-label" for="username">Username <span style="color: var(--accent-red);">*</span></label>
-                <input type="text" name="username" id="username" class="form-control" required>
+                <input type="text" name="username" id="username" class="form-control" value="{{ form_data.username|default:'' }}" required>
                 <small style="color: var(--text-light);">Must be unique. Letters, digits, and @/./+/-/_ only.</small>
             </div>
 
@@ -139,18 +139,18 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label class="form-label" for="first_name">First Name <span style="color: var(--accent-red);">*</span></label>
-                    <input type="text" name="first_name" id="first_name" class="form-control" required>
+                    <input type="text" name="first_name" id="first_name" class="form-control" value="{{ form_data.first_name|default:'' }}" required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="last_name">Last Name <span style="color: var(--accent-red);">*</span></label>
-                    <input type="text" name="last_name" id="last_name" class="form-control" required>
+                    <input type="text" name="last_name" id="last_name" class="form-control" value="{{ form_data.last_name|default:'' }}" required>
                 </div>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="email">Email Address</label>
-                <input type="email" name="email" id="email" class="form-control">
+                <input type="email" name="email" id="email" class="form-control" value="{{ form_data.email|default:'' }}">
             </div>
 
             <div class="form-group">
@@ -252,7 +252,7 @@
 
             <div class="form-group">
                 <label class="form-label" for="badge_number">Badge Number <span style="color: var(--accent-red);">*</span></label>
-                <input type="text" name="badge_number" id="badge_number" class="form-control" required>
+                <input type="text" name="badge_number" id="badge_number" class="form-control" value="{{ form_data.badge_number|default:'' }}" required>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -332,6 +332,7 @@
             <div class="form-group">
                 <label class="form-label" for="mobile_number">
                     Mobile Number
+                    <span style="color: var(--accent-red);">*</span>
                     <small style="color: var(--text-light); font-weight: 400;">(10-digit format: 917 555 0123)</small>
                 </label>
                 <div class="phone-input-group" id="mobileNumberGroup">
@@ -342,7 +343,9 @@
                            class="form-control phone-input-field"
                            placeholder=""
                            maxlength="18"
-                           inputmode="numeric">
+                           inputmode="numeric"
+                           value="{{ form_data.mobile_number|default:'' }}"
+                           required>
                 </div>
                 <small id="mobileNumberHint" style="color: var(--text-light); display: none; margin-top: 0.5rem;">
                     <i class="fas fa-info-circle"></i> Please enter exactly 10 digits
@@ -518,19 +521,24 @@ function validateForm() {
         return false;
     }
 
-    // Validate mobile number if field has a value
+    // Validate mobile number - REQUIRED
     const mobileValue = mobileNumberInput.value.trim();
-    if (mobileValue !== '') {
-        const digitsOnly = mobileValue.replace(/\D/g, '');
+    if (mobileValue === '') {
+        alert('Mobile number is required! Please enter a 10-digit number (e.g., 917 555 0123)');
+        mobileNumberInput.focus();
+        mobileNumberGroup.classList.add('error');
+        mobileNumberHint.style.display = 'block';
+        return false;
+    }
 
-        if (digitsOnly.length !== 10) {
-            alert('Please enter exactly 10 digits for the mobile number (e.g., 917 555 0123)');
-            mobileNumberInput.focus();
-            mobileNumberInput.setSelectionRange(mobileNumberInput.value.length, mobileNumberInput.value.length);
-            mobileNumberGroup.classList.add('error');
-            mobileNumberHint.style.display = 'block';
-            return false;
-        }
+    const digitsOnly = mobileValue.replace(/\D/g, '');
+    if (digitsOnly.length !== 10) {
+        alert('Please enter exactly 10 digits for the mobile number (e.g., 917 555 0123)');
+        mobileNumberInput.focus();
+        mobileNumberInput.setSelectionRange(mobileNumberInput.value.length, mobileNumberInput.value.length);
+        mobileNumberGroup.classList.add('error');
+        mobileNumberHint.style.display = 'block';
+        return false;
     }
 
     // All validation passed
@@ -776,5 +784,23 @@ function validateMobileNumber(input) {
     mobileNumberHint.style.display = 'none';
     return true;
 }
+
+// =========================================
+// AUTO-FOCUS ON ERROR FIELD
+// =========================================
+// If there's a validation error, focus on the problematic field
+document.addEventListener('DOMContentLoaded', function() {
+    const focusField = '{{ focus_field|default:"" }}';
+    if (focusField) {
+        const element = document.getElementById(focusField);
+        if (element) {
+            setTimeout(() => {
+                element.focus();
+                // Scroll to the element
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+    }
+});
 </script>
 {% endblock %}

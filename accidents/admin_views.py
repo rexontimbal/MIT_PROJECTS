@@ -331,6 +331,7 @@ def user_detail(request, user_id):
 @user_passes_test(is_admin)
 def user_create(request):
     """Create new user"""
+    import re
 
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -340,6 +341,7 @@ def user_create(request):
         first_name = request.POST.get('first_name', '')
         last_name = request.POST.get('last_name', '')
         badge_number = request.POST.get('badge_number', '')
+        mobile_number = request.POST.get('mobile_number', '')
 
         # Debug: Log if profile picture is in request
         has_picture = 'profile_picture' in request.FILES
@@ -352,17 +354,56 @@ def user_create(request):
         # Validate passwords match
         if password != confirm_password:
             messages.error(request, 'Passwords do not match! Please try again.')
-            return redirect('admin_panel:user_create')
+            context = {
+                'ranks': UserProfile.RANK_CHOICES,
+                'roles': UserProfile.ROLE_CHOICES,
+                'form_data': request.POST,
+            }
+            return render(request, 'admin_panel/user_create.html', context)
 
         # Check if username already exists
         if User.objects.filter(username=username).exists():
             messages.error(request, f'Username "{username}" already exists!')
-            return redirect('admin_panel:user_create')
+            context = {
+                'ranks': UserProfile.RANK_CHOICES,
+                'roles': UserProfile.ROLE_CHOICES,
+                'form_data': request.POST,
+            }
+            return render(request, 'admin_panel/user_create.html', context)
 
         # Check if badge_number already exists
         if UserProfile.objects.filter(badge_number=badge_number).exists():
             messages.error(request, f'Badge/ID number "{badge_number}" already exists! Please use a unique badge number.')
-            return redirect('admin_panel:user_create')
+            # Return to form with preserved data and focus badge_number field
+            context = {
+                'ranks': UserProfile.RANK_CHOICES,
+                'roles': UserProfile.ROLE_CHOICES,
+                'form_data': request.POST,
+                'focus_field': 'badge_number',  # Focus on the error field
+            }
+            return render(request, 'admin_panel/user_create.html', context)
+
+        # Validate mobile number is present and complete
+        if not mobile_number or mobile_number.strip() == '':
+            messages.error(request, 'Mobile number is required! Please enter a 10-digit number.')
+            context = {
+                'ranks': UserProfile.RANK_CHOICES,
+                'roles': UserProfile.ROLE_CHOICES,
+                'form_data': request.POST,
+                'focus_field': 'mobile_number',
+            }
+            return render(request, 'admin_panel/user_create.html', context)
+
+        mobile_digits = re.sub(r'\D', '', mobile_number)
+        if len(mobile_digits) != 10:
+            messages.error(request, 'Mobile number must be exactly 10 digits (e.g., 917 555 0123).')
+            context = {
+                'ranks': UserProfile.RANK_CHOICES,
+                'roles': UserProfile.ROLE_CHOICES,
+                'form_data': request.POST,
+                'focus_field': 'mobile_number',
+            }
+            return render(request, 'admin_panel/user_create.html', context)
 
         # Create user and profile in a transaction to ensure both succeed or both fail
         from django.db import transaction
@@ -387,7 +428,7 @@ def user_create(request):
                     province=request.POST.get('province', ''),
                     station=request.POST.get('station', ''),
                     unit=request.POST.get('unit', ''),
-                    mobile_number=request.POST.get('mobile_number', ''),
+                    mobile_number=mobile_number,
                     phone_number=request.POST.get('phone_number', ''),
                     created_by=request.user
                 )
@@ -454,7 +495,12 @@ def user_create(request):
             # Catch any other errors and show a user-friendly message
             messages.error(request, f'Error creating user: {str(e)}')
             print(f"DEBUG: User creation failed - {str(e)}")
-            return redirect('admin_panel:user_create')
+            context = {
+                'ranks': UserProfile.RANK_CHOICES,
+                'roles': UserProfile.ROLE_CHOICES,
+                'form_data': request.POST,
+            }
+            return render(request, 'admin_panel/user_create.html', context)
 
     context = {
         'ranks': UserProfile.RANK_CHOICES,
