@@ -79,13 +79,31 @@
             <i class="fas fa-user"></i>
             {{ target_user.get_full_name|default:target_user.username }}
             {% if target_user.is_superuser %}
-            <span class="badge badge-danger" style="margin-left: var(--space-2); font-size: 0.6em; vertical-align: middle;">
+            <span class="badge badge-danger" style="margin-left: var(--space-2); font-size: 0.5em; vertical-align: middle; padding: 0.4em 0.8em; background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
                 <i class="fas fa-crown"></i> SUPERUSER
             </span>
-            {% elif profile and profile.role == 'regional_director' %}
-            <span class="badge badge-primary" style="margin-left: var(--space-2); font-size: 0.6em; vertical-align: middle; background: linear-gradient(135deg, #0047AB 0%, #003087 100%);">
-                <i class="fas fa-user-shield"></i> REGIONAL DIRECTOR
-            </span>
+            {% elif profile %}
+                {% if profile.role == 'regional_director' %}
+                <span class="badge" style="margin-left: var(--space-2); font-size: 0.5em; vertical-align: middle; padding: 0.4em 0.8em; background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%); color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                    <i class="fas fa-user-shield"></i> REGIONAL DIRECTOR
+                </span>
+                {% elif profile.role == 'provincial_chief' %}
+                <span class="badge" style="margin-left: var(--space-2); font-size: 0.5em; vertical-align: middle; padding: 0.4em 0.8em; background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%); color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                    <i class="fas fa-star"></i> PROVINCIAL CHIEF
+                </span>
+                {% elif profile.role == 'station_commander' %}
+                <span class="badge" style="margin-left: var(--space-2); font-size: 0.5em; vertical-align: middle; padding: 0.4em 0.8em; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                    <i class="fas fa-medal"></i> STATION COMMANDER
+                </span>
+                {% elif profile.role == 'traffic_officer' %}
+                <span class="badge" style="margin-left: var(--space-2); font-size: 0.5em; vertical-align: middle; padding: 0.4em 0.8em; background: linear-gradient(135deg, #0891B2 0%, #0E7490 100%); color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                    <i class="fas fa-traffic-light"></i> TRAFFIC OFFICER
+                </span>
+                {% elif profile.role == 'data_encoder' %}
+                <span class="badge" style="margin-left: var(--space-2); font-size: 0.5em; vertical-align: middle; padding: 0.4em 0.8em; background: linear-gradient(135deg, #64748B 0%, #475569 100%); color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                    <i class="fas fa-keyboard"></i> DATA ENCODER
+                </span>
+                {% endif %}
             {% endif %}
         </h1>
         <div class="admin-breadcrumb">
