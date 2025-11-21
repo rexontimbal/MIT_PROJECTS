@@ -15,7 +15,7 @@ from django.views.decorators.http import require_http_methods
 import json
 from datetime import timedelta
 from datetime import time as dt_time
-from .models import Accident, AccidentCluster, AccidentReport
+from .models import Accident, AccidentCluster, AccidentReport, UserProfile
 from datetime import datetime
 from django.contrib.auth.views import LoginView
 from .auth_utils import pnp_login_required, log_user_action
