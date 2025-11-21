@@ -773,7 +773,7 @@ function previewProfilePicture(event) {
     if (file) {
         // Check file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            showNotification('File size too large! Maximum 5MB allowed.', 'error', 5000);
+            showCenterNotification('File size too large! Maximum 5MB allowed.', 'error', 5000);
             event.target.value = '';
             document.getElementById('image-preview').style.display = 'none';
             return;
@@ -781,7 +781,7 @@ function previewProfilePicture(event) {
 
         // Check file type
         if (!file.type.startsWith('image/')) {
-            showNotification('Please select a valid image file!', 'error', 5000);
+            showCenterNotification('Please select a valid image file!', 'error', 5000);
             event.target.value = '';
             document.getElementById('image-preview').style.display = 'none';
             return;
@@ -837,7 +837,7 @@ function handleDrop(event) {
         const changeEvent = new Event('change', { bubbles: true });
         fileInput.dispatchEvent(changeEvent);
 
-        showNotification('Image selected! Click "Save All Changes" at the bottom to upload.', 'success', 4000);
+        showCenterNotification('Image selected! Click "Save All Changes" at the bottom to upload.', 'success', 4000);
     }
 }
 
@@ -998,7 +998,7 @@ function validateMobileAndProceed(event) {
             mobileNumberHint.style.display = 'block';
 
             // Show popup alert
-            showNotification('Please enter exactly 10 digits for the mobile number (e.g., 917 555 0123)', 'error', 5000);
+            showCenterNotification('Please enter exactly 10 digits for the mobile number (e.g., 917 555 0123)', 'error', 5000);
 
             return false;
         }
