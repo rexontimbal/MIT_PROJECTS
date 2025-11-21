@@ -311,6 +311,97 @@ def user_detail(request, user_id):
                     severity='warning'
                 )
 
+        elif action == 'update_all':
+            # Consolidated update - handles all sections in one save
+            changes_made = []
+
+            # 1. Update Basic Info
+            user.first_name = request.POST.get('first_name', '')
+            user.last_name = request.POST.get('last_name', '')
+            user.email = request.POST.get('email', '')
+
+            # 2. Update Profile Picture
+            if profile:
+                # Check if user wants to remove current picture
+                if request.POST.get('remove_picture'):
+                    if profile.profile_picture:
+                        profile.profile_picture.delete(save=False)
+                        profile.profile_picture = None
+                        changes_made.append('removed profile picture')
+
+                # Handle new picture upload
+                if 'profile_picture' in request.FILES:
+                    try:
+                        import os
+                        from django.conf import settings
+
+                        # Ensure media directories exist
+                        media_root = settings.MEDIA_ROOT
+                        profile_pics_dir = os.path.join(media_root, 'profile_pictures')
+                        os.makedirs(profile_pics_dir, exist_ok=True)
+
+                        # Delete old picture if exists
+                        if profile.profile_picture:
+                            profile.profile_picture.delete(save=False)
+
+                        uploaded_file = request.FILES['profile_picture']
+                        profile.profile_picture = uploaded_file
+                        changes_made.append('updated profile picture')
+
+                    except Exception as e:
+                        messages.warning(request, f'Profile picture upload failed: {str(e)}')
+
+            # 3. Update Profile Information
+            if profile:
+                old_role = profile.role
+                profile.badge_number = request.POST.get('badge_number', '')
+                profile.rank = request.POST.get('rank', '')
+                profile.role = request.POST.get('role', '')
+                profile.region = request.POST.get('region', '')
+                profile.province = request.POST.get('province', '')
+                profile.station = request.POST.get('station', '')
+                profile.unit = request.POST.get('unit', '')
+                profile.mobile_number = request.POST.get('mobile_number', '')
+                profile.phone_number = request.POST.get('phone_number', '')
+
+                # Track role change
+                if old_role != profile.role:
+                    changes_made.append(f'changed role from {old_role} to {profile.role}')
+
+                # Automatically update permissions based on role
+                if profile.role == 'super_admin':
+                    user.is_staff = True
+                    user.is_superuser = True
+                elif profile.role == 'regional_director':
+                    user.is_staff = True
+                    user.is_superuser = False
+                else:
+                    user.is_staff = False
+                    user.is_superuser = False
+
+                profile.save()
+
+            # 4. Update Active Status
+            old_active = user.is_active
+            user.is_active = request.POST.get('is_active') == 'on'
+            if old_active != user.is_active:
+                changes_made.append(f'changed status to {"active" if user.is_active else "inactive"}')
+
+            # Save user
+            user.save()
+
+            # Success message
+            changes_summary = ', '.join(changes_made) if changes_made else 'updated user information'
+            messages.success(request, f'User {user.username} updated successfully! ({changes_summary})')
+
+            # Log the action
+            log_user_action(
+                request=request,
+                action='user_edit',
+                description=f'Updated user: {user.username} - {changes_summary}',
+                severity='info'
+            )
+
         return redirect('admin_panel:user_detail', user_id=user.id)
 
     # Get user's recent audit logs
