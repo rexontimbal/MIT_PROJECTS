@@ -129,7 +129,7 @@
                 </h2>
             </div>
 
-            <form method="post" enctype="multipart/form-data" id="userDetailForm" onsubmit="return validateMobileAndProceed(event) && handleSuperuserSubmit(event, this, 'userDetailForm')">
+            <form method="post" enctype="multipart/form-data" id="userDetailForm" onsubmit="return checkForChanges() && validateMobileAndProceed(event) && handleSuperuserSubmit(event, this, 'userDetailForm')">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="update_all">
 
@@ -680,6 +680,41 @@ function updateStations() {
     }
 }
 
+// =========================================
+// FORM CHANGE DETECTION - GLOBAL STATE
+// =========================================
+let originalFormValues = {};
+let profilePictureChanged = false;
+let removePictureChecked = false;
+
+// Function to check if form has changes (called from inline onsubmit)
+function checkForChanges() {
+    const form = document.getElementById('userDetailForm');
+
+    // Check if any field has changed
+    let hasChanges = profilePictureChanged || removePictureChecked;
+
+    if (!hasChanges) {
+        const currentFormData = new FormData(form);
+        for (let [key, value] of currentFormData.entries()) {
+            if (key !== 'csrfmiddlewaretoken' && key !== 'profile_picture' && key !== 'action') {
+                if (originalFormValues[key] !== value) {
+                    hasChanges = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    // If no changes detected, prevent submission
+    if (!hasChanges) {
+        showNotification('No changes detected. Please make changes before saving.', 'warning', 4000);
+        return false;
+    }
+
+    return true;
+}
+
 // Initialize station dropdown on page load
 document.addEventListener('DOMContentLoaded', function() {
     updateStations();
@@ -703,21 +738,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // =========================================
-    // FORM CHANGE DETECTION
+    // INITIALIZE FORM CHANGE DETECTION
     // =========================================
     const form = document.getElementById('userDetailForm');
     const originalFormData = new FormData(form);
-    const originalValues = {};
 
     // Store original values (excluding file inputs and CSRF token)
     for (let [key, value] of originalFormData.entries()) {
-        if (key !== 'csrfmiddlewaretoken' && key !== 'profile_picture') {
-            originalValues[key] = value;
+        if (key !== 'csrfmiddlewaretoken' && key !== 'profile_picture' && key !== 'action') {
+            originalFormValues[key] = value;
         }
     }
 
     // Check for file input changes
-    let profilePictureChanged = false;
     const profilePictureInput = document.getElementById('profile_picture');
     if (profilePictureInput) {
         profilePictureInput.addEventListener('change', function() {
@@ -726,41 +759,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Check for remove picture checkbox
-    let removePictureChecked = false;
     const removePictureCheckbox = document.querySelector('input[name="remove_picture"]');
     if (removePictureCheckbox) {
         removePictureCheckbox.addEventListener('change', function() {
             removePictureChecked = this.checked;
         });
     }
-
-    // Intercept form submission to check for changes
-    form.addEventListener('submit', function(e) {
-        // Check if any field has changed
-        let hasChanges = profilePictureChanged || removePictureChecked;
-
-        if (!hasChanges) {
-            const currentFormData = new FormData(form);
-            for (let [key, value] of currentFormData.entries()) {
-                if (key !== 'csrfmiddlewaretoken' && key !== 'profile_picture') {
-                    if (originalValues[key] !== value) {
-                        hasChanges = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // If no changes detected, prevent submission
-        if (!hasChanges) {
-            e.preventDefault();
-            showNotification('No changes detected. Please make changes before saving.', 'info', 4000);
-            return false;
-        }
-
-        // Continue with normal submission (including superuser check)
-        return true;
-    });
 });
 
 // Profile picture preview
