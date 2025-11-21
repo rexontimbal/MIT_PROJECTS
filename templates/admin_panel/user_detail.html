@@ -78,6 +78,15 @@
         <h1 class="admin-page-title">
             <i class="fas fa-user"></i>
             {{ target_user.get_full_name|default:target_user.username }}
+            {% if target_user.is_superuser %}
+            <span class="badge badge-danger" style="margin-left: var(--space-2); font-size: 0.6em; vertical-align: middle;">
+                <i class="fas fa-crown"></i> SUPERUSER
+            </span>
+            {% elif profile and profile.role == 'regional_director' %}
+            <span class="badge badge-primary" style="margin-left: var(--space-2); font-size: 0.6em; vertical-align: middle; background: linear-gradient(135deg, #0047AB 0%, #003087 100%);">
+                <i class="fas fa-user-shield"></i> REGIONAL DIRECTOR
+            </span>
+            {% endif %}
         </h1>
         <div class="admin-breadcrumb">
             <a href="{% url 'admin_panel:dashboard' %}"><i class="fas fa-tachometer-alt"></i> Admin</a>
@@ -102,16 +111,6 @@
     </div>
 {% endif %}
 
-<!-- Superuser Warning -->
-{% if target_user.is_superuser %}
-<div class="alert alert-warning" style="margin-bottom: var(--space-6);">
-    <i class="fas fa-shield-alt"></i>
-    <div>
-        <strong>Protected Account:</strong> This is a superuser account. For security, you'll be asked to confirm your password before making changes.
-    </div>
-</div>
-{% endif %}
-
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
     <!-- Main Content -->
     <div>
@@ -121,11 +120,6 @@
                 <h2 class="admin-card-title">
                     <i class="fas fa-id-card"></i>
                     Basic Information
-                    {% if target_user.is_superuser %}
-                    <span class="badge badge-danger" style="margin-left: var(--space-2);">
-                        <i class="fas fa-crown"></i> SUPERUSER
-                    </span>
-                    {% endif %}
                 </h2>
             </div>
 
