@@ -721,13 +721,6 @@
     </div>
 </div>
 
-<!-- Results Summary -->
-<div class="results-summary">
-    <div class="results-summary-text">
-        Page <span id="currentlyShowing">0</span> of <span id="totalFiltered">{{ hotspots.count }}</span> items
-    </div>
-</div>
-
 <!-- Pagination Controls -->
 <div class="pagination-container">
     <div class="pagination-info">
@@ -981,19 +974,90 @@
             return 0;
         });
 
-        // Re-append cards in sorted order
-        cards.forEach(card => container.appendChild(card));
+        // Add fade-out effect before reordering
+        cards.forEach(card => {
+            card.style.transition = 'opacity 0.2s ease';
+            card.style.opacity = '0.3';
+        });
 
-        // Reset to page 1 and update display
-        currentPage = 1;
-        updatePagination();
-        updateActiveFilters();
+        // Re-append cards in sorted order with delay for visual effect
+        setTimeout(() => {
+            cards.forEach(card => container.appendChild(card));
 
-        // Scroll to top of hotspots grid to show sorted results
-        const filtersSection = document.querySelector('.filters-section');
-        if (filtersSection) {
-            filtersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+            // Fade cards back in
+            setTimeout(() => {
+                cards.forEach(card => {
+                    card.style.opacity = '1';
+                });
+            }, 50);
+
+            // Highlight severity meters briefly to show what was sorted
+            if (sortValue === 'severity') {
+                setTimeout(() => {
+                    const severityMeters = document.querySelectorAll('.severity-meter');
+                    severityMeters.forEach(meter => {
+                        meter.style.transition = 'all 0.3s ease';
+                        meter.style.backgroundColor = 'rgba(0, 48, 135, 0.08)';
+                        meter.style.borderRadius = '6px';
+                        meter.style.padding = '0.5rem';
+                        meter.style.marginTop = '0.5rem';
+                    });
+
+                    // Remove highlight after 2 seconds
+                    setTimeout(() => {
+                        severityMeters.forEach(meter => {
+                            meter.style.backgroundColor = '';
+                            meter.style.padding = '';
+                            meter.style.marginTop = '';
+                        });
+                    }, 2000);
+                }, 100);
+            }
+
+            // Reset to page 1 and update display
+            currentPage = 1;
+            updatePagination();
+            updateActiveFilters();
+
+            // Scroll to top of hotspots grid to show sorted results
+            const filtersSection = document.querySelector('.filters-section');
+            if (filtersSection) {
+                filtersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // Show notification to user
+            const sortLabel = sortValue === 'severity' ? 'Severity Score (High to Low)' : 'Total Accidents (High to Low)';
+            showSortNotification(`Sorted by: ${sortLabel}`);
+        }, 200);
+    }
+
+    // Add notification function for sort feedback
+    function showSortNotification(message) {
+        const notification = document.createElement('div');
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #003087 0%, #0047ab 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,48,135,0.3);
+            z-index: 10000;
+            font-weight: 600;
+            font-size: 0.9rem;
+            animation: slideDown 0.3s ease-out;
+        `;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.transition = 'all 0.3s ease';
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(-50%) translateY(-10px)';
+            setTimeout(() => notification.remove(), 300);
+        }, 2500);
     }
 
     function updateActiveFilters() {
@@ -1107,10 +1171,8 @@
             }
         });
 
-        document.getElementById('currentlyShowing').textContent = currentPage;
-        document.getElementById('totalFiltered').textContent = totalPages || 1;
-        document.getElementById('showingCount').textContent = Math.min(endIndex, totalItems);
-        document.getElementById('totalCount').textContent = totalItems;
+        document.getElementById('showingCount').textContent = currentPage;
+        document.getElementById('totalCount').textContent = totalPages || 1;
         document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
 
         document.getElementById('prevPage').disabled = currentPage <= 1;
