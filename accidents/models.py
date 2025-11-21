@@ -426,14 +426,64 @@ class UserProfile(models.Model):
         return f"{self.get_rank_display()} {name}"
 
     def has_permission(self, permission):
-        """Check if user has specific permission based on role"""
+        """
+        Check if user has specific permission based on role
+
+        Permission types:
+        - view: View accident data
+        - add: Create new accidents/reports
+        - edit: Modify existing accidents
+        - delete: Delete accidents (requires approval)
+        - manage_users: Create, edit, activate/deactivate user accounts
+        - delete_users: Permanently delete user accounts
+        - run_clustering: Execute AGNES clustering algorithm
+        - view_all_data: View data across entire region
+        - view_province_data: View data within assigned province
+        - view_station_data: View data within assigned station
+        - view_own_data: View only own created records
+        - generate_reports: Generate and export reports
+        - view_audit_logs: View system audit logs
+        - system_config: Change system configuration
+        - verify_reports: Verify citizen accident reports
+        - assign_jurisdiction: Assign users to provinces/stations
+        """
         permissions = {
-            'super_admin': ['view', 'add', 'edit', 'delete', 'manage_users', 'run_clustering', 'view_all_data'],
-            'regional_director': ['view', 'add', 'edit', 'manage_users', 'run_clustering', 'view_all_data'],
-            'provincial_chief': ['view', 'add', 'edit', 'delete', 'run_clustering', 'view_province_data'],
-            'station_commander': ['view', 'add', 'edit', 'view_station_data'],
-            'traffic_officer': ['view', 'add', 'view_own_data'],
-            'data_encoder': ['view', 'add', 'view_all_data'],
+            'super_admin': [
+                'view', 'add', 'edit', 'delete',
+                'manage_users', 'delete_users', 'assign_jurisdiction',
+                'run_clustering', 'view_all_data',
+                'generate_reports', 'view_audit_logs', 'system_config',
+                'verify_reports'
+            ],
+            'regional_director': [
+                'view', 'add', 'edit',  # No delete - requires super_admin
+                'manage_users', 'assign_jurisdiction',  # Can manage users in region
+                'run_clustering', 'view_all_data',
+                'generate_reports', 'view_audit_logs',
+                'verify_reports'
+            ],
+            'provincial_chief': [
+                'view', 'add', 'edit', 'delete',  # Can delete within province
+                'manage_users',  # Can create/edit users in province
+                'run_clustering', 'view_province_data',
+                'generate_reports', 'view_audit_logs',
+                'verify_reports'
+            ],
+            'station_commander': [
+                'view', 'add', 'edit',  # No delete - requires provincial approval
+                'manage_users',  # Can manage officers at station
+                'view_station_data',
+                'generate_reports',
+                'verify_reports'
+            ],
+            'traffic_officer': [
+                'view', 'add',  # Primary job: add accident reports
+                'view_own_data',  # Can only view own created records
+            ],
+            'data_encoder': [
+                'view', 'add',  # Data entry from paper forms
+                'view_all_data',  # Need to see all data for verification
+            ],
         }
         return permission in permissions.get(self.role, [])
 

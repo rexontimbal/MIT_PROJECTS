@@ -1422,7 +1422,7 @@
                     </a>
                 </li>
 
-                {% if user.is_superuser or user.profile.role == 'super_admin' %}
+                {% if user.is_superuser or user.profile.role in 'super_admin,regional_director,provincial_chief,station_commander' %}
                 <li class="admin-nav-item">
                     <a href="{% url 'admin_panel:users' %}" class="admin-nav-link {% if 'users' in request.path %}active{% endif %}" data-tooltip="User Management">
                         <i class="fas fa-users"></i>
