@@ -575,9 +575,10 @@
             top: 100px;
             margin-top: 1.5rem;
             z-index: 10;
+            display: flex;
+            justify-content: center;
         ">
             <button type="submit" form="userDetailForm" class="btn btn-primary" style="
-                width: 100%;
                 font-size: 1rem;
                 padding: 0.875rem 1.5rem;
                 border-radius: 8px;
@@ -699,6 +700,66 @@ document.addEventListener('DOMContentLoaded', function() {
         if (input.value.length > 0) {
             input.value = input.value.charAt(0).toUpperCase() + input.value.slice(1);
         }
+    });
+
+    // =========================================
+    // FORM CHANGE DETECTION
+    // =========================================
+    const form = document.getElementById('userDetailForm');
+    const originalFormData = new FormData(form);
+    const originalValues = {};
+
+    // Store original values (excluding file inputs and CSRF token)
+    for (let [key, value] of originalFormData.entries()) {
+        if (key !== 'csrfmiddlewaretoken' && key !== 'profile_picture') {
+            originalValues[key] = value;
+        }
+    }
+
+    // Check for file input changes
+    let profilePictureChanged = false;
+    const profilePictureInput = document.getElementById('profile_picture');
+    if (profilePictureInput) {
+        profilePictureInput.addEventListener('change', function() {
+            profilePictureChanged = this.files.length > 0;
+        });
+    }
+
+    // Check for remove picture checkbox
+    let removePictureChecked = false;
+    const removePictureCheckbox = document.querySelector('input[name="remove_picture"]');
+    if (removePictureCheckbox) {
+        removePictureCheckbox.addEventListener('change', function() {
+            removePictureChecked = this.checked;
+        });
+    }
+
+    // Intercept form submission to check for changes
+    form.addEventListener('submit', function(e) {
+        // Check if any field has changed
+        let hasChanges = profilePictureChanged || removePictureChecked;
+
+        if (!hasChanges) {
+            const currentFormData = new FormData(form);
+            for (let [key, value] of currentFormData.entries()) {
+                if (key !== 'csrfmiddlewaretoken' && key !== 'profile_picture') {
+                    if (originalValues[key] !== value) {
+                        hasChanges = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // If no changes detected, prevent submission
+        if (!hasChanges) {
+            e.preventDefault();
+            showNotification('No changes detected. Please make changes before saving.', 'info', 4000);
+            return false;
+        }
+
+        // Continue with normal submission (including superuser check)
+        return true;
     });
 });
 
