@@ -1392,21 +1392,21 @@ def get_critical_alerts():
                 'message': f'{increase_percentage:.0f}% increase in accidents this week',
                 'action_url': '/analytics/'
             })
-    
+
     # Alert 3: High-severity hotspots
     critical_hotspots = AccidentCluster.objects.filter(
         severity_score__gte=80
     ).count()
-    
+
     if critical_hotspots > 0:
         alerts.append({
-            'type': 'danger',
-            'icon': '🔴',
+            'type': 'warning',
+            'icon': '⚠️',
             'title': 'Critical Hotspots',
             'message': f'{critical_hotspots} high-severity areas identified',
             'action_url': '/hotspots/?min_severity=80'
         })
-    
+
     # Alert 4: Pending reports needing attention
     pending_reports_24h = AccidentReport.objects.filter(
         status='pending',
