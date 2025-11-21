@@ -9,83 +9,261 @@
 
 {% block extra_css %}
 <style>
+    /* ===== MODERN FLAT UI STYLING ===== */
+
     .hotspots-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         flex-wrap: wrap;
         gap: 1rem;
     }
 
+    /* Clean Search & Filters Section */
+    .filters-section {
+        background: white;
+        padding: 1.75rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        margin-bottom: 1.5rem;
+        border: 1px solid #E5E7EB;
+    }
+
+    .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .filters-header h3 {
+        margin: 0;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    /* Search Input - Modern & Flat */
+    #hotspotSearch {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.75rem;
+        border: 1.5px solid #D1D5DB;
+        border-radius: 6px;
+        font-size: 0.9375rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+
+    #hotspotSearch:hover {
+        border-color: #9CA3AF;
+    }
+
+    #hotspotSearch:focus {
+        outline: none;
+        border-color: #003087;
+        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.08);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6B7280;
+        pointer-events: none;
+    }
+
+    /* Filter Grid - Clean Layout */
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1.25rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .filter-group label {
+        font-weight: 500;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .filter-group select {
+        padding: 0.625rem 0.875rem;
+        border: 1.5px solid #D1D5DB;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        background: white;
+        cursor: pointer;
+    }
+
+    .filter-group select:hover {
+        border-color: #9CA3AF;
+    }
+
+    .filter-group select:focus {
+        outline: none;
+        border-color: #003087;
+        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.08);
+    }
+
+    /* Active Filters Tags */
+    .active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #E5E7EB;
+    }
+
+    .filter-tag {
+        background: #EFF6FF;
+        color: #1E40AF;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8125rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        border: 1px solid #DBEAFE;
+    }
+
+    .filter-tag button {
+        background: none;
+        border: none;
+        color: #1E40AF;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1.125rem;
+        line-height: 1;
+        padding: 0;
+        margin-left: 0.25rem;
+        transition: color 0.2s;
+    }
+
+    .filter-tag button:hover {
+        color: #1E3A8A;
+    }
+
+    /* Summary Cards - Flat & Clean */
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        text-align: center;
+        transition: all 0.2s ease;
+        border: 1px solid #E5E7EB;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .summary-card h3 {
+        font-size: 2rem;
+        color: #003087;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    .summary-card p {
+        color: #6B7280;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    /* Hotspot Cards - Flat Modern Design */
     .hotspots-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: 1.5rem;
+        gap: 1.25rem;
         margin-bottom: 2rem;
     }
 
     .hotspot-card {
         background: white;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         overflow: hidden;
-        transition: var(--transition);
-        border-left: 4px solid var(--primary-red);
+        transition: all 0.2s ease;
+        border: 1px solid #E5E7EB;
+        border-left: 3px solid #DC143C;
         position: relative;
     }
 
     .hotspot-card:hover {
-        box-shadow: var(--shadow-md);
-        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
     }
 
     .hotspot-header {
-        background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+        background: #FFA500;
         color: white;
-        padding: 1.5rem;
+        padding: 1.25rem;
         position: relative;
     }
 
-    .hotspot-rank {
-        display: inline-block;
-        background: rgba(255, 255, 255, 0.3);
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
+    .hotspot-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        margin: 0 0 0.75rem 0;
     }
 
-    .hotspot-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin: 0;
+    .risk-badge {
+        padding: 0.375rem 0.875rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-block;
     }
+
+    .risk-critical { background: #DC143C; color: white; }
+    .risk-high { background: #F59E0B; color: white; }
+    .risk-medium { background: #10B981; color: white; }
+    .risk-low { background: #6B7280; color: white; }
 
     .hotspot-body {
-        padding: 1.5rem;
+        padding: 1.25rem;
     }
 
     .hotspot-stat {
         display: flex;
         justify-content: space-between;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid var(--border-color);
+        padding: 0.625rem 0;
+        border-bottom: 1px solid #E5E7EB;
     }
 
-    .hotspot-stat:last-child {
+    .hotspot-stat:last-of-type {
         border-bottom: none;
     }
 
     .stat-label {
-        color: var(--text-medium);
-        font-size: 0.9rem;
+        color: #6B7280;
+        font-size: 0.875rem;
     }
 
     .stat-value {
-        font-weight: 700;
-        color: var(--text-dark);
+        font-weight: 600;
+        color: #111827;
     }
 
     .severity-meter {
@@ -96,158 +274,179 @@
         display: flex;
         justify-content: space-between;
         margin-bottom: 0.5rem;
-        font-size: 0.9rem;
+        font-size: 0.875rem;
+        color: #374151;
     }
 
     .severity-bar {
-        height: 10px;
-        background: var(--bg-light);
-        border-radius: 10px;
+        height: 8px;
+        background: #E5E7EB;
+        border-radius: 4px;
         overflow: hidden;
     }
 
     .severity-fill {
         height: 100%;
-        border-radius: 10px;
+        border-radius: 4px;
         transition: width 0.3s ease;
     }
 
-    .severity-low { background: linear-gradient(90deg, #28A745, #5CB85C); }
-    .severity-medium { background: linear-gradient(90deg, #FFA500, #FFB84D); }
-    .severity-high { background: linear-gradient(90deg, #DC143C, #FF6B6B); }
+    .severity-low { background: #10B981; }
+    .severity-medium { background: #F59E0B; }
+    .severity-high { background: #DC143C; }
 
     .hotspot-actions {
-        padding: 1rem 1.5rem;
-        background: var(--bg-light);
+        padding: 1rem 1.25rem;
+        background: #F9FAFB;
         display: flex;
         gap: 0.5rem;
+        border-top: 1px solid #E5E7EB;
+    }
+
+    /* Modern Flat Buttons */
+    .btn {
+        padding: 0.625rem 1.25rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #003087;
+        color: white;
+        border: 1px solid #003087;
+    }
+
+    .btn-primary:hover {
+        background: #002366;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline {
+        background: white;
+        color: #374151;
+        border: 1.5px solid #D1D5DB;
+    }
+
+    .btn-outline:hover {
+        background: #F9FAFB;
+        border-color: #9CA3AF;
     }
 
     .btn-sm {
         padding: 0.5rem 1rem;
-        font-size: 0.85rem;
+        font-size: 0.8125rem;
     }
 
-    /* Enhanced Filters Section */
-    .filters-section {
+    /* View Toggle - Flat Design */
+    .view-toggle {
+        display: flex;
+        background: #F3F4F6;
+        border-radius: 6px;
+        padding: 0.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid #E5E7EB;
+    }
+
+    .view-option {
+        flex: 1;
+        padding: 0.5rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6B7280;
+    }
+
+    .view-option.active {
         background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-        margin-bottom: 2rem;
+        color: #003087;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
 
-    .filters-header {
+    /* Results Summary - Clean */
+    .results-summary {
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        margin-bottom: 1rem;
+        border: 1px solid #E5E7EB;
+    }
+
+    .results-summary-text {
+        color: #374151;
+        font-size: 0.9375rem;
+        font-weight: 500;
+    }
+
+    .results-summary-text span {
+        color: #003087;
+        font-weight: 600;
+    }
+
+    /* Pagination - Modern Flat */
+    .pagination-container {
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        margin-bottom: 1rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .filters-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-    }
-
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .filter-group label {
-        font-weight: 500;
-        color: var(--text-dark);
-        font-size: 0.9rem;
-    }
-
-    .filter-group select, .filter-group input {
-        padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        font-size: 0.9rem;
-        transition: var(--transition);
-    }
-
-    .filter-group select:focus, .filter-group input:focus {
-        outline: none;
-        border-color: var(--primary-blue);
-        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.1);
-    }
-
-    .active-filters {
-        display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .filter-tag {
-        background: var(--light-blue);
-        color: var(--primary-blue);
-        padding: 0.25rem 0.75rem;
-        border-radius: 15px;
-        font-size: 0.8rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .filter-tag button {
-        background: none;
-        border: none;
-        color: var(--primary-blue);
-        cursor: pointer;
-        font-weight: bold;
-    }
-
-    .summary-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
-        margin-bottom: 2rem;
+        border: 1px solid #E5E7EB;
     }
 
-    .summary-card {
+    .pagination-info {
+        color: #6B7280;
+        font-size: 0.875rem;
+    }
+
+    .pagination-controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .pagination-controls button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    #pageInfo {
+        padding: 0 1rem;
+        font-weight: 600;
+        color: #111827;
+        font-size: 0.875rem;
+    }
+
+    #itemsPerPage {
+        padding: 0.5rem 0.75rem;
+        border: 1.5px solid #D1D5DB;
+        border-radius: 6px;
+        font-size: 0.875rem;
         background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-        text-align: center;
-        transition: var(--transition);
+        cursor: pointer;
     }
 
-    .summary-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-    }
-
-    .summary-card h3 {
-        font-size: 2rem;
-        color: var(--primary-blue);
-        margin-bottom: 0.5rem;
-    }
-
-    .summary-card p {
-        color: var(--text-medium);
-        font-size: 0.9rem;
-    }
-
-    /* Loading States */
-    .loading {
-        opacity: 0.6;
-        pointer-events: none;
-    }
-
+    /* Loading & Empty States */
     .loading-spinner {
         display: inline-block;
         width: 20px;
         height: 20px;
-        border: 2px solid #f3f3f3;
-        border-top: 2px solid var(--primary-blue);
+        border: 2px solid #E5E7EB;
+        border-top: 2px solid #003087;
         border-radius: 50%;
         animation: spin 1s linear infinite;
     }
@@ -257,35 +456,44 @@
         100% { transform: rotate(360deg); }
     }
 
-    /* Empty State */
-    .empty-state {
+    .empty-state, .no-results {
         grid-column: 1 / -1;
         text-align: center;
-        padding: 3rem;
+        padding: 3rem 2rem;
         background: white;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        border: 1px solid #E5E7EB;
     }
 
-    /* Tooltip for municipality names */
+    .empty-state h3, .no-results h4 {
+        color: #374151;
+        margin-bottom: 0.75rem;
+    }
+
+    .empty-state p, .no-results p {
+        color: #6B7280;
+        margin-bottom: 1rem;
+    }
+
+    /* Municipality Tooltip */
     .municipality-hover {
         cursor: help;
         position: relative;
-        border-bottom: 1px dotted var(--text-medium);
+        border-bottom: 1px dotted #9CA3AF;
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
     }
 
     .municipality-hover:hover {
-        color: var(--primary-blue);
-        border-bottom-color: var(--primary-blue);
+        color: #003087;
+        border-bottom-color: #003087;
     }
 
     .info-icon {
         opacity: 0.6;
-        margin-left: 0.15rem;
-        transition: opacity 0.3s;
+        transition: opacity 0.2s;
     }
 
     .municipality-hover:hover .info-icon {
@@ -298,18 +506,18 @@
         bottom: 100%;
         left: 50%;
         transform: translateX(-50%);
-        background-color: var(--dark-navy);
+        background-color: #1F2937;
         color: white;
         padding: 0.5rem 1rem;
         border-radius: 6px;
-        font-size: 0.85rem;
+        font-size: 0.8125rem;
         white-space: normal;
         max-width: 300px;
         text-align: center;
         line-height: 1.4;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.3s;
+        transition: opacity 0.2s;
         z-index: 1000;
         margin-bottom: 0.5rem;
     }
@@ -318,73 +526,7 @@
         opacity: 1;
     }
 
-    .municipality-hover::before {
-        content: '';
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        border: 6px solid transparent;
-        border-top-color: var(--dark-navy);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s;
-        z-index: 100;
-    }
-
-    .municipality-hover:hover::before {
-        opacity: 1;
-    }
-
-    @media (max-width: 768px) {
-        .hotspots-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .hotspots-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .filters-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* Enhanced Search & Stats */
-    .stats-search-section {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-    }
-
-    /* View Toggle */
-    .view-toggle {
-        display: flex;
-        background: var(--bg-light);
-        border-radius: 8px;
-        padding: 0.25rem;
-        margin-bottom: 1rem;
-    }
-
-    .view-option {
-        flex: 1;
-        padding: 0.5rem 1rem;
-        text-align: center;
-        cursor: pointer;
-        border-radius: 6px;
-        transition: var(--transition);
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-
-    .view-option.active {
-        background: var(--primary-blue);
-        color: white;
-    }
-
-    /* Grid vs List View */
+    /* List View Styles */
     .hotspots-grid.view-list {
         grid-template-columns: 1fr;
     }
@@ -421,90 +563,29 @@
         margin-top: 0;
     }
 
-    /* Risk Level Badges */
-    .risk-badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 15px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hotspots-grid {
+            grid-template-columns: 1fr;
+        }
 
-    .risk-critical { background: #DC143C; color: white; }
-    .risk-high { background: #FFA500; color: white; }
-    .risk-medium { background: #FFB84D; color: #333; }
-    .risk-low { background: #28A745; color: white; }
+        .hotspots-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
 
-    /* Progress Indicators */
-    .progress-indicators {
-        display: flex;
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-    }
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
 
-    .progress-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--border-color);
-    }
+        .pagination-container {
+            flex-direction: column;
+            align-items: stretch;
+        }
 
-    .progress-dot.active {
-        background: var(--primary-blue);
-    }
-
-
-    .search-info.show {
-        display: block;
-    }
-
-    /* No Results State */
-    .no-results {
-        grid-column: 1 / -1;
-        text-align: center;
-        padding: 3rem;
-        background: white;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-        margin: 1rem 0;
-    }
-
-    .no-results h4 {
-        color: var(--text-medium);
-        margin-bottom: 1rem;
-    }
-
-    .no-results p {
-        color: var(--text-light);
-        margin-bottom: 0.5rem;
-    }
-
-    /* Quick Stats */
-    .quick-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .stat-item-small {
-        background: white;
-        padding: 1rem;
-        border-radius: 8px;
-        box-shadow: var(--shadow-sm);
-        text-align: center;
-    }
-
-    .stat-item-small .value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--primary-blue);
-        display: block;
-    }
-
-    .stat-item-small .label {
-        font-size: 0.8rem;
-        color: var(--text-light);
+        .pagination-controls {
+            justify-content: center;
+        }
     }
 </style>
 {% endblock %}
@@ -512,10 +593,10 @@
 {% block content %}
 <div class="hotspots-header">
     <div>
-        <h2>🔴 Accident Hotspots</h2>
-        <p>High-risk areas identified by AGNES clustering algorithm • {{ hotspots.count }} hotspots detected</p>
+        <h2 style="color: #111827; font-size: 1.75rem; font-weight: 700; margin: 0 0 0.5rem 0;">🔴 Accident Hotspots</h2>
+        <p style="color: #6B7280; margin: 0;">High-risk areas identified by AGNES clustering algorithm • {{ hotspots.count }} hotspots detected</p>
     </div>
-    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
         <button class="btn btn-outline" onclick="window.location.href='{% url 'map_view' %}'">
             <span>🗺️</span> View on Map
         </button>
@@ -525,14 +606,13 @@
     </div>
 </div>
 
-<!-- View Toggle & Progress -->
+<!-- View Toggle -->
 <div class="view-toggle">
     <div class="view-option active" onclick="switchView('grid')">📊 Grid View</div>
     <div class="view-option" onclick="switchView('list')">📋 List View</div>
 </div>
 
-
-<!-- Summary Cards - Fixed Total Statistics -->
+<!-- Summary Cards -->
 <div class="summary-cards">
     <div class="summary-card">
         <h3>{{ hotspots.count }}</h3>
@@ -552,18 +632,18 @@
     </div>
 </div>
 
-<!-- Enhanced Filters -->
+<!-- Enhanced Filters Section -->
 <div class="filters-section">
     <div class="filters-header">
-        <h3 style="margin: 0;">Search & Filter Hotspots</h3>
+        <h3>Search & Filter Hotspots</h3>
         <button type="button" class="btn btn-outline btn-sm" onclick="clearAllFiltersAndSearch()">
             Clear All
         </button>
     </div>
 
-    <!-- Search Bar - Inside Filters Section -->
-    <div style="margin-bottom: 1.5rem;">
-        <label style="display: block; font-weight: 500; color: var(--text-dark); font-size: 0.9rem; margin-bottom: 0.5rem;">
+    <!-- Search Bar -->
+    <div style="margin-bottom: 1.25rem;">
+        <label style="display: block; font-weight: 500; color: #374151; font-size: 0.875rem; margin-bottom: 0.5rem;">
             Search Hotspots
         </label>
         <div style="display: flex; gap: 0.5rem;">
@@ -571,19 +651,17 @@
                 <input type="text"
                        id="hotspotSearch"
                        placeholder="Search by location, cluster ID, or municipality..."
-                       style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; transition: all 0.3s ease;"
-                       onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 0 3px rgba(0,48,135,0.1)';"
-                       onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';"
                        onkeypress="if(event.key==='Enter') performSearch()">
-                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-medium); pointer-events: none;"></i>
+                <i class="fas fa-search search-icon"></i>
             </div>
-            <button onclick="performSearch()" class="btn btn-primary" style="padding: 0.75rem 2rem; white-space: nowrap;">
+            <button onclick="performSearch()" class="btn btn-primary" style="padding: 0.75rem 1.75rem; white-space: nowrap;">
                 🔍 Search
             </button>
         </div>
     </div>
 
-    <div class="filters-grid" id="hotspotFilters">
+    <!-- Filter Grid -->
+    <div class="filters-grid">
         <div class="filter-group">
             <label for="province">Province</label>
             <select name="province" id="province" onchange="updateMunicipalityDropdown(); applyClientSideFilters();">
@@ -635,35 +713,35 @@
             </select>
         </div>
     </div>
-    
+
     <!-- Active Filters Display -->
     <div class="active-filters" id="activeFilters">
-        <!-- Active filters will be displayed here dynamically -->
+        <!-- Active filters displayed dynamically -->
     </div>
 </div>
 
 <!-- Results Summary -->
-<div style="background: white; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: var(--shadow-sm); margin-bottom: 1rem;">
-    <div style="color: var(--text-dark); font-size: 1rem; font-weight: 600;">
-        Showing <span id="currentlyShowing" style="color: var(--primary-blue);">0</span> of <span id="totalFiltered" style="color: var(--primary-blue);">{{ hotspots.count }}</span> hotspots
+<div class="results-summary">
+    <div class="results-summary-text">
+        Showing <span id="currentlyShowing">0</span> of <span id="totalFiltered">{{ hotspots.count }}</span> hotspots
     </div>
 </div>
 
 <!-- Pagination Controls -->
-<div style="background: white; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: var(--shadow-sm); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-    <div style="color: var(--text-medium); font-size: 0.9rem;">
+<div class="pagination-container">
+    <div class="pagination-info">
         Page <span id="showingCount">0</span> of <span id="totalCount">{{ hotspots.count }}</span> items
     </div>
-    <div style="display: flex; gap: 0.5rem; align-items: center;">
+    <div class="pagination-controls">
         <button id="prevPage" onclick="changePage(-1)" class="btn btn-outline btn-sm" disabled>
             ← Previous
         </button>
-        <span id="pageInfo" style="padding: 0 1rem; font-weight: 600; color: var(--text-dark);">Page 1</span>
+        <span id="pageInfo">Page 1</span>
         <button id="nextPage" onclick="changePage(1)" class="btn btn-outline btn-sm">
             Next →
         </button>
     </div>
-    <select id="itemsPerPage" onchange="changeItemsPerPage()" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem;">
+    <select id="itemsPerPage" onchange="changeItemsPerPage()">
         <option value="12">12 per page</option>
         <option value="24">24 per page</option>
         <option value="48">48 per page</option>
@@ -693,7 +771,7 @@
                 </span>
             </div>
         </div>
-        
+
         <div class="hotspot-body">
             <div class="hotspot-stat">
                 <span class="stat-label">Cluster ID</span>
@@ -718,23 +796,23 @@
                 <span class="stat-value municipality-hover"
                       data-municipalities="Areas: {{ hotspot.municipalities|join:', ' }}">
                     <strong>{{ hotspot.municipalities|length }}</strong> area{% if hotspot.municipalities|length > 1 %}s{% endif %}
-                    <span class="info-icon" style="font-size: 0.9rem;">🔍</span>
+                    <span class="info-icon">🔍</span>
                 </span>
             </div>
-            
+
             <div class="severity-meter">
                 <div class="severity-label">
                     <span>Severity Score</span>
                     <strong>{{ hotspot.severity_score|floatformat:1 }}/100</strong>
                 </div>
                 <div class="severity-bar">
-                    <div class="severity-fill {% if hotspot.severity_score >= 70 %}severity-high{% elif hotspot.severity_score >= 40 %}severity-medium{% else %}severity-low{% endif %}" 
+                    <div class="severity-fill {% if hotspot.severity_score >= 70 %}severity-high{% elif hotspot.severity_score >= 40 %}severity-medium{% else %}severity-low{% endif %}"
                          style="width: {{ hotspot.severity_score }}%">
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div class="hotspot-actions">
             <a href="{% url 'hotspot_detail' hotspot.cluster_id %}" class="btn btn-primary btn-sm">
                 View Details
@@ -756,47 +834,44 @@
 </div>
 
 <!-- Loading Overlay -->
-<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
-    <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center;">
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
         <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
-        <p>Loading hotspots...</p>
+        <p style="margin: 0; color: #374151;">Loading hotspots...</p>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Province to Municipality mapping for cascade filtering
+    // Province to Municipality mapping
     const provinceMunicipalityMap = {{ province_municipality_map|safe }};
     const allMunicipalities = {{ municipalities|safe }};
 
-    // Initialize when page loads
+    // Pagination state
+    let currentPage = 1;
+    let itemsPerPage = 12;
+
+    // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        updateActiveFilters();
         initializeHotspotCards();
+        updatePagination();
+        updateActiveFilters();
     });
 
-    // CASCADE FILTERING - Update municipality dropdown when province changes
+    // CASCADE FILTERING - Update municipality dropdown
     function updateMunicipalityDropdown() {
         const provinceSelect = document.getElementById('province');
         const municipalitySelect = document.getElementById('municipality');
         const selectedProvince = provinceSelect.value;
 
-        // Clear current municipality selection
         municipalitySelect.value = '';
-
-        // Remove all current options except "All Municipalities"
         municipalitySelect.innerHTML = '<option value="">All Municipalities</option>';
 
-        // Get municipalities for selected province
-        let municipalitiesToShow = [];
-        if (selectedProvince) {
-            municipalitiesToShow = provinceMunicipalityMap[selectedProvince] || [];
-        } else {
-            municipalitiesToShow = allMunicipalities;
-        }
+        let municipalitiesToShow = selectedProvince ?
+            (provinceMunicipalityMap[selectedProvince] || []) :
+            allMunicipalities;
 
-        // Add municipality options
         municipalitiesToShow.forEach(function(mun) {
             const option = document.createElement('option');
             option.value = mun;
@@ -805,12 +880,10 @@
         });
     }
 
-    // CLIENT-SIDE FILTERING - No page reload!
+    // CLIENT-SIDE FILTERING
     function applyClientSideFilters() {
         const cards = Array.from(document.getElementsByClassName('hotspot-card'));
         const searchTerm = document.getElementById('hotspotSearch').value.toLowerCase().trim();
-
-        // Get dropdown filter values
         const provinceFilter = document.getElementById('province').value.toLowerCase();
         const severityFilter = document.getElementById('min_severity').value;
         const accidentsFilter = document.getElementById('min_accidents').value;
@@ -819,43 +892,25 @@
         let visibleCount = 0;
 
         cards.forEach(card => {
-            // Get card data
             const location = (card.getAttribute('data-location') || '').toLowerCase();
             const clusterId = (card.getAttribute('data-cluster') || '').toString().toLowerCase();
             const municipalities = (card.getAttribute('data-municipalities') || '').toLowerCase();
             const provinces = (card.getAttribute('data-provinces') || '').toLowerCase();
-            const titleElement = card.querySelector('.hotspot-title');
-            const titleText = titleElement ? titleElement.textContent.toLowerCase() : '';
             const severity = parseFloat(card.getAttribute('data-severity')) || 0;
             const accidents = parseInt(card.getAttribute('data-accidents')) || 0;
 
-            // Check search match
             const searchMatch = searchTerm === '' ||
                               location.includes(searchTerm) ||
                               clusterId.includes(searchTerm) ||
                               municipalities.includes(searchTerm) ||
-                              provinces.includes(searchTerm) ||
-                              titleText.includes(searchTerm);
+                              provinces.includes(searchTerm);
 
-            // Check province filter - check if card's provinces include the selected province
-            const provinceMatch = provinceFilter === '' ||
-                                provinces.includes(provinceFilter);
+            const provinceMatch = provinceFilter === '' || provinces.includes(provinceFilter);
+            const severityMatch = severityFilter === '' || severity >= parseFloat(severityFilter);
+            const accidentsMatch = accidentsFilter === '' || accidents >= parseInt(accidentsFilter);
+            const municipalityMatch = municipalityFilter === '' || municipalities.includes(municipalityFilter);
 
-            // Check severity filter
-            const severityMatch = severityFilter === '' ||
-                                severity >= parseFloat(severityFilter);
-
-            // Check accidents filter
-            const accidentsMatch = accidentsFilter === '' ||
-                                 accidents >= parseInt(accidentsFilter);
-
-            // Check municipality filter
-            const municipalityMatch = municipalityFilter === '' ||
-                                    municipalities.includes(municipalityFilter);
-
-            // Card is visible only if ALL filters match
-            const allMatch = searchMatch && provinceMatch && severityMatch &&
-                           accidentsMatch && municipalityMatch;
+            const allMatch = searchMatch && provinceMatch && severityMatch && accidentsMatch && municipalityMatch;
 
             if (allMatch) {
                 card.setAttribute('data-search-visible', 'true');
@@ -865,26 +920,19 @@
             }
         });
 
-        // Show no results message if needed
         if (visibleCount === 0) {
             showNoResultsMessage('your filters');
         } else {
             hideNoResultsMessage();
         }
 
-        // Update active filters display
         updateActiveFilters();
-
-        // Reset to page 1 and update pagination
         currentPage = 1;
         updatePagination();
     }
 
     function clearAllFiltersAndSearch() {
-        // Clear search
         document.getElementById('hotspotSearch').value = '';
-
-        // Clear all dropdown filters
         document.getElementById('province').value = '';
         document.getElementById('min_severity').value = '';
         document.getElementById('min_accidents').value = '';
@@ -893,10 +941,8 @@
         const wasSorted = sortDropdown.value !== '';
         sortDropdown.value = '';
 
-        // Reset municipality dropdown to show all municipalities
         updateMunicipalityDropdown();
 
-        // Reset all cards to visible
         const cards = document.getElementsByClassName('hotspot-card');
         Array.from(cards).forEach(card => {
             card.setAttribute('data-search-visible', 'true');
@@ -906,7 +952,6 @@
         updateActiveFilters();
         currentPage = 1;
 
-        // Reload to reset original order if there was sorting
         if (wasSorted) {
             window.location.reload();
         } else {
@@ -914,12 +959,10 @@
         }
     }
 
-    // NEW UNIFIED SORT HANDLER
     function handleSortChange() {
         const sortValue = document.getElementById('sort_by').value;
 
         if (!sortValue) {
-            // Reset to default order - reload page
             window.location.reload();
             return;
         }
@@ -929,20 +972,15 @@
 
         cards.sort((a, b) => {
             if (sortValue === 'accidents') {
-                const aAccidents = parseInt(a.getAttribute('data-accidents'));
-                const bAccidents = parseInt(b.getAttribute('data-accidents'));
-                return bAccidents - aAccidents;
+                return parseInt(b.getAttribute('data-accidents')) - parseInt(a.getAttribute('data-accidents'));
             } else if (sortValue === 'severity') {
-                const aSeverity = parseFloat(a.getAttribute('data-severity'));
-                const bSeverity = parseFloat(b.getAttribute('data-severity'));
-                return bSeverity - aSeverity;
+                return parseFloat(b.getAttribute('data-severity')) - parseFloat(a.getAttribute('data-severity'));
             }
             return 0;
         });
 
         cards.forEach(card => container.appendChild(card));
 
-        // Reset to page 1 and update pagination after sorting
         currentPage = 1;
         updatePagination();
         updateActiveFilters();
@@ -951,8 +989,6 @@
     function updateActiveFilters() {
         const activeFilters = document.getElementById('activeFilters');
         const searchTerm = document.getElementById('hotspotSearch').value.trim();
-
-        // Get dropdown values
         const province = document.getElementById('province').value;
         const minSeverity = document.getElementById('min_severity').value;
         const minAccidents = document.getElementById('min_accidents').value;
@@ -961,7 +997,6 @@
 
         let activeFiltersHTML = '';
 
-        // Add search filter tag if search is active
         if (searchTerm) {
             activeFiltersHTML += `<div class="filter-tag">
                 Search: "${searchTerm}"
@@ -969,7 +1004,6 @@
             </div>`;
         }
 
-        // Add province filter tag
         if (province) {
             activeFiltersHTML += `<div class="filter-tag">
                 Province: ${province}
@@ -977,7 +1011,6 @@
             </div>`;
         }
 
-        // Add municipality filter tag
         if (municipality) {
             activeFiltersHTML += `<div class="filter-tag">
                 Municipality: ${municipality}
@@ -985,7 +1018,6 @@
             </div>`;
         }
 
-        // Add severity filter tag
         if (minSeverity) {
             let level = 'All';
             if (minSeverity === '70') level = 'Critical (70+)';
@@ -999,7 +1031,6 @@
             </div>`;
         }
 
-        // Add accidents filter tag
         if (minAccidents) {
             activeFiltersHTML += `<div class="filter-tag">
                 Min Accidents: ${minAccidents}+
@@ -1007,7 +1038,6 @@
             </div>`;
         }
 
-        // Add sort filter tag from dropdown
         if (sortBy) {
             const sortLabel = sortBy === 'accidents' ? 'Sorted by Accidents' : 'Sorted by Severity';
             activeFiltersHTML += `<div class="filter-tag">
@@ -1025,15 +1055,12 @@
     }
 
     function removeFilter(filterName) {
-        // Reset the specific dropdown filter
         document.getElementById(filterName).value = '';
 
-        // If province filter is removed, reset municipality dropdown
         if (filterName === 'province') {
             updateMunicipalityDropdown();
         }
 
-        // If sort filter is removed, reload to restore default order
         if (filterName === 'sort_by') {
             window.location.reload();
             return;
@@ -1043,16 +1070,74 @@
     }
 
     function initializeHotspotCards() {
-        // Add click handlers for interactive elements
         const cards = document.getElementsByClassName('hotspot-card');
         Array.from(cards).forEach(card => {
-            card.addEventListener('click', function(e) {
-                if (!e.target.closest('.hotspot-actions')) {
-                    const clusterId = this.querySelector('.stat-value').textContent.replace('#', '');
-                    window.location.href = `/hotspots/${clusterId}/`;
-                }
-            });
+            card.setAttribute('data-search-visible', 'true');
         });
+    }
+
+    function performSearch() {
+        applyClientSideFilters();
+    }
+
+    function updatePagination() {
+        const cards = Array.from(document.getElementsByClassName('hotspot-card'));
+        const searchVisibleCards = cards.filter(card => card.getAttribute('data-search-visible') !== 'false');
+
+        const totalItems = searchVisibleCards.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+
+        cards.forEach(card => card.style.display = 'none');
+
+        searchVisibleCards.forEach((card, index) => {
+            if (index >= startIndex && index < endIndex) {
+                card.style.display = '';
+            }
+        });
+
+        document.getElementById('currentlyShowing').textContent = Math.min(endIndex, totalItems);
+        document.getElementById('totalFiltered').textContent = totalItems;
+        document.getElementById('showingCount').textContent = Math.min(endIndex, totalItems);
+        document.getElementById('totalCount').textContent = totalItems;
+        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
+
+        document.getElementById('prevPage').disabled = currentPage <= 1;
+        document.getElementById('nextPage').disabled = currentPage >= totalPages;
+    }
+
+    function changePage(direction) {
+        currentPage += direction;
+        updatePagination();
+
+        const filtersSection = document.querySelector('.filters-section');
+        if (filtersSection) {
+            filtersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function changeItemsPerPage() {
+        itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+        currentPage = 1;
+        updatePagination();
+    }
+
+    function switchView(viewType) {
+        const container = document.getElementById('hotspotsContainer');
+        const cards = container.getElementsByClassName('hotspot-card');
+        const options = document.querySelectorAll('.view-option');
+
+        options.forEach(opt => opt.classList.remove('active'));
+        event.target.classList.add('active');
+
+        container.className = 'hotspots-grid';
+        if (viewType === 'list') {
+            container.classList.add('view-list');
+            Array.from(cards).forEach(card => card.classList.add('view-list'));
+        } else {
+            Array.from(cards).forEach(card => card.classList.remove('view-list'));
+        }
     }
 
     function viewOnMap(lat, lng) {
@@ -1081,42 +1166,49 @@
             AGNESSystem.exportToCSV(data, 'accident_hotspots_report.csv');
             AGNESSystem.showNotification('Hotspots exported successfully', 'success');
         } else {
-            // Fallback export
             const csv = convertToCSV(data);
             downloadCSV(csv, 'accident_hotspots_report.csv');
         }
     }
 
-    function refreshHotspots() {
-        const btn = document.getElementById('refreshBtn');
-        btn.innerHTML = '<span class="loading-spinner"></span> Refreshing...';
-        btn.disabled = true;
-        
-        // Simulate refresh - in real implementation, this would reload from server
-        setTimeout(() => {
-            window.location.reload();
-        }, 1000);
-    }
-
-    function showLoading() {
-        document.getElementById('loadingOverlay').style.display = 'flex';
-    }
-
-    function showNotification(message, type = 'info') {
-        if (typeof AGNESSystem !== 'undefined' && AGNESSystem.showNotification) {
-            AGNESSystem.showNotification(message, type);
+    function showNoResultsMessage(searchTerm) {
+        let noResultsDiv = document.getElementById('noResultsMessage');
+        if (!noResultsDiv) {
+            noResultsDiv = document.createElement('div');
+            noResultsDiv.id = 'noResultsMessage';
+            noResultsDiv.className = 'no-results';
+            noResultsDiv.innerHTML = `
+                <h4>🔍 No hotspots found</h4>
+                <p>No hotspots match "<strong>${searchTerm}</strong>"</p>
+                <p style="font-size: 0.875rem; color: #6B7280; margin-top: 0.5rem;">
+                    Try searching by location name, cluster ID, or municipality
+                </p>
+            `;
+            document.getElementById('hotspotsContainer').appendChild(noResultsDiv);
         } else {
-            alert(message);
+            noResultsDiv.innerHTML = `
+                <h4>🔍 No hotspots found</h4>
+                <p>No hotspots match "<strong>${searchTerm}</strong>"</p>
+                <p style="font-size: 0.875rem; color: #6B7280; margin-top: 0.5rem;">
+                    Try searching by location name, cluster ID, or municipality
+                </p>
+            `;
         }
     }
 
-    // Utility functions for CSV export
+    function hideNoResultsMessage() {
+        const noResultsDiv = document.getElementById('noResultsMessage');
+        if (noResultsDiv) {
+            noResultsDiv.remove();
+        }
+    }
+
     function convertToCSV(data) {
         if (!data || data.length === 0) return '';
-        
+
         const headers = Object.keys(data[0]);
         const csvRows = [headers.join(',')];
-        
+
         for (const row of data) {
             const values = headers.map(header => {
                 const value = row[header];
@@ -1124,7 +1216,7 @@
             });
             csvRows.push(values.join(','));
         }
-        
+
         return csvRows.join('\n');
     }
 
@@ -1139,159 +1231,5 @@
         link.click();
         document.body.removeChild(link);
     }
-
-
-    
-    function showNoResultsMessage(searchTerm) {
-        let noResultsDiv = document.getElementById('noResultsMessage');
-        if (!noResultsDiv) {
-            noResultsDiv = document.createElement('div');
-            noResultsDiv.id = 'noResultsMessage';
-            noResultsDiv.className = 'no-results';
-            noResultsDiv.innerHTML = `
-                <h4>🔍 No hotspots found</h4>
-                <p>No hotspots match "<strong>${searchTerm}</strong>"</p>
-                <p style="font-size: 0.9rem; color: var(--text-light); margin-top: 0.5rem;">
-                    Try searching by location name, cluster ID, or municipality
-                </p>
-            `;
-            document.getElementById('hotspotsContainer').appendChild(noResultsDiv);
-        } else {
-            noResultsDiv.innerHTML = `
-                <h4>🔍 No hotspots found</h4>
-                <p>No hotspots match "<strong>${searchTerm}</strong>"</p>
-                <p style="font-size: 0.9rem; color: var(--text-light); margin-top: 0.5rem;">
-                    Try searching by location name, cluster ID, or municipality
-                </p>
-            `;
-        }
-    }
-    
-    function hideNoResultsMessage() {
-        const noResultsDiv = document.getElementById('noResultsMessage');
-        if (noResultsDiv) {
-            noResultsDiv.remove();
-        }
-    }
-
-    // SEARCH FUNCTIONALITY - Triggered by button click or Enter key
-    function performSearch() {
-        // Apply filters when search button is clicked
-        applyClientSideFilters();
-    }
-
-    // PAGINATION FUNCTIONALITY
-    let currentPage = 1;
-    let itemsPerPage = 12;
-
-    function updatePagination() {
-        const cards = Array.from(document.getElementsByClassName('hotspot-card'));
-        const searchVisibleCards = cards.filter(card => card.getAttribute('data-search-visible') !== 'false');
-
-        const totalItems = searchVisibleCards.length;
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-
-        // Hide all cards first
-        cards.forEach(card => card.style.display = 'none');
-
-        // Show only cards for current page
-        searchVisibleCards.forEach((card, index) => {
-            if (index >= startIndex && index < endIndex) {
-                card.style.display = '';
-            }
-        });
-
-        // Update results summary at top
-        document.getElementById('currentlyShowing').textContent = Math.min(endIndex, totalItems);
-        document.getElementById('totalFiltered').textContent = totalItems;
-
-        // Update pagination controls
-        document.getElementById('showingCount').textContent = Math.min(endIndex, totalItems);
-        document.getElementById('totalCount').textContent = totalItems;
-        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
-
-        // Enable/disable buttons
-        document.getElementById('prevPage').disabled = currentPage <= 1;
-        document.getElementById('nextPage').disabled = currentPage >= totalPages;
-    }
-
-    function changePage(direction) {
-        currentPage += direction;
-        updatePagination();
-
-        // Scroll to filters section smoothly (not top)
-        const filtersSection = document.querySelector('.filters-section');
-        if (filtersSection) {
-            filtersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }
-
-    function changeItemsPerPage() {
-        itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
-        currentPage = 1;
-        updatePagination();
-    }
-    
-    // View Switching 
-    function switchView(viewType) {
-        const container = document.getElementById('hotspotsContainer');
-        const cards = container.getElementsByClassName('hotspot-card');
-        const options = document.querySelectorAll('.view-option');
-        
-        // Update active button
-        options.forEach(opt => opt.classList.remove('active'));
-        event.target.classList.add('active');
-        
-        // Switch view
-        container.className = 'hotspots-grid';
-        if (viewType === 'list') {
-            container.classList.add('view-list');
-            Array.from(cards).forEach(card => card.classList.add('view-list'));
-        } else {
-            // Grid view
-            Array.from(cards).forEach(card => card.classList.remove('view-list'));
-        }
-    }
-    
-    // Initialize page when DOM loads
-    document.addEventListener('DOMContentLoaded', function() {
-        updateActiveFilters();
-        initializeHotspotCards();
-    });
-
-
-    // Debug function to check what data is available
-    function debugSearch() {
-        const cards = document.getElementsByClassName('hotspot-card');
-        console.log('Total cards found:', cards.length);
-        
-        Array.from(cards).forEach((card, index) => {
-            const location = card.querySelector('.hotspot-title').textContent;
-            const clusterId = card.querySelector('.stat-value').textContent;
-            const municipalities = card.getAttribute('data-municipalities');
-            
-            console.log(`Card ${index + 1}:`, {
-                location: location,
-                clusterId: clusterId,
-                municipalities: municipalities
-            });
-        });
-    }
-    
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize all cards as search-visible
-        const cards = document.getElementsByClassName('hotspot-card');
-        Array.from(cards).forEach(card => {
-            card.setAttribute('data-search-visible', 'true');
-        });
-
-        // Initialize pagination
-        updatePagination();
-
-        // debugSearch(); // Uncomment to see debug info in console
-    });
 </script>
 {% endblock %}
