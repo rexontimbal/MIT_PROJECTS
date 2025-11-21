@@ -724,7 +724,7 @@
 <!-- Pagination Controls -->
 <div class="pagination-container">
     <div class="pagination-info">
-        Page <span id="showingCount">0</span> of <span id="totalCount">{{ hotspots.count }}</span> items
+        Showing <span id="showingStart">1</span>-<span id="showingEnd">12</span> of <span id="totalCount">{{ hotspots.count }}</span> hotspots
     </div>
     <div class="pagination-controls">
         <button id="prevPage" onclick="changePage(-1)" class="btn btn-outline btn-sm" disabled>
@@ -1171,8 +1171,13 @@
             }
         });
 
-        document.getElementById('showingCount').textContent = currentPage;
-        document.getElementById('totalCount').textContent = totalPages || 1;
+        // Update pagination info with correct item ranges
+        const showingStart = totalItems > 0 ? startIndex + 1 : 0;
+        const showingEnd = Math.min(endIndex, totalItems);
+
+        document.getElementById('showingStart').textContent = showingStart;
+        document.getElementById('showingEnd').textContent = showingEnd;
+        document.getElementById('totalCount').textContent = totalItems;
         document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
 
         document.getElementById('prevPage').disabled = currentPage <= 1;
