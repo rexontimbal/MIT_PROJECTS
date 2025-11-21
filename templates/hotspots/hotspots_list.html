@@ -335,8 +335,9 @@
     }
 
     .btn-outline:hover {
-        background: #F9FAFB;
-        border-color: #9CA3AF;
+        background: #003087;
+        border-color: #003087;
+        color: white;
     }
 
     .btn-sm {
@@ -367,8 +368,8 @@
     }
 
     .view-option.active {
-        background: white;
-        color: #003087;
+        background: #003087;
+        color: white;
         box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
 
@@ -723,7 +724,7 @@
 <!-- Results Summary -->
 <div class="results-summary">
     <div class="results-summary-text">
-        Showing <span id="currentlyShowing">0</span> of <span id="totalFiltered">{{ hotspots.count }}</span> hotspots
+        Page <span id="currentlyShowing">0</span> of <span id="totalFiltered">{{ hotspots.count }}</span> items
     </div>
 </div>
 
@@ -970,6 +971,7 @@
         const container = document.getElementById('hotspotsContainer');
         const cards = Array.from(container.getElementsByClassName('hotspot-card'));
 
+        // Sort cards based on selected criteria
         cards.sort((a, b) => {
             if (sortValue === 'accidents') {
                 return parseInt(b.getAttribute('data-accidents')) - parseInt(a.getAttribute('data-accidents'));
@@ -979,11 +981,19 @@
             return 0;
         });
 
+        // Re-append cards in sorted order
         cards.forEach(card => container.appendChild(card));
 
+        // Reset to page 1 and update display
         currentPage = 1;
         updatePagination();
         updateActiveFilters();
+
+        // Scroll to top of hotspots grid to show sorted results
+        const filtersSection = document.querySelector('.filters-section');
+        if (filtersSection) {
+            filtersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     function updateActiveFilters() {
@@ -1097,8 +1107,8 @@
             }
         });
 
-        document.getElementById('currentlyShowing').textContent = Math.min(endIndex, totalItems);
-        document.getElementById('totalFiltered').textContent = totalItems;
+        document.getElementById('currentlyShowing').textContent = currentPage;
+        document.getElementById('totalFiltered').textContent = totalPages || 1;
         document.getElementById('showingCount').textContent = Math.min(endIndex, totalItems);
         document.getElementById('totalCount').textContent = totalItems;
         document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
