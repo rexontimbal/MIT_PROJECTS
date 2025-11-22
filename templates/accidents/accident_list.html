@@ -1081,18 +1081,32 @@ function updatePageContent(url, pushState = true) {
                 currentSummaryCards.innerHTML = newSummaryCards.innerHTML;
             }
 
-            // Update filter dropdowns and badges
+            // Update filter dropdowns to match URL parameters
             const urlParams = new URLSearchParams(new URL(url).search);
             const perPageParam = urlParams.get('per_page') || '100';
+            const provinceParam = urlParams.get('province') || '';
+            const municipalParam = urlParams.get('municipal') || '';
+            const yearParam = urlParams.get('year') || '';
+            const searchParam = urlParams.get('search') || '';
+
             document.getElementById('itemsPerPage').value = perPageParam;
+            document.getElementById('province').value = provinceParam;
 
-            // Update active filters badges
-            updateActiveFilters();
+            // Update municipalities based on selected province
+            updateMunicipalityDropdown();
 
-            // Update browser URL without reload
+            // Then set the municipal value after updating the dropdown
+            document.getElementById('municipal').value = municipalParam;
+            document.getElementById('year').value = yearParam;
+            document.getElementById('hotspotSearch').value = searchParam;
+
+            // Update browser URL without reload FIRST
             if (pushState) {
                 history.pushState({}, '', url);
             }
+
+            // Update active filters badges AFTER URL is updated
+            updateActiveFilters();
 
             // Scroll to search section
             const searchSection = document.getElementById('search-section');
@@ -1460,36 +1474,9 @@ function displayActiveFilters() {
     }
 }
 
-// Auto-submit form when filters change
+// Filter changes are handled by inline onchange="applyServerSideFilters()"
+// in the HTML elements for smooth AJAX updates
 document.addEventListener('DOMContentLoaded', function() {
-    // Add event listeners to filter dropdowns for auto-submit
-    const provinceSelect = document.getElementById('province');
-    const municipalSelect = document.getElementById('municipal');
-    const yearSelect = document.getElementById('year');
-
-    if (provinceSelect) {
-        provinceSelect.addEventListener('change', function() {
-            if (this.value) {
-                document.getElementById('filterForm').submit();
-            }
-        });
-    }
-
-    if (municipalSelect) {
-        municipalSelect.addEventListener('change', function() {
-            if (this.value) {
-                document.getElementById('filterForm').submit();
-            }
-        });
-    }
-
-    if (yearSelect) {
-        yearSelect.addEventListener('change', function() {
-            if (this.value) {
-                document.getElementById('filterForm').submit();
-            }
-        });
-    }
 
     // Display active filters on page load
     displayActiveFilters();
