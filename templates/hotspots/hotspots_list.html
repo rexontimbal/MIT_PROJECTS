@@ -1203,7 +1203,7 @@
             <a href="{% url 'hotspot_detail' hotspot.cluster_id %}" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">
                 View Details
             </a>
-            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); viewOnMap({{ hotspot.center_latitude }}, {{ hotspot.center_longitude }})">
+            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); viewOnMap({{ hotspot.cluster_id }})">
                 Show on Map
             </button>
         </div>
@@ -1445,7 +1445,7 @@
         };
 
         viewMapBtn.onclick = function() {
-            window.location.href = `/map/?lat=${data.lat}&lng=${data.lng}&zoom=13`;
+            window.location.href = `/map/?cluster_id=${data.cluster}`;
         };
     }
 
@@ -1813,8 +1813,8 @@
         }
     }
 
-    function viewOnMap(lat, lng) {
-        window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=13`;
+    function viewOnMap(clusterId) {
+        window.location.href = `/map/?cluster_id=${clusterId}`;
     }
 
     function exportHotspots() {

@@ -806,24 +806,49 @@ def map_view(request):
     """
     OPTIMIZED Interactive map view with all accidents and hotspots
     Fixed: Province loading, data validation, performance
+    Enhanced: Can focus on a specific hotspot cluster when cluster_id is provided
     """
     from django.core.serializers.json import DjangoJSONEncoder
     import json
-    
+
+    # Check if viewing a specific cluster
+    cluster_id = request.GET.get('cluster_id')
+    focus_cluster = None
+
     # Get all accidents with coordinates - OPTIMIZED QUERY
-    accidents = Accident.objects.filter(
+    accidents_query = Accident.objects.filter(
         latitude__isnull=False,
         longitude__isnull=False
-    ).values(
+    )
+
+    # Filter by cluster if specified
+    if cluster_id:
+        try:
+            cluster_id_int = int(cluster_id)
+            accidents_query = accidents_query.filter(cluster_id=cluster_id_int)
+            # Get the cluster details for centering the map
+            focus_cluster = AccidentCluster.objects.filter(cluster_id=cluster_id_int).first()
+        except (ValueError, TypeError):
+            pass  # Invalid cluster_id, show all
+
+    accidents = accidents_query.values(
         'id', 'latitude', 'longitude', 'incident_type',
         'date_committed', 'time_committed', 'barangay',
         'municipal', 'province', 'victim_count',
         'victim_killed', 'victim_injured', 'year', 'cluster_id',
         'vehicle_kind'
     ).order_by('-date_committed')  # Most recent first
-    
-    # Get all hotspots - OPTIMIZED QUERY
-    hotspots = AccidentCluster.objects.all().values(
+
+    # Get hotspots - filter if cluster_id specified
+    hotspots_query = AccidentCluster.objects.all()
+    if cluster_id:
+        try:
+            cluster_id_int = int(cluster_id)
+            hotspots_query = hotspots_query.filter(cluster_id=cluster_id_int)
+        except (ValueError, TypeError):
+            pass
+
+    hotspots = hotspots_query.values(
         'cluster_id', 'center_latitude', 'center_longitude',
         'primary_location', 'accident_count', 'total_casualties',
         'severity_score'
@@ -903,7 +928,18 @@ def map_view(request):
     # Calculate statistics
     total_accidents = len(accidents_list)
     total_hotspots = len(hotspots_list)
-    
+
+    # Prepare focus cluster data for map centering
+    focus_cluster_data = None
+    if focus_cluster:
+        focus_cluster_data = {
+            'cluster_id': focus_cluster.cluster_id,
+            'center_latitude': float(focus_cluster.center_latitude),
+            'center_longitude': float(focus_cluster.center_longitude),
+            'primary_location': focus_cluster.primary_location,
+            'severity_score': float(focus_cluster.severity_score),
+        }
+
     context = {
         'accidents_json': accidents_json,
         'hotspots_json': hotspots_json,
@@ -911,6 +947,8 @@ def map_view(request):
         'total_hotspots': total_hotspots,
         'provinces': provinces,  # Now guaranteed to have data
         'mapbox_token': settings.MAPBOX_ACCESS_TOKEN,
+        'cluster_id': cluster_id,  # Pass cluster_id to template
+        'focus_cluster': focus_cluster_data,  # Pass cluster details for map centering
     }
 
     return render(request, 'maps/map_view.html', context)
