@@ -383,20 +383,11 @@ def accident_list(request):
         
         return response
     
-    # Pagination - adaptive approach
-    # If filters are active, load all matching results (for better search UX)
-    # If no filters, use 100 items per page (for performance with full dataset)
+    # Pagination - consistent 100 items per page
+    # Simpler UX: max 100 records displayed at once for both filtered and unfiltered
     from django.core.paginator import Paginator
 
-    has_filters = any([province, municipal, year, is_hotspot, search, fatal_only, injury_only, no_hotspot])
-
-    if has_filters:
-        # Load all filtered results - usually much smaller dataset
-        paginator = Paginator(accidents, 999999)
-    else:
-        # Load 100 items per page for browsing full dataset
-        paginator = Paginator(accidents, 100)
-
+    paginator = Paginator(accidents, 100)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
