@@ -1975,36 +1975,44 @@ document.addEventListener('DOMContentLoaded', function() {
         // Load only the specific accident
         const singleAccident = allAccidents.find(a => a.id == accidentId);
         if (singleAccident) {
-            allAccidents = [singleAccident];
-            loadAllAccidentMarkers();
+            console.log('✅ Found single accident:', singleAccident);
 
-            // Don't load hotspots in single mode
-            console.log('🚫 Hotspots disabled in single accident view');
+            // Create marker directly WITHOUT clustering
+            const marker = createAccidentMarker(singleAccident);
+            if (marker) {
+                // Add marker directly to map (bypass cluster group)
+                marker.addTo(map);
+                accidentMarkers = [marker];
+                activeMarkers = [marker];
 
-            // Initialize statistics with single accident
-            activeMarkers = [...accidentMarkers];
-            updateAllStatistics();
+                console.log('✅ Marker added directly to map (no clustering)');
 
-            // Auto-focus on the accident with smooth zoom and open popup
-            setTimeout(() => {
-                if (accidentMarkers.length > 0 && accidentMarkers[0]) {
+                // Update statistics
+                updateAllStatistics();
+
+                // Don't load hotspots in single mode
+                console.log('🚫 Hotspots disabled in single accident view');
+
+                // Auto-focus and open popup
+                setTimeout(() => {
                     console.log('🎯 Opening popup for single accident...');
 
-                    // Open the popup FIRST (before zoom)
-                    accidentMarkers[0].openPopup();
+                    // Open popup
+                    marker.openPopup();
+                    console.log('✅ Popup opened');
 
-                    // Then zoom to the location smoothly (popup stays open during zoom)
+                    // Then zoom smoothly
                     setTimeout(() => {
                         map.setView([singleAccident.latitude, singleAccident.longitude], 16, {
                             animate: true,
                             duration: 1.5
                         });
-                        console.log('✅ Zoomed to accident with popup open');
+                        console.log('✅ Zooming to location with popup visible');
                     }, 200);
-                } else {
-                    console.error('❌ No markers found to open popup');
-                }
-            }, 1000);
+                }, 500);
+            } else {
+                console.error('❌ Failed to create marker');
+            }
         }
     } else {
         console.log('📊 Total accidents loaded:', allAccidents.length);
