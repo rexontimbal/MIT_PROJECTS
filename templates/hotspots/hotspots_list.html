@@ -344,15 +344,30 @@
     }
 
     .risk-critical {
-        background: white;
-        color: #B8112C;  /* Darker red for strong contrast */
-        border: 2px solid white;
+        background: rgba(255, 255, 255, 0.95);
+        color: #B8112C;
+        border: 2px solid rgba(255, 255, 255, 0.95);
         font-weight: 700;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
     }
-    .risk-high { background: var(--hotspot-secondary); color: white; }
-    .risk-medium { background: var(--hotspot-safe); color: white; }
-    .risk-low { background: var(--text-secondary); color: white; }
+    .risk-high {
+        background: rgba(245, 158, 11, 0.95);
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    .risk-medium {
+        background: rgba(16, 185, 129, 0.95);
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    .risk-low {
+        background: rgba(107, 114, 128, 0.95);
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
 
     .hotspot-body {
         padding: 0.875rem 1rem;
