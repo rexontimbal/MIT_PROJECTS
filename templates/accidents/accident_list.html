@@ -509,10 +509,9 @@
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         margin-bottom: 1rem;
-        display: flex;
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
         align-items: center;
-        flex-wrap: wrap;
         gap: 1rem;
         border: 1px solid #E5E7EB;
     }
@@ -520,7 +519,6 @@
     .pagination-info {
         color: #6B7280;
         font-size: 0.875rem;
-        flex: 1;
         text-align: left;
     }
 
@@ -528,7 +526,7 @@
         display: flex;
         gap: 0.5rem;
         align-items: center;
-        flex: 0 0 auto;
+        justify-content: center;
     }
 
     .pagination-controls button:disabled {
@@ -550,6 +548,7 @@
         font-size: 0.875rem;
         background: white;
         cursor: pointer;
+        justify-self: end;
     }
 
     /* Accidents Grid - Matching Hotspots */
