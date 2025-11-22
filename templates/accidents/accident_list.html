@@ -1586,7 +1586,7 @@ function viewOnMap(lat, lng) {
 // Accident Modal Functions
 let currentAccidentData = {};
 
-function openAccidentModal(id, date, time, barangay, municipal, province, incidentType, isFatal, isInjury, isHotspot, lat, lng, street, victimCount) {
+function openAccidentModal(id, date, time, barangay, municipal, province, incidentType, isFatal, isInjury, isHotspot, lat, lng, street, victimCount, placeType, vehicle, station, clusterId) {
     currentAccidentData = { id, lat, lng };
 
     const modal = document.getElementById('accidentModal');
@@ -1598,6 +1598,10 @@ function openAccidentModal(id, date, time, barangay, municipal, province, incide
     document.getElementById('modalStreet').textContent = street || 'N/A';
     document.getElementById('modalIncidentType').textContent = incidentType;
     document.getElementById('modalVictims').textContent = `${victimCount} victim(s)`;
+    document.getElementById('modalPlaceType').textContent = placeType || 'Road/Highway';
+    document.getElementById('modalVehicle').textContent = vehicle || 'Not specified';
+    document.getElementById('modalStation').textContent = station || 'Not specified';
+    document.getElementById('modalCluster').textContent = clusterId || '-';
 
     // Add badges
     let badgesHTML = '';
@@ -1615,9 +1619,9 @@ function openAccidentModal(id, date, time, barangay, municipal, province, incide
 
     document.getElementById('modalBadges').innerHTML = badgesHTML;
 
-    // Set button actions
+    // Set button actions - Updated to show only this accident on map
     document.getElementById('modalMapBtn').onclick = function() {
-        window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=15`;
+        window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=16&accident_id=${id}&single=true`;
     };
 
     document.getElementById('modalDetailBtn').onclick = function() {
@@ -2054,7 +2058,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div id="cardsView">
         <div class="accidents-grid" id="accidentsContainer">
             {% for accident in accidents %}
-            <div class="accident-card" onclick="openAccidentModal({{ accident.pk }}, '{{ accident.date_committed|date:"M d, Y" }}', '{{ accident.time_committed|time:"g:i A" }}', '{{ accident.barangay }}', '{{ accident.municipal }}', '{{ accident.province }}', '{{ accident.incident_type }}', {{ accident.victim_killed|yesno:"true,false" }}, {{ accident.victim_injured|yesno:"true,false" }}, {{ accident.is_hotspot|yesno:"true,false" }}, {{ accident.latitude }}, {{ accident.longitude }}, '{{ accident.street|default:"N/A" }}', {{ accident.victim_count|default:0 }})" style="cursor: pointer;">
+            <div class="accident-card" onclick="openAccidentModal({{ accident.pk }}, '{{ accident.date_committed|date:"M d, Y" }}', '{{ accident.time_committed|time:"g:i A" }}', '{{ accident.barangay }}', '{{ accident.municipal }}', '{{ accident.province }}', '{{ accident.incident_type }}', {{ accident.victim_killed|yesno:"true,false" }}, {{ accident.victim_injured|yesno:"true,false" }}, {{ accident.is_hotspot|yesno:"true,false" }}, {{ accident.latitude }}, {{ accident.longitude }}, '{{ accident.street|default:"N/A" }}', {{ accident.victim_count|default:0 }}, '{{ accident.type_of_place|default:"Road/Highway" }}', '{{ accident.vehicle_kind|default:"Not specified" }}', '{{ accident.station|default:"Not specified" }}', '{{ accident.cluster_id|default:"-" }}')" style="cursor: pointer;">
                 <div class="card-header">
                     <span class="severity-badge {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}">
                         {% if accident.victim_killed %}
@@ -2247,6 +2251,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div>
                         <div class="modal-label">Victims</div>
                         <div class="modal-value" id="modalVictims"></div>
+                    </div>
+                </div>
+
+                <div class="modal-info-item">
+                    <i class="fas fa-building"></i>
+                    <div>
+                        <div class="modal-label">Place Type</div>
+                        <div class="modal-value" id="modalPlaceType"></div>
+                    </div>
+                </div>
+
+                <div class="modal-info-item">
+                    <i class="fas fa-car"></i>
+                    <div>
+                        <div class="modal-label">Vehicle(s)</div>
+                        <div class="modal-value" id="modalVehicle"></div>
+                    </div>
+                </div>
+
+                <div class="modal-info-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <div class="modal-label">Police Station</div>
+                        <div class="modal-value" id="modalStation"></div>
+                    </div>
+                </div>
+
+                <div class="modal-info-item">
+                    <i class="fas fa-layer-group"></i>
+                    <div>
+                        <div class="modal-label">Cluster ID</div>
+                        <div class="modal-value" id="modalCluster"></div>
                     </div>
                 </div>
             </div>

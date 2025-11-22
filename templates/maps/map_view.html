@@ -1961,32 +1961,73 @@ let activeMarkers = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Initializing Enhanced Map System...');
-    console.log('📊 Total accidents loaded:', allAccidents.length);
-    console.log('🎯 Total hotspots loaded:', allHotspots.length);
-    
-    validateData();
-    initializeEnhancedMap();
-    loadAllAccidentMarkers();
-    loadAllHotspotCircles();
-    setupTimeFilters();
-    
-    // Initialize search history system
-    initializeSearchHistory();
-    
-    // Initialize statistics with all accidents
-    activeMarkers = [...accidentMarkers];
-    updateAllStatistics();
-    
-    console.log('✅ Map system initialized successfully');
-    console.log('📊 Active markers:', activeMarkers.length);
-    console.log('📚 Search history items:', searchHistory.length);
-    
-    // Initialize draggable panels
-    makePanelDraggable('statsBox', 'statsHeader');
-    makePanelDraggable('legendBox', 'legendHeader');
-    
-    // Check for URL parameters to jump to specific location
-    checkURLParametersAndJump();
+
+    // Check for single accident view mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const singleMode = urlParams.get('single') === 'true';
+    const accidentId = urlParams.get('accident_id');
+
+    if (singleMode && accidentId) {
+        console.log('📍 Single accident view mode - ID:', accidentId);
+        validateData();
+        initializeEnhancedMap();
+
+        // Load only the specific accident
+        const singleAccident = allAccidents.find(a => a.id == accidentId);
+        if (singleAccident) {
+            allAccidents = [singleAccident];
+            loadAllAccidentMarkers();
+
+            // Don't load hotspots in single mode
+            console.log('🚫 Hotspots disabled in single accident view');
+
+            // Initialize statistics with single accident
+            activeMarkers = [...accidentMarkers];
+            updateAllStatistics();
+
+            // Auto-focus on the accident with smooth zoom
+            setTimeout(() => {
+                map.setView([singleAccident.latitude, singleAccident.longitude], 16, {
+                    animate: true,
+                    duration: 1.5
+                });
+
+                // Open the popup after zoom
+                setTimeout(() => {
+                    if (accidentMarkers.length > 0) {
+                        accidentMarkers[0].openPopup();
+                    }
+                }, 1600);
+            }, 500);
+        }
+    } else {
+        console.log('📊 Total accidents loaded:', allAccidents.length);
+        console.log('🎯 Total hotspots loaded:', allHotspots.length);
+
+        validateData();
+        initializeEnhancedMap();
+        loadAllAccidentMarkers();
+        loadAllHotspotCircles();
+        setupTimeFilters();
+
+        // Initialize search history system
+        initializeSearchHistory();
+
+        // Initialize statistics with all accidents
+        activeMarkers = [...accidentMarkers];
+        updateAllStatistics();
+
+        console.log('✅ Map system initialized successfully');
+        console.log('📊 Active markers:', activeMarkers.length);
+        console.log('📚 Search history items:', searchHistory.length);
+
+        // Initialize draggable panels
+        makePanelDraggable('statsBox', 'statsHeader');
+        makePanelDraggable('legendBox', 'legendHeader');
+
+        // Check for URL parameters to jump to specific location
+        checkURLParametersAndJump();
+    }
 });
 
 // ============================================================================
