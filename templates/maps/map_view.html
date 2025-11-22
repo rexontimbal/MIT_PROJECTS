@@ -2276,16 +2276,14 @@ function createAccidentMarker(accident) {
         </div>
     `;
 
-    marker.accidentData = accident;
-    marker.on('click', function() {
-        if (!this.getPopup()) {
-            this.bindPopup(popupContent, {
-                maxWidth: 320,
-                className: 'custom-popup'
-            });
-        }
+    // Bind popup immediately (not on click) so openPopup() works in single mode
+    marker.bindPopup(popupContent, {
+        maxWidth: 320,
+        className: 'custom-popup'
     });
-    
+
+    marker.accidentData = accident;
+
     return marker;
 }
 
