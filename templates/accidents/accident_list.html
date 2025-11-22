@@ -209,6 +209,39 @@
         pointer-events: none;
     }
 
+    /* Quick Search Buttons */
+    .quick-search-btn {
+        padding: 0.4rem 0.875rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: #374151;
+        background: white;
+        border: 1.5px solid #D1D5DB;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    .quick-search-btn:hover {
+        background: #F9FAFB;
+        border-color: #003087;
+        color: #003087;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 48, 135, 0.1);
+    }
+
+    .quick-search-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0, 48, 135, 0.1);
+    }
+
+    .quick-search-btn i {
+        font-size: 0.75rem;
+    }
+
     /* Filter Grid - Clean Layout */
     .filters-grid {
         display: grid;
@@ -1123,6 +1156,12 @@ function updatePageContent(url, pushState = true) {
         });
 }
 
+// Quick search function for category buttons
+function quickSearch(keyword) {
+    document.getElementById('hotspotSearch').value = keyword;
+    performSearch();
+}
+
 // Search function - Smooth update without reload
 function performSearch() {
     const searchValue = document.getElementById('hotspotSearch').value.trim();
@@ -1649,6 +1688,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <button onclick="performSearch()" class="btn btn-primary" style="padding: 0.75rem 1.75rem; white-space: nowrap;">
                     🔍 Search
+                </button>
+            </div>
+
+            <!-- Quick Search Buttons -->
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem;">
+                <button onclick="quickSearch('Fatal')" class="quick-search-btn">
+                    <i class="fas fa-skull-crossbones"></i> Fatal
+                </button>
+                <button onclick="quickSearch('Injury')" class="quick-search-btn">
+                    <i class="fas fa-user-injured"></i> Injury
+                </button>
+                <button onclick="quickSearch('Property Damage')" class="quick-search-btn">
+                    <i class="fas fa-car-crash"></i> Property Damage
+                </button>
+                <button onclick="quickSearch('Not Hotspot')" class="quick-search-btn">
+                    <i class="fas fa-map-marker-slash"></i> Standalone
                 </button>
             </div>
         </div>
