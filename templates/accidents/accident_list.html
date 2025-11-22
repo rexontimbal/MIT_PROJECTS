@@ -515,17 +515,22 @@
         flex-wrap: wrap;
         gap: 1rem;
         border: 1px solid #E5E7EB;
+        position: relative;
     }
 
     .pagination-info {
         color: #6B7280;
         font-size: 0.875rem;
+        flex: 1;
     }
 
     .pagination-controls {
         display: flex;
         gap: 0.5rem;
         align-items: center;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
     }
 
     .pagination-controls button:disabled {
