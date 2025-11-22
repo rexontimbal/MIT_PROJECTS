@@ -1581,7 +1581,7 @@ function viewAccident(id) {
 
 function viewOnMap(lat, lng, accidentId) {
     if (accidentId) {
-        window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=16&accident_id=${accidentId}&single=true`;
+        window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=16&accident_id=${accidentId}&single=true&source=list`;
     } else {
         window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=15`;
     }
@@ -1625,7 +1625,7 @@ function openAccidentModal(id, date, time, barangay, municipal, province, incide
 
     // Set button actions - Updated to show only this accident on map
     document.getElementById('modalMapBtn').onclick = function() {
-        window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=16&accident_id=${id}&single=true`;
+        window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=16&accident_id=${id}&single=true&source=list`;
     };
 
     document.getElementById('modalDetailBtn').onclick = function() {

@@ -1993,6 +1993,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Don't load hotspots in single mode
                 console.log('🚫 Hotspots disabled in single accident view');
 
+                // Show back button with context-aware text
+                const backBtn = document.getElementById('backToListBtn');
+                const source = urlParams.get('source');
+                if (backBtn) {
+                    backBtn.style.display = 'flex';
+                    // Change button text based on source
+                    if (source === 'detail') {
+                        backBtn.innerHTML = '<span>←</span><span>Back to Details</span>';
+                    } else {
+                        backBtn.innerHTML = '<span>←</span><span>Back to Accident List</span>';
+                    }
+                }
+
+                // Auto-expand to fullscreen mode
+                setTimeout(() => {
+                    if (!document.body.classList.contains('fullscreen-mode')) {
+                        toggleFullscreen();
+                        console.log('✅ Auto-expanded to fullscreen');
+                    }
+                }, 100);
+
                 // Auto-focus and open popup
                 setTimeout(() => {
                     console.log('🎯 Opening popup for single accident...');
@@ -4549,9 +4570,20 @@ function goBackToHotspot() {
     const urlParams = new URLSearchParams(window.location.search);
     const source = urlParams.get('source');
     const clusterId = urlParams.get('cluster_id');
+    const accidentId = urlParams.get('accident_id');
+    const singleMode = urlParams.get('single') === 'true';
 
     // Context-aware navigation
-    if (source === 'detail' && clusterId) {
+    if (singleMode && accidentId) {
+        // Single accident view mode
+        if (source === 'detail') {
+            // Return to accident detail page
+            window.location.href = `/accidents/${accidentId}/`;
+        } else {
+            // Return to accident list page (source === 'list' or default)
+            window.location.href = "{% url 'accident_list' %}";
+        }
+    } else if (source === 'detail' && clusterId) {
         // Return to hotspot detail page
         window.location.href = `/hotspots/${clusterId}/`;
     } else if (source === 'list' || clusterId) {

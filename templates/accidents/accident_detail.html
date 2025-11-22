@@ -734,7 +734,7 @@
             <a href="{% url 'accident_list' %}" class="btn-action btn-back">
                 <i class="fas fa-arrow-left"></i> Back to List
             </a>
-            <a href="{% url 'map_view' %}?lat={{ accident.latitude }}&lng={{ accident.longitude }}&zoom=16&accident_id={{ accident.id }}&single=true" class="btn-action btn-map">
+            <a href="{% url 'map_view' %}?lat={{ accident.latitude }}&lng={{ accident.longitude }}&zoom=16&accident_id={{ accident.id }}&single=true&source=detail" class="btn-action btn-map">
                 <i class="fas fa-map-marked-alt"></i> View on Map
             </a>
             <button onclick="window.print()" class="btn-action btn-print no-print">
