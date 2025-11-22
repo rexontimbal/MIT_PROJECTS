@@ -1643,28 +1643,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div style="position: relative; flex: 1;">
                     <input type="text"
                            id="hotspotSearch"
-                           list="searchSuggestions"
                            placeholder="Search by location, severity, incident type, or barangay..."
                            onkeypress="if(event.key==='Enter') performSearch()">
-                    <datalist id="searchSuggestions">
-                        <!-- Severity suggestions -->
-                        <option value="Fatal">
-                        <option value="Injury">
-                        <option value="Property Damage">
-                        <!-- Hotspot suggestions -->
-                        <option value="Hotspot">
-                        <option value="Not Hotspot">
-                        <option value="Non-Hotspot">
-                        <!-- Province suggestions -->
-                        {% for province in provinces %}
-                        <option value="{{ province }}">
-                        {% endfor %}
-                        <!-- Common incident types -->
-                        <option value="Vehicular Accident">
-                        <option value="Motorcycle Accident">
-                        <option value="Collision">
-                        <option value="Hit and Run">
-                    </datalist>
                     <i class="fas fa-search search-icon"></i>
                 </div>
                 <button onclick="performSearch()" class="btn btn-primary" style="padding: 0.75rem 1.75rem; white-space: nowrap;">
