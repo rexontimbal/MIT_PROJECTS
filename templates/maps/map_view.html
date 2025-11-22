@@ -1231,26 +1231,39 @@ body.fullscreen-mode .search-info-panel {
 
     .back-to-list-btn {
         position: absolute;
-        top: calc(50% + 120px);
-        right: 15px;
+        top: 20px;
+        left: 20px;
         z-index: 1000;
-        width: 48px;
-        height: 48px;
         background: white;
+        color: var(--primary-blue);
         border: none;
-        border-radius: 10px;
+        border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         cursor: pointer;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.875rem;
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 1.4rem;
-        transition: all 0.3s ease;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
     }
 
     .back-to-list-btn:hover {
-        background: var(--light-blue);
-        transform: scale(1.1);
+        background: var(--primary-blue);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 48, 135, 0.3);
+    }
+
+    /* Responsive back button for mobile */
+    @media (max-width: 768px) {
+        .back-to-list-btn {
+            top: 10px;
+            left: 10px;
+            padding: 0.625rem 1rem;
+            font-size: 0.813rem;
+        }
     }
 
     /* ============================================================================
@@ -1660,8 +1673,9 @@ body.fullscreen-mode .search-info-panel {
         </div>
 
         <!-- Back to Hotspot Button -->
-        <div class="back-to-list-btn" id="backToListBtn" onclick="goBackToHotspot()" data-tooltip="Back to Hotspot" style="display: none;">
-            ⬅️
+        <div class="back-to-list-btn" id="backToListBtn" onclick="goBackToHotspot()" style="display: none;">
+            <span>←</span>
+            <span>Back to Hotspot</span>
         </div>
 
         <!-- Stats Box -->
