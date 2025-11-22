@@ -31,6 +31,16 @@
         border-radius: 15px;
         margin-bottom: 25px;
         box-shadow: 0 4px 12px rgba(0, 48, 135, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .page-hero-content {
+        flex: 1;
+        min-width: 300px;
     }
 
     .page-hero h1 {
@@ -39,6 +49,7 @@
         display: flex;
         align-items: center;
         gap: 15px;
+        flex-wrap: wrap;
     }
 
     .page-hero p {
@@ -52,6 +63,37 @@
         padding: 5px 15px;
         border-radius: 20px;
         font-size: 0.9rem;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .hero-actions .btn {
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .hero-actions .btn-outline-light {
+        background: transparent;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .hero-actions .btn-outline-light:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: white;
+        transform: translateY(-2px);
     }
 
     /* Unified Filters Section - Modern Design */
@@ -371,63 +413,34 @@
         font-size: 0.8125rem;
     }
 
-    /* View Controls */
-    .view-controls {
-        background: white;
-        padding: 15px 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
+    /* View Toggle - Flat Design */
     .view-toggle {
         display: flex;
-        gap: 5px;
-        background: #F8F9FA;
-        padding: 5px;
-        border-radius: 8px;
+        background: #F3F4F6;
+        border-radius: 6px;
+        padding: 0.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid #E5E7EB;
     }
 
-    .view-btn {
-        padding: 8px 20px;
+    .view-option {
+        flex: 1;
+        padding: 0.5rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6B7280;
         border: none;
         background: transparent;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s;
-        display: flex;
-        align-items: center;
-        gap: 5px;
     }
 
-    .view-btn.active {
+    .view-option.active {
         background: var(--primary-blue);
         color: white;
-    }
-
-    .export-btn {
-        padding: 8px 20px;
-        background: var(--success-green);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .export-btn:hover {
-        background: #218838;
-        transform: translateY(-2px);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
 
     /* Pagination - Matching Hotspots */
@@ -436,56 +449,45 @@
         padding: 1rem 1.5rem;
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        border: 1px solid #E5E7EB;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
         gap: 1rem;
+        border: 1px solid #E5E7EB;
     }
 
-    .results-info {
-        font-size: 0.875rem;
+    .pagination-info {
         color: #6B7280;
+        font-size: 0.875rem;
     }
 
     .pagination-controls {
         display: flex;
+        gap: 0.5rem;
         align-items: center;
-        gap: 0.75rem;
     }
 
-    .pagination-controls a,
-    .pagination-controls span {
-        padding: 0.5rem 0.875rem;
+    .pagination-controls button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    #pageInfo {
+        padding: 0 1rem;
+        font-weight: 600;
+        color: #111827;
+        font-size: 0.875rem;
+    }
+
+    #itemsPerPage {
+        padding: 0.5rem 0.75rem;
+        border: 1.5px solid #D1D5DB;
         border-radius: 6px;
         font-size: 0.875rem;
-        font-weight: 500;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-
-    .pagination-controls a {
         background: white;
-        color: #374151;
-        border: 1.5px solid #D1D5DB;
-    }
-
-    .pagination-controls a:hover {
-        background: var(--primary-blue);
-        border-color: var(--primary-blue);
-        color: white;
-    }
-
-    .pagination-controls a.disabled {
-        opacity: 0.5;
-        pointer-events: none;
-    }
-
-    .pagination-controls .page-info {
-        color: #6B7280;
-        padding: 0.5rem 0.75rem;
+        cursor: pointer;
     }
 
     /* Card View */
@@ -911,22 +913,20 @@
 // Municipality data
 const municipalityData = {{ municipality_data_json|safe }};
 
-// View toggle
-let currentView = 'cards'; // Default to card view
+// Pagination state
+let currentPage = 1;
+let itemsPerPage = 12;
 
-function toggleView(view) {
-    currentView = view;
-    
-    document.querySelectorAll('.view-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    event.target.closest('.view-btn').classList.add('active');
-    
+// View toggle
+function switchView(viewType) {
     const cardsView = document.getElementById('cardsView');
     const tableView = document.getElementById('tableView');
-    
-    if (view === 'cards') {
+    const options = document.querySelectorAll('.view-option');
+
+    options.forEach(opt => opt.classList.remove('active'));
+    event.target.classList.add('active');
+
+    if (viewType === 'cards') {
         cardsView.style.display = 'grid';
         tableView.style.display = 'none';
     } else {
@@ -1238,6 +1238,69 @@ function clearAllFilters() {
     const baseUrl = window.location.pathname;
     window.location.href = baseUrl;
 }
+
+// ===== CLIENT-SIDE PAGINATION FUNCTIONS =====
+
+function updatePagination() {
+    const cards = Array.from(document.querySelectorAll('.accident-card'));
+    const tableRows = Array.from(document.querySelectorAll('.accidents-table tbody tr'));
+
+    const totalItems = cards.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    // Hide all cards and rows
+    cards.forEach(card => card.style.display = 'none');
+    tableRows.forEach(row => row.style.display = 'none');
+
+    // Show only items for current page
+    cards.forEach((card, index) => {
+        if (index >= startIndex && index < endIndex) {
+            card.style.display = '';
+        }
+    });
+
+    tableRows.forEach((row, index) => {
+        if (index >= startIndex && index < endIndex) {
+            row.style.display = '';
+        }
+    });
+
+    // Update pagination info
+    const showingStart = totalItems > 0 ? startIndex + 1 : 0;
+    const showingEnd = Math.min(endIndex, totalItems);
+
+    document.getElementById('showingStart').textContent = showingStart;
+    document.getElementById('showingEnd').textContent = showingEnd;
+    document.getElementById('totalCount').textContent = totalItems;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
+
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+}
+
+function changePage(direction) {
+    currentPage += direction;
+    updatePagination();
+
+    // Scroll to view toggle smoothly
+    const viewToggle = document.querySelector('.view-toggle');
+    if (viewToggle) {
+        viewToggle.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function changeItemsPerPage() {
+    itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+    currentPage = 1;
+    updatePagination();
+}
+
+// Initialize pagination on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updatePagination();
+});
 </script>
 {% endblock %}
 
@@ -1250,12 +1313,20 @@ function clearAllFilters() {
 
     <!-- Hero Header -->
     <div class="page-hero">
-        <h1>
-            <i class="fas fa-car-crash"></i>
-            Accident Records
-            <span class="hero-badge">{{ accidents.paginator.count }} Total</span>
-        </h1>
-        <p>Browse and analyze traffic accidents across Caraga Region</p>
+        <div class="page-hero-content">
+            <h1>
+                <i class="fas fa-car-crash"></i>
+                Accident Records
+                <span class="hero-badge">{{ accidents.paginator.count }} Total</span>
+            </h1>
+            <p>Browse and analyze traffic accidents across Caraga Region</p>
+        </div>
+        <div class="hero-actions">
+            <button class="btn btn-outline-light" onclick="exportToCSV()">
+                <i class="fas fa-download"></i>
+                Export CSV
+            </button>
+        </div>
     </div>
 
     <!-- Statistics -->
@@ -1375,49 +1446,32 @@ function clearAllFilters() {
         </div>
     </div>
 
-    <!-- Pagination & Results Info -->
-    <div class="pagination-container">
-        <div class="results-info">
-            Showing {{ accidents.start_index }}-{{ accidents.end_index }} of {{ accidents.paginator.count }} accidents
-        </div>
-        <div class="pagination-controls">
-            {% if accidents.has_previous %}
-                <a href="?page={{ accidents.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.province %}&province={{ request.GET.province }}{% endif %}{% if request.GET.municipal %}&municipal={{ request.GET.municipal }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}">
-                    ← Previous
-                </a>
-            {% else %}
-                <span class="disabled">← Previous</span>
-            {% endif %}
-
-            <span class="page-info">
-                Page {{ accidents.number }} of {{ accidents.paginator.num_pages }}
-            </span>
-
-            {% if accidents.has_next %}
-                <a href="?page={{ accidents.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.province %}&province={{ request.GET.province }}{% endif %}{% if request.GET.municipal %}&municipal={{ request.GET.municipal }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}">
-                    Next →
-                </a>
-            {% else %}
-                <span class="disabled">Next →</span>
-            {% endif %}
-        </div>
+    <!-- View Toggle -->
+    <div class="view-toggle">
+        <button class="view-option active" onclick="switchView('cards')">📊 Cards View</button>
+        <button class="view-option" onclick="switchView('table')">📋 Table View</button>
     </div>
 
-    <!-- View Controls -->
-    <div class="view-controls">
-        <div class="view-toggle">
-            <button class="view-btn active" onclick="toggleView('cards')">
-                <i class="fas fa-th-large"></i> Cards
+    <!-- Pagination Controls -->
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Showing <span id="showingStart">1</span>-<span id="showingEnd">12</span> of <span id="totalCount">{{ accidents.paginator.count }}</span> accidents
+        </div>
+        <div class="pagination-controls">
+            <button id="prevPage" onclick="changePage(-1)" class="btn btn-outline btn-sm" disabled>
+                ← Previous
             </button>
-            <button class="view-btn" onclick="toggleView('table')">
-                <i class="fas fa-table"></i> Table
+            <span id="pageInfo">Page 1</span>
+            <button id="nextPage" onclick="changePage(1)" class="btn btn-outline btn-sm">
+                Next →
             </button>
         </div>
-        <div>
-            <button class="export-btn" onclick="exportToCSV()">
-                <i class="fas fa-download"></i> Export CSV
-            </button>
-        </div>
+        <select id="itemsPerPage" onchange="changeItemsPerPage()">
+            <option value="12">12 per page</option>
+            <option value="24">24 per page</option>
+            <option value="48">48 per page</option>
+            <option value="999999">Show all</option>
+        </select>
     </div>
 
     <!-- Card View -->
@@ -1552,54 +1606,5 @@ function clearAllFilters() {
             </table>
         </div>
     </div>
-
-    <!-- Pagination -->
-    {% if accidents.has_other_pages %}
-    <div class="pagination-container">
-        <ul class="pagination">
-            {% if accidents.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ accidents.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                    <i class="fas fa-chevron-left"></i> Previous
-                </a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">
-                    <i class="fas fa-chevron-left"></i> Previous
-                </span>
-            </li>
-            {% endif %}
-
-            {% for i in accidents.paginator.page_range %}
-                {% if accidents.number == i %}
-                <li class="page-item active">
-                    <span class="page-link">{{ i }}</span>
-                </li>
-                {% elif i > accidents.number|add:'-3' and i < accidents.number|add:'3' %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                        {{ i }}
-                    </a>
-                </li>
-                {% endif %}
-            {% endfor %}
-
-            {% if accidents.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ accidents.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                    Next <i class="fas fa-chevron-right"></i>
-                </a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">
-                    Next <i class="fas fa-chevron-right"></i>
-                </span>
-            </li>
-            {% endif %}
-        </ul>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
