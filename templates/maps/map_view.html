@@ -1659,9 +1659,9 @@ body.fullscreen-mode .search-info-panel {
             ⛶
         </div>
 
-        <!-- Back to List Button -->
-        <div class="back-to-list-btn" id="backToListBtn" onclick="goBackToList()" data-tooltip="Back to Accident List" style="display: none;">
-            📋
+        <!-- Back to Hotspot Button -->
+        <div class="back-to-list-btn" id="backToListBtn" onclick="goBackToHotspot()" data-tooltip="Back to Hotspot" style="display: none;">
+            ⬅️
         </div>
 
         <!-- Stats Box -->
@@ -4405,6 +4405,7 @@ function checkURLParametersAndJump() {
     const zoom = urlParams.get('zoom');
     const accidentId = urlParams.get('accident_id');
     const clusterId = urlParams.get('cluster_id');
+    const source = urlParams.get('source');
 
     // Priority: cluster_id takes precedence over lat/lng
     if (clusterId) {
@@ -4418,6 +4419,13 @@ function checkURLParametersAndJump() {
             // Show back button
             const backBtn = document.getElementById('backToListBtn');
             if (backBtn) backBtn.style.display = 'flex';
+
+            // Auto-expand to fullscreen mode
+            setTimeout(() => {
+                if (!document.body.classList.contains('fullscreen-mode')) {
+                    toggleFullscreen();
+                }
+            }, 100);
 
             // Wait for map to be fully loaded, then zoom to hotspot
             setTimeout(() => {
@@ -4470,8 +4478,22 @@ function checkURLParametersAndJump() {
     }
 }
 
-function goBackToList() {
-    window.location.href = "{% url 'accident_list' %}";
+function goBackToHotspot() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const source = urlParams.get('source');
+    const clusterId = urlParams.get('cluster_id');
+
+    // Context-aware navigation
+    if (source === 'detail' && clusterId) {
+        // Return to hotspot detail page
+        window.location.href = `/hotspots/${clusterId}/`;
+    } else if (source === 'list' || clusterId) {
+        // Return to hotspot list page
+        window.location.href = "{% url 'hotspots' %}";
+    } else {
+        // Default: return to accident list
+        window.location.href = "{% url 'accident_list' %}";
+    }
 }
 
 // ============================================================================
