@@ -9,16 +9,48 @@
 
 {% block extra_css %}
 <style>
+    /* ===== COHESIVE COLOR SCHEME FOR HOTSPOTS ===== */
+    :root {
+        /* Primary Colors - Danger/Warning Theme */
+        --hotspot-primary: #DC143C;      /* Crimson Red - Critical */
+        --hotspot-secondary: #F59E0B;    /* Amber - Warning */
+        --hotspot-accent: #FF6B35;       /* Coral - Highlights */
+        --hotspot-safe: #10B981;         /* Emerald - Low severity */
+
+        /* Neutral Colors */
+        --text-primary: #111827;         /* Dark Gray */
+        --text-secondary: #6B7280;       /* Medium Gray */
+        --border-light: #E5E7EB;         /* Light Gray */
+        --border-medium: #D1D5DB;        /* Medium Border */
+        --bg-light: #F9FAFB;             /* Very Light Background */
+
+        /* Button Colors */
+        --btn-primary-bg: #DC143C;
+        --btn-primary-hover: #B01030;
+        --btn-outline-border: #D1D5DB;
+        --btn-outline-hover: #DC143C;
+    }
+
     /* ===== MODERN FLAT UI STYLING ===== */
 
     /* Hero Header */
     .page-hero {
-        background: linear-gradient(135deg, #DC143C 0%, #FF6B35 100%);
+        background: linear-gradient(135deg, var(--hotspot-primary) 0%, var(--hotspot-accent) 100%);
         color: white;
         padding: 35px;
         border-radius: 15px;
         margin-bottom: 25px;
         box-shadow: 0 4px 12px rgba(220, 20, 60, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .page-hero-content {
+        flex: 1;
+        min-width: 300px;
     }
 
     .page-hero h1 {
@@ -27,6 +59,7 @@
         display: flex;
         align-items: center;
         gap: 15px;
+        flex-wrap: wrap;
     }
 
     .page-hero p {
@@ -40,6 +73,49 @@
         padding: 5px 15px;
         border-radius: 20px;
         font-size: 0.9rem;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .hero-actions .btn {
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .hero-actions .btn-light {
+        background: rgba(255, 255, 255, 0.95);
+        color: var(--hotspot-primary);
+        border: 2px solid transparent;
+    }
+
+    .hero-actions .btn-light:hover {
+        background: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .hero-actions .btn-outline-light {
+        background: transparent;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .hero-actions .btn-outline-light:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: white;
+        transform: translateY(-2px);
     }
 
     .hotspots-header {
@@ -92,8 +168,8 @@
 
     #hotspotSearch:focus {
         outline: none;
-        border-color: #003087;
-        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.08);
+        border-color: var(--hotspot-primary);
+        box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.08);
     }
 
     .search-icon {
@@ -141,8 +217,8 @@
 
     .filter-group select:focus {
         outline: none;
-        border-color: #003087;
-        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.08);
+        border-color: var(--hotspot-primary);
+        box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.08);
     }
 
     /* Active Filters Tags */
@@ -156,8 +232,8 @@
     }
 
     .filter-tag {
-        background: #EFF6FF;
-        color: #1E40AF;
+        background: #FEE2E2;
+        color: #991B1B;
         padding: 0.375rem 0.75rem;
         border-radius: 6px;
         font-size: 0.8125rem;
@@ -165,13 +241,13 @@
         align-items: center;
         gap: 0.5rem;
         font-weight: 500;
-        border: 1px solid #DBEAFE;
+        border: 1px solid #FECACA;
     }
 
     .filter-tag button {
         background: none;
         border: none;
-        color: #1E40AF;
+        color: var(--hotspot-primary);
         cursor: pointer;
         font-weight: 600;
         font-size: 1.125rem;
@@ -182,7 +258,7 @@
     }
 
     .filter-tag button:hover {
-        color: #1E3A8A;
+        color: var(--btn-primary-hover);
     }
 
     /* Summary Cards - Flat & Clean */
@@ -210,7 +286,7 @@
 
     .summary-card h3 {
         font-size: 2rem;
-        color: #003087;
+        color: var(--hotspot-primary);
         margin-bottom: 0.5rem;
         font-weight: 700;
     }
@@ -235,8 +311,8 @@
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         overflow: hidden;
         transition: all 0.2s ease;
-        border: 1px solid #E5E7EB;
-        border-left: 3px solid #DC143C;
+        border: 1px solid var(--border-light);
+        border-left: 3px solid var(--hotspot-primary);
         position: relative;
     }
 
@@ -246,7 +322,7 @@
     }
 
     .hotspot-header {
-        background: #FFA500;
+        background: linear-gradient(135deg, var(--hotspot-primary) 0%, var(--hotspot-accent) 100%);
         color: white;
         padding: 1.25rem;
         position: relative;
@@ -267,10 +343,10 @@
         display: inline-block;
     }
 
-    .risk-critical { background: #DC143C; color: white; }
-    .risk-high { background: #F59E0B; color: white; }
-    .risk-medium { background: #10B981; color: white; }
-    .risk-low { background: #6B7280; color: white; }
+    .risk-critical { background: var(--hotspot-primary); color: white; }
+    .risk-high { background: var(--hotspot-secondary); color: white; }
+    .risk-medium { background: var(--hotspot-safe); color: white; }
+    .risk-low { background: var(--text-secondary); color: white; }
 
     .hotspot-body {
         padding: 1.25rem;
@@ -349,25 +425,26 @@
     }
 
     .btn-primary {
-        background: #003087;
+        background: var(--btn-primary-bg);
         color: white;
-        border: 1px solid #003087;
+        border: 1px solid var(--btn-primary-bg);
     }
 
     .btn-primary:hover {
-        background: #002366;
+        background: var(--btn-primary-hover);
+        border-color: var(--btn-primary-hover);
         transform: translateY(-1px);
     }
 
     .btn-outline {
         background: white;
-        color: #374151;
-        border: 1.5px solid #D1D5DB;
+        color: var(--text-secondary);
+        border: 1.5px solid var(--btn-outline-border);
     }
 
     .btn-outline:hover {
-        background: #003087;
-        border-color: #003087;
+        background: var(--btn-outline-hover);
+        border-color: var(--btn-outline-hover);
         color: white;
     }
 
@@ -399,7 +476,7 @@
     }
 
     .view-option.active {
-        background: #003087;
+        background: var(--hotspot-primary);
         color: white;
         box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
@@ -629,12 +706,24 @@
 {% block content %}
 <!-- Hero Header -->
 <div class="page-hero">
-    <h1>
-        <i class="fas fa-exclamation-triangle"></i>
-        Accident Hotspots
-        <span class="hero-badge">{{ hotspots.count }} Detected</span>
-    </h1>
-    <p>High-risk areas identified by AGNES clustering algorithm across Caraga Region</p>
+    <div class="page-hero-content">
+        <h1>
+            <i class="fas fa-exclamation-triangle"></i>
+            Accident Hotspots
+            <span class="hero-badge">{{ hotspots.count }} Detected</span>
+        </h1>
+        <p>High-risk areas identified by AGNES clustering algorithm across Caraga Region</p>
+    </div>
+    <div class="hero-actions">
+        <button class="btn btn-light" onclick="window.location.href='{% url 'map_view' %}'">
+            <i class="fas fa-map-marked-alt"></i>
+            View on Map
+        </button>
+        <button class="btn btn-outline-light" onclick="exportHotspots()">
+            <i class="fas fa-download"></i>
+            Export Report
+        </button>
+    </div>
 </div>
 
 <!-- View Toggle -->
