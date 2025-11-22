@@ -179,6 +179,36 @@
         transform: translateY(-1px);
     }
 
+    /* Search Input - Modern & Flat */
+    #hotspotSearch {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.75rem;
+        border: 1.5px solid #D1D5DB;
+        border-radius: 6px;
+        font-size: 0.9375rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+
+    #hotspotSearch:hover {
+        border-color: #9CA3AF;
+    }
+
+    #hotspotSearch:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.08);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6B7280;
+        pointer-events: none;
+    }
+
     /* Filter Grid - Clean Layout */
     .filters-grid {
         display: grid;
@@ -273,6 +303,50 @@
     .quick-filter-btn.standalone.active {
         background: linear-gradient(135deg, #6C757D, #495057);
         border-color: #6C757D;
+    }
+
+    /* Active Filters Tags - Blue Theme */
+    .active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #E5E7EB;
+    }
+
+    .active-filters.hidden {
+        display: none;
+    }
+
+    .filter-tag {
+        background: #E8F0FE;
+        color: #003087;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8125rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        border: 1px solid #BBDEFB;
+    }
+
+    .filter-tag button {
+        background: none;
+        border: none;
+        color: var(--primary-blue);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1.125rem;
+        line-height: 1;
+        padding: 0;
+        margin-left: 0.25rem;
+        transition: all 0.2s;
+    }
+
+    .filter-tag button:hover {
+        color: #0052CC;
     }
 
     /* Active Filters Tags - Blue Theme */
@@ -975,7 +1049,6 @@ function applyClientSideFilters() {
     let visibleCount = 0;
 
     cards.forEach(card => {
-        // You'll need to add data attributes to cards for filtering
         const location = (card.querySelector('.card-location-title')?.textContent || '').toLowerCase();
         const municipal = (card.querySelector('.card-location-sub')?.textContent || '').toLowerCase();
 
@@ -993,8 +1066,67 @@ function applyClientSideFilters() {
         }
     });
 
+    updateActiveFilters();
     currentPage = 1;
     updatePagination();
+}
+
+function updateActiveFilters() {
+    const activeFilters = document.getElementById('activeFilters');
+    const searchTerm = document.getElementById('hotspotSearch').value.trim();
+    const province = document.getElementById('province').value;
+    const municipal = document.getElementById('municipal').value;
+    const year = document.getElementById('year').value;
+
+    let activeFiltersHTML = '';
+
+    if (searchTerm) {
+        activeFiltersHTML += `<div class="filter-tag">
+            <i class="fas fa-search"></i> Search: "${searchTerm}"
+            <button onclick="removeSearchFilter()">×</button>
+        </div>`;
+    }
+
+    if (province) {
+        activeFiltersHTML += `<div class="filter-tag">
+            <i class="fas fa-map-marker-alt"></i> Province: ${province}
+            <button onclick="removeFilter('province')">×</button>
+        </div>`;
+    }
+
+    if (municipal) {
+        activeFiltersHTML += `<div class="filter-tag">
+            <i class="fas fa-city"></i> Municipality: ${municipal}
+            <button onclick="removeFilter('municipal')">×</button>
+        </div>`;
+    }
+
+    if (year) {
+        activeFiltersHTML += `<div class="filter-tag">
+            <i class="fas fa-calendar"></i> Year: ${year}
+            <button onclick="removeFilter('year')">×</button>
+        </div>`;
+    }
+
+    activeFilters.innerHTML = activeFiltersHTML;
+    if (activeFiltersHTML) {
+        activeFilters.classList.remove('hidden');
+    } else {
+        activeFilters.classList.add('hidden');
+    }
+}
+
+function removeSearchFilter() {
+    document.getElementById('hotspotSearch').value = '';
+    applyClientSideFilters();
+}
+
+function removeFilter(filterName) {
+    document.getElementById(filterName).value = '';
+    if (filterName === 'province') {
+        updateMunicipalityDropdown();
+    }
+    applyClientSideFilters();
 }
 
 // Quick filter
@@ -1043,30 +1175,25 @@ function toggleAdvancedFilters() {
     icon.classList.toggle('fa-chevron-up');
 }
 
-// Update municipalities
-function updateMunicipalities() {
+// Update municipalities based on selected province
+function updateMunicipalityDropdown() {
     const provinceSelect = document.getElementById('province');
-    const municipalSelect = document.getElementById('municipal');
+    const municipalitySelect = document.getElementById('municipal');
     const selectedProvince = provinceSelect.value;
-    
-    municipalSelect.innerHTML = '<option value="">All Municipalities</option>';
-    
-    if (selectedProvince && municipalityData[selectedProvince]) {
-        municipalityData[selectedProvince].forEach(municipal => {
-            if (municipal && municipal.trim()) {
-                const option = document.createElement('option');
-                option.value = municipal;
-                option.textContent = municipal;
-                
-                const currentSelected = "{{ request.GET.municipal|escapejs }}";
-                if (municipal === currentSelected) {
-                    option.selected = true;
-                }
-                
-                municipalSelect.appendChild(option);
-            }
-        });
-    }
+
+    municipalitySelect.value = '';
+    municipalitySelect.innerHTML = '<option value="">All Municipalities</option>';
+
+    let municipalitiesToShow = selectedProvince ?
+        (municipalityData[selectedProvince] || []) :
+        [];
+
+    municipalitiesToShow.forEach(function(mun) {
+        const option = document.createElement('option');
+        option.value = mun;
+        option.textContent = mun;
+        municipalitySelect.appendChild(option);
+    });
 }
 
 // Export to CSV
@@ -1278,12 +1405,21 @@ function removeFilter(filterName) {
 
 // Clear all filters
 function clearAllFilters() {
-    // Show loading
-    document.querySelector('.loading-overlay').classList.add('active');
+    document.getElementById('hotspotSearch').value = '';
+    document.getElementById('province').value = '';
+    document.getElementById('municipal').value = '';
+    document.getElementById('year').value = '';
 
-    // Get base URL without any parameters
-    const baseUrl = window.location.pathname;
-    window.location.href = baseUrl;
+    updateMunicipalityDropdown();
+
+    const cards = document.getElementsByClassName('accident-card');
+    Array.from(cards).forEach(card => {
+        card.setAttribute('data-search-visible', 'true');
+    });
+
+    updateActiveFilters();
+    currentPage = 1;
+    updatePagination();
 }
 
 // ===== CLIENT-SIDE PAGINATION FUNCTIONS =====
@@ -1344,6 +1480,8 @@ function changeItemsPerPage() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeAccidentCards();
+    updateMunicipalityDropdown();
+    updateActiveFilters();
     updatePagination();
 });
 </script>
@@ -1547,35 +1685,5 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         {% endfor %}
     </div>
-
-    <!-- Server-side Pagination (Load More Data) -->
-    {% if accidents.has_other_pages %}
-    <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid #E5E7EB; margin-bottom: 2rem; text-align: center;">
-        <div style="margin-bottom: 1rem; color: #6B7280; font-size: 0.875rem;">
-            <strong>Showing Django page {{ accidents.number }} of {{ accidents.paginator.num_pages }}</strong>
-            <br>
-            <small>({{ accidents.paginator.count }} total accidents across all pages)</small>
-        </div>
-        <div style="display: flex; gap: 0.75rem; justify-content: center; align-items: center;">
-            {% if accidents.has_previous %}
-                <a href="?page={{ accidents.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-                   class="btn btn-outline" style="text-decoration: none;">
-                    ← Load Previous 100
-                </a>
-            {% endif %}
-
-            <span style="padding: 0.5rem 1rem; color: #111827; font-weight: 600;">
-                Page {{ accidents.number }} / {{ accidents.paginator.num_pages }}
-            </span>
-
-            {% if accidents.has_next %}
-                <a href="?page={{ accidents.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-                   class="btn btn-primary" style="text-decoration: none;">
-                    Load Next 100 →
-                </a>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
