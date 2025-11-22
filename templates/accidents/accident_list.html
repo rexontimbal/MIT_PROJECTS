@@ -1579,8 +1579,12 @@ function viewAccident(id) {
     window.location.href = `/accidents/${id}/`;
 }
 
-function viewOnMap(lat, lng) {
-    window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=15`;
+function viewOnMap(lat, lng, accidentId) {
+    if (accidentId) {
+        window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=16&accident_id=${accidentId}&single=true`;
+    } else {
+        window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=15`;
+    }
 }
 
 // Accident Modal Functions
@@ -2102,7 +2106,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button class="card-action-btn btn-view" onclick="event.stopPropagation(); viewAccident({{ accident.pk }})">
                             <i class="fas fa-eye"></i> View
                         </button>
-                        <button class="card-action-btn btn-map" onclick="event.stopPropagation(); viewOnMap({{ accident.latitude }}, {{ accident.longitude }})">
+                        <button class="card-action-btn btn-map" onclick="event.stopPropagation(); viewOnMap({{ accident.latitude }}, {{ accident.longitude }}, {{ accident.pk }})">
                             <i class="fas fa-map"></i> Map
                         </button>
                     </div>
