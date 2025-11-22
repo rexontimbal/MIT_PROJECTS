@@ -313,6 +313,15 @@ def accident_list(request):
         if 'property' in search_lower or 'damage' in search_lower or 'unharmed' in search_lower:
             search_q |= Q(victim_unharmed=True)
 
+        # Add hotspot/non-hotspot search
+        if 'hotspot' in search_lower:
+            if 'not' in search_lower or 'no' in search_lower or 'non' in search_lower:
+                # Search for non-hotspot accidents
+                search_q |= Q(is_hotspot=False)
+            else:
+                # Search for hotspot accidents
+                search_q |= Q(is_hotspot=True)
+
         accidents = accidents.filter(search_q)
     
     # Calculate statistics for filtered results
