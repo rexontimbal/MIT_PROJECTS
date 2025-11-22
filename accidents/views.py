@@ -381,17 +381,54 @@ def accident_list(request):
     if export == 'csv':
         import csv
         from django.http import HttpResponse
-        
+        from datetime import datetime
+
+        # Count filtered results
+        total_count = accidents.count()
+
+        # Determine if filters are applied
+        has_filters = any([province, municipal, year, date_from, date_to, is_hotspot,
+                          search, fatal_only, injury_only, no_hotspot])
+
+        # Create descriptive filename
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        if has_filters:
+            filename = f'accidents_filtered_{total_count}_records_{timestamp}.csv'
+        else:
+            filename = f'accidents_all_{total_count}_records_{timestamp}.csv'
+
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="accidents_export.csv"'
-        
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
         writer = csv.writer(response)
+
+        # Write header with metadata
+        writer.writerow(['# Accident Records Export'])
+        writer.writerow(['# Export Date:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+        writer.writerow(['# Total Records:', total_count])
+        writer.writerow(['# Filters Applied:', 'Yes' if has_filters else 'No'])
+        if has_filters:
+            filter_details = []
+            if province: filter_details.append(f'Province={province}')
+            if municipal: filter_details.append(f'Municipality={municipal}')
+            if year: filter_details.append(f'Year={year}')
+            if date_from: filter_details.append(f'DateFrom={date_from}')
+            if date_to: filter_details.append(f'DateTo={date_to}')
+            if search: filter_details.append(f'Search={search}')
+            if fatal_only: filter_details.append('Fatal Only')
+            if injury_only: filter_details.append('Injury Only')
+            if no_hotspot: filter_details.append('Non-Hotspot Only')
+            writer.writerow(['# Active Filters:', ', '.join(filter_details)])
+        writer.writerow([])  # Empty row separator
+
+        # Write column headers
         writer.writerow([
             'Date', 'Time', 'Province', 'Municipality', 'Barangay',
             'Street', 'Incident Type', 'Casualties', 'Fatal', 'Injured',
-            'Hotspot', 'Latitude', 'Longitude'
+            'Hotspot', 'Cluster ID', 'Latitude', 'Longitude'
         ])
-        
+
+        # Write data rows
         for acc in accidents:
             writer.writerow([
                 acc.date_committed.strftime('%Y-%m-%d') if acc.date_committed else '',
@@ -405,10 +442,11 @@ def accident_list(request):
                 'Yes' if acc.victim_killed else 'No',
                 'Yes' if acc.victim_injured else 'No',
                 'Yes' if acc.is_hotspot else 'No',
+                acc.cluster_id or '',
                 float(acc.latitude) if acc.latitude else '',
                 float(acc.longitude) if acc.longitude else ''
             ])
-        
+
         return response
 
     # Pagination - user-controlled via per_page parameter
