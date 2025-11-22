@@ -287,17 +287,17 @@
     }
 
     .btn-action {
-        padding: 8px 14px;
+        padding: 6px 10px;
         border: none;
-        border-radius: 6px;
+        border-radius: 5px;
         font-weight: 600;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
         text-decoration: none;
         transition: all 0.2s ease;
-        font-size: 0.85rem;
+        font-size: 0.75rem;
     }
 
     .btn-back {
@@ -876,8 +876,8 @@
                     <span class="stat-label">Resolved</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value">
-                        {{ accident.station|default:"-"|truncatechars:8 }}
+                    <span class="stat-value" style="font-size: 0.85rem; line-height: 1.3; overflow-wrap: break-word;">
+                        {{ accident.station|default:"-" }}
                     </span>
                     <span class="stat-label">Station</span>
                 </div>
