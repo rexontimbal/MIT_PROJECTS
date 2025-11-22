@@ -278,6 +278,11 @@
         color: #856404;
     }
 
+    .casualty-property {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+
     /* Recommendations Box */
     .recommendations {
         background: linear-gradient(135deg, #E8F0FE 0%, #F8F9FA 100%);
@@ -517,7 +522,9 @@
                                     {{ accident.victim_count }} injured
                                 </span>
                             {% else %}
-                                {{ accident.victim_count }}
+                                <span class="casualty-badge casualty-property">
+                                    Property damage
+                                </span>
                             {% endif %}
                         </td>
                     </tr>
