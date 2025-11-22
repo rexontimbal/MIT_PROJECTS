@@ -294,13 +294,26 @@ def accident_list(request):
     # Search filter
     if search:
         from django.db.models import Q
-        accidents = accidents.filter(
+
+        # Create base location/incident search
+        search_q = (
             Q(barangay__icontains=search) |
             Q(municipal__icontains=search) |
             Q(province__icontains=search) |
             Q(incident_type__icontains=search) |
             Q(street__icontains=search)
         )
+
+        # Add severity-based search
+        search_lower = search.lower()
+        if 'fatal' in search_lower or 'death' in search_lower or 'killed' in search_lower:
+            search_q |= Q(victim_killed=True)
+        if 'injury' in search_lower or 'injured' in search_lower or 'hurt' in search_lower:
+            search_q |= Q(victim_injured=True)
+        if 'property' in search_lower or 'damage' in search_lower or 'unharmed' in search_lower:
+            search_q |= Q(victim_unharmed=True)
+
+        accidents = accidents.filter(search_q)
     
     # Calculate statistics for filtered results
     fatal_count = accidents.filter(victim_killed=True).count()
