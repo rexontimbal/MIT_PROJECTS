@@ -4259,7 +4259,8 @@ function showNotification(message, type = 'info') {
     notification.style.cssText = `
         position: fixed;
         top: 20px;
-        right: 20px;
+        left: 50%;
+        transform: translateX(-50%);
         background: ${type === 'success' ? '#28A745' : type === 'error' ? '#DC143C' : '#007BFF'};
         color: white;
         padding: 1rem 1.5rem;
@@ -4268,10 +4269,13 @@ function showNotification(message, type = 'info') {
         z-index: 10000;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         animation: slideIn 0.3s ease;
+        white-space: nowrap;
+        max-width: 90%;
+        text-align: center;
     `;
     notification.textContent = message;
     document.body.appendChild(notification);
-    
+
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => notification.remove(), 300);
