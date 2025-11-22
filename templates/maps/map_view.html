@@ -4404,37 +4404,64 @@ function checkURLParametersAndJump() {
     const lng = urlParams.get('lng');
     const zoom = urlParams.get('zoom');
     const accidentId = urlParams.get('accident_id');
-    
-    if (lat && lng) {
+    const clusterId = urlParams.get('cluster_id');
+
+    // Priority: cluster_id takes precedence over lat/lng
+    if (clusterId) {
+        const clusterIdInt = parseInt(clusterId);
+        console.log('🎯 Focusing on hotspot cluster:', clusterIdInt);
+
+        // Find the hotspot in the data
+        const hotspot = allHotspots.find(h => h.cluster_id === clusterIdInt);
+
+        if (hotspot) {
+            // Show back button
+            const backBtn = document.getElementById('backToListBtn');
+            if (backBtn) backBtn.style.display = 'flex';
+
+            // Wait for map to be fully loaded, then zoom to hotspot
+            setTimeout(() => {
+                zoomToHotspotArea(hotspot.cluster_id, hotspot.center_latitude, hotspot.center_longitude);
+
+                // Show notification after animation
+                setTimeout(() => {
+                    showNotification(`Focused on Hotspot #${clusterIdInt} 🎯`, 'success');
+                }, 2000);
+            }, 500);
+        } else {
+            console.warn('⚠️ Hotspot cluster not found:', clusterIdInt);
+            showNotification('Hotspot not found', 'error');
+        }
+    } else if (lat && lng) {
         const backBtn = document.getElementById('backToListBtn');
         if (backBtn) backBtn.style.display = 'flex';
-        
+
         const latitude = parseFloat(lat);
         const longitude = parseFloat(lng);
         const zoomLevel = zoom ? parseInt(zoom) : 16;
-        
+
         console.log('🎯 Jumping to location from URL:', latitude, longitude);
-        
+
         setTimeout(() => {
             map.flyTo([latitude, longitude], zoomLevel, {
                 duration: 2,
                 easeLinearity: 0.5
             });
-            
+
             if (accidentId) {
                 setTimeout(() => {
-                    const targetMarker = accidentMarkers.find(m => 
+                    const targetMarker = accidentMarkers.find(m =>
                         m.accidentData && m.accidentData.id == accidentId
                     );
-                    
+
                     if (targetMarker) {
                         targetMarker.openPopup();
-                        
+
                         const markerElement = targetMarker.getElement();
                         if (markerElement) {
                             markerElement.style.animation = 'pulse 2s ease 5';
                         }
-                        
+
                         showNotification('Location found! 🎯', 'success');
                     }
                 }, 2000);
