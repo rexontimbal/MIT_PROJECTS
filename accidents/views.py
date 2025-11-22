@@ -382,12 +382,21 @@ def accident_list(request):
             ])
         
         return response
-    
-    # Pagination - consistent 100 items per page
-    # Simpler UX: max 100 records displayed at once for both filtered and unfiltered
+
+    # Pagination - user-controlled via per_page parameter
+    # Default: 100 per page, options: 12, 24, 48, 100, 500
     from django.core.paginator import Paginator
 
-    paginator = Paginator(accidents, 100)
+    per_page = request.GET.get('per_page', 100)
+    try:
+        per_page = int(per_page)
+        # Validate per_page is in allowed values
+        if per_page not in [12, 24, 48, 100, 500]:
+            per_page = 100
+    except (ValueError, TypeError):
+        per_page = 100
+
+    paginator = Paginator(accidents, per_page)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     

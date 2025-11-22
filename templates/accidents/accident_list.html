@@ -983,9 +983,7 @@
 // Municipality data
 const municipalityData = {{ municipality_data_json|safe }};
 
-// Pagination state
-let currentPage = 1;
-let itemsPerPage = 12;
+// No client-side pagination state needed - server handles everything
 
 // View toggle
 function switchView(viewType) {
@@ -1408,53 +1406,19 @@ function clearAllFilters() {
     window.location.href = window.location.pathname;
 }
 
-// ===== CLIENT-SIDE PAGINATION FUNCTIONS =====
-// Note: Server handles filtering, client only paginates display
-
-function updatePagination() {
-    const cards = Array.from(document.getElementsByClassName('accident-card'));
-    const totalItems = cards.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-
-    // Hide all cards first
-    cards.forEach(card => card.style.display = 'none');
-
-    // Show only cards for current page
-    cards.forEach((card, index) => {
-        if (index >= startIndex && index < endIndex) {
-            card.style.display = '';
-        }
-    });
-
-    // Update pagination info
-    const showingStart = totalItems > 0 ? startIndex + 1 : 0;
-    const showingEnd = Math.min(endIndex, totalItems);
-
-    document.getElementById('showingStart').textContent = showingStart;
-    document.getElementById('showingEnd').textContent = showingEnd;
-    document.getElementById('totalCount').textContent = totalItems;
-    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
-
-    document.getElementById('prevPage').disabled = currentPage <= 1;
-    document.getElementById('nextPage').disabled = currentPage >= totalPages;
-}
-
-function changePage(direction) {
-    currentPage += direction;
-    updatePagination();
-
-    const filtersSection = document.querySelector('.filters-section');
-    if (filtersSection) {
-        filtersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-}
+// ===== SERVER-SIDE PAGINATION FUNCTIONS =====
 
 function changeItemsPerPage() {
-    itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
-    currentPage = 1;
-    updatePagination();
+    const perPage = document.getElementById('itemsPerPage').value;
+    const currentUrl = new URL(window.location.href);
+
+    // Update per_page parameter
+    currentUrl.searchParams.set('per_page', perPage);
+    // Reset to first page when changing items per page
+    currentUrl.searchParams.delete('page');
+
+    // Redirect to update page
+    window.location.href = currentUrl.toString();
 }
 
 // Initialize on page load
@@ -1466,6 +1430,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const provinceParam = urlParams.get('province') || '';
     const municipalParam = urlParams.get('municipal') || '';
     const yearParam = urlParams.get('year') || '';
+    const perPageParam = urlParams.get('per_page') || '100';
 
     // Set form values from URL
     if (searchParam) {
@@ -1481,6 +1446,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('year').value = yearParam;
     }
 
+    // Set items per page dropdown from URL
+    document.getElementById('itemsPerPage').value = perPageParam;
+
     // Update municipality dropdown based on selected province
     updateMunicipalityDropdown();
 
@@ -1491,9 +1459,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Display active filter badges
     updateActiveFilters();
-
-    // Initialize client-side pagination
-    updatePagination();
 
     // Scroll to search section when navigating pagination
     if (window.location.hash === '#search-section') {
@@ -1626,22 +1591,35 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Pagination Controls -->
     <div class="pagination-container">
         <div class="pagination-info">
-            Showing <span id="showingStart">1</span>-<span id="showingEnd">12</span> of <span id="totalCount">{{ accidents.paginator.count }}</span> accidents
+            Showing {{ accidents.start_index }}-{{ accidents.end_index }} of {{ accidents.paginator.count }} accidents
         </div>
         <div class="pagination-controls">
-            <button id="prevPage" onclick="changePage(-1)" class="btn btn-outline btn-sm" disabled>
-                ← Previous
-            </button>
-            <span id="pageInfo">Page 1</span>
-            <button id="nextPage" onclick="changePage(1)" class="btn btn-outline btn-sm">
-                Next →
-            </button>
+            {% if accidents.has_previous %}
+                <a href="?page={{ accidents.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}#search-section"
+                   class="btn btn-outline btn-sm" style="text-decoration: none;">
+                    ← Previous
+                </a>
+            {% else %}
+                <button class="btn btn-outline btn-sm" disabled>← Previous</button>
+            {% endif %}
+
+            <span id="pageInfo">Page {{ accidents.number }} of {{ accidents.paginator.num_pages }}</span>
+
+            {% if accidents.has_next %}
+                <a href="?page={{ accidents.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}#search-section"
+                   class="btn btn-primary" style="text-decoration: none;">
+                    Next →
+                </a>
+            {% else %}
+                <button class="btn btn-outline btn-sm" disabled>Next →</button>
+            {% endif %}
         </div>
         <select id="itemsPerPage" onchange="changeItemsPerPage()">
             <option value="12">12 per page</option>
             <option value="24">24 per page</option>
             <option value="48">48 per page</option>
             <option value="100">100 per page</option>
+            <option value="500">500 per page</option>
         </select>
     </div>
 
@@ -1780,41 +1758,5 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <!-- Server-Side Pagination (Load More Pages) -->
-    {% if accidents.has_other_pages %}
-    <div class="pagination-container" style="margin-top: 2rem;">
-        <div class="pagination-info">
-            <strong style="color: #111827;">Page {{ accidents.number }} of {{ accidents.paginator.num_pages }}</strong>
-            <br>
-            <small style="color: #6B7280;">({{ accidents.paginator.count }} total accidents)</small>
-        </div>
-        <div class="pagination-controls">
-            {% if accidents.has_previous %}
-                <a href="?page={{ accidents.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}#search-section"
-                   class="btn btn-outline btn-sm" style="text-decoration: none;">
-                    ← Previous
-                </a>
-            {% else %}
-                <button class="btn btn-outline btn-sm" disabled>← Previous</button>
-            {% endif %}
-
-            <span style="padding: 0 1rem; color: #111827; font-weight: 600;">
-                {{ accidents.number }} / {{ accidents.paginator.num_pages }}
-            </span>
-
-            {% if accidents.has_next %}
-                <a href="?page={{ accidents.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}#search-section"
-                   class="btn btn-primary" style="text-decoration: none;">
-                    Next →
-                </a>
-            {% else %}
-                <button class="btn btn-outline btn-sm" disabled>Next →</button>
-            {% endif %}
-        </div>
-        <div style="justify-self: end; color: #6B7280; font-size: 0.875rem;">
-            Showing records {{ accidents.start_index }}-{{ accidents.end_index }}
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
