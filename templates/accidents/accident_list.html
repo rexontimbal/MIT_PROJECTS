@@ -1010,6 +1010,181 @@
         100% { transform: rotate(360deg); }
     }
 
+    /* Accident Modal */
+    .accident-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .accident-modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+        position: relative;
+        background: white;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+        overflow: hidden;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        color: #6B7280;
+        cursor: pointer;
+        z-index: 10;
+        transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+        color: #DC143C;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #003087 0%, #0052CC 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .modal-badges {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .modal-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .modal-info-item {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .modal-info-item > i {
+        color: #003087;
+        font-size: 1.25rem;
+        margin-top: 0.25rem;
+    }
+
+    .modal-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #6B7280;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .modal-value {
+        font-size: 0.95rem;
+        color: #111827;
+        font-weight: 500;
+    }
+
+    .modal-footer {
+        padding: 1.5rem 2rem;
+        background: #F9FAFB;
+        border-top: 1px solid #E5E7EB;
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .modal-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .modal-btn.btn-map {
+        background: #10B981;
+        color: white;
+    }
+
+    .modal-btn.btn-map:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .modal-btn.btn-detail {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    .modal-btn.btn-detail:hover {
+        background: #002070;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 48, 135, 0.3);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .page-hero h1 {
@@ -1039,6 +1214,30 @@
 
         .stats-section {
             grid-template-columns: repeat(2, 1fr);
+        }
+
+        .modal-content {
+            width: 95%;
+            max-height: 90vh;
+        }
+
+        .modal-info-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .modal-btn {
+            width: 100%;
+            justify-content: center;
         }
 
         .filters-content {
@@ -1383,6 +1582,65 @@ function viewAccident(id) {
 function viewOnMap(lat, lng) {
     window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=15`;
 }
+
+// Accident Modal Functions
+let currentAccidentData = {};
+
+function openAccidentModal(id, date, time, barangay, municipal, province, incidentType, isFatal, isInjury, isHotspot, lat, lng, street, victimCount) {
+    currentAccidentData = { id, lat, lng };
+
+    const modal = document.getElementById('accidentModal');
+
+    // Populate modal content
+    document.getElementById('modalDate').textContent = date;
+    document.getElementById('modalTime').textContent = time;
+    document.getElementById('modalLocation').textContent = `${barangay}, ${municipal}, ${province}`;
+    document.getElementById('modalStreet').textContent = street || 'N/A';
+    document.getElementById('modalIncidentType').textContent = incidentType;
+    document.getElementById('modalVictims').textContent = `${victimCount} victim(s)`;
+
+    // Add badges
+    let badgesHTML = '';
+    if (isFatal) {
+        badgesHTML += '<span class="severity-badge fatal"><i class="fas fa-skull-crossbones"></i> Fatal</span>';
+    } else if (isInjury) {
+        badgesHTML += '<span class="severity-badge injury"><i class="fas fa-user-injured"></i> Injury</span>';
+    } else {
+        badgesHTML += '<span class="severity-badge property"><i class="fas fa-car"></i> Property</span>';
+    }
+
+    if (isHotspot) {
+        badgesHTML += '<span class="hotspot-mini-badge"><i class="fas fa-fire"></i> Hotspot</span>';
+    }
+
+    document.getElementById('modalBadges').innerHTML = badgesHTML;
+
+    // Set button actions
+    document.getElementById('modalMapBtn').onclick = function() {
+        window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=15`;
+    };
+
+    document.getElementById('modalDetailBtn').onclick = function() {
+        window.location.href = `/accidents/${id}/`;
+    };
+
+    // Show modal
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAccidentModal() {
+    const modal = document.getElementById('accidentModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAccidentModal();
+    }
+});
 
 // Enter key for search
 document.addEventListener('DOMContentLoaded', function() {
@@ -1796,7 +2054,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div id="cardsView">
         <div class="accidents-grid" id="accidentsContainer">
             {% for accident in accidents %}
-            <div class="accident-card">
+            <div class="accident-card" onclick="openAccidentModal({{ accident.pk }}, '{{ accident.date_committed|date:"M d, Y" }}', '{{ accident.time_committed|time:"g:i A" }}', '{{ accident.barangay }}', '{{ accident.municipal }}', '{{ accident.province }}', '{{ accident.incident_type }}', {{ accident.victim_killed|yesno:"true,false" }}, {{ accident.victim_injured|yesno:"true,false" }}, {{ accident.is_hotspot|yesno:"true,false" }}, {{ accident.latitude }}, {{ accident.longitude }}, '{{ accident.street|default:"N/A" }}', {{ accident.victim_count|default:0 }})" style="cursor: pointer;">
                 <div class="card-header">
                     <span class="severity-badge {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}">
                         {% if accident.victim_killed %}
@@ -1837,10 +2095,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
 
                     <div class="card-actions">
-                        <button class="card-action-btn btn-view" onclick="viewAccident({{ accident.pk }})">
+                        <button class="card-action-btn btn-view" onclick="event.stopPropagation(); viewAccident({{ accident.pk }})">
                             <i class="fas fa-eye"></i> View
                         </button>
-                        <button class="card-action-btn btn-map" onclick="viewOnMap({{ accident.latitude }}, {{ accident.longitude }})">
+                        <button class="card-action-btn btn-map" onclick="event.stopPropagation(); viewOnMap({{ accident.latitude }}, {{ accident.longitude }})">
                             <i class="fas fa-map"></i> Map
                         </button>
                     </div>
@@ -1928,4 +2186,81 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
 </div>
+
+<!-- Accident Details Modal -->
+<div id="accidentModal" class="accident-modal">
+    <div class="modal-overlay" onclick="closeAccidentModal()"></div>
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeAccidentModal()">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <div class="modal-header">
+            <h2 id="modalTitle">Accident Details</h2>
+            <div id="modalBadges" class="modal-badges"></div>
+        </div>
+
+        <div class="modal-body">
+            <div class="modal-info-grid">
+                <div class="modal-info-item">
+                    <i class="fas fa-calendar"></i>
+                    <div>
+                        <div class="modal-label">Date</div>
+                        <div class="modal-value" id="modalDate"></div>
+                    </div>
+                </div>
+
+                <div class="modal-info-item">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <div class="modal-label">Time</div>
+                        <div class="modal-value" id="modalTime"></div>
+                    </div>
+                </div>
+
+                <div class="modal-info-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <div class="modal-label">Location</div>
+                        <div class="modal-value" id="modalLocation"></div>
+                    </div>
+                </div>
+
+                <div class="modal-info-item">
+                    <i class="fas fa-road"></i>
+                    <div>
+                        <div class="modal-label">Street</div>
+                        <div class="modal-value" id="modalStreet"></div>
+                    </div>
+                </div>
+
+                <div class="modal-info-item">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <div class="modal-label">Incident Type</div>
+                        <div class="modal-value" id="modalIncidentType"></div>
+                    </div>
+                </div>
+
+                <div class="modal-info-item">
+                    <i class="fas fa-users"></i>
+                    <div>
+                        <div class="modal-label">Victims</div>
+                        <div class="modal-value" id="modalVictims"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="modal-btn btn-map" id="modalMapBtn">
+                <i class="fas fa-map-marked-alt"></i> View on Map
+            </button>
+            <button class="modal-btn btn-detail" id="modalDetailBtn">
+                <i class="fas fa-file-alt"></i> View Details
+            </button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
