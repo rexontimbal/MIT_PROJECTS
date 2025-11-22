@@ -343,7 +343,13 @@
         display: inline-block;
     }
 
-    .risk-critical { background: var(--hotspot-primary); color: white; }
+    .risk-critical {
+        background: white;
+        color: #B8112C;  /* Darker red for strong contrast */
+        border: 2px solid white;
+        font-weight: 700;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
     .risk-high { background: var(--hotspot-secondary); color: white; }
     .risk-medium { background: var(--hotspot-safe); color: white; }
     .risk-low { background: var(--text-secondary); color: white; }
