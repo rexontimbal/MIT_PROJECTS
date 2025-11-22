@@ -883,18 +883,14 @@
                 </div>
             </div>
 
+            {% if accident.case_solve_type %}
             <div class="status-card-details">
-                {% if accident.case_solve_type %}
                 <div class="status-card-detail">
                     <i class="fas fa-gavel"></i>
                     <span>Resolution: {{ accident.case_solve_type }}</span>
                 </div>
-                {% endif %}
-                <div class="status-card-detail">
-                    <i class="fas fa-user-shield"></i>
-                    <span>Station: {{ accident.station|default:"Not specified" }}</span>
-                </div>
             </div>
+            {% endif %}
         </div>
     </div>
 
