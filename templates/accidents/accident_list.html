@@ -1003,11 +1003,83 @@ function switchView(viewType) {
     }
 }
 
-// Search function - Submit to server for full dataset search
+// ===== SMOOTH PAGE UPDATES WITHOUT RELOAD =====
+
+function showLoading() {
+    document.querySelector('.loading-overlay').classList.add('active');
+}
+
+function hideLoading() {
+    document.querySelector('.loading-overlay').classList.remove('active');
+}
+
+function updatePageContent(url, pushState = true) {
+    showLoading();
+
+    fetch(url)
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Update accidents container (both cards and table view)
+            const newCardsView = doc.getElementById('cardsView');
+            const newTableView = doc.getElementById('tableView');
+            const currentCardsView = document.getElementById('cardsView');
+            const currentTableView = document.getElementById('tableView');
+
+            if (newCardsView && currentCardsView) {
+                currentCardsView.innerHTML = newCardsView.innerHTML;
+            }
+            if (newTableView && currentTableView) {
+                currentTableView.innerHTML = newTableView.innerHTML;
+            }
+
+            // Update pagination
+            const newPagination = doc.querySelector('.pagination-container');
+            const currentPagination = document.querySelector('.pagination-container');
+            if (newPagination && currentPagination) {
+                currentPagination.innerHTML = newPagination.innerHTML;
+            }
+
+            // Update summary cards
+            const newSummaryCards = doc.querySelector('.summary-cards');
+            const currentSummaryCards = document.querySelector('.summary-cards');
+            if (newSummaryCards && currentSummaryCards) {
+                currentSummaryCards.innerHTML = newSummaryCards.innerHTML;
+            }
+
+            // Update filter dropdowns and badges
+            const urlParams = new URLSearchParams(new URL(url).search);
+            const perPageParam = urlParams.get('per_page') || '100';
+            document.getElementById('itemsPerPage').value = perPageParam;
+
+            // Update active filters badges
+            updateActiveFilters();
+
+            // Update browser URL without reload
+            if (pushState) {
+                history.pushState({}, '', url);
+            }
+
+            // Scroll to search section
+            const searchSection = document.getElementById('search-section');
+            if (searchSection) {
+                searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            hideLoading();
+        })
+        .catch(error => {
+            console.error('Error loading content:', error);
+            // Fallback to normal page load if fetch fails
+            window.location.href = url;
+        });
+}
+
+// Search function - Smooth update without reload
 function performSearch() {
     const searchValue = document.getElementById('hotspotSearch').value.trim();
-
-    // Build URL with current filters + search
     const currentUrl = new URL(window.location.href);
 
     if (searchValue) {
@@ -1028,8 +1100,8 @@ function performSearch() {
     // Reset to first page
     currentUrl.searchParams.delete('page');
 
-    // Redirect to filtered URL
-    window.location.href = currentUrl.toString();
+    // Smooth update instead of reload
+    updatePageContent(currentUrl.toString());
 }
 
 function applyServerSideFilters() {
@@ -1069,8 +1141,8 @@ function applyServerSideFilters() {
     // Reset to first page when filters change
     currentUrl.searchParams.delete('page');
 
-    // Redirect to filtered URL
-    window.location.href = currentUrl.toString();
+    // Smooth update instead of reload
+    updatePageContent(currentUrl.toString());
 }
 
 function updateActiveFilters() {
@@ -1124,7 +1196,9 @@ function removeServerFilter(filterName) {
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.delete(filterName);
     currentUrl.searchParams.delete('page'); // Reset to first page
-    window.location.href = currentUrl.toString();
+
+    // Smooth update instead of reload
+    updatePageContent(currentUrl.toString());
 }
 
 // Quick filter
@@ -1401,12 +1475,20 @@ function removeFilter(filterName) {
     window.location.href = currentUrl.toString();
 }
 
-// Clear all filters - Redirect to base URL
+// Clear all filters - Smooth update to base URL
 function clearAllFilters() {
-    window.location.href = window.location.pathname;
+    updatePageContent(window.location.pathname);
 }
 
 // ===== SERVER-SIDE PAGINATION FUNCTIONS =====
+
+function navigateToPage(pageNumber) {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('page', pageNumber);
+
+    // Smooth update instead of reload
+    updatePageContent(currentUrl.toString());
+}
 
 function changeItemsPerPage() {
     const perPage = document.getElementById('itemsPerPage').value;
@@ -1417,8 +1499,8 @@ function changeItemsPerPage() {
     // Reset to first page when changing items per page
     currentUrl.searchParams.delete('page');
 
-    // Redirect to update page
-    window.location.href = currentUrl.toString();
+    // Smooth update instead of reload
+    updatePageContent(currentUrl.toString());
 }
 
 // Initialize on page load
@@ -1595,10 +1677,9 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="pagination-controls">
             {% if accidents.has_previous %}
-                <a href="?page={{ accidents.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}#search-section"
-                   class="btn btn-outline btn-sm" style="text-decoration: none;">
+                <button onclick="navigateToPage('{{ accidents.previous_page_number }}')" class="btn btn-outline btn-sm">
                     ← Previous
-                </a>
+                </button>
             {% else %}
                 <button class="btn btn-outline btn-sm" disabled>← Previous</button>
             {% endif %}
@@ -1606,10 +1687,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <span id="pageInfo">Page {{ accidents.number }} of {{ accidents.paginator.num_pages }}</span>
 
             {% if accidents.has_next %}
-                <a href="?page={{ accidents.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}#search-section"
-                   class="btn btn-primary" style="text-decoration: none;">
+                <button onclick="navigateToPage('{{ accidents.next_page_number }}')" class="btn btn-primary">
                     Next →
-                </a>
+                </button>
             {% else %}
                 <button class="btn btn-outline btn-sm" disabled>Next →</button>
             {% endif %}
