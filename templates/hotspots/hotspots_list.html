@@ -184,9 +184,21 @@
     /* Filter Grid - Clean Layout */
     .filters-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 1rem;
         margin-top: 1.25rem;
+    }
+
+    @media (max-width: 1024px) {
+        .filters-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     .filter-group {
@@ -201,7 +213,8 @@
         font-size: 0.875rem;
     }
 
-    .filter-group select {
+    .filter-group select,
+    .filter-group input[type="date"] {
         padding: 0.625rem 0.875rem;
         border: 1.5px solid #D1D5DB;
         border-radius: 6px;
@@ -211,11 +224,13 @@
         cursor: pointer;
     }
 
-    .filter-group select:hover {
+    .filter-group select:hover,
+    .filter-group input[type="date"]:hover {
         border-color: #9CA3AF;
     }
 
-    .filter-group select:focus {
+    .filter-group select:focus,
+    .filter-group input[type="date"]:focus {
         outline: none;
         border-color: var(--hotspot-primary);
         box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.08);
@@ -1147,6 +1162,16 @@
         </div>
 
         <div class="filter-group">
+            <label for="date_from">Date From</label>
+            <input type="date" name="date_from" id="date_from" onchange="applyClientSideFilters()">
+        </div>
+
+        <div class="filter-group">
+            <label for="date_to">To Date</label>
+            <input type="date" name="date_to" id="date_to" onchange="applyClientSideFilters()">
+        </div>
+
+        <div class="filter-group">
             <label for="sort_by">Sort By</label>
             <select name="sort_by" id="sort_by" onchange="handleSortChange()">
                 <option value="">Default Order</option>
@@ -1198,6 +1223,8 @@
         data-killed="{{ hotspot.killed_count|default:'0' }}"
         data-lat="{{ hotspot.center_latitude }}"
         data-lng="{{ hotspot.center_longitude }}"
+        data-date-start="{{ hotspot.date_range_start|date:'Y-m-d' }}"
+        data-date-end="{{ hotspot.date_range_end|date:'Y-m-d' }}"
         onclick="openHotspotModal(this)"
         style="cursor: pointer;"
         title="Click to view details">
@@ -1533,6 +1560,8 @@
         const severityFilter = document.getElementById('min_severity').value;
         const accidentsFilter = document.getElementById('min_accidents').value;
         const municipalityFilter = document.getElementById('municipality').value.toLowerCase();
+        const dateFromFilter = document.getElementById('date_from').value;
+        const dateToFilter = document.getElementById('date_to').value;
 
         let visibleCount = 0;
 
@@ -1543,6 +1572,8 @@
             const provinces = (card.getAttribute('data-provinces') || '').toLowerCase();
             const severity = parseFloat(card.getAttribute('data-severity')) || 0;
             const accidents = parseInt(card.getAttribute('data-accidents')) || 0;
+            const dateStart = card.getAttribute('data-date-start') || '';
+            const dateEnd = card.getAttribute('data-date-end') || '';
 
             const searchMatch = searchTerm === '' ||
                               location.includes(searchTerm) ||
@@ -1555,7 +1586,18 @@
             const accidentsMatch = accidentsFilter === '' || accidents >= parseInt(accidentsFilter);
             const municipalityMatch = municipalityFilter === '' || municipalities.includes(municipalityFilter);
 
-            const allMatch = searchMatch && provinceMatch && severityMatch && accidentsMatch && municipalityMatch;
+            // Date range filtering: Check if hotspot's date range overlaps with filter range
+            let dateMatch = true;
+            if (dateFromFilter && dateEnd) {
+                // Hotspot must end on or after the "from" date
+                dateMatch = dateMatch && (dateEnd >= dateFromFilter);
+            }
+            if (dateToFilter && dateStart) {
+                // Hotspot must start on or before the "to" date
+                dateMatch = dateMatch && (dateStart <= dateToFilter);
+            }
+
+            const allMatch = searchMatch && provinceMatch && severityMatch && accidentsMatch && municipalityMatch && dateMatch;
 
             if (allMatch) {
                 card.setAttribute('data-search-visible', 'true');
@@ -1582,6 +1624,8 @@
         document.getElementById('min_severity').value = '';
         document.getElementById('min_accidents').value = '';
         document.getElementById('municipality').value = '';
+        document.getElementById('date_from').value = '';
+        document.getElementById('date_to').value = '';
         const sortDropdown = document.getElementById('sort_by');
         const wasSorted = sortDropdown.value !== '';
         sortDropdown.value = '';
@@ -1719,6 +1763,8 @@
         const minAccidents = document.getElementById('min_accidents').value;
         const municipality = document.getElementById('municipality').value;
         const sortBy = document.getElementById('sort_by').value;
+        const dateFrom = document.getElementById('date_from').value;
+        const dateTo = document.getElementById('date_to').value;
 
         let activeFiltersHTML = '';
 
@@ -1768,6 +1814,20 @@
             activeFiltersHTML += `<div class="filter-tag">
                 ${sortLabel}
                 <button onclick="removeFilter('sort_by')">×</button>
+            </div>`;
+        }
+
+        if (dateFrom) {
+            activeFiltersHTML += `<div class="filter-tag">
+                Date From: ${dateFrom}
+                <button onclick="removeFilter('date_from')">×</button>
+            </div>`;
+        }
+
+        if (dateTo) {
+            activeFiltersHTML += `<div class="filter-tag">
+                To Date: ${dateTo}
+                <button onclick="removeFilter('date_to')">×</button>
             </div>`;
         }
 
