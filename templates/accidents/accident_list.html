@@ -560,11 +560,6 @@
         margin-bottom: 2rem;
     }
 
-    /* List View Styles */
-    .accidents-grid.view-list {
-        grid-template-columns: 1fr;
-    }
-
     .accident-card {
         background: white;
         border-radius: 8px;
@@ -591,34 +586,6 @@
     .accident-card:hover {
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         transform: translateY(-2px);
-    }
-
-    .accident-card.view-list {
-        display: flex;
-        min-height: auto;
-    }
-
-    .accident-card.view-list .card-header {
-        flex: 0 0 200px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .accident-card.view-list .card-body {
-        flex: 1;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-        align-items: center;
-    }
-
-    .accident-card.view-list .card-actions {
-        flex: 0 0 auto;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 0.5rem;
     }
 
     .card-header {
@@ -857,6 +824,10 @@
         color: white;
     }
 
+    .text-center {
+        text-align: center;
+    }
+
     /* Empty State */
     .empty-state {
         text-align: center;
@@ -1018,19 +989,19 @@ let itemsPerPage = 12;
 
 // View toggle
 function switchView(viewType) {
-    const container = document.getElementById('accidentsContainer');
-    const cards = container.getElementsByClassName('accident-card');
+    const cardsView = document.getElementById('cardsView');
+    const tableView = document.getElementById('tableView');
     const options = document.querySelectorAll('.view-option');
 
     options.forEach(opt => opt.classList.remove('active'));
     event.target.classList.add('active');
 
-    container.className = 'accidents-grid';
-    if (viewType === 'list') {
-        container.classList.add('view-list');
-        Array.from(cards).forEach(card => card.classList.add('view-list'));
+    if (viewType === 'cards') {
+        cardsView.style.display = 'block';
+        tableView.style.display = 'none';
     } else {
-        Array.from(cards).forEach(card => card.classList.remove('view-list'));
+        cardsView.style.display = 'none';
+        tableView.style.display = 'block';
     }
 }
 
@@ -1524,8 +1495,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- View Toggle -->
     <div class="view-toggle">
-        <div class="view-option active" onclick="switchView('grid')">📊 Grid View</div>
-        <div class="view-option" onclick="switchView('list')">📋 List View</div>
+        <button class="view-option active" onclick="switchView('cards')">📊 Cards View</button>
+        <button class="view-option" onclick="switchView('table')">📋 Table View</button>
     </div>
 
     <!-- Summary Cards -->
@@ -1634,66 +1605,139 @@ document.addEventListener('DOMContentLoaded', function() {
         </select>
     </div>
 
-    <!-- Accidents Grid -->
-    <div class="accidents-grid" id="accidentsContainer">
-        {% for accident in accidents %}
-        <div class="accident-card {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}">
-            <div class="card-header">
-                <span class="severity-badge {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}">
-                    {% if accident.victim_killed %}
-                        <i class="fas fa-skull-crossbones"></i> FATAL
-                    {% elif accident.victim_injured %}
-                        <i class="fas fa-user-injured"></i> INJURY
-                    {% else %}
-                        <i class="fas fa-car"></i> PROPERTY
+    <!-- Cards View -->
+    <div id="cardsView">
+        <div class="accidents-grid" id="accidentsContainer">
+            {% for accident in accidents %}
+            <div class="accident-card {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}">
+                <div class="card-header">
+                    <span class="severity-badge {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}">
+                        {% if accident.victim_killed %}
+                            <i class="fas fa-skull-crossbones"></i> FATAL
+                        {% elif accident.victim_injured %}
+                            <i class="fas fa-user-injured"></i> INJURY
+                        {% else %}
+                            <i class="fas fa-car"></i> PROPERTY
+                        {% endif %}
+                    </span>
+                    {% if accident.is_hotspot %}
+                    <span class="hotspot-mini-badge">
+                        <i class="fas fa-fire"></i> HOTSPOT
+                    </span>
                     {% endif %}
-                </span>
-                {% if accident.is_hotspot %}
-                <span class="hotspot-mini-badge">
-                    <i class="fas fa-fire"></i> HOTSPOT
-                </span>
-                {% endif %}
-            </div>
-            
-            <div class="card-body">
-                <div class="card-date">
-                    <i class="fas fa-calendar"></i>
-                    <strong>{{ accident.date_committed|date:"M d, Y" }}</strong>
-                    <span>•</span>
-                    <i class="fas fa-clock"></i>
-                    <span>{{ accident.time_committed|time:"g:i A" }}</span>
                 </div>
-                
-                <div class="card-location">
-                    <div class="card-location-title">{{ accident.barangay }}</div>
-                    <div class="card-location-sub">
-                        <i class="fas fa-map-marker-alt"></i>
-                        {{ accident.municipal }}, {{ accident.province }}
+
+                <div class="card-body">
+                    <div class="card-date">
+                        <i class="fas fa-calendar"></i>
+                        <strong>{{ accident.date_committed|date:"M d, Y" }}</strong>
+                        <span>•</span>
+                        <i class="fas fa-clock"></i>
+                        <span>{{ accident.time_committed|time:"g:i A" }}</span>
+                    </div>
+
+                    <div class="card-location">
+                        <div class="card-location-title">{{ accident.barangay }}</div>
+                        <div class="card-location-sub">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ accident.municipal }}, {{ accident.province }}
+                        </div>
+                    </div>
+
+                    <div class="card-type">
+                        <i class="fas fa-info-circle"></i>
+                        {{ accident.incident_type|truncatewords:5 }}
+                    </div>
+
+                    <div class="card-actions">
+                        <button class="card-action-btn btn-view" onclick="viewAccident({{ accident.pk }})">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="card-action-btn btn-map" onclick="viewOnMap({{ accident.latitude }}, {{ accident.longitude }})">
+                            <i class="fas fa-map"></i> Map
+                        </button>
                     </div>
                 </div>
-                
-                <div class="card-type">
-                    <i class="fas fa-info-circle"></i>
-                    {{ accident.incident_type|truncatewords:5 }}
-                </div>
-                
-                <div class="card-actions">
-                    <button class="card-action-btn btn-view" onclick="viewAccident({{ accident.pk }})">
-                        <i class="fas fa-eye"></i> View
-                    </button>
-                    <button class="card-action-btn btn-map" onclick="viewOnMap({{ accident.latitude }}, {{ accident.longitude }})">
-                        <i class="fas fa-map"></i> Map
-                    </button>
-                </div>
             </div>
+            {% empty %}
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <i class="fas fa-search"></i>
+                <h3>No accidents found</h3>
+                <p>Try adjusting your filters or search criteria</p>
+            </div>
+            {% endfor %}
         </div>
-        {% empty %}
-        <div class="empty-state" style="grid-column: 1 / -1;">
-            <i class="fas fa-search"></i>
-            <h3>No accidents found</h3>
-            <p>Try adjusting your filters or search criteria</p>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="accidents-table-container" style="display: none;">
+        <div id="tableResponsive" class="table-responsive scrollable">
+            <table class="accidents-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">Severity</th>
+                        <th style="width: 15%;">Date & Time</th>
+                        <th style="width: 25%;">Location</th>
+                        <th style="width: 20%;">Incident Type</th>
+                        <th style="width: 10%;" class="text-center">Casualties</th>
+                        <th style="width: 10%;" class="text-center">Hotspot</th>
+                        <th style="width: 15%;" class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for accident in accidents %}
+                    <tr onclick="viewAccident({{ accident.pk }})">
+                        <td>
+                            <span class="severity-dot {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}"></span>
+                        </td>
+                        <td>
+                            <div style="font-weight: 600;">{{ accident.date_committed|date:"M d, Y" }}</div>
+                            <small style="color: #666;">{{ accident.time_committed|time:"g:i A" }}</small>
+                        </td>
+                        <td>
+                            <div style="font-weight: 600; color: #333;">{{ accident.barangay }}</div>
+                            <small style="color: #666;">{{ accident.municipal }}, {{ accident.province }}</small>
+                        </td>
+                        <td>
+                            <span style="font-size: 0.9rem;">{{ accident.incident_type|truncatewords:4 }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span style="font-weight: 700; color: {% if accident.victim_killed %}var(--fatal-red){% elif accident.victim_injured %}var(--injury-orange){% else %}#6c757d{% endif %}">
+                                {{ accident.victim_count|default:0 }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if accident.is_hotspot %}
+                            <i class="fas fa-fire" style="color: var(--hotspot-red);"></i>
+                            {% else %}
+                            <span style="color: #ccc;">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="table-actions" onclick="event.stopPropagation()">
+                                <button class="table-action-btn view" onclick="viewAccident({{ accident.pk }})">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="table-action-btn map" onclick="viewOnMap({{ accident.latitude }}, {{ accident.longitude }})">
+                                    <i class="fas fa-map"></i> Map
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-search"></i>
+                                <h3>No accidents found</h3>
+                                <p>Try adjusting your filters or search criteria</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        {% endfor %}
     </div>
 
     <!-- Server-Side Pagination (Load More Pages) -->
