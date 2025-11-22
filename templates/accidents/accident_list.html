@@ -1719,7 +1719,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <span id="pageInfo">Page {{ accidents.number }} of {{ accidents.paginator.num_pages }}</span>
 
             {% if accidents.has_next %}
-                <button onclick="navigateToPage('{{ accidents.next_page_number }}')" class="btn btn-primary">
+                <button onclick="navigateToPage('{{ accidents.next_page_number }}')" class="btn btn-outline btn-sm">
                     Next →
                 </button>
             {% else %}
