@@ -7,170 +7,513 @@
 <span> / <a href="{% url 'hotspots' %}" style="color: inherit; text-decoration: none;">Hotspots</a> / Cluster #{{ hotspot.cluster_id }}</span>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --hotspot-primary: #DC143C;
+        --hotspot-accent: #FF6B35;
+        --hotspot-secondary: #F59E0B;
+        --primary-blue: #003087;
+        --text-dark: #111827;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --bg-light: #F9FAFB;
+    }
+
+    .detail-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    /* Header with gradient matching list page */
+    .detail-header {
+        background: linear-gradient(135deg, var(--hotspot-primary) 0%, var(--hotspot-accent) 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(220, 20, 60, 0.2);
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 2rem;
+    }
+
+    .header-info h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .header-info p {
+        margin: 0 0 1rem 0;
+        font-size: 1rem;
+        opacity: 0.95;
+    }
+
+    .severity-badge {
+        background: white;
+        color: var(--hotspot-primary);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .risk-badge-detail {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.813rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: inline-block;
+        margin-left: 0.5rem;
+    }
+
+    .risk-critical-detail {
+        background: white;
+        color: #B8112C;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .risk-high-detail {
+        background: var(--hotspot-secondary);
+        color: white;
+    }
+
+    .risk-medium-detail {
+        background: #10B981;
+        color: white;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-direction: column;
+    }
+
+    .action-btn {
+        background: white;
+        color: var(--primary-blue);
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        border: 1px solid var(--border-light);
+        transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+
+    .stat-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary-blue);
+        margin: 0 0 1rem 0;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #E8F0FE;
+        font-size: 1.125rem;
+        font-weight: 600;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.625rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .stat-value {
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 0.9375rem;
+    }
+
+    .stat-value-large {
+        color: var(--hotspot-primary);
+        font-size: 1.25rem;
+    }
+
+    .stat-value-warning {
+        color: var(--hotspot-secondary);
+    }
+
+    /* Content Sections */
+    .content-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        border: 1px solid var(--border-light);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .section-title {
+        color: var(--primary-blue);
+        margin: 0;
+        font-size: 1.125rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Table Styling */
+    .accidents-table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+    }
+
+    .accidents-table thead {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, #0052CC 100%);
+        color: white;
+    }
+
+    .accidents-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.2s ease;
+    }
+
+    .accidents-table th:hover {
+        background: rgba(255,255,255,0.1);
+    }
+
+    .accidents-table tbody tr {
+        border-bottom: 1px solid var(--border-light);
+        transition: background 0.2s ease;
+    }
+
+    .accidents-table tbody tr:hover {
+        background: #F9FAFB;
+    }
+
+    .accidents-table td {
+        padding: 0.875rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .casualty-badge {
+        padding: 0.375rem 0.875rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.813rem;
+        display: inline-block;
+    }
+
+    .casualty-fatal {
+        background: #FFE5E5;
+        color: var(--hotspot-primary);
+    }
+
+    .casualty-injury {
+        background: #FFF3CD;
+        color: #856404;
+    }
+
+    /* Recommendations Box */
+    .recommendations {
+        background: linear-gradient(135deg, #E8F0FE 0%, #F8F9FA 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 4px solid var(--primary-blue);
+        margin-top: 2rem;
+    }
+
+    .recommendations h3 {
+        color: var(--primary-blue);
+        margin: 0 0 1rem 0;
+        font-size: 1.125rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .recommendations ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        line-height: 1.8;
+    }
+
+    .recommendations li {
+        margin-bottom: 0.75rem;
+        color: var(--text-dark);
+    }
+
+    .recommendations li strong {
+        color: var(--primary-blue);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+        }
+
+        .header-actions {
+            flex-direction: row;
+            width: 100%;
+        }
+
+        .action-btn {
+            flex: 1;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .header-info h1 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
+<div class="detail-container">
 
     <!-- Header -->
-    <div style="background: linear-gradient(135deg, #FFA500, #FF8C00); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: start;">
-            <div>
-                <h1 style="margin: 0 0 0.5rem 0; font-size: 2.5rem;">🔴 {{ hotspot.primary_location }}</h1>
-                <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">Cluster #{{ hotspot.cluster_id }} • High-Risk Accident Zone</p>
-                <div style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px; display: inline-block; margin-top: 1rem;">
-                    <strong>Severity Score: {{ hotspot.severity_score|floatformat:1 }}/100</strong>
+    <div class="detail-header">
+        <div class="header-content">
+            <div class="header-info">
+                <h1>
+                    <span>🔴</span>
+                    <span>{{ hotspot.primary_location }}</span>
+                    <span class="risk-badge-detail {% if hotspot.severity_score >= 70 %}risk-critical-detail{% elif hotspot.severity_score >= 50 %}risk-high-detail{% else %}risk-medium-detail{% endif %}">
+                        {% if hotspot.severity_score >= 70 %}CRITICAL{% elif hotspot.severity_score >= 50 %}HIGH{% else %}MEDIUM{% endif %} RISK
+                    </span>
+                </h1>
+                <p>Cluster #{{ hotspot.cluster_id }} • High-Risk Accident Zone</p>
+                <div class="severity-badge">
+                    <span>⚡</span>
+                    <span>Severity Score: {{ hotspot.severity_score|floatformat:1 }}/100</span>
                 </div>
             </div>
-            <div style="display: flex; gap: 0.5rem; flex-direction: column;">
-                <button onclick="window.location.href='/map/?cluster_id={{ hotspot.cluster_id }}'"
-                        style="background: white; color: #003087; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                    🗺️ View on Map
+            <div class="header-actions">
+                <button onclick="window.location.href='/map/?cluster_id={{ hotspot.cluster_id }}'" class="action-btn">
+                    <span>🗺️</span>
+                    <span>View on Map</span>
                 </button>
-                <button onclick="exportAccidents()"
-                        style="background: white; color: #003087; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                    📥 Export CSV
+                <button onclick="exportAccidents()" class="action-btn">
+                    <span>📥</span>
+                    <span>Export CSV</span>
                 </button>
-                <button onclick="window.print()"
-                        style="background: white; color: #003087; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                    🖨️ Print Report
+                <button onclick="window.print()" class="action-btn">
+                    <span>🖨️</span>
+                    <span>Print Report</span>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Stats Grid -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-        
+    <div class="stats-grid">
+
         <!-- Location Card -->
-        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #003087; margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 2px solid #E8F0FE;">📍 Location Information</h3>
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                    <span style="color: #666;">Primary Location</span>
-                    <strong>{{ hotspot.primary_location }}</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                    <span style="color: #666;">Coordinates</span>
-                    <strong style="font-size: 0.85rem;">{{ hotspot.center_latitude|floatformat:4 }}°N, {{ hotspot.center_longitude|floatformat:4 }}°E</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
-                    <span style="color: #666;">Municipalities</span>
-                    <strong>{{ hotspot.municipalities|join:", " }}</strong>
-                </div>
+        <div class="stat-card">
+            <h3 class="stat-card-header">
+                <span>📍</span>
+                <span>Location Information</span>
+            </h3>
+            <div class="stat-item">
+                <span class="stat-label">Primary Location</span>
+                <span class="stat-value">{{ hotspot.primary_location }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Coordinates</span>
+                <span class="stat-value" style="font-size: 0.813rem;">{{ hotspot.center_latitude|floatformat:4 }}°N, {{ hotspot.center_longitude|floatformat:4 }}°E</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Municipalities</span>
+                <span class="stat-value">{{ hotspot.municipalities|join:", " }}</span>
             </div>
         </div>
 
         <!-- Statistics Card -->
-        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #003087; margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 2px solid #E8F0FE;">📊 Accident Statistics</h3>
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                    <span style="color: #666;">Total Accidents</span>
-                    <strong style="color: #DC143C; font-size: 1.2rem;">{{ hotspot.accident_count }}</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                    <span style="color: #666;">Total Casualties</span>
-                    <strong>{{ hotspot.total_casualties }}</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                    <span style="color: #666;">Fatal Accidents</span>
-                    <strong style="color: #DC143C;">{{ total_killed }}</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
-                    <span style="color: #666;">Injury Accidents</span>
-                    <strong style="color: #FFA500;">{{ total_injured }}</strong>
-                </div>
+        <div class="stat-card">
+            <h3 class="stat-card-header">
+                <span>📊</span>
+                <span>Accident Statistics</span>
+            </h3>
+            <div class="stat-item">
+                <span class="stat-label">Total Accidents</span>
+                <span class="stat-value stat-value-large">{{ hotspot.accident_count }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Casualties</span>
+                <span class="stat-value">{{ hotspot.total_casualties }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Fatal Accidents</span>
+                <span class="stat-value stat-value-large">{{ total_killed }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Injury Accidents</span>
+                <span class="stat-value stat-value-warning">{{ total_injured }}</span>
             </div>
         </div>
 
         <!-- Time Period Card -->
-        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #003087; margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 2px solid #E8F0FE;">📅 Time Period</h3>
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                    <span style="color: #666;">From</span>
-                    <strong>{{ hotspot.date_range_start|date:"M d, Y" }}</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                    <span style="color: #666;">To</span>
-                    <strong>{{ hotspot.date_range_end|date:"M d, Y" }}</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                    <span style="color: #666;">Duration</span>
-                    <strong>{{ date_span }} days</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
-                    <span style="color: #666;">Last Updated</span>
-                    <strong style="font-size: 0.85rem;">{{ hotspot.computed_at|date:"M d, Y" }}</strong>
-                </div>
+        <div class="stat-card">
+            <h3 class="stat-card-header">
+                <span>📅</span>
+                <span>Time Period</span>
+            </h3>
+            <div class="stat-item">
+                <span class="stat-label">From</span>
+                <span class="stat-value">{{ hotspot.date_range_start|date:"M d, Y" }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">To</span>
+                <span class="stat-value">{{ hotspot.date_range_end|date:"M d, Y" }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Duration</span>
+                <span class="stat-value">{{ date_span }} days</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Last Updated</span>
+                <span class="stat-value" style="font-size: 0.813rem;">{{ hotspot.computed_at|date:"M d, Y" }}</span>
             </div>
         </div>
     </div>
 
     <!-- Accident Trend Chart -->
-    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem;">
-        <h3 style="color: #003087; margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 2px solid #E8F0FE;">📈 Accident Trend Over Time (Last 12 Months)</h3>
+    <div class="content-section">
+        <h3 class="section-title">
+            <span>📈</span>
+            <span>Accident Trend Over Time (Last 12 Months)</span>
+        </h3>
         <div style="position: relative; height: 300px; width: 100%;">
             <canvas id="trendChart"></canvas>
         </div>
     </div>
 
     <!-- Map -->
-    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem;">
-        <h3 style="color: #003087; margin: 0 0 1rem 0;">🗺️ Location Map</h3>
+    <div class="content-section">
+        <h3 class="section-title">
+            <span>🗺️</span>
+            <span>Location Map</span>
+        </h3>
         <div id="hotspotMap" style="height: 450px; border-radius: 8px;"></div>
     </div>
 
     <!-- Accidents Table -->
-    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3 style="color: #003087; margin: 0;">
-                📋 Accidents in This Hotspot 
-                {% if showing_count < total_accidents %}
-                    (Showing {{ showing_count }} of {{ total_accidents }})
-                {% else %}
-                    ({{ total_accidents }})
-                {% endif %}
+    <div class="content-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <span>📋</span>
+                <span>Accidents in This Hotspot{% if showing_count < total_accidents %} (Showing {{ showing_count }} of {{ total_accidents }}){% else %} ({{ total_accidents }}){% endif %}</span>
             </h3>
-            <a href="{% url 'hotspots' %}" style="padding: 0.5rem 1rem; background: #f0f0f0; color: #003087; border-radius: 6px; text-decoration: none; font-weight: 600;">
-                ← Back to Hotspots
+            <a href="{% url 'hotspots' %}" class="action-btn" style="padding: 0.5rem 1rem; font-size: 0.813rem;">
+                <span>←</span>
+                <span>Back to Hotspots</span>
             </a>
         </div>
-        
+
         <div style="overflow-x: auto;">
-            <table id="accidentsTable" style="width: 100%; border-collapse: collapse;">
-                <thead style="background: #E8F0FE;">
+            <table id="accidentsTable" class="accidents-table">
+                <thead>
                     <tr>
-                        <th onclick="sortTable(0)" style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600; cursor: pointer; user-select: none;">
-                            Date <span style="font-size: 0.7rem; opacity: 0.5;">▼▲</span>
+                        <th onclick="sortTable(0)">
+                            Date <span style="font-size: 0.7rem; opacity: 0.7;">▼▲</span>
                         </th>
-                        <th onclick="sortTable(1)" style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600; cursor: pointer; user-select: none;">
-                            Time <span style="font-size: 0.7rem; opacity: 0.5;">▼▲</span>
+                        <th onclick="sortTable(1)">
+                            Time <span style="font-size: 0.7rem; opacity: 0.7;">▼▲</span>
                         </th>
-                        <th onclick="sortTable(2)" style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600; cursor: pointer; user-select: none;">
-                            Location <span style="font-size: 0.7rem; opacity: 0.5;">▼▲</span>
+                        <th onclick="sortTable(2)">
+                            Location <span style="font-size: 0.7rem; opacity: 0.7;">▼▲</span>
                         </th>
-                        <th onclick="sortTable(3)" style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600; cursor: pointer; user-select: none;">
-                            Type <span style="font-size: 0.7rem; opacity: 0.5;">▼▲</span>
+                        <th onclick="sortTable(3)">
+                            Type <span style="font-size: 0.7rem; opacity: 0.7;">▼▲</span>
                         </th>
-                        <th onclick="sortTable(4)" style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #003087; font-weight: 600; cursor: pointer; user-select: none;">
-                            Casualties <span style="font-size: 0.7rem; opacity: 0.5;">▼▲</span>
+                        <th onclick="sortTable(4)">
+                            Casualties <span style="font-size: 0.7rem; opacity: 0.7;">▼▲</span>
                         </th>
                     </tr>
                 </thead>
                 <tbody id="accidentsTableBody">
                     {% for accident in accidents %}
-                    <tr style="border-bottom: 1px solid #ddd;" data-date="{{ accident.date_committed|date:'Y-m-d' }}" data-casualties="{{ accident.victim_count }}">
-                        <td style="padding: 0.75rem;">{{ accident.date_committed|date:"M d, Y" }}</td>
-                        <td style="padding: 0.75rem;">{{ accident.time_committed|time:"g:i A" }}</td>
-                        <td style="padding: 0.75rem;">{{ accident.barangay }}, {{ accident.municipal }}</td>
-                        <td style="padding: 0.75rem; font-size: 0.85rem;">{{ accident.incident_type|truncatewords:5 }}</td>
-                        <td style="padding: 0.75rem;">
+                    <tr data-date="{{ accident.date_committed|date:'Y-m-d' }}" data-casualties="{{ accident.victim_count }}">
+                        <td>{{ accident.date_committed|date:"M d, Y" }}</td>
+                        <td>{{ accident.time_committed|time:"g:i A" }}</td>
+                        <td>{{ accident.barangay }}, {{ accident.municipal }}</td>
+                        <td>{{ accident.incident_type|truncatewords:5 }}</td>
+                        <td>
                             {% if accident.victim_killed %}
-                                <span style="background: #FFE5E5; color: #DC143C; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem;">
+                                <span class="casualty-badge casualty-fatal">
                                     {{ accident.victim_count }} killed
                                 </span>
                             {% elif accident.victim_injured %}
-                                <span style="background: #FFF3CD; color: #856404; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem;">
+                                <span class="casualty-badge casualty-injury">
                                     {{ accident.victim_count }} injured
                                 </span>
                             {% else %}
@@ -180,7 +523,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="padding: 2rem; text-align: center; color: #666;">
+                        <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-secondary);">
                             No accidents found in this hotspot.
                         </td>
                     </tr>
@@ -191,9 +534,12 @@
     </div>
 
     <!-- Recommendations -->
-    <div style="background: linear-gradient(135deg, #E8F0FE 0%, #F8F9FA 100%); padding: 1.5rem; border-radius: 12px; margin-top: 2rem; border-left: 4px solid #003087;">
-        <h3 style="color: #003087; margin: 0 0 1rem 0;">💡 Recommended Actions</h3>
-        <ul style="margin: 0; padding-left: 1.5rem; line-height: 2;">
+    <div class="recommendations">
+        <h3>
+            <span>💡</span>
+            <span>Recommended Actions</span>
+        </h3>
+        <ul>
             <li><strong>Increase Patrol Frequency:</strong> Deploy traffic enforcers during peak hours</li>
             <li><strong>Infrastructure Review:</strong> Assess road conditions, signage, and lighting in this area</li>
             <li><strong>Speed Enforcement:</strong> Install speed cameras or conduct regular speed checks</li>
