@@ -1005,77 +1005,112 @@ function switchView(viewType) {
     }
 }
 
-// Search function
+// Search function - Submit to server for full dataset search
 function performSearch() {
-    applyClientSideFilters();
+    const searchValue = document.getElementById('hotspotSearch').value.trim();
+
+    // Build URL with current filters + search
+    const currentUrl = new URL(window.location.href);
+
+    if (searchValue) {
+        currentUrl.searchParams.set('search', searchValue);
+    } else {
+        currentUrl.searchParams.delete('search');
+    }
+
+    // Keep existing filters
+    const province = document.getElementById('province').value;
+    const municipal = document.getElementById('municipal').value;
+    const year = document.getElementById('year').value;
+
+    if (province) currentUrl.searchParams.set('province', province);
+    if (municipal) currentUrl.searchParams.set('municipal', municipal);
+    if (year) currentUrl.searchParams.set('year', year);
+
+    // Reset to first page
+    currentUrl.searchParams.delete('page');
+
+    // Redirect to filtered URL
+    window.location.href = currentUrl.toString();
 }
 
-function applyClientSideFilters() {
-    const cards = Array.from(document.getElementsByClassName('accident-card'));
-    const searchTerm = document.getElementById('hotspotSearch').value.toLowerCase().trim();
-    const provinceFilter = document.getElementById('province').value.toLowerCase();
-    const municipalFilter = document.getElementById('municipal').value.toLowerCase();
-    const yearFilter = document.getElementById('year').value;
+function applyServerSideFilters() {
+    const currentUrl = new URL(window.location.href);
 
-    let visibleCount = 0;
+    // Get filter values
+    const searchValue = document.getElementById('hotspotSearch').value.trim();
+    const province = document.getElementById('province').value;
+    const municipal = document.getElementById('municipal').value;
+    const year = document.getElementById('year').value;
 
-    cards.forEach(card => {
-        const location = (card.querySelector('.card-location-title')?.textContent || '').toLowerCase();
-        const municipal = (card.querySelector('.card-location-sub')?.textContent || '').toLowerCase();
+    // Update URL parameters
+    if (searchValue) {
+        currentUrl.searchParams.set('search', searchValue);
+    } else {
+        currentUrl.searchParams.delete('search');
+    }
 
-        const searchMatch = searchTerm === '' || location.includes(searchTerm) || municipal.includes(searchTerm);
-        const provinceMatch = provinceFilter === '' || municipal.includes(provinceFilter);
-        const municipalMatch = municipalFilter === '' || municipal.includes(municipalFilter);
+    if (province) {
+        currentUrl.searchParams.set('province', province);
+    } else {
+        currentUrl.searchParams.delete('province');
+    }
 
-        const allMatch = searchMatch && provinceMatch && municipalMatch;
+    if (municipal) {
+        currentUrl.searchParams.set('municipal', municipal);
+    } else {
+        currentUrl.searchParams.delete('municipal');
+    }
 
-        if (allMatch) {
-            card.setAttribute('data-search-visible', 'true');
-            visibleCount++;
-        } else {
-            card.setAttribute('data-search-visible', 'false');
-        }
-    });
+    if (year) {
+        currentUrl.searchParams.set('year', year);
+    } else {
+        currentUrl.searchParams.delete('year');
+    }
 
-    updateActiveFilters();
-    currentPage = 1;
-    updatePagination();
+    // Reset to first page when filters change
+    currentUrl.searchParams.delete('page');
+
+    // Redirect to filtered URL
+    window.location.href = currentUrl.toString();
 }
 
 function updateActiveFilters() {
     const activeFilters = document.getElementById('activeFilters');
-    const searchTerm = document.getElementById('hotspotSearch').value.trim();
-    const province = document.getElementById('province').value;
-    const municipal = document.getElementById('municipal').value;
-    const year = document.getElementById('year').value;
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const searchTerm = urlParams.get('search') || '';
+    const province = urlParams.get('province') || '';
+    const municipal = urlParams.get('municipal') || '';
+    const year = urlParams.get('year') || '';
 
     let activeFiltersHTML = '';
 
     if (searchTerm) {
         activeFiltersHTML += `<div class="filter-tag">
             <i class="fas fa-search"></i> Search: "${searchTerm}"
-            <button onclick="removeSearchFilter()">×</button>
+            <button onclick="removeServerFilter('search')">×</button>
         </div>`;
     }
 
     if (province) {
         activeFiltersHTML += `<div class="filter-tag">
             <i class="fas fa-map-marker-alt"></i> Province: ${province}
-            <button onclick="removeFilter('province')">×</button>
+            <button onclick="removeServerFilter('province')">×</button>
         </div>`;
     }
 
     if (municipal) {
         activeFiltersHTML += `<div class="filter-tag">
             <i class="fas fa-city"></i> Municipality: ${municipal}
-            <button onclick="removeFilter('municipal')">×</button>
+            <button onclick="removeServerFilter('municipal')">×</button>
         </div>`;
     }
 
     if (year) {
         activeFiltersHTML += `<div class="filter-tag">
             <i class="fas fa-calendar"></i> Year: ${year}
-            <button onclick="removeFilter('year')">×</button>
+            <button onclick="removeServerFilter('year')">×</button>
         </div>`;
     }
 
@@ -1087,17 +1122,11 @@ function updateActiveFilters() {
     }
 }
 
-function removeSearchFilter() {
-    document.getElementById('hotspotSearch').value = '';
-    applyClientSideFilters();
-}
-
-function removeFilter(filterName) {
-    document.getElementById(filterName).value = '';
-    if (filterName === 'province') {
-        updateMunicipalityDropdown();
-    }
-    applyClientSideFilters();
+function removeServerFilter(filterName) {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete(filterName);
+    currentUrl.searchParams.delete('page'); // Reset to first page
+    window.location.href = currentUrl.toString();
 }
 
 // Quick filter
@@ -1374,45 +1403,32 @@ function removeFilter(filterName) {
     window.location.href = currentUrl.toString();
 }
 
-// Clear all filters
+// Clear all filters - Redirect to base URL
 function clearAllFilters() {
-    document.getElementById('hotspotSearch').value = '';
-    document.getElementById('province').value = '';
-    document.getElementById('municipal').value = '';
-    document.getElementById('year').value = '';
-
-    updateMunicipalityDropdown();
-
-    const cards = document.getElementsByClassName('accident-card');
-    Array.from(cards).forEach(card => {
-        card.setAttribute('data-search-visible', 'true');
-    });
-
-    updateActiveFilters();
-    currentPage = 1;
-    updatePagination();
+    window.location.href = window.location.pathname;
 }
 
 // ===== CLIENT-SIDE PAGINATION FUNCTIONS =====
+// Note: Server handles filtering, client only paginates display
 
 function updatePagination() {
     const cards = Array.from(document.getElementsByClassName('accident-card'));
-    const searchVisibleCards = cards.filter(card => card.getAttribute('data-search-visible') !== 'false');
-
-    const totalItems = searchVisibleCards.length;
+    const totalItems = cards.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
 
+    // Hide all cards first
     cards.forEach(card => card.style.display = 'none');
 
-    searchVisibleCards.forEach((card, index) => {
+    // Show only cards for current page
+    cards.forEach((card, index) => {
         if (index >= startIndex && index < endIndex) {
             card.style.display = '';
         }
     });
 
-    // Update pagination info with correct item ranges
+    // Update pagination info
     const showingStart = totalItems > 0 ? startIndex + 1 : 0;
     const showingEnd = Math.min(endIndex, totalItems);
 
@@ -1423,13 +1439,6 @@ function updatePagination() {
 
     document.getElementById('prevPage').disabled = currentPage <= 1;
     document.getElementById('nextPage').disabled = currentPage >= totalPages;
-}
-
-function initializeAccidentCards() {
-    const cards = document.getElementsByClassName('accident-card');
-    Array.from(cards).forEach(card => {
-        card.setAttribute('data-search-visible', 'true');
-    });
 }
 
 function changePage(direction) {
@@ -1450,9 +1459,40 @@ function changeItemsPerPage() {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    initializeAccidentCards();
+    // Load filter values from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const searchParam = urlParams.get('search') || '';
+    const provinceParam = urlParams.get('province') || '';
+    const municipalParam = urlParams.get('municipal') || '';
+    const yearParam = urlParams.get('year') || '';
+
+    // Set form values from URL
+    if (searchParam) {
+        document.getElementById('hotspotSearch').value = searchParam;
+    }
+    if (provinceParam) {
+        document.getElementById('province').value = provinceParam;
+    }
+    if (municipalParam) {
+        document.getElementById('municipal').value = municipalParam;
+    }
+    if (yearParam) {
+        document.getElementById('year').value = yearParam;
+    }
+
+    // Update municipality dropdown based on selected province
     updateMunicipalityDropdown();
+
+    // Restore municipal value after dropdown update
+    if (municipalParam) {
+        document.getElementById('municipal').value = municipalParam;
+    }
+
+    // Display active filter badges
     updateActiveFilters();
+
+    // Initialize client-side pagination
     updatePagination();
 
     // Scroll to search section when navigating pagination
@@ -1551,7 +1591,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="filters-grid">
             <div class="filter-group">
                 <label for="province">Province</label>
-                <select name="province" id="province" onchange="updateMunicipalityDropdown(); applyClientSideFilters();">
+                <select name="province" id="province" onchange="updateMunicipalityDropdown(); applyServerSideFilters();">
                     <option value="">All Provinces</option>
                     {% for province in provinces %}
                         <option value="{{ province }}">{{ province }}</option>
@@ -1561,14 +1601,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             <div class="filter-group">
                 <label for="municipal">Municipality</label>
-                <select name="municipal" id="municipal" onchange="applyClientSideFilters()">
+                <select name="municipal" id="municipal" onchange="applyServerSideFilters()">
                     <option value="">All Municipalities</option>
                 </select>
             </div>
 
             <div class="filter-group">
                 <label for="year">Year</label>
-                <select name="year" id="year" onchange="applyClientSideFilters()">
+                <select name="year" id="year" onchange="applyServerSideFilters()">
                     <option value="">All Years</option>
                     {% for year in years %}
                         <option value="{{ year }}">{{ year }}</option>
