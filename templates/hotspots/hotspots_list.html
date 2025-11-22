@@ -679,6 +679,253 @@
         margin-top: 0;
     }
 
+    /* ===== HOTSPOT MODAL STYLES ===== */
+    .hotspot-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(4px);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .hotspot-modal.show {
+        display: flex;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        position: relative;
+        animation: slideUp 0.4s ease;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: white;
+        border: none;
+        font-size: 1.5rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+        z-index: 10;
+        color: #6B7280;
+    }
+
+    .modal-close:hover {
+        background: #F3F4F6;
+        color: #111827;
+        transform: rotate(90deg);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--hotspot-primary) 0%, var(--hotspot-accent) 100%);
+        color: white;
+        padding: 2rem 1.5rem 1.5rem;
+        border-radius: 12px 12px 0 0;
+        position: relative;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 1rem 0;
+        padding-right: 2.5rem;
+    }
+
+    .modal-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: inline-block;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-stat-card {
+        background: #F9FAFB;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+    }
+
+    .modal-stat-label {
+        color: #6B7280;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .modal-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .modal-stat-value.critical {
+        color: #DC143C;
+    }
+
+    .modal-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .modal-municipalities {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .modal-municipality-tag {
+        background: #E8F0FE;
+        color: #003087;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .modal-severity {
+        background: #F9FAFB;
+        padding: 1.25rem;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+    }
+
+    .modal-severity-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+        color: #374151;
+        font-weight: 500;
+    }
+
+    .modal-severity-score {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--hotspot-primary);
+    }
+
+    .modal-severity-bar {
+        height: 12px;
+        background: #E5E7EB;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .modal-severity-fill {
+        height: 100%;
+        border-radius: 6px;
+        transition: width 0.6s ease;
+    }
+
+    .modal-actions {
+        padding: 1.25rem 1.5rem;
+        background: #F9FAFB;
+        border-top: 1px solid #E5E7EB;
+        display: flex;
+        gap: 0.75rem;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .modal-btn {
+        flex: 1;
+        padding: 0.875rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .modal-btn-primary {
+        background: var(--hotspot-primary);
+        color: white;
+    }
+
+    .modal-btn-primary:hover {
+        background: var(--btn-primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3);
+    }
+
+    .modal-btn-secondary {
+        background: white;
+        color: #374151;
+        border: 2px solid #D1D5DB;
+    }
+
+    .modal-btn-secondary:hover {
+        background: #F9FAFB;
+        border-color: #9CA3AF;
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
         .page-hero h1 {
@@ -705,6 +952,19 @@
 
         .pagination-controls {
             justify-content: center;
+        }
+
+        .modal-content {
+            width: 95%;
+            max-height: 95vh;
+        }
+
+        .modal-stat-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .modal-actions {
+            flex-direction: column;
         }
     }
 </style>
@@ -879,7 +1139,13 @@
         data-provinces="{{ hotspot.provinces|join:',' }}"
         data-municipalities="{{ hotspot.municipalities|join:', ' }}"
         data-cluster="{{ hotspot.cluster_id }}"
-        data-location="{{ hotspot.primary_location }}">
+        data-location="{{ hotspot.primary_location }}"
+        data-killed="{{ hotspot.killed_count|default:'0' }}"
+        data-lat="{{ hotspot.center_latitude }}"
+        data-lng="{{ hotspot.center_longitude }}"
+        onclick="openHotspotModal(this)"
+        style="cursor: pointer;"
+        title="Click to view details">
         <div class="hotspot-header">
             <h3 class="hotspot-title">{{ hotspot.primary_location }}</h3>
             <div style="margin-top: 0.5rem;">
@@ -934,10 +1200,10 @@
         </div>
 
         <div class="hotspot-actions">
-            <a href="{% url 'hotspot_detail' hotspot.cluster_id %}" class="btn btn-primary btn-sm">
+            <a href="{% url 'hotspot_detail' hotspot.cluster_id %}" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">
                 View Details
             </a>
-            <button class="btn btn-outline btn-sm" onclick="viewOnMap({{ hotspot.center_latitude }}, {{ hotspot.center_longitude }})">
+            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); viewOnMap({{ hotspot.center_latitude }}, {{ hotspot.center_longitude }})">
                 Show on Map
             </button>
         </div>
@@ -960,6 +1226,79 @@
         <p style="margin: 0; color: #374151;">Loading hotspots...</p>
     </div>
 </div>
+
+<!-- Hotspot Details Modal -->
+<div id="hotspotModal" class="hotspot-modal" onclick="closeHotspotModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeHotspotModal()">&times;</button>
+
+        <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">Loading...</h2>
+            <span class="modal-badge risk-critical" id="modalBadge">CRITICAL RISK</span>
+        </div>
+
+        <div class="modal-body">
+            <!-- Statistics Grid -->
+            <div class="modal-stat-grid">
+                <div class="modal-stat-card">
+                    <span class="modal-stat-label">Cluster ID</span>
+                    <div class="modal-stat-value" id="modalClusterId">#0</div>
+                </div>
+                <div class="modal-stat-card">
+                    <span class="modal-stat-label">Total Accidents</span>
+                    <div class="modal-stat-value" id="modalAccidents">0</div>
+                </div>
+                <div class="modal-stat-card">
+                    <span class="modal-stat-label">Total Casualties</span>
+                    <div class="modal-stat-value" id="modalCasualties">0</div>
+                </div>
+                <div class="modal-stat-card">
+                    <span class="modal-stat-label">Fatal Accidents</span>
+                    <div class="modal-stat-value critical" id="modalKilled">0</div>
+                </div>
+            </div>
+
+            <!-- Municipalities Section -->
+            <div class="modal-section">
+                <h3 class="modal-section-title">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Affected Municipalities
+                </h3>
+                <div class="modal-municipalities" id="modalMunicipalities">
+                    <!-- Municipalities will be dynamically inserted -->
+                </div>
+            </div>
+
+            <!-- Severity Score Section -->
+            <div class="modal-section">
+                <h3 class="modal-section-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Severity Assessment
+                </h3>
+                <div class="modal-severity">
+                    <div class="modal-severity-label">
+                        <span>Overall Severity Score</span>
+                        <span class="modal-severity-score" id="modalSeverityScore">0/100</span>
+                    </div>
+                    <div class="modal-severity-bar">
+                        <div class="modal-severity-fill severity-high" id="modalSeverityFill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-primary" id="modalViewDetails">
+                <i class="fas fa-info-circle"></i>
+                View Full Details
+            </button>
+            <button class="modal-btn modal-btn-secondary" id="modalViewMap">
+                <i class="fas fa-map"></i>
+                Show on Map
+            </button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -972,12 +1311,143 @@
     let currentPage = 1;
     let itemsPerPage = 12;
 
+    // Modal data storage
+    let currentModalData = null;
+
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         initializeHotspotCards();
         updatePagination();
         updateActiveFilters();
+
+        // Prevent body scroll when modal is open
+        const modal = document.getElementById('hotspotModal');
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeHotspotModal();
+            }
+        });
+
+        // ESC key to close modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeHotspotModal();
+            }
+        });
     });
+
+    // ===== MODAL FUNCTIONS =====
+
+    function openHotspotModal(cardElement) {
+        // Prevent card click from triggering on button clicks
+        if (event && (event.target.tagName === 'A' || event.target.tagName === 'BUTTON')) {
+            event.stopPropagation();
+            return;
+        }
+
+        const modal = document.getElementById('hotspotModal');
+        const data = {
+            location: cardElement.getAttribute('data-location'),
+            cluster: cardElement.getAttribute('data-cluster'),
+            severity: parseFloat(cardElement.getAttribute('data-severity')),
+            accidents: parseInt(cardElement.getAttribute('data-accidents')),
+            casualties: parseInt(cardElement.getAttribute('data-casualties')),
+            killed: parseInt(cardElement.getAttribute('data-killed')),
+            municipalities: cardElement.getAttribute('data-municipalities'),
+            lat: parseFloat(cardElement.getAttribute('data-lat')),
+            lng: parseFloat(cardElement.getAttribute('data-lng'))
+        };
+
+        currentModalData = data;
+        populateModal(data);
+
+        // Show modal with animation
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeHotspotModal(event) {
+        if (event) {
+            event.stopPropagation();
+        }
+
+        const modal = document.getElementById('hotspotModal');
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+        currentModalData = null;
+    }
+
+    function populateModal(data) {
+        // Set title
+        document.getElementById('modalTitle').textContent = data.location;
+
+        // Set cluster ID
+        document.getElementById('modalClusterId').textContent = '#' + data.cluster;
+
+        // Set statistics
+        document.getElementById('modalAccidents').textContent = data.accidents.toLocaleString();
+        document.getElementById('modalCasualties').textContent = data.casualties.toLocaleString();
+        document.getElementById('modalKilled').textContent = data.killed.toLocaleString();
+
+        // Set severity badge and score
+        const badge = document.getElementById('modalBadge');
+        const severityScore = document.getElementById('modalSeverityScore');
+        const severityFill = document.getElementById('modalSeverityFill');
+
+        let badgeClass = 'modal-badge ';
+        let badgeText = '';
+
+        if (data.severity >= 70) {
+            badgeClass += 'risk-critical';
+            badgeText = 'CRITICAL RISK';
+            severityFill.className = 'modal-severity-fill severity-high';
+        } else if (data.severity >= 50) {
+            badgeClass += 'risk-high';
+            badgeText = 'HIGH RISK';
+            severityFill.className = 'modal-severity-fill severity-medium';
+        } else if (data.severity >= 30) {
+            badgeClass += 'risk-medium';
+            badgeText = 'MEDIUM RISK';
+            severityFill.className = 'modal-severity-fill severity-medium';
+        } else {
+            badgeClass += 'risk-low';
+            badgeText = 'LOW RISK';
+            severityFill.className = 'modal-severity-fill severity-low';
+        }
+
+        badge.className = badgeClass;
+        badge.textContent = badgeText;
+        severityScore.textContent = data.severity.toFixed(1) + '/100';
+
+        // Animate severity bar
+        setTimeout(() => {
+            severityFill.style.width = data.severity + '%';
+        }, 100);
+
+        // Set municipalities
+        const municipalitiesContainer = document.getElementById('modalMunicipalities');
+        const municipalities = data.municipalities.split(', ').filter(m => m.trim());
+
+        municipalitiesContainer.innerHTML = '';
+        municipalities.forEach(mun => {
+            const tag = document.createElement('span');
+            tag.className = 'modal-municipality-tag';
+            tag.textContent = mun.trim();
+            municipalitiesContainer.appendChild(tag);
+        });
+
+        // Set button actions
+        const viewDetailsBtn = document.getElementById('modalViewDetails');
+        const viewMapBtn = document.getElementById('modalViewMap');
+
+        viewDetailsBtn.onclick = function() {
+            window.location.href = `/hotspots/${data.cluster}/`;
+        };
+
+        viewMapBtn.onclick = function() {
+            window.location.href = `/map/?lat=${data.lat}&lng=${data.lng}&zoom=13`;
+        };
+    }
 
     // CASCADE FILTERING - Update municipality dropdown
     function updateMunicipalityDropdown() {
