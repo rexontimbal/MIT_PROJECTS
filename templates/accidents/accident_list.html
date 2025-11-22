@@ -563,71 +563,56 @@
     .accident-card {
         background: white;
         border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        border: 1px solid #E5E7EB;
         overflow: hidden;
         transition: all 0.2s ease;
-        border: 1px solid var(--border-light);
-        border-left: 3px solid;
         position: relative;
     }
 
-    .accident-card.fatal {
-        border-left-color: var(--fatal-red);
-    }
-
-    .accident-card.injury {
-        border-left-color: var(--injury-orange);
-    }
-
-    .accident-card.property {
-        border-left-color: var(--property-blue);
-    }
-
     .accident-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        transform: translateY(-2px);
+        border-color: #D1D5DB;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
     .card-header {
-        padding: 15px 20px;
-        background: #F8F9FA;
+        padding: 16px 20px;
+        background: #FAFBFC;
+        border-bottom: 1px solid #F0F1F3;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
 
     .severity-badge {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6B7280;
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 6px;
     }
 
-    .severity-badge.fatal {
-        background: var(--fatal-red);
-        color: white;
-    }
-
-    .severity-badge.injury {
-        background: var(--injury-orange);
-        color: white;
-    }
-
-    .severity-badge.property {
-        background: var(--property-blue);
-        color: white;
+    .severity-badge i {
+        font-size: 0.875rem;
+        color: #9CA3AF;
     }
 
     .hotspot-mini-badge {
-        background: var(--hotspot-red);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 10px;
-        font-size: 0.75rem;
+        background: #FEF3C7;
+        color: #92400E;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.7rem;
         font-weight: 600;
+        letter-spacing: 0.3px;
+        border: 1px solid #FDE68A;
+    }
+
+    .hotspot-mini-badge i {
+        color: #D97706;
+        font-size: 0.75rem;
     }
 
     .card-body {
@@ -638,77 +623,113 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        color: #666;
-        font-size: 0.95rem;
-        margin-bottom: 12px;
+        color: #9CA3AF;
+        font-size: 0.875rem;
+        margin-bottom: 14px;
+    }
+
+    .card-date i {
+        color: #D1D5DB;
+        font-size: 0.8rem;
+    }
+
+    .card-date strong {
+        color: #374151;
+        font-weight: 500;
     }
 
     .card-location {
-        margin-bottom: 12px;
+        margin-bottom: 14px;
     }
 
     .card-location-title {
-        font-weight: 700;
-        font-size: 1.1rem;
-        color: #333;
-        margin-bottom: 5px;
+        font-weight: 600;
+        font-size: 1.05rem;
+        color: #111827;
+        margin-bottom: 4px;
     }
 
     .card-location-sub {
-        color: #666;
-        font-size: 0.9rem;
+        color: #6B7280;
+        font-size: 0.875rem;
         display: flex;
         align-items: center;
         gap: 5px;
     }
 
+    .card-location-sub i {
+        color: #9CA3AF;
+        font-size: 0.75rem;
+    }
+
     .card-type {
-        background: #F8F9FA;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        color: #666;
-        margin-bottom: 15px;
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        font-size: 0.875rem;
+        color: #6B7280;
+        margin-bottom: 16px;
+        line-height: 1.5;
+    }
+
+    .card-type i {
+        color: #D1D5DB;
+        margin-right: 6px;
+        font-size: 0.75rem;
     }
 
     .card-actions {
         display: flex;
-        gap: 10px;
+        gap: 8px;
+        padding-top: 14px;
+        border-top: 1px solid #F3F4F6;
     }
 
     .card-action-btn {
         flex: 1;
-        padding: 10px;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
+        padding: 9px 12px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        color: #374151;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.875rem;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.15s ease;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 5px;
-        font-size: 0.9rem;
+        gap: 6px;
     }
 
-    .btn-view {
-        background: var(--primary-blue);
-        color: white;
+    .card-action-btn i {
+        font-size: 0.8rem;
+        color: #6B7280;
+    }
+
+    .card-action-btn:hover {
+        background: #F9FAFB;
+        border-color: #D1D5DB;
     }
 
     .btn-view:hover {
-        background: #0052CC;
-        transform: translateY(-2px);
+        background: #EFF6FF;
+        border-color: #BFDBFE;
+        color: #1E40AF;
     }
 
-    .btn-map {
-        background: var(--success-green);
-        color: white;
+    .btn-view:hover i {
+        color: #3B82F6;
     }
 
     .btn-map:hover {
-        background: #218838;
-        transform: translateY(-2px);
+        background: #F0FDF4;
+        border-color: #BBF7D0;
+        color: #166534;
+    }
+
+    .btn-map:hover i {
+        color: #22C55E;
     }
 
     /* Table View */
@@ -1707,20 +1728,20 @@ document.addEventListener('DOMContentLoaded', function() {
     <div id="cardsView">
         <div class="accidents-grid" id="accidentsContainer">
             {% for accident in accidents %}
-            <div class="accident-card {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}">
+            <div class="accident-card">
                 <div class="card-header">
-                    <span class="severity-badge {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}">
+                    <span class="severity-badge">
                         {% if accident.victim_killed %}
-                            <i class="fas fa-skull-crossbones"></i> FATAL
+                            <i class="fas fa-skull-crossbones"></i> Fatal
                         {% elif accident.victim_injured %}
-                            <i class="fas fa-user-injured"></i> INJURY
+                            <i class="fas fa-user-injured"></i> Injury
                         {% else %}
-                            <i class="fas fa-car"></i> PROPERTY
+                            <i class="fas fa-car"></i> Property
                         {% endif %}
                     </span>
                     {% if accident.is_hotspot %}
                     <span class="hotspot-mini-badge">
-                        <i class="fas fa-fire"></i> HOTSPOT
+                        <i class="fas fa-fire"></i> Hotspot
                     </span>
                     {% endif %}
                 </div>
