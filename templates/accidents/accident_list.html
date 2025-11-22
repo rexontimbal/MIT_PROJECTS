@@ -1685,5 +1685,42 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         {% endfor %}
     </div>
+
+    <!-- Server-Side Pagination (Load More Pages) -->
+    {% if accidents.has_other_pages %}
+    <div class="pagination-container" style="margin-top: 2rem;">
+        <div class="pagination-info">
+            <strong style="color: #111827;">Page {{ accidents.number }} of {{ accidents.paginator.num_pages }}</strong>
+            <br>
+            <small style="color: #6B7280;">({{ accidents.paginator.count }} total accidents)</small>
+        </div>
+        <div class="pagination-controls">
+            {% if accidents.has_previous %}
+                <a href="?page={{ accidents.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                   class="btn btn-outline btn-sm" style="text-decoration: none;">
+                    ← Previous 100
+                </a>
+            {% else %}
+                <button class="btn btn-outline btn-sm" disabled>← Previous 100</button>
+            {% endif %}
+
+            <span style="padding: 0 1rem; color: #111827; font-weight: 600;">
+                {{ accidents.number }} / {{ accidents.paginator.num_pages }}
+            </span>
+
+            {% if accidents.has_next %}
+                <a href="?page={{ accidents.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                   class="btn btn-primary" style="text-decoration: none;">
+                    Next 100 →
+                </a>
+            {% else %}
+                <button class="btn btn-outline btn-sm" disabled>Next 100 →</button>
+            {% endif %}
+        </div>
+        <div style="justify-self: end; color: #6B7280; font-size: 0.875rem;">
+            Showing records {{ accidents.start_index }}-{{ accidents.end_index }}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
