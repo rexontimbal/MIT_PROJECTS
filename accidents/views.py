@@ -383,10 +383,12 @@ def accident_list(request):
         
         return response
     
-    # Pagination
+    # Pagination - using client-side pagination, so load all records
     from django.core.paginator import Paginator
-    paginator = Paginator(accidents, 25)
-    page_number = request.GET.get('page')
+    # Set to a very high number to effectively disable server-side pagination
+    # Client-side JavaScript handles pagination now
+    paginator = Paginator(accidents, 999999)
+    page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
     context = {
