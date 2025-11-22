@@ -1483,6 +1483,17 @@ document.addEventListener('DOMContentLoaded', function() {
     updateMunicipalityDropdown();
     updateActiveFilters();
     updatePagination();
+
+    // If coming from pagination, scroll is already handled by #accidents-grid anchor
+    // But add smooth scroll behavior
+    if (window.location.hash === '#accidents-grid') {
+        setTimeout(() => {
+            const grid = document.getElementById('accidents-grid');
+            if (grid) {
+                grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
+    }
 });
 </script>
 {% endblock %}
@@ -1626,6 +1637,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Accidents Grid -->
     <div class="accidents-grid" id="accidentsContainer">
+        <a id="accidents-grid" style="position: relative; top: -80px; visibility: hidden;"></a>
         {% for accident in accidents %}
         <div class="accident-card {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}">
             <div class="card-header">
@@ -1696,7 +1708,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="pagination-controls">
             {% if accidents.has_previous %}
-                <a href="?page={{ accidents.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                <a href="?page={{ accidents.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}#accidents-grid"
                    class="btn btn-outline btn-sm" style="text-decoration: none;">
                     ← Previous 100
                 </a>
@@ -1709,7 +1721,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </span>
 
             {% if accidents.has_next %}
-                <a href="?page={{ accidents.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                <a href="?page={{ accidents.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}#accidents-grid"
                    class="btn btn-primary" style="text-decoration: none;">
                     Next 100 →
                 </a>
