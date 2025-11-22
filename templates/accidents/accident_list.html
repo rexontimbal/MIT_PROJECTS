@@ -1132,64 +1132,6 @@ function clearAllFilters() {
         <p>Browse and analyze traffic accidents across Caraga Region</p>
     </div>
 
-    <!-- Search & Quick Filters -->
-    <div class="search-section">
-        <div class="search-box">
-            <input 
-                type="text" 
-                id="searchInput" 
-                class="search-input" 
-                placeholder="Search by location, incident type, or barangay..."
-                value="{{ request.GET.search|default:'' }}"
-            >
-            <button class="search-btn" onclick="performSearch()">
-                <i class="fas fa-search"></i> Search
-            </button>
-        </div>
-
-        <div class="quick-filters">
-            <button class="quick-filter-btn all {% if not is_fatal_view and not is_injury_view and not is_hotspot_view and not is_standalone_view %}active{% endif %}" 
-                    onclick="applyQuickFilter('all')">
-                <i class="fas fa-th"></i> All Accidents
-            </button>
-
-            <button class="quick-filter-btn fatal {% if is_fatal_view %}active{% endif %}" 
-                    onclick="applyQuickFilter('fatal')">
-                <i class="fas fa-skull-crossbones"></i> Fatal Only
-            </button>
-
-            <button class="quick-filter-btn injury {% if is_injury_view %}active{% endif %}" 
-                    onclick="applyQuickFilter('injury')">
-                <i class="fas fa-ambulance"></i> Injury Only
-            </button>
-
-            <button class="quick-filter-btn hotspot {% if is_hotspot_view %}active{% endif %}" 
-                    onclick="applyQuickFilter('hotspot')">
-                <i class="fas fa-fire"></i> Hotspots Only
-            </button>
-
-            <button class="quick-filter-btn standalone {% if is_standalone_view %}active{% endif %}" 
-                    onclick="applyQuickFilter('standalone')">
-                <i class="fas fa-map-marker-alt"></i> Standalone Only
-            </button>
-        </div>
-    </div>
-
-    <!-- Active Filters Display -->
-    <div class="active-filters-section" id="activeFiltersSection">
-        <div class="active-filters-header">
-            <span class="active-filters-title">
-                <i class="fas fa-filter"></i> Active Filters
-            </span>
-            <button class="clear-all-btn" onclick="clearAllFilters()">
-                <i class="fas fa-times"></i> Clear All
-            </button>
-        </div>
-        <div class="active-filters-tags" id="activeFiltersTags">
-            <!-- Filter tags will be added here dynamically -->
-        </div>
-    </div>
-
     <!-- Statistics -->
     <div class="stats-section">
         <div class="stat-card total">
@@ -1210,17 +1152,38 @@ function clearAllFilters() {
         </div>
     </div>
 
-    <!-- Advanced Filters -->
-    <div class="advanced-filters">
-        <div class="filters-toggle" onclick="toggleAdvancedFilters()">
-            <span><i class="fas fa-filter"></i> Advanced Filters</span>
-            <i class="fas fa-chevron-down"></i>
+    <!-- Unified Search & Filters Section -->
+    <div class="filters-section">
+        <div class="filters-header">
+            <h3>Search & Filter Accidents</h3>
+            <button type="button" class="btn btn-outline btn-sm" onclick="clearAllFilters()">
+                Clear All
+            </button>
         </div>
+
+        <!-- Search Bar -->
+        <div style="margin-bottom: 1.25rem;">
+            <label style="display: block; font-weight: 500; color: #374151; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                Search Accidents
+            </label>
+            <div style="position: relative;">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search by location, incident type, or barangay..."
+                    value="{{ request.GET.search|default:'' }}"
+                    onkeypress="if(event.key==='Enter') performSearch()"
+                >
+                <i class="fas fa-search search-icon"></i>
+            </div>
+        </div>
+
+        <!-- Filter Grid -->
         <form method="get" id="filterForm">
-            <div class="filters-content collapsed">
+            <div class="filters-grid">
                 <div class="filter-group">
-                    <label class="filter-label">Province</label>
-                    <select name="province" id="province" class="filter-select">
+                    <label for="province">Province</label>
+                    <select name="province" id="province" onchange="updateMunicipalityDropdown()">
                         <option value="">All Provinces</option>
                         {% for province in provinces %}
                             <option value="{{ province }}" {% if request.GET.province == province %}selected{% endif %}>
@@ -1229,17 +1192,17 @@ function clearAllFilters() {
                         {% endfor %}
                     </select>
                 </div>
-                
+
                 <div class="filter-group">
-                    <label class="filter-label">Municipality</label>
-                    <select name="municipal" id="municipal" class="filter-select">
+                    <label for="municipal">Municipality</label>
+                    <select name="municipal" id="municipal">
                         <option value="">All Municipalities</option>
                     </select>
                 </div>
-                
+
                 <div class="filter-group">
-                    <label class="filter-label">Year</label>
-                    <select name="year" id="year" class="filter-select">
+                    <label for="year">Year</label>
+                    <select name="year" id="year">
                         <option value="">All Years</option>
                         {% for year in years %}
                             <option value="{{ year }}" {% if request.GET.year == year %}selected{% endif %}>
@@ -1248,14 +1211,37 @@ function clearAllFilters() {
                         {% endfor %}
                     </select>
                 </div>
-                
-                <div class="filter-group" style="align-self: flex-end;">
-                    <button type="submit" class="search-btn" style="width: 100%;">
-                        <i class="fas fa-check"></i> Apply
-                    </button>
-                </div>
             </div>
         </form>
+
+        <!-- Quick Filters -->
+        <div class="quick-filters">
+            <button class="quick-filter-btn all {% if not is_fatal_view and not is_injury_view and not is_hotspot_view and not is_standalone_view %}active{% endif %}"
+                    onclick="applyQuickFilter('all')">
+                <i class="fas fa-th"></i> All
+            </button>
+            <button class="quick-filter-btn fatal {% if is_fatal_view %}active{% endif %}"
+                    onclick="applyQuickFilter('fatal')">
+                <i class="fas fa-skull-crossbones"></i> Fatal
+            </button>
+            <button class="quick-filter-btn injury {% if is_injury_view %}active{% endif %}"
+                    onclick="applyQuickFilter('injury')">
+                <i class="fas fa-ambulance"></i> Injury
+            </button>
+            <button class="quick-filter-btn hotspot {% if is_hotspot_view %}active{% endif %}"
+                    onclick="applyQuickFilter('hotspot')">
+                <i class="fas fa-fire"></i> Hotspots
+            </button>
+            <button class="quick-filter-btn standalone {% if is_standalone_view %}active{% endif %}"
+                    onclick="applyQuickFilter('standalone')">
+                <i class="fas fa-map-marker-alt"></i> Standalone
+            </button>
+        </div>
+
+        <!-- Active Filters -->
+        <div class="active-filters" id="activeFiltersTags">
+            <!-- Filter tags will be added here dynamically -->
+        </div>
     </div>
 
     <!-- View Controls -->
