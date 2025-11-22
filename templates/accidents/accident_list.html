@@ -461,12 +461,14 @@
     .pagination-info {
         color: #6B7280;
         font-size: 0.875rem;
+        flex: 1;
     }
 
     .pagination-controls {
         display: flex;
         gap: 0.5rem;
         align-items: center;
+        justify-content: center;
     }
 
     .pagination-controls button:disabled {
@@ -659,6 +661,9 @@
 
     .table-responsive {
         overflow-x: auto;
+    }
+
+    .table-responsive.scrollable {
         max-height: 700px;
     }
 
@@ -1294,6 +1299,17 @@ function changePage(direction) {
 function changeItemsPerPage() {
     itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
     currentPage = 1;
+
+    // Toggle table scrollable class based on items per page
+    const tableResponsive = document.getElementById('tableResponsive');
+    if (tableResponsive) {
+        if (itemsPerPage >= 999999) {
+            tableResponsive.classList.remove('scrollable');
+        } else {
+            tableResponsive.classList.add('scrollable');
+        }
+    }
+
     updatePagination();
 }
 
@@ -1456,15 +1472,15 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="pagination-container">
         <div class="pagination-info">
             Showing <span id="showingStart">1</span>-<span id="showingEnd">12</span> of <span id="totalCount">{{ accidents.paginator.count }}</span> accidents
-        </div>
-        <div class="pagination-controls">
-            <button id="prevPage" onclick="changePage(-1)" class="btn btn-outline btn-sm" disabled>
-                ← Previous
-            </button>
-            <span id="pageInfo">Page 1</span>
-            <button id="nextPage" onclick="changePage(1)" class="btn btn-outline btn-sm">
-                Next →
-            </button>
+            <span style="margin-left: 1.5rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <button id="prevPage" onclick="changePage(-1)" class="btn btn-outline btn-sm" disabled>
+                    ← Previous
+                </button>
+                <span id="pageInfo">Page 1</span>
+                <button id="nextPage" onclick="changePage(1)" class="btn btn-outline btn-sm">
+                    Next →
+                </button>
+            </span>
         </div>
         <select id="itemsPerPage" onchange="changeItemsPerPage()">
             <option value="12">12 per page</option>
@@ -1538,7 +1554,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Table View (Hidden by default) -->
     <div id="tableView" class="accidents-table-container" style="display: none;">
-        <div class="table-responsive">
+        <div id="tableResponsive" class="table-responsive scrollable">
             <table class="accidents-table">
                 <thead>
                     <tr>
