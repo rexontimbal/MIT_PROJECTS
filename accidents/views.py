@@ -383,11 +383,10 @@ def accident_list(request):
         
         return response
     
-    # Pagination - using client-side pagination, so load all records
+    # Pagination - hybrid approach for performance
+    # Load 100 items per Django page, client-side splits into 12/24/48 chunks
     from django.core.paginator import Paginator
-    # Set to a very high number to effectively disable server-side pagination
-    # Client-side JavaScript handles pagination now
-    paginator = Paginator(accidents, 999999)
+    paginator = Paginator(accidents, 100)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     

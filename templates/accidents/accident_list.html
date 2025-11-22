@@ -1547,5 +1547,35 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         {% endfor %}
     </div>
+
+    <!-- Server-side Pagination (Load More Data) -->
+    {% if accidents.has_other_pages %}
+    <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid #E5E7EB; margin-bottom: 2rem; text-align: center;">
+        <div style="margin-bottom: 1rem; color: #6B7280; font-size: 0.875rem;">
+            <strong>Showing Django page {{ accidents.number }} of {{ accidents.paginator.num_pages }}</strong>
+            <br>
+            <small>({{ accidents.paginator.count }} total accidents across all pages)</small>
+        </div>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; align-items: center;">
+            {% if accidents.has_previous %}
+                <a href="?page={{ accidents.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                   class="btn btn-outline" style="text-decoration: none;">
+                    ← Load Previous 100
+                </a>
+            {% endif %}
+
+            <span style="padding: 0.5rem 1rem; color: #111827; font-weight: 600;">
+                Page {{ accidents.number }} / {{ accidents.paginator.num_pages }}
+            </span>
+
+            {% if accidents.has_next %}
+                <a href="?page={{ accidents.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                   class="btn btn-primary" style="text-decoration: none;">
+                    Load Next 100 →
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
