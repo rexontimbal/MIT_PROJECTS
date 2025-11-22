@@ -1987,25 +1987,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Auto-focus on the accident with smooth zoom and open popup
             setTimeout(() => {
-                // Set up event listener for when zoom completes
-                map.once('zoomend moveend', function() {
-                    console.log('🎯 Zoom complete, opening popup...');
-                    setTimeout(() => {
-                        if (accidentMarkers.length > 0 && accidentMarkers[0]) {
-                            accidentMarkers[0].openPopup();
-                            console.log('✅ Popup opened successfully');
-                        } else {
-                            console.error('❌ No markers found to open popup');
-                        }
-                    }, 300);
-                });
+                if (accidentMarkers.length > 0 && accidentMarkers[0]) {
+                    console.log('🎯 Opening popup for single accident...');
 
-                // Start the zoom animation
-                map.setView([singleAccident.latitude, singleAccident.longitude], 16, {
-                    animate: true,
-                    duration: 1.5
-                });
-            }, 800);
+                    // Open the popup FIRST (before zoom)
+                    accidentMarkers[0].openPopup();
+
+                    // Then zoom to the location smoothly (popup stays open during zoom)
+                    setTimeout(() => {
+                        map.setView([singleAccident.latitude, singleAccident.longitude], 16, {
+                            animate: true,
+                            duration: 1.5
+                        });
+                        console.log('✅ Zoomed to accident with popup open');
+                    }, 200);
+                } else {
+                    console.error('❌ No markers found to open popup');
+                }
+            }, 1000);
         }
     } else {
         console.log('📊 Total accidents loaded:', allAccidents.length);
