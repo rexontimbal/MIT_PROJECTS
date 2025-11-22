@@ -268,20 +268,26 @@ def accident_list(request):
     province = request.GET.get('province')
     municipal = request.GET.get('municipal')
     year = request.GET.get('year')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
     is_hotspot = request.GET.get('is_hotspot')
     search = request.GET.get('search')
-    
+
     # Quick filters
     fatal_only = request.GET.get('fatal')
     injury_only = request.GET.get('injury')
     no_hotspot = request.GET.get('no_hotspot')  # NEW
-    
+
     if province:
         accidents = accidents.filter(province=province)
     if municipal:
         accidents = accidents.filter(municipal=municipal)
     if year:
         accidents = accidents.filter(year=year)
+    if date_from:
+        accidents = accidents.filter(date_committed__gte=date_from)
+    if date_to:
+        accidents = accidents.filter(date_committed__lte=date_to)
     if is_hotspot:
         accidents = accidents.filter(is_hotspot=True)
     if fatal_only:

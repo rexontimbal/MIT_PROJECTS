@@ -260,9 +260,27 @@
     /* Filter Grid - Clean Layout */
     .filters-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.875rem;
         margin-top: 1.25rem;
+    }
+
+    @media (max-width: 1200px) {
+        .filters-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .filters-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     .filter-group {
@@ -277,7 +295,8 @@
         font-size: 0.875rem;
     }
 
-    .filter-group select {
+    .filter-group select,
+    .filter-group input[type="date"] {
         padding: 0.625rem 0.875rem;
         border: 1.5px solid #D1D5DB;
         border-radius: 6px;
@@ -287,11 +306,13 @@
         cursor: pointer;
     }
 
-    .filter-group select:hover {
+    .filter-group select:hover,
+    .filter-group input[type="date"]:hover {
         border-color: #9CA3AF;
     }
 
-    .filter-group select:focus {
+    .filter-group select:focus,
+    .filter-group input[type="date"]:focus {
         outline: none;
         border-color: var(--primary-blue);
         box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.08);
@@ -1433,6 +1454,8 @@ function applyServerSideFilters() {
     const province = document.getElementById('province').value;
     const municipal = document.getElementById('municipal').value;
     const year = document.getElementById('year').value;
+    const dateFrom = document.getElementById('date_from').value;
+    const dateTo = document.getElementById('date_to').value;
 
     // Update URL parameters
     if (searchValue) {
@@ -1459,6 +1482,18 @@ function applyServerSideFilters() {
         currentUrl.searchParams.delete('year');
     }
 
+    if (dateFrom) {
+        currentUrl.searchParams.set('date_from', dateFrom);
+    } else {
+        currentUrl.searchParams.delete('date_from');
+    }
+
+    if (dateTo) {
+        currentUrl.searchParams.set('date_to', dateTo);
+    } else {
+        currentUrl.searchParams.delete('date_to');
+    }
+
     // Reset to first page when filters change
     currentUrl.searchParams.delete('page');
 
@@ -1474,6 +1509,8 @@ function updateActiveFilters() {
     const province = urlParams.get('province') || '';
     const municipal = urlParams.get('municipal') || '';
     const year = urlParams.get('year') || '';
+    const dateFrom = urlParams.get('date_from') || '';
+    const dateTo = urlParams.get('date_to') || '';
 
     let activeFiltersHTML = '';
 
@@ -1502,6 +1539,20 @@ function updateActiveFilters() {
         activeFiltersHTML += `<div class="filter-tag">
             <i class="fas fa-calendar"></i> Year: ${year}
             <button onclick="removeServerFilter('year')">×</button>
+        </div>`;
+    }
+
+    if (dateFrom) {
+        activeFiltersHTML += `<div class="filter-tag">
+            <i class="fas fa-calendar-day"></i> From: ${dateFrom}
+            <button onclick="removeServerFilter('date_from')">×</button>
+        </div>`;
+    }
+
+    if (dateTo) {
+        activeFiltersHTML += `<div class="filter-tag">
+            <i class="fas fa-calendar-day"></i> To: ${dateTo}
+            <button onclick="removeServerFilter('date_to')">×</button>
         </div>`;
     }
 
@@ -2038,6 +2089,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         <option value="{{ year }}">{{ year }}</option>
                     {% endfor %}
                 </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="date_from">From Date</label>
+                <input type="date" name="date_from" id="date_from" onchange="applyServerSideFilters()">
+            </div>
+
+            <div class="filter-group">
+                <label for="date_to">To Date</label>
+                <input type="date" name="date_to" id="date_to" onchange="applyServerSideFilters()">
             </div>
         </div>
 
