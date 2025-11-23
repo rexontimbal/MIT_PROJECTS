@@ -9,13 +9,6 @@
 
 {% block extra_css %}
 <style>
-    /* Prevent page blink when loading with filters */
-    {% if request.GET %}
-    body {
-        visibility: hidden;
-    }
-    {% endif %}
-
     :root {
         --analytics-primary: #6B46C1;
         --analytics-secondary: #14B8A6;
@@ -674,39 +667,6 @@
 {% endblock %}
 
 {% block content %}
-<script>
-    // Immediate scroll positioning for filter pages
-    (function() {
-        const hasFilters = window.location.search.length > 0;
-        const hasHash = window.location.hash === '#filter-controls';
-
-        if (hasHash || hasFilters) {
-            // Wait for filter-controls element to exist, then scroll and show
-            const checkElement = setInterval(function() {
-                const filterControls = document.getElementById('filter-controls');
-                if (filterControls) {
-                    clearInterval(checkElement);
-                    // Scroll to position with offset to show some content above
-                    const elementPosition = filterControls.getBoundingClientRect().top + window.pageYOffset;
-                    const offsetPosition = elementPosition - 100; // 100px above the filter controls
-                    window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'auto'
-                    });
-                    // Show page
-                    document.body.style.visibility = 'visible';
-                    // Clean up hash from URL
-                    if (window.location.hash) {
-                        history.replaceState(null, null, window.location.pathname + window.location.search);
-                    }
-                }
-            }, 10);
-        } else {
-            // No filters - show page immediately
-            document.body.style.visibility = 'visible';
-        }
-    })();
-</script>
 <div class="analytics-container">
     <!-- Compact Header -->
     <div class="analytics-header">
@@ -818,12 +778,12 @@
 
             <div class="form-group">
                 <label for="from_date">From Date</label>
-                <input type="date" name="from_date" {% if from_date %}value="{{ from_date }}"{% endif %} class="form-control" id="from_date" onchange="updateCharts()">
+                <input type="date" name="from_date" class="form-control" id="from_date" onchange="updateCharts()">
             </div>
 
             <div class="form-group">
                 <label for="to_date">To Date</label>
-                <input type="date" name="to_date" {% if to_date %}value="{{ to_date }}"{% endif %} class="form-control" id="to_date" onchange="updateCharts()">
+                <input type="date" name="to_date" class="form-control" id="to_date" onchange="updateCharts()">
             </div>
         </div>
 
@@ -1137,11 +1097,30 @@
     document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Initializing analytics...');
 
+    // Populate date inputs from URL parameters ONLY
+    populateDateInputsFromURL();
+
     // Initialize charts and content
     initializeCharts();
     loadPredictiveInsights();
     displayActiveFilters();
 });
+
+    function populateDateInputsFromURL() {
+        const params = new URLSearchParams(window.location.search);
+
+        // Only set date values if they exist in URL
+        const fromDate = params.get('from_date');
+        const toDate = params.get('to_date');
+
+        if (fromDate) {
+            document.getElementById('from_date').value = fromDate;
+        }
+
+        if (toDate) {
+            document.getElementById('to_date').value = toDate;
+        }
+    }
 
     function initializeCharts() {
     console.log('📊 Starting chart initialization...');
@@ -1722,8 +1701,8 @@
         params.append('to_date', toDate);
     }
 
-    // Reload page with filters AND hash anchor to filter-controls
-    const newUrl = window.location.pathname + '?' + params.toString() + '#filter-controls';
+    // Reload page with filters
+    const newUrl = window.location.pathname + '?' + params.toString();
     console.log('🔗 Navigating to:', newUrl);
     window.location.href = newUrl;
 }
@@ -1833,9 +1812,15 @@
         // Remove the specific filter
         params.delete(filterName);
 
-        // Redirect to updated URL with hash anchor if there are still filters
+        // Clear the corresponding input field
+        if (filterName === 'from_date' || filterName === 'to_date') {
+            const input = document.getElementById(filterName);
+            if (input) input.value = '';
+        }
+
+        // Redirect to updated URL
         const queryString = params.toString();
-        const newUrl = window.location.pathname + (queryString ? '?' + queryString + '#filter-controls' : '');
+        const newUrl = window.location.pathname + (queryString ? '?' + queryString : '');
         window.location.href = newUrl;
     }
 
