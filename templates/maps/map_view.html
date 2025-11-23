@@ -2234,25 +2234,56 @@ function loadAllAccidentMarkers() {
 }
 
 function createAccidentMarker(accident) {
+    // Check if coming from accident pages (detail or list)
+    const urlParams = new URLSearchParams(window.location.search);
+    const source = urlParams.get('source');
+    const isFromAccidentPage = source === 'detail' || source === 'list';
+
     let markerColor = '#DC143C';
     let markerSize = 12;
-    
+    let markerIcon = 'fa-car-crash';
+
     if (accident.victim_killed) {
-        markerColor = '#8B0000';
+        markerColor = '#DC143C';
         markerSize = 14;
+        markerIcon = 'fa-skull-crossbones';
     } else if (accident.victim_injured) {
         markerColor = '#FFA500';
         markerSize = 13;
+        markerIcon = 'fa-user-injured';
+    } else {
+        markerColor = '#6C757D';
+        markerSize = 12;
+        markerIcon = 'fa-car-crash';
     }
 
-    const icon = L.divIcon({
+    // Use icon-based markers when coming from accident pages, otherwise use simple circles
+    const icon = isFromAccidentPage ? L.divIcon({
         className: 'custom-marker',
         html: `<div style="
-            background-color: ${markerColor}; 
-            width: ${markerSize}px; 
-            height: ${markerSize}px; 
-            border-radius: 50%; 
-            border: 2px solid white; 
+            background-color: ${markerColor};
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+        "><i class="fas ${markerIcon}"></i></div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+    }) : L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="
+            background-color: ${markerColor};
+            width: ${markerSize}px;
+            height: ${markerSize}px;
+            border-radius: 50%;
+            border: 2px solid white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             cursor: pointer;
         "></div>`,
