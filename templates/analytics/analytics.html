@@ -519,6 +519,82 @@
         max-height: 100%;
     }
 
+    /* Filter Help Modal */
+    .filter-help-body {
+        padding: 1.5rem;
+        max-height: calc(95vh - 80px);
+        overflow-y: auto;
+    }
+
+    .filter-help-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .filter-help-section:last-of-type {
+        border-bottom: none;
+    }
+
+    .filter-help-section h4 {
+        color: var(--analytics-primary);
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-description {
+        color: var(--text-secondary);
+        font-size: 0.9375rem;
+        margin-bottom: 1rem;
+        font-style: italic;
+    }
+
+    .filter-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .filter-option {
+        background: var(--analytics-light);
+        padding: 0.875rem 1rem;
+        border-radius: 8px;
+        border-left: 3px solid var(--analytics-primary);
+        font-size: 0.9375rem;
+        line-height: 1.6;
+    }
+
+    .filter-option strong {
+        color: var(--analytics-primary);
+        font-weight: 600;
+    }
+
+    .filter-help-tip {
+        background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
+        border-left: 4px solid #F59E0B;
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .filter-help-tip i {
+        color: #F59E0B;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        margin-top: 0.125rem;
+    }
+
+    .filter-help-tip strong {
+        color: #92400E;
+    }
+
     /* Mini Buttons */
     .expand-btn {
         background: white;
@@ -811,9 +887,14 @@
     <div class="analytics-controls" id="filter-controls">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h3 style="margin: 0;">🎛️ Filter Controls</h3>
-            <a href="{% url 'analytics' %}" class="btn btn-outline btn-sm">
-                <i class="fas fa-times-circle"></i> Clear All
-            </a>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button onclick="openFilterHelp()" class="btn btn-outline btn-sm" title="Filter Guide & Help">
+                    <i class="fas fa-question-circle"></i> Help
+                </button>
+                <a href="{% url 'analytics' %}" class="btn btn-outline btn-sm">
+                    <i class="fas fa-times-circle"></i> Clear All
+                </a>
+            </div>
         </div>
 
         <div class="control-row">
@@ -1191,6 +1272,108 @@
             <div class="chart-modal-body">
                 <div class="chart-modal-canvas-container">
                     <canvas id="modalChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Help Modal -->
+    <div class="chart-modal" id="filterHelpModal">
+        <div class="chart-modal-content" style="max-width: 800px;">
+            <div class="chart-modal-header">
+                <h3>📚 Filter Guide & Help</h3>
+                <button class="chart-modal-close" onclick="closeFilterHelp()">×</button>
+            </div>
+            <div class="filter-help-body">
+                <div class="filter-help-section">
+                    <h4><i class="fas fa-chart-line"></i> Analysis Type</h4>
+                    <p class="filter-description">Choose the focus of your analysis to view specific insights.</p>
+                    <div class="filter-options">
+                        <div class="filter-option">
+                            <strong>Overview:</strong> Comprehensive dashboard showing all key metrics, charts, and trends across all data.
+                        </div>
+                        <div class="filter-option">
+                            <strong>Temporal Analysis:</strong> Focus on time-based patterns including hourly distributions, day of week trends, and monthly comparisons.
+                        </div>
+                        <div class="filter-option">
+                            <strong>Spatial Analysis:</strong> Geographic analysis showing province comparisons and location-based severity metrics.
+                        </div>
+                        <div class="filter-option">
+                            <strong>Severity Analysis:</strong> Deep dive into accident severity levels, fatality rates, and injury statistics.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-help-section">
+                    <h4><i class="fas fa-clock"></i> Time Granularity</h4>
+                    <p class="filter-description">Control the time interval for trend charts and temporal analysis.</p>
+                    <div class="filter-options">
+                        <div class="filter-option">
+                            <strong>Daily:</strong> View accident patterns day by day for detailed short-term analysis.
+                        </div>
+                        <div class="filter-option">
+                            <strong>Weekly:</strong> Aggregate data by week to identify weekly patterns and trends.
+                        </div>
+                        <div class="filter-option">
+                            <strong>Monthly:</strong> Monthly summaries ideal for long-term trend identification.
+                        </div>
+                        <div class="filter-option">
+                            <strong>Quarterly:</strong> Three-month intervals for high-level strategic planning.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-help-section">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Severity Filter</h4>
+                    <p class="filter-description">Filter accidents by their severity level to focus on specific incident types.</p>
+                    <div class="filter-options">
+                        <div class="filter-option">
+                            <strong>All Severities:</strong> Include all accident types in the analysis.
+                        </div>
+                        <div class="filter-option">
+                            <strong>Fatal Only:</strong> Show only accidents that resulted in fatalities.
+                        </div>
+                        <div class="filter-option">
+                            <strong>Injury Only:</strong> Display accidents where people were injured but no fatalities occurred.
+                        </div>
+                        <div class="filter-option">
+                            <strong>Property Damage Only:</strong> Focus on accidents with property damage but no injuries or fatalities.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-help-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> Province Filter</h4>
+                    <p class="filter-description">Narrow down analysis to specific provinces in the Caraga Region.</p>
+                    <div class="filter-options">
+                        <div class="filter-option">
+                            <strong>All Provinces:</strong> Include data from all provinces in Caraga Region.
+                        </div>
+                        <div class="filter-option">
+                            <strong>Specific Province:</strong> Focus analysis on selected province for localized insights and targeted interventions.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-help-section">
+                    <h4><i class="fas fa-calendar-alt"></i> Date Range</h4>
+                    <p class="filter-description">Define the time period for your analysis.</p>
+                    <div class="filter-options">
+                        <div class="filter-option">
+                            <strong>From Date:</strong> Start date of the analysis period. Leave empty to include all historical data from the beginning.
+                        </div>
+                        <div class="filter-option">
+                            <strong>To Date:</strong> End date of the analysis period. Leave empty to include data up to the most recent date.
+                        </div>
+                        <div class="filter-option">
+                            <strong>Auto-Apply:</strong> Charts automatically update when you select dates - no need to click a button.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-help-tip">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong>Tip:</strong> Combine multiple filters to create custom views. For example, select "Fatal Only" + specific province + date range to analyze fatal accidents in a particular area and time period.
                 </div>
             </div>
         </div>
@@ -2296,17 +2479,38 @@ function exportModalChart() {
     }
 }
 
+// Filter Help Modal Functions
+function openFilterHelp() {
+    const modal = document.getElementById('filterHelpModal');
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeFilterHelp() {
+    const modal = document.getElementById('filterHelpModal');
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+}
+
 // Close modal on ESC key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeChartModal();
+        closeFilterHelp();
     }
 });
 
-// Close modal on background click
+// Close chart modal on background click
 document.getElementById('chartModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
         closeChartModal();
+    }
+});
+
+// Close filter help modal on background click
+document.getElementById('filterHelpModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeFilterHelp();
     }
 });
 </script>
