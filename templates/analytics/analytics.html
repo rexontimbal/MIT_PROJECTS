@@ -725,11 +725,29 @@
     }
 
     .filter-tag button {
-        transition: color 0.2s;
+        background: none;
+        border: none;
+        color: var(--analytics-primary);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1.125rem;
+        line-height: 1;
+        padding: 0;
+        margin-left: 0.25rem;
+        border-radius: 4px;
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
     }
 
     .filter-tag button:hover {
-        color: var(--analytics-secondary);
+        background: var(--analytics-primary);
+        color: white;
+        transform: scale(1.2) rotate(90deg);
+        box-shadow: 0 2px 6px rgba(107, 70, 193, 0.3);
     }
 
     /* Modern Export Section */
