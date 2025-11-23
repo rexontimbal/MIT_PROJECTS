@@ -1510,19 +1510,33 @@
         const municipalitySelect = document.getElementById('municipality');
         const selectedProvince = provinceSelect.value;
 
+        // Save the currently selected municipality BEFORE clearing
+        const currentlySelectedMunicipality = municipalitySelect.value;
+
+        // Clear the dropdown
         municipalitySelect.value = '';
         municipalitySelect.innerHTML = '<option value="">All Municipalities</option>';
 
+        // Determine which municipalities to show
         let municipalitiesToShow = selectedProvince ?
             (provinceMunicipalityMap[selectedProvince] || []) :
             allMunicipalities;
 
+        // Rebuild the dropdown
         municipalitiesToShow.forEach(function(mun) {
             const option = document.createElement('option');
             option.value = mun;
             option.textContent = mun;
             municipalitySelect.appendChild(option);
         });
+
+        // SMART PRESERVATION: If the previously selected municipality exists in the new list, keep it selected
+        if (currentlySelectedMunicipality && municipalitiesToShow.includes(currentlySelectedMunicipality)) {
+            municipalitySelect.value = currentlySelectedMunicipality;
+            console.log('✅ Municipality preserved:', currentlySelectedMunicipality, 'is in', selectedProvince);
+        } else if (currentlySelectedMunicipality) {
+            console.log('❌ Municipality cleared:', currentlySelectedMunicipality, 'not in', selectedProvince);
+        }
     }
 
     // CLIENT-SIDE FILTERING
