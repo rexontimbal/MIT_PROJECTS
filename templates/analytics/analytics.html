@@ -686,8 +686,13 @@
                 const filterControls = document.getElementById('filter-controls');
                 if (filterControls) {
                     clearInterval(checkElement);
-                    // Scroll to position instantly
-                    filterControls.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    // Scroll to position with offset to show some content above
+                    const elementPosition = filterControls.getBoundingClientRect().top + window.pageYOffset;
+                    const offsetPosition = elementPosition - 100; // 100px above the filter controls
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'auto'
+                    });
                     // Remove hiding style
                     const hideStyle = document.getElementById('analytics-loading-style');
                     if (hideStyle) hideStyle.remove();
@@ -1725,9 +1730,6 @@
         params.append('to_date', toDate);
     }
 
-    // Show loading overlay
-    showLoadingOverlay();
-
     // Reload page with filters AND hash anchor to filter-controls
     const newUrl = window.location.pathname + '?' + params.toString() + '#filter-controls';
     console.log('🔗 Navigating to:', newUrl);
@@ -1839,9 +1841,6 @@
         // Remove the specific filter
         params.delete(filterName);
 
-        // Show loading
-        showLoadingOverlay();
-
         // Redirect to updated URL with hash anchor if there are still filters
         const queryString = params.toString();
         const newUrl = window.location.pathname + (queryString ? '?' + queryString + '#filter-controls' : '');
@@ -1850,10 +1849,7 @@
 
     function clearAllFilters() {
         console.log('🗑️ Clearing all filters...');
-        
-        // Show loading
-        showLoadingOverlay();
-        
+
         // Redirect to base URL without any parameters
         window.location.href = window.location.pathname;
     }
