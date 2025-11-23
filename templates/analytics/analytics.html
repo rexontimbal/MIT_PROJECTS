@@ -882,66 +882,26 @@
     <div class="analytics-grid">
         <!-- Accident Trends Over Time -->
         <div class="chart-card">
-            <div class="chart-header">
-                <h3>📅 Accident Trends Over Time</h3>
-                <div class="chart-actions">
-                    <button class="expand-btn" onclick="expandChart('trendChart', '📅 Accident Trends Over Time')" title="Expand chart">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="exportChart('trendChart')">Export</button>
-                </div>
-            </div>
-            <div class="chart-body">
-                <canvas id="trendChart"></canvas>
-            </div>
+            <h3>Accident Trends Over Time</h3>
+            <canvas id="trendChart"></canvas>
         </div>
 
         <!-- Severity Distribution -->
         <div class="chart-card">
-            <div class="chart-header">
-                <h3>⚡ Accident Severity Distribution</h3>
-                <div class="chart-actions">
-                    <button class="expand-btn" onclick="expandChart('severityChart', '⚡ Accident Severity Distribution')" title="Expand chart">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="exportChart('severityChart')">Export</button>
-                </div>
-            </div>
-            <div class="chart-body">
-                <canvas id="severityChart"></canvas>
-            </div>
+            <h3>Accident Severity Distribution</h3>
+            <canvas id="severityChart"></canvas>
         </div>
 
         <!-- Vehicle Type Analysis -->
         <div class="chart-card">
-            <div class="chart-header">
-                <h3>🚗 Vehicle Types Involved</h3>
-                <div class="chart-actions">
-                    <button class="expand-btn" onclick="expandChart('vehicleChart', '🚗 Vehicle Types Involved')" title="Expand chart">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="exportChart('vehicleChart')">Export</button>
-                </div>
-            </div>
-            <div class="chart-body">
-                <canvas id="vehicleChart"></canvas>
-            </div>
+            <h3>Vehicle Types Involved</h3>
+            <canvas id="vehicleChart"></canvas>
         </div>
 
         <!-- Day of Week Analysis -->
         <div class="chart-card">
-            <div class="chart-header">
-                <h3>📆 Day of Week Analysis</h3>
-                <div class="chart-actions">
-                    <button class="expand-btn" onclick="expandChart('dowChart', '📆 Day of Week Analysis')" title="Expand chart">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="exportChart('dowChart')">Export</button>
-                </div>
-            </div>
-            <div class="chart-body">
-                <canvas id="dowChart"></canvas>
-            </div>
+            <h3>Day of Week Analysis</h3>
+            <canvas id="dowChart"></canvas>
         </div>
     </div>
 
@@ -949,18 +909,8 @@
     <div class="analytics-grid" style="grid-template-columns: 1fr;">
         <!-- Hourly Pattern Analysis -->
         <div class="chart-card">
-            <div class="chart-header">
-                <h3>🕐 Hourly Accident Patterns</h3>
-                <div class="chart-actions">
-                    <button class="expand-btn" onclick="expandChart('hourlyChart', '🕐 Hourly Distribution')" title="Expand chart">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="exportChart('hourlyChart')">Export</button>
-                </div>
-            </div>
-            <div class="chart-body">
-                <canvas id="hourlyChart"></canvas>
-            </div>
+            <h3>Hourly Accident Patterns</h3>
+            <canvas id="hourlyChart"></canvas>
         </div>
     </div>
 
@@ -968,52 +918,22 @@
     <!-- Province Comparison Chart -->
     <div class="analytics-grid" style="grid-template-columns: 1fr;">
         <div class="chart-card">
-            <div class="chart-header">
-                <h3>🏛️ Province Comparison - Fatal vs Injury Accidents</h3>
-                <div class="chart-actions">
-                    <button class="expand-btn" onclick="expandChart('provinceComparisonChart', '🗺️ Province Comparison')" title="Expand chart">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="exportChart('provinceComparisonChart')">Export</button>
-                </div>
-            </div>
-            <div class="chart-body" style="height: 350px;">
-                <canvas id="provinceComparisonChart"></canvas>
-            </div>
+            <h3>Province Comparison - Fatal vs Injury Accidents</h3>
+            <canvas id="provinceComparisonChart" style="height: 350px;"></canvas>
         </div>
     </div>
 
     <!-- Incident Type Distribution & Trend Comparison -->
     <div class="analytics-grid">
         <div class="chart-card">
-            <div class="chart-header">
-                <h3>📋 Top 5 Incident Types</h3>
-                <div class="chart-actions">
-                    <button class="expand-btn" onclick="expandChart('incidentTypeChart', '💥 Incident Type Breakdown')" title="Expand chart">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="exportChart('incidentTypeChart')">Export</button>
-                </div>
-            </div>
-            <div class="chart-body">
-                <canvas id="incidentTypeChart"></canvas>
-            </div>
+            <h3>Top 5 Incident Types</h3>
+            <canvas id="incidentTypeChart"></canvas>
         </div>
 
         <!-- Time Series Trend -->
         <div class="chart-card">
-            <div class="chart-header">
-                <h3>📈 Accident Trends - Fatal vs Injury Over Time</h3>
-                <div class="chart-actions">
-                    <button class="expand-btn" onclick="expandChart('trendComparisonChart', '📈 Trend Comparison')" title="Expand chart">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="exportChart('trendComparisonChart')">Export</button>
-                </div>
-            </div>
-            <div class="chart-body">
-                <canvas id="trendComparisonChart"></canvas>
-            </div>
+            <h3>Accident Trends - Fatal vs Injury Over Time</h3>
+            <canvas id="trendComparisonChart"></canvas>
         </div>
     </div>
 
@@ -1021,34 +941,14 @@
     <div class="comparison-section">
         <!-- Monthly Comparison -->
         <div class="chart-card">
-            <div class="chart-header">
-                <h3>📊 Monthly Comparison</h3>
-                <div class="chart-actions">
-                    <button class="expand-btn" onclick="expandChart('comparisonChart', '⚖️ Year-over-Year Comparison')" title="Expand chart">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="exportChart('comparisonChart')">Export</button>
-                </div>
-            </div>
-            <div class="chart-body">
-                <canvas id="comparisonChart"></canvas>
-            </div>
+            <h3>Monthly Comparison</h3>
+            <canvas id="comparisonChart"></canvas>
         </div>
 
         <!-- Predictive Forecast -->
         <div class="chart-card">
-            <div class="chart-header">
-                <h3>🔮 30-Day Accident Forecast</h3>
-                <div class="chart-actions">
-                    <button class="expand-btn" onclick="expandChart('forecastChart', '🔮 Forecast & Predictions')" title="Expand chart">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="exportChart('forecastChart')">Export</button>
-                </div>
-            </div>
-            <div class="chart-body">
-                <canvas id="forecastChart"></canvas>
-            </div>
+            <h3>30-Day Accident Forecast</h3>
+            <canvas id="forecastChart"></canvas>
         </div>
     </div>
 
