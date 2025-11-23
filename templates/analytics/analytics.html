@@ -667,6 +667,40 @@
 {% endblock %}
 
 {% block content %}
+<script>
+    // Immediate scroll positioning BEFORE page renders
+    // This prevents the flash of top content when filters are active
+    (function() {
+        const hasFilters = window.location.search.length > 0;
+        const hasHash = window.location.hash === '#filter-controls';
+
+        if (hasHash || hasFilters) {
+            // Add CSS to hide page until positioned
+            const style = document.createElement('style');
+            style.id = 'analytics-loading-style';
+            style.textContent = 'body { visibility: hidden; }';
+            document.head.appendChild(style);
+
+            // Wait for filter-controls element to exist, then scroll and show
+            const checkElement = setInterval(function() {
+                const filterControls = document.getElementById('filter-controls');
+                if (filterControls) {
+                    clearInterval(checkElement);
+                    // Scroll to position instantly
+                    filterControls.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    // Remove hiding style
+                    const hideStyle = document.getElementById('analytics-loading-style');
+                    if (hideStyle) hideStyle.remove();
+                    document.body.style.visibility = 'visible';
+                    // Clean up hash from URL
+                    if (window.location.hash) {
+                        history.replaceState(null, null, window.location.pathname + window.location.search);
+                    }
+                }
+            }, 10);
+        }
+    })();
+</script>
 <div class="analytics-container">
     <!-- Compact Header -->
     <div class="analytics-header">
@@ -1107,7 +1141,6 @@
     console.log('🚀 Initializing analytics...');
 
     // Initialize charts and content
-    // Browser automatically scrolls to #filter-controls if hash is present in URL
     initializeCharts();
     loadPredictiveInsights();
     displayActiveFilters();
