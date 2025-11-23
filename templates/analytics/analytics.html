@@ -9,6 +9,13 @@
 
 {% block extra_css %}
 <style>
+    {% if request.GET %}
+    /* Hide page initially when filters present - prevent flash */
+    body {
+        visibility: hidden;
+    }
+    {% endif %}
+
     html {
         scroll-behavior: auto;
     }
@@ -800,6 +807,33 @@
             <!-- Active filter tags will be inserted here -->
         </div>
     </div>
+
+    {% if request.GET %}
+    <script>
+        // Immediate scroll positioning - runs as soon as filter-controls element exists
+        (function() {
+            const filterControls = document.getElementById('filter-controls');
+            if (filterControls) {
+                // Calculate position with offset
+                const rect = filterControls.getBoundingClientRect();
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const elementTop = rect.top + scrollTop;
+                const offsetPosition = elementTop - 100;
+
+                // Scroll immediately
+                window.scrollTo(0, offsetPosition);
+
+                // Show page
+                document.body.style.visibility = 'visible';
+            }
+        })();
+    </script>
+    {% else %}
+    <script>
+        // No filters - show page immediately
+        document.body.style.visibility = 'visible';
+    </script>
+    {% endif %}
 
     <!-- Key Metrics -->
     <div class="stats-overview">
