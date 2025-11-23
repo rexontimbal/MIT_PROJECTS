@@ -529,17 +529,17 @@
     }
 
     .help-card {
-        background: white;
-        border: 2px solid var(--border-light);
-        border-radius: 12px;
+        background: #FAFAFA;
+        border: 1px solid #E0E0E0;
+        border-radius: 8px;
         padding: 1.25rem;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
 
     .help-card:hover {
-        border-color: var(--analytics-primary);
-        box-shadow: 0 8px 20px rgba(107, 70, 193, 0.12);
-        transform: translateY(-2px);
+        background: white;
+        border-color: #BDBDBD;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
 
     .help-card-header {
@@ -547,30 +547,34 @@
         align-items: center;
         gap: 0.75rem;
         margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #E0E0E0;
     }
 
     .help-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
         font-size: 1.125rem;
         flex-shrink: 0;
+        background: white;
+        border: 2px solid #E0E0E0;
+        color: #424242;
     }
 
     .help-card-header h4 {
         margin: 0;
-        font-size: 1.0625rem;
+        font-size: 1rem;
         font-weight: 700;
-        color: var(--analytics-primary);
+        color: #212121;
     }
 
     .help-card-desc {
         font-size: 0.875rem;
-        color: var(--text-secondary);
+        color: #616161;
         margin-bottom: 1rem;
         line-height: 1.5;
     }
@@ -578,80 +582,47 @@
     .help-options {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.625rem;
     }
 
     .help-option-item {
         display: flex;
         align-items: flex-start;
         gap: 0.75rem;
+        padding: 0.5rem;
+        background: white;
+        border-radius: 6px;
+        border-left: 3px solid #BDBDBD;
     }
 
     .help-badge {
         display: inline-block;
-        padding: 0.25rem 0.65rem;
-        border-radius: 12px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
         font-size: 0.75rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.5px;
         flex-shrink: 0;
         line-height: 1.4;
-    }
-
-    .help-badge-purple {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .help-badge-blue {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        color: white;
-    }
-
-    .help-badge-green {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        color: white;
-    }
-
-    .help-badge-red {
-        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        color: white;
-    }
-
-    .help-badge-cyan {
-        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-        color: #333;
-    }
-
-    .help-badge-orange {
-        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-        color: #333;
-    }
-
-    .help-badge-yellow {
-        background: linear-gradient(135deg, #ffdde1 0%, #ee9ca7 100%);
-        color: #333;
-    }
-
-    .help-badge-gray {
-        background: linear-gradient(135deg, #e0e0e0 0%, #d0d0d0 100%);
-        color: #555;
+        background: #E0E0E0;
+        color: #424242;
+        border: 1px solid #BDBDBD;
     }
 
     .help-option-item p {
         margin: 0;
         font-size: 0.8125rem;
-        color: var(--text-secondary);
+        color: #616161;
         line-height: 1.5;
         padding-top: 0.15rem;
     }
 
-    /* Pro Tip */
+    /* Pro Tip - Clean Design */
     .help-pro-tip {
-        background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
-        border: 2px solid #FCD34D;
-        border-radius: 12px;
+        background: #F5F5F5;
+        border: 2px solid #E0E0E0;
+        border-radius: 8px;
         padding: 1.25rem;
         display: flex;
         align-items: flex-start;
@@ -661,25 +632,26 @@
     .tip-icon {
         width: 40px;
         height: 40px;
-        background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
-        border-radius: 10px;
+        background: white;
+        border: 2px solid #E0E0E0;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
+        color: #757575;
         font-size: 1.125rem;
         flex-shrink: 0;
     }
 
     .tip-content {
         flex: 1;
-        color: #92400E;
+        color: #424242;
         line-height: 1.6;
         font-size: 0.9375rem;
     }
 
     .tip-content strong {
-        color: #78350F;
+        color: #212121;
         font-weight: 700;
     }
 
@@ -1757,7 +1729,7 @@
                     <!-- Analysis Type Card -->
                     <div class="help-card">
                         <div class="help-card-header">
-                            <div class="help-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="help-icon">
                                 <i class="fas fa-chart-line"></i>
                             </div>
                             <h4>Analysis Type</h4>
@@ -1765,19 +1737,19 @@
                         <p class="help-card-desc">Choose the focus of your analysis to view specific charts</p>
                         <div class="help-options">
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-purple">Overview</span>
+                                <span class="help-badge">Overview</span>
                                 <p>All charts - complete dashboard view</p>
                             </div>
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-blue">Temporal</span>
+                                <span class="help-badge">Temporal</span>
                                 <p>Time-based: Trends, hourly, day-of-week patterns</p>
                             </div>
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-green">Spatial</span>
+                                <span class="help-badge">Spatial</span>
                                 <p>Location-based: Provinces & municipalities</p>
                             </div>
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-red">Severity</span>
+                                <span class="help-badge">Severity</span>
                                 <p>Severity focus: Fatal, injury distribution</p>
                             </div>
                         </div>
@@ -1786,7 +1758,7 @@
                     <!-- Time Granularity Card -->
                     <div class="help-card">
                         <div class="help-card-header">
-                            <div class="help-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <div class="help-icon">
                                 <i class="fas fa-clock"></i>
                             </div>
                             <h4>Time Granularity</h4>
@@ -1794,19 +1766,19 @@
                         <p class="help-card-desc">Control the time interval for trend analysis</p>
                         <div class="help-options">
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-blue">Daily</span>
+                                <span class="help-badge">Daily</span>
                                 <p>Day-by-day details for short-term analysis</p>
                             </div>
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-cyan">Weekly</span>
+                                <span class="help-badge">Weekly</span>
                                 <p>Weekly patterns and trends</p>
                             </div>
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-green">Monthly</span>
+                                <span class="help-badge">Monthly</span>
                                 <p>Monthly summaries for long-term trends</p>
                             </div>
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-orange">Quarterly</span>
+                                <span class="help-badge">Quarterly</span>
                                 <p>3-month intervals for strategic planning</p>
                             </div>
                         </div>
@@ -1815,7 +1787,7 @@
                     <!-- Severity Filter Card -->
                     <div class="help-card">
                         <div class="help-card-header">
-                            <div class="help-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <div class="help-icon">
                                 <i class="fas fa-exclamation-triangle"></i>
                             </div>
                             <h4>Severity Filter</h4>
@@ -1823,19 +1795,19 @@
                         <p class="help-card-desc">Filter by accident severity level</p>
                         <div class="help-options">
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-gray">All</span>
+                                <span class="help-badge">All</span>
                                 <p>Include all accident types</p>
                             </div>
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-red">Fatal</span>
+                                <span class="help-badge">Fatal</span>
                                 <p>Accidents with fatalities only</p>
                             </div>
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-orange">Injury</span>
+                                <span class="help-badge">Injury</span>
                                 <p>Injury accidents (no fatalities)</p>
                             </div>
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-yellow">Property</span>
+                                <span class="help-badge">Property</span>
                                 <p>Property damage only</p>
                             </div>
                         </div>
@@ -1844,7 +1816,7 @@
                     <!-- Province Filter Card -->
                     <div class="help-card">
                         <div class="help-card-header">
-                            <div class="help-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <div class="help-icon">
                                 <i class="fas fa-map-marker-alt"></i>
                             </div>
                             <h4>Province Filter</h4>
@@ -1852,11 +1824,11 @@
                         <p class="help-card-desc">Focus on specific provinces in Caraga Region</p>
                         <div class="help-options">
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-gray">All Provinces</span>
+                                <span class="help-badge">All Provinces</span>
                                 <p>Data from entire Caraga Region</p>
                             </div>
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-blue">Specific</span>
+                                <span class="help-badge">Specific</span>
                                 <p>Focus on one province for localized insights</p>
                             </div>
                         </div>
@@ -1865,7 +1837,7 @@
                     <!-- Date Range Card -->
                     <div class="help-card">
                         <div class="help-card-header">
-                            <div class="help-icon" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                            <div class="help-icon">
                                 <i class="fas fa-calendar-alt"></i>
                             </div>
                             <h4>Date Range</h4>
@@ -1873,11 +1845,11 @@
                         <p class="help-card-desc">Define the time period for analysis</p>
                         <div class="help-options">
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-cyan">From Date</span>
+                                <span class="help-badge">From Date</span>
                                 <p>Analysis start date (leave empty for all history)</p>
                             </div>
                             <div class="help-option-item">
-                                <span class="help-badge help-badge-purple">To Date</span>
+                                <span class="help-badge">To Date</span>
                                 <p>Analysis end date (leave empty for latest data)</p>
                             </div>
                         </div>
