@@ -1026,8 +1026,9 @@
     </div>
 
     <!-- Main Charts Grid -->
+    {% if current_analysis_type == 'overview' or current_analysis_type == 'temporal' %}
     <div class="analytics-grid">
-        <!-- Accident Trends Over Time -->
+        <!-- Accident Trends Over Time (Temporal & Overview) -->
         <div class="chart-card">
             <h3>
                 <span class="chart-title">Accident Trends Over Time</span>
@@ -1043,7 +1044,8 @@
             <canvas id="trendChart"></canvas>
         </div>
 
-        <!-- Severity Distribution -->
+        {% if current_analysis_type == 'overview' or current_analysis_type == 'severity' %}
+        <!-- Severity Distribution (Severity & Overview) -->
         <div class="chart-card">
             <h3>
                 <span class="chart-title">Accident Severity Distribution</span>
@@ -1058,8 +1060,10 @@
             </h3>
             <canvas id="severityChart"></canvas>
         </div>
+        {% endif %}
 
-        <!-- Vehicle Type Analysis -->
+        {% if current_analysis_type == 'overview' %}
+        <!-- Vehicle Type Analysis (Overview only) -->
         <div class="chart-card">
             <h3>
                 <span class="chart-title">Vehicle Types Involved</span>
@@ -1074,8 +1078,10 @@
             </h3>
             <canvas id="vehicleChart"></canvas>
         </div>
+        {% endif %}
 
-        <!-- Day of Week Analysis -->
+        {% if current_analysis_type == 'overview' or current_analysis_type == 'temporal' %}
+        <!-- Day of Week Analysis (Temporal & Overview) -->
         <div class="chart-card">
             <h3>
                 <span class="chart-title">Day of Week Analysis</span>
@@ -1090,11 +1096,14 @@
             </h3>
             <canvas id="dowChart"></canvas>
         </div>
+        {% endif %}
     </div>
+    {% endif %}
 
     <!-- Full Width Charts -->
+    {% if current_analysis_type == 'overview' or current_analysis_type == 'temporal' %}
     <div class="analytics-grid" style="grid-template-columns: 1fr;">
-        <!-- Hourly Pattern Analysis -->
+        <!-- Hourly Pattern Analysis (Temporal & Overview) -->
         <div class="chart-card">
             <h3>
                 <span class="chart-title">Hourly Accident Patterns</span>
@@ -1110,9 +1119,11 @@
             <canvas id="hourlyChart"></canvas>
         </div>
     </div>
+    {% endif %}
 
     <!-- NEW ADVANCED CHARTS -->
-    <!-- Province Comparison Chart -->
+    <!-- Province Comparison Chart (Spatial, Severity & Overview) -->
+    {% if current_analysis_type == 'overview' or current_analysis_type == 'spatial' or current_analysis_type == 'severity' %}
     <div class="analytics-grid" style="grid-template-columns: 1fr;">
         <div class="chart-card">
             <h3>
@@ -1129,9 +1140,12 @@
             <canvas id="provinceComparisonChart"></canvas>
         </div>
     </div>
+    {% endif %}
 
     <!-- Incident Type Distribution & Trend Comparison -->
     <div class="analytics-grid">
+        {% if current_analysis_type == 'overview' %}
+        <!-- Incident Type (Overview only) -->
         <div class="chart-card">
             <h3>
                 <span class="chart-title">Top 5 Incident Types</span>
@@ -1146,8 +1160,10 @@
             </h3>
             <canvas id="incidentTypeChart"></canvas>
         </div>
+        {% endif %}
 
-        <!-- Time Series Trend -->
+        {% if current_analysis_type == 'overview' or current_analysis_type == 'severity' %}
+        <!-- Time Series Trend (Severity & Overview) -->
         <div class="chart-card">
             <h3>
                 <span class="chart-title">Accident Trends - Fatal vs Injury Over Time</span>
@@ -1162,9 +1178,11 @@
             </h3>
             <canvas id="trendComparisonChart"></canvas>
         </div>
+        {% endif %}
     </div>
 
-    <!-- Comparison Section -->
+    <!-- Comparison Section (Temporal & Overview) -->
+    {% if current_analysis_type == 'overview' or current_analysis_type == 'temporal' %}
     <div class="comparison-section">
         <!-- Monthly Comparison -->
         <div class="chart-card">
@@ -1198,8 +1216,10 @@
             <canvas id="forecastChart"></canvas>
         </div>
     </div>
+    {% endif %}
 
-    <!-- Severity by Location Table -->
+    <!-- Severity by Location Table (Spatial & Overview) -->
+    {% if current_analysis_type == 'overview' or current_analysis_type == 'spatial' %}
     <div class="severity-table">
         <h3>🏙️ Top 10 Municipalities by Accident Severity</h3>
         <table class="data-table">
@@ -1234,6 +1254,7 @@
             </tbody>
         </table>
     </div>
+    {% endif %}
 
     <!-- Export Section -->
     <div class="export-section">
@@ -1287,19 +1308,29 @@
             <div class="filter-help-body">
                 <div class="filter-help-section">
                     <h4><i class="fas fa-chart-line"></i> Analysis Type</h4>
-                    <p class="filter-description">Choose the focus of your analysis to view specific insights.</p>
+                    <p class="filter-description">Choose the focus of your analysis to view specific charts and insights.</p>
                     <div class="filter-options">
                         <div class="filter-option">
-                            <strong>Overview:</strong> Comprehensive dashboard showing all key metrics, charts, and trends across all data.
+                            <strong>Overview:</strong> Shows ALL charts - complete dashboard with trends, severity, hourly patterns, province comparisons, forecasts, and municipality data.
                         </div>
                         <div class="filter-option">
-                            <strong>Temporal Analysis:</strong> Focus on time-based patterns including hourly distributions, day of week trends, and monthly comparisons.
+                            <strong>Temporal Analysis:</strong> Shows only TIME-related charts:<br>
+                            • Accident Trends Over Time<br>
+                            • Day of Week Analysis<br>
+                            • Hourly Accident Patterns<br>
+                            • Monthly Comparison<br>
+                            • 30-Day Forecast
                         </div>
                         <div class="filter-option">
-                            <strong>Spatial Analysis:</strong> Geographic analysis showing province comparisons and location-based severity metrics.
+                            <strong>Spatial Analysis:</strong> Shows only LOCATION-related charts:<br>
+                            • Province Comparison Chart<br>
+                            • Top 10 Municipalities by Severity (Table)
                         </div>
                         <div class="filter-option">
-                            <strong>Severity Analysis:</strong> Deep dive into accident severity levels, fatality rates, and injury statistics.
+                            <strong>Severity Analysis:</strong> Shows only SEVERITY-related charts:<br>
+                            • Accident Severity Distribution<br>
+                            • Province Comparison - Fatal vs Injury<br>
+                            • Accident Trends - Fatal vs Injury Over Time
                         </div>
                     </div>
                 </div>
