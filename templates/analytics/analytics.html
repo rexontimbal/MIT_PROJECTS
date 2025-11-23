@@ -9,6 +9,13 @@
 
 {% block extra_css %}
 <style>
+    /* Prevent page blink when loading with filters */
+    {% if request.GET %}
+    body {
+        visibility: hidden;
+    }
+    {% endif %}
+
     :root {
         --analytics-primary: #6B46C1;
         --analytics-secondary: #14B8A6;
@@ -668,19 +675,12 @@
 
 {% block content %}
 <script>
-    // Immediate scroll positioning BEFORE page renders
-    // This prevents the flash of top content when filters are active
+    // Immediate scroll positioning for filter pages
     (function() {
         const hasFilters = window.location.search.length > 0;
         const hasHash = window.location.hash === '#filter-controls';
 
         if (hasHash || hasFilters) {
-            // Add CSS to hide page until positioned
-            const style = document.createElement('style');
-            style.id = 'analytics-loading-style';
-            style.textContent = 'body { visibility: hidden; }';
-            document.head.appendChild(style);
-
             // Wait for filter-controls element to exist, then scroll and show
             const checkElement = setInterval(function() {
                 const filterControls = document.getElementById('filter-controls');
@@ -693,9 +693,7 @@
                         top: offsetPosition,
                         behavior: 'auto'
                     });
-                    // Remove hiding style
-                    const hideStyle = document.getElementById('analytics-loading-style');
-                    if (hideStyle) hideStyle.remove();
+                    // Show page
                     document.body.style.visibility = 'visible';
                     // Clean up hash from URL
                     if (window.location.hash) {
@@ -767,7 +765,12 @@
 
     <!-- Analytics Controls -->
     <div class="analytics-controls" id="filter-controls">
-        <h3>🎛️ Filter Controls</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">🎛️ Filter Controls</h3>
+            <a href="{% url 'analytics' %}" class="btn btn-outline btn-sm">
+                <i class="fas fa-times-circle"></i> Clear All
+            </a>
+        </div>
 
         <div class="control-row">
             <div class="form-group">
@@ -812,26 +815,12 @@
 
             <div class="form-group">
                 <label for="from_date">From Date</label>
-                <input type="date" name="from_date" value="{{ from_date }}" class="form-control" id="from_date">
+                <input type="date" name="from_date" value="{{ from_date }}" class="form-control" id="from_date" onchange="updateCharts()">
             </div>
 
             <div class="form-group">
                 <label for="to_date">To Date</label>
-                <input type="date" name="to_date" value="{{ to_date }}" class="form-control" id="to_date">
-            </div>
-
-            <div class="form-group">
-                <label>&nbsp;</label>
-                <button type="button" class="btn btn-primary btn-sm" onclick="updateCharts()" style="width: 100%;">
-                    <i class="fas fa-filter"></i> Apply Filter
-                </button>
-            </div>
-
-            <div class="form-group">
-                <label>&nbsp;</label>
-                <a href="{% url 'analytics' %}" class="btn btn-outline btn-sm" style="width: 100%; display: inline-block;">
-                    <i class="fas fa-redo"></i> Reset
-                </a>
+                <input type="date" name="to_date" value="{{ to_date }}" class="form-control" id="to_date" onchange="updateCharts()">
             </div>
         </div>
 
