@@ -1571,6 +1571,19 @@ function removeServerFilter(filterName) {
     currentUrl.searchParams.delete(filterName);
     currentUrl.searchParams.delete('page'); // Reset to first page
 
+    // Clear the corresponding input field
+    if (filterName === 'date_from') {
+        document.getElementById('date_from').value = '';
+    } else if (filterName === 'date_to') {
+        document.getElementById('date_to').value = '';
+    } else if (filterName === 'province') {
+        document.getElementById('province').value = '';
+    } else if (filterName === 'municipal') {
+        document.getElementById('municipal').value = '';
+    } else if (filterName === 'year') {
+        document.getElementById('year').value = '';
+    }
+
     // Smooth update instead of reload
     updatePageContent(currentUrl.toString());
 }
