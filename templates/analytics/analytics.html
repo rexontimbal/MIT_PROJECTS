@@ -9,15 +9,8 @@
 
 {% block extra_css %}
 <style>
-    {% if request.GET %}
-    /* Hide page initially when filters present - prevent flash */
-    body {
-        visibility: hidden;
-    }
-    {% endif %}
-
     html {
-        scroll-behavior: auto;
+        scroll-behavior: smooth;
     }
 
     :root {
@@ -28,10 +21,6 @@
         --text-dark: #1F2937;
         --text-secondary: #6B7280;
         --border-light: #E5E7EB;
-    }
-
-    #filter-controls {
-        scroll-margin-top: 100px;
     }
 
     .analytics-container {
@@ -1437,33 +1426,6 @@
         </div>
     </div>
 
-    {% if request.GET %}
-    <script>
-        // Immediate scroll positioning - runs as soon as filter-controls element exists
-        (function() {
-            const filterControls = document.getElementById('filter-controls');
-            if (filterControls) {
-                // Calculate position with offset
-                const rect = filterControls.getBoundingClientRect();
-                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                const elementTop = rect.top + scrollTop;
-                const offsetPosition = elementTop - 100;
-
-                // Scroll immediately
-                window.scrollTo(0, offsetPosition);
-
-                // Show page
-                document.body.style.visibility = 'visible';
-            }
-        })();
-    </script>
-    {% else %}
-    <script>
-        // No filters - show page immediately
-        document.body.style.visibility = 'visible';
-    </script>
-    {% endif %}
-
     <!-- Key Metrics -->
     <div class="stats-overview">
         <div class="stat-box">
@@ -2647,8 +2609,8 @@
         params.append('to_date', toDate);
     }
 
-    // Reload page with filters and scroll to filter controls
-    const newUrl = window.location.pathname + '?' + params.toString() + '#filter-controls';
+    // Reload page with filters
+    const newUrl = window.location.pathname + '?' + params.toString();
     console.log('🔗 Navigating to:', newUrl);
     window.location.href = newUrl;
 }
