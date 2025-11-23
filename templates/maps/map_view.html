@@ -1928,6 +1928,10 @@ let accidentMarkers = [];
 let hotspotCircles = [];
 let clusterMarkers = [];
 
+// Track clicked accident from accident pages
+let clickedAccidentId = null;
+let isFromAccidentPage = false;
+
 // Map layer variables
 let currentLayer = 'street'; // 'street' or 'satellite'
 let streetLayer;
@@ -1969,8 +1973,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (singleMode && accidentId) {
         console.log('📍 Single accident view mode - ID:', accidentId);
+
+        // Check if coming from accident pages
+        const source = urlParams.get('source');
+        isFromAccidentPage = source === 'detail' || source === 'list';
+        clickedAccidentId = parseInt(accidentId);
+
         validateData();
         initializeEnhancedMap();
+
+        // Uncheck both checkboxes by default when from accident pages
+        if (isFromAccidentPage) {
+            const accidentsCheckbox = document.getElementById('showAccidents');
+            const hotspotsCheckbox = document.getElementById('showHotspots');
+            if (accidentsCheckbox) accidentsCheckbox.checked = false;
+            if (hotspotsCheckbox) hotspotsCheckbox.checked = false;
+            console.log('✅ Unchecked layer checkboxes for accident page view');
+        }
 
         // Load only the specific accident
         const singleAccident = allAccidents.find(a => a.id == accidentId);
@@ -1990,12 +2009,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update statistics
                 updateAllStatistics();
 
-                // Don't load hotspots in single mode
-                console.log('🚫 Hotspots disabled in single accident view');
+                // Don't load hotspots in single mode initially
+                console.log('🚫 Hotspots disabled by default in single accident view');
 
                 // Show back button with context-aware text
                 const backBtn = document.getElementById('backToListBtn');
-                const source = urlParams.get('source');
                 if (backBtn) {
                     backBtn.style.display = 'flex';
                     // Change button text based on source
@@ -2234,10 +2252,8 @@ function loadAllAccidentMarkers() {
 }
 
 function createAccidentMarker(accident) {
-    // Check if coming from accident pages (detail or list)
-    const urlParams = new URLSearchParams(window.location.search);
-    const source = urlParams.get('source');
-    const isFromAccidentPage = source === 'detail' || source === 'list';
+    // Check if this is the clicked accident from accident pages
+    const isClickedAccident = isFromAccidentPage && accident.id === clickedAccidentId;
 
     let markerColor = '#DC143C';
     let markerSize = 12;
@@ -2257,8 +2273,8 @@ function createAccidentMarker(accident) {
         markerIcon = 'fa-car-crash';
     }
 
-    // Use icon-based markers when coming from accident pages, otherwise use simple circles
-    const icon = isFromAccidentPage ? L.divIcon({
+    // Use icon-based marker ONLY for the clicked accident, simple circles for all others
+    const icon = isClickedAccident ? L.divIcon({
         className: 'custom-marker',
         html: `<div style="
             background-color: ${markerColor};
@@ -2442,9 +2458,113 @@ function loadAllHotspotCircles() {
     });
 
     console.log(`✅ Prepared ${hotspotCircles.length} hotspot circles`);
-    
+
     const { startDate, endDate } = getDateRange();
     updateHotspotDisplay(startDate, endDate);
+}
+
+// Load only a specific hotspot by cluster ID (for accident page view)
+function loadSpecificHotspot(clusterId) {
+    console.log(`🎯 Loading specific hotspot: Cluster #${clusterId}`);
+
+    // Clear existing hotspot circles
+    hotspotCircles.forEach(item => {
+        if (item.circle && item.circle.remove) {
+            item.circle.remove();
+        }
+    });
+    hotspotCircles = [];
+
+    // Find the hotspot
+    const hotspot = allHotspots.find(h => h.cluster_id === clusterId);
+    if (!hotspot) {
+        console.warn(`⚠️ Hotspot cluster ${clusterId} not found`);
+        return;
+    }
+
+    // Get accidents for this cluster
+    const hotspotAccidents = allAccidents.filter(acc => acc.cluster_id === clusterId);
+
+    if (hotspotAccidents.length === 0) {
+        console.warn(`⚠️ Hotspot ${clusterId} has no accidents`);
+        return;
+    }
+
+    const maxDistance = calculateMaxDistance(
+        hotspot.center_latitude,
+        hotspot.center_longitude,
+        hotspotAccidents
+    );
+
+    const radius = maxDistance * 1.2;
+
+    let fillColor, borderColor;
+    if (hotspot.severity_score >= 70) {
+        fillColor = '#DC143C';
+        borderColor = '#DC143C';
+    } else if (hotspot.severity_score >= 50) {
+        fillColor = '#FFA500';
+        borderColor = '#FFA500';
+    } else {
+        fillColor = '#28A745';
+        borderColor = '#28A745';
+    }
+
+    const circle = L.circle(
+        [hotspot.center_latitude, hotspot.center_longitude],
+        {
+            color: borderColor,
+            fillColor: fillColor,
+            fillOpacity: 0.2,
+            radius: radius,
+            weight: 2
+        }
+    ).addTo(map);
+
+    const popupContent = `
+        <div class="marker-popup">
+            <div class="popup-header" style="background: linear-gradient(135deg, ${fillColor}, ${fillColor}99);">
+                <h4>🔴 ${getRiskLevel(hotspot.severity_score)} HOTSPOT</h4>
+            </div>
+            <div class="popup-body">
+                <p><strong>📍 Location:</strong> ${hotspot.primary_location}</p>
+                <p><strong>📊 Accidents:</strong> ${hotspotAccidents.length}</p>
+                <p><strong>👥 Casualties:</strong> ${hotspot.total_casualties}</p>
+                <p><strong>⚡ Severity:</strong> ${hotspot.severity_score.toFixed(1)}/100</p>
+                <p><strong>📏 Coverage:</strong> ${radius.toFixed(0)}m radius</p>
+                <p><strong>🆔 Cluster ID:</strong> #${hotspot.cluster_id}</p>
+            </div>
+            <div class="popup-footer">
+                <a href="/hotspots/${hotspot.cluster_id}/">View Details</a>
+                <a href="javascript:void(0)" onclick="zoomToHotspotArea(${hotspot.cluster_id}, ${hotspot.center_latitude}, ${hotspot.center_longitude})" style="background: #FFA500;">🔍 Zoom to Area</a>
+            </div>
+        </div>
+    `;
+
+    circle.bindPopup(popupContent, { maxWidth: 300 });
+
+    circle.on('mouseover', function() {
+        this.setStyle({
+            fillOpacity: 0.35,
+            weight: 3
+        });
+    });
+
+    circle.on('mouseout', function() {
+        this.setStyle({
+            fillOpacity: 0.2,
+            weight: 2
+        });
+    });
+
+    hotspotCircles.push({
+        circle: circle,
+        hotspot: hotspot,
+        accidents: hotspotAccidents
+    });
+
+    updateHotspotStatistics(1);
+    console.log(`✅ Loaded hotspot cluster #${clusterId}`);
 }
 
 function getRiskLevel(severity) {
@@ -3068,23 +3188,59 @@ function clearAllFilters() {
 function toggleLayer(layerType) {
     const checkbox = document.getElementById(`show${layerType.charAt(0).toUpperCase() + layerType.slice(1)}`);
     if (!checkbox) return;
-    
+
     const isChecked = checkbox.checked;
-    
+
     switch(layerType) {
         case 'accidents':
             if (isChecked) {
-                map.addLayer(markerClusterGroup);
+                // If from accident page, load all accidents but keep clicked one special
+                if (isFromAccidentPage && clickedAccidentId) {
+                    console.log('📍 Loading all accidents with clicked accident highlighted');
+                    loadAllAccidentMarkers();
+                } else {
+                    map.addLayer(markerClusterGroup);
+                }
             } else {
-                map.removeLayer(markerClusterGroup);
+                // If from accident page, show only the clicked accident
+                if (isFromAccidentPage && clickedAccidentId) {
+                    console.log('📍 Hiding other accidents, keeping clicked accident');
+                    const clickedAccident = allAccidents.find(a => a.id === clickedAccidentId);
+                    if (clickedAccident) {
+                        // Clear all markers
+                        markerClusterGroup.clearLayers();
+                        accidentMarkers = [];
+
+                        // Re-add only the clicked accident
+                        const marker = createAccidentMarker(clickedAccident);
+                        if (marker) {
+                            marker.addTo(map);
+                            accidentMarkers = [marker];
+                            activeMarkers = [marker];
+                        }
+                    }
+                } else {
+                    map.removeLayer(markerClusterGroup);
+                }
             }
             break;
 
         case 'hotspots':
             if (isChecked) {
-                const { startDate, endDate } = getDateRange();
-                updateHotspotDisplay(startDate, endDate);
-                console.log('✅ Hotspots layer enabled');
+                // If from accident page, show only the hotspot for the clicked accident
+                if (isFromAccidentPage && clickedAccidentId) {
+                    console.log('📍 Loading hotspot for clicked accident only');
+                    const clickedAccident = allAccidents.find(a => a.id === clickedAccidentId);
+                    if (clickedAccident && clickedAccident.cluster_id) {
+                        loadSpecificHotspot(clickedAccident.cluster_id);
+                    } else {
+                        console.log('⚠️ Clicked accident has no hotspot cluster');
+                    }
+                } else {
+                    const { startDate, endDate } = getDateRange();
+                    updateHotspotDisplay(startDate, endDate);
+                    console.log('✅ Hotspots layer enabled');
+                }
             } else {
                 hotspotCircles.forEach(item => {
                     if (item.circle && item.circle.remove) {
@@ -3112,7 +3268,7 @@ function toggleLayer(layerType) {
             }
             break;
     }
-    
+
     updateAllStatistics();
 }
 
