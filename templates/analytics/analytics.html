@@ -1995,6 +1995,14 @@
     document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Initializing analytics...');
 
+    // Restore scroll position if it was saved
+    const savedScrollPosition = sessionStorage.getItem('analyticsScrollPosition');
+    if (savedScrollPosition) {
+        window.scrollTo(0, parseInt(savedScrollPosition));
+        sessionStorage.removeItem('analyticsScrollPosition');
+        console.log('📍 Restored scroll position:', savedScrollPosition);
+    }
+
     // Populate date inputs from URL parameters ONLY
     populateDateInputsFromURL();
 
@@ -2609,6 +2617,10 @@
         params.append('to_date', toDate);
     }
 
+    // Save current scroll position before reload
+    sessionStorage.setItem('analyticsScrollPosition', window.pageYOffset.toString());
+    console.log('💾 Saved scroll position:', window.pageYOffset);
+
     // Reload page with filters
     const newUrl = window.location.pathname + '?' + params.toString();
     console.log('🔗 Navigating to:', newUrl);
@@ -2726,6 +2738,9 @@
             if (input) input.value = '';
         }
 
+        // Save current scroll position before reload
+        sessionStorage.setItem('analyticsScrollPosition', window.pageYOffset.toString());
+
         // Redirect to updated URL
         const queryString = params.toString();
         const newUrl = window.location.pathname + (queryString ? '?' + queryString : '');
@@ -2734,6 +2749,9 @@
 
     function clearAllFilters() {
         console.log('🗑️ Clearing all filters...');
+
+        // Save current scroll position before reload
+        sessionStorage.setItem('analyticsScrollPosition', window.pageYOffset.toString());
 
         // Redirect to base URL without any parameters
         window.location.href = window.location.pathname;
