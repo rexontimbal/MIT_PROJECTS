@@ -437,9 +437,9 @@
         background: white;
         border-radius: 16px;
         padding: 0;
-        width: 90%;
-        max-width: 1200px;
-        max-height: 90vh;
+        width: 95%;
+        max-width: 1400px;
+        max-height: 95vh;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         overflow: hidden;
         animation: slideUp 0.4s ease;
@@ -448,19 +448,28 @@
     }
 
     .chart-modal-header {
-        padding: 1.5rem 2rem;
+        padding: 1rem 1.5rem;
         border-bottom: 1px solid var(--border-light);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: var(--analytics-light);
+        background: white;
+        flex-shrink: 0;
     }
 
     .chart-modal-header h3 {
         margin: 0;
         color: var(--analytics-primary);
-        font-size: 1.25rem;
-        font-weight: 700;
+        font-size: 1.125rem;
+        font-weight: 600;
+        flex: 1;
+    }
+
+    .chart-modal-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-right: 1rem;
     }
 
     .chart-modal-close {
@@ -486,18 +495,28 @@
     }
 
     .chart-modal-body {
-        padding: 2rem;
+        padding: 1.5rem;
         flex: 1;
-        overflow-y: auto;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+    }
+
+    .chart-modal-canvas-container {
+        width: 100%;
+        height: 100%;
+        max-height: calc(95vh - 100px);
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
-    .chart-modal-canvas-container {
-        width: 100%;
-        height: 600px;
-        position: relative;
+    .chart-modal-canvas-container canvas {
+        max-width: 100%;
+        max-height: 100%;
     }
 
     /* Mini Buttons */
@@ -933,7 +952,7 @@
                 <span class="chart-title">Accident Trends Over Time</span>
                 <div class="chart-actions">
                     <button class="chart-btn" onclick="expandChart('trendChart', 'Accident Trends Over Time')" title="Expand chart">
-                        <i class="fas fa-expand"></i> Expand
+                        <i class="fas fa-expand"></i>
                     </button>
                     <button class="chart-btn" onclick="exportChart('trendChart', 'accident-trends')" title="Export as image">
                         <i class="fas fa-download"></i> Export
@@ -949,7 +968,7 @@
                 <span class="chart-title">Accident Severity Distribution</span>
                 <div class="chart-actions">
                     <button class="chart-btn" onclick="expandChart('severityChart', 'Accident Severity Distribution')" title="Expand chart">
-                        <i class="fas fa-expand"></i> Expand
+                        <i class="fas fa-expand"></i>
                     </button>
                     <button class="chart-btn" onclick="exportChart('severityChart', 'severity-distribution')" title="Export as image">
                         <i class="fas fa-download"></i> Export
@@ -965,7 +984,7 @@
                 <span class="chart-title">Vehicle Types Involved</span>
                 <div class="chart-actions">
                     <button class="chart-btn" onclick="expandChart('vehicleChart', 'Vehicle Types Involved')" title="Expand chart">
-                        <i class="fas fa-expand"></i> Expand
+                        <i class="fas fa-expand"></i>
                     </button>
                     <button class="chart-btn" onclick="exportChart('vehicleChart', 'vehicle-types')" title="Export as image">
                         <i class="fas fa-download"></i> Export
@@ -981,7 +1000,7 @@
                 <span class="chart-title">Day of Week Analysis</span>
                 <div class="chart-actions">
                     <button class="chart-btn" onclick="expandChart('dowChart', 'Day of Week Analysis')" title="Expand chart">
-                        <i class="fas fa-expand"></i> Expand
+                        <i class="fas fa-expand"></i>
                     </button>
                     <button class="chart-btn" onclick="exportChart('dowChart', 'day-of-week')" title="Export as image">
                         <i class="fas fa-download"></i> Export
@@ -1000,7 +1019,7 @@
                 <span class="chart-title">Hourly Accident Patterns</span>
                 <div class="chart-actions">
                     <button class="chart-btn" onclick="expandChart('hourlyChart', 'Hourly Accident Patterns')" title="Expand chart">
-                        <i class="fas fa-expand"></i> Expand
+                        <i class="fas fa-expand"></i>
                     </button>
                     <button class="chart-btn" onclick="exportChart('hourlyChart', 'hourly-patterns')" title="Export as image">
                         <i class="fas fa-download"></i> Export
@@ -1019,7 +1038,7 @@
                 <span class="chart-title">Province Comparison - Fatal vs Injury Accidents</span>
                 <div class="chart-actions">
                     <button class="chart-btn" onclick="expandChart('provinceComparisonChart', 'Province Comparison')" title="Expand chart">
-                        <i class="fas fa-expand"></i> Expand
+                        <i class="fas fa-expand"></i>
                     </button>
                     <button class="chart-btn" onclick="exportChart('provinceComparisonChart', 'province-comparison')" title="Export as image">
                         <i class="fas fa-download"></i> Export
@@ -1037,7 +1056,7 @@
                 <span class="chart-title">Top 5 Incident Types</span>
                 <div class="chart-actions">
                     <button class="chart-btn" onclick="expandChart('incidentTypeChart', 'Top 5 Incident Types')" title="Expand chart">
-                        <i class="fas fa-expand"></i> Expand
+                        <i class="fas fa-expand"></i>
                     </button>
                     <button class="chart-btn" onclick="exportChart('incidentTypeChart', 'incident-types')" title="Export as image">
                         <i class="fas fa-download"></i> Export
@@ -1053,7 +1072,7 @@
                 <span class="chart-title">Accident Trends - Fatal vs Injury Over Time</span>
                 <div class="chart-actions">
                     <button class="chart-btn" onclick="expandChart('trendComparisonChart', 'Trend Comparison')" title="Expand chart">
-                        <i class="fas fa-expand"></i> Expand
+                        <i class="fas fa-expand"></i>
                     </button>
                     <button class="chart-btn" onclick="exportChart('trendComparisonChart', 'trend-comparison')" title="Export as image">
                         <i class="fas fa-download"></i> Export
@@ -1072,7 +1091,7 @@
                 <span class="chart-title">Monthly Comparison</span>
                 <div class="chart-actions">
                     <button class="chart-btn" onclick="expandChart('comparisonChart', 'Monthly Comparison')" title="Expand chart">
-                        <i class="fas fa-expand"></i> Expand
+                        <i class="fas fa-expand"></i>
                     </button>
                     <button class="chart-btn" onclick="exportChart('comparisonChart', 'monthly-comparison')" title="Export as image">
                         <i class="fas fa-download"></i> Export
@@ -1088,7 +1107,7 @@
                 <span class="chart-title">30-Day Accident Forecast</span>
                 <div class="chart-actions">
                     <button class="chart-btn" onclick="expandChart('forecastChart', '30-Day Forecast')" title="Expand chart">
-                        <i class="fas fa-expand"></i> Expand
+                        <i class="fas fa-expand"></i>
                     </button>
                     <button class="chart-btn" onclick="exportChart('forecastChart', 'forecast')" title="Export as image">
                         <i class="fas fa-download"></i> Export
@@ -1160,6 +1179,11 @@
         <div class="chart-modal-content">
             <div class="chart-modal-header">
                 <h3 id="modalChartTitle">Chart View</h3>
+                <div class="chart-modal-actions">
+                    <button class="chart-btn" onclick="exportModalChart()" title="Export chart as HD image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
                 <button class="chart-modal-close" onclick="closeChartModal()">
                     ×
                 </button>
@@ -2150,14 +2174,16 @@ window.addEventListener('scroll', function() {
 
 // Chart Modal Functions
 let modalChartInstance = null;
+let currentModalChartTitle = '';
 
 function expandChart(chartId, chartTitle) {
     const modal = document.getElementById('chartModal');
     const modalTitle = document.getElementById('modalChartTitle');
     const modalCanvas = document.getElementById('modalChart');
 
-    // Set title
+    // Set title and store for export
     modalTitle.textContent = chartTitle;
+    currentModalChartTitle = chartTitle;
 
     // Show modal with animation
     modal.classList.add('show');
@@ -2223,6 +2249,50 @@ function closeChartModal() {
     if (modalChartInstance) {
         modalChartInstance.destroy();
         modalChartInstance = null;
+    }
+}
+
+function exportModalChart() {
+    if (!modalChartInstance) {
+        alert('No chart available to export');
+        return;
+    }
+
+    try {
+        // Get the modal canvas
+        const originalCanvas = modalChartInstance.canvas;
+
+        // Create HD canvas (3x resolution for high quality)
+        const scale = 3;
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = originalCanvas.width * scale;
+        tempCanvas.height = originalCanvas.height * scale;
+        const ctx = tempCanvas.getContext('2d');
+
+        // Enable high quality rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        // Fill with white background
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+        // Scale and draw the chart on top of white background
+        ctx.scale(scale, scale);
+        ctx.drawImage(originalCanvas, 0, 0);
+
+        // Export as HD PNG
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().split('T')[0];
+        const filename = currentModalChartTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        link.download = `${filename}_${timestamp}_HD.png`;
+        link.href = tempCanvas.toDataURL('image/png', 1.0);
+        link.click();
+
+        console.log(`✅ Exported modal chart (${tempCanvas.width}x${tempCanvas.height}): ${filename}`);
+    } catch (error) {
+        console.error('❌ Error exporting modal chart:', error);
+        alert('Error exporting chart. Please try again.');
     }
 }
 
