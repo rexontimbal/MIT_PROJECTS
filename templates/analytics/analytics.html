@@ -9,6 +9,10 @@
 
 {% block extra_css %}
 <style>
+    html {
+        scroll-behavior: auto;
+    }
+
     :root {
         --analytics-primary: #6B46C1;
         --analytics-secondary: #14B8A6;
@@ -17,6 +21,10 @@
         --text-dark: #1F2937;
         --text-secondary: #6B7280;
         --border-light: #E5E7EB;
+    }
+
+    #filter-controls {
+        scroll-margin-top: 100px;
     }
 
     .analytics-container {
@@ -1701,8 +1709,8 @@
         params.append('to_date', toDate);
     }
 
-    // Reload page with filters
-    const newUrl = window.location.pathname + '?' + params.toString();
+    // Reload page with filters and scroll to filter controls
+    const newUrl = window.location.pathname + '?' + params.toString() + '#filter-controls';
     console.log('🔗 Navigating to:', newUrl);
     window.location.href = newUrl;
 }
@@ -1818,9 +1826,9 @@
             if (input) input.value = '';
         }
 
-        // Redirect to updated URL
+        // Redirect to updated URL with scroll to filter controls if filters remain
         const queryString = params.toString();
-        const newUrl = window.location.pathname + (queryString ? '?' + queryString : '');
+        const newUrl = window.location.pathname + (queryString ? '?' + queryString + '#filter-controls' : '');
         window.location.href = newUrl;
     }
 
