@@ -595,6 +595,92 @@
         color: #92400E;
     }
 
+    /* Date Selection Modal */
+    .date-modal-body {
+        padding: 2rem;
+    }
+
+    .date-input-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .date-input-group label {
+        display: block;
+        font-weight: 600;
+        color: var(--analytics-primary);
+        margin-bottom: 0.5rem;
+        font-size: 0.9375rem;
+    }
+
+    .date-input-group .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid var(--border-light);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .date-input-group .form-control:focus {
+        outline: none;
+        border-color: var(--analytics-primary);
+        box-shadow: 0 0 0 3px rgba(107, 70, 193, 0.1);
+    }
+
+    .date-helper {
+        display: block;
+        margin-top: 0.375rem;
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+        font-style: italic;
+    }
+
+    .date-modal-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .btn-primary {
+        background: var(--analytics-primary);
+        color: white;
+        border: 2px solid var(--analytics-primary);
+        padding: 0.625rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+        background: #5a3aa0;
+        border-color: #5a3aa0;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(107, 70, 193, 0.3);
+    }
+
+    .date-selector {
+        position: relative;
+    }
+
+    .date-selector::after {
+        content: '\f073';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--analytics-primary);
+        pointer-events: none;
+    }
+
     /* Mini Buttons */
     .expand-btn {
         background: white;
@@ -958,12 +1044,14 @@
 
             <div class="form-group">
                 <label for="from_date">From Date</label>
-                <input type="date" name="from_date" class="form-control" id="from_date" onchange="updateCharts()">
+                <input type="text" readonly class="form-control date-selector" id="from_date_display" placeholder="Select date..." onclick="openDateModal()" style="cursor: pointer; background: white;">
+                <input type="hidden" name="from_date" id="from_date">
             </div>
 
             <div class="form-group">
                 <label for="to_date">To Date</label>
-                <input type="date" name="to_date" class="form-control" id="to_date" onchange="updateCharts()">
+                <input type="text" readonly class="form-control date-selector" id="to_date_display" placeholder="Select date..." onclick="openDateModal()" style="cursor: pointer; background: white;">
+                <input type="hidden" name="to_date" id="to_date">
             </div>
         </div>
 
@@ -1427,6 +1515,41 @@
             </div>
         </div>
     </div>
+
+    <!-- Date Selection Modal -->
+    <div class="chart-modal" id="dateModal">
+        <div class="chart-modal-content" style="max-width: 500px;">
+            <div class="chart-modal-header">
+                <h3>📅 Select Date Range</h3>
+                <button class="chart-modal-close" onclick="closeDateModal()">×</button>
+            </div>
+            <div class="date-modal-body">
+                <div class="date-input-group">
+                    <label for="modal_from_date">From Date</label>
+                    <input type="date" id="modal_from_date" class="form-control">
+                    <small class="date-helper">Leave empty to include all historical data</small>
+                </div>
+                <div class="date-input-group">
+                    <label for="modal_to_date">To Date</label>
+                    <input type="date" id="modal_to_date" class="form-control">
+                    <small class="date-helper">Leave empty to include data up to today</small>
+                </div>
+                <div class="date-modal-actions">
+                    <button class="btn btn-outline" onclick="clearDates()">
+                        <i class="fas fa-eraser"></i> Clear
+                    </button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-outline" onclick="closeDateModal()">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary" onclick="applyDates()">
+                            <i class="fas fa-check"></i> Apply
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -1460,10 +1583,12 @@
 
         if (fromDate) {
             document.getElementById('from_date').value = fromDate;
+            document.getElementById('from_date_display').value = fromDate;
         }
 
         if (toDate) {
             document.getElementById('to_date').value = toDate;
+            document.getElementById('to_date_display').value = toDate;
         }
     }
 
@@ -2541,11 +2666,57 @@ function closeFilterHelp() {
     document.body.style.overflow = '';
 }
 
+// Date Selection Modal Functions
+function openDateModal() {
+    const modal = document.getElementById('dateModal');
+
+    // Load current values into modal
+    const fromDate = document.getElementById('from_date').value;
+    const toDate = document.getElementById('to_date').value;
+
+    document.getElementById('modal_from_date').value = fromDate;
+    document.getElementById('modal_to_date').value = toDate;
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDateModal() {
+    const modal = document.getElementById('dateModal');
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+function clearDates() {
+    document.getElementById('modal_from_date').value = '';
+    document.getElementById('modal_to_date').value = '';
+}
+
+function applyDates() {
+    const fromDate = document.getElementById('modal_from_date').value;
+    const toDate = document.getElementById('modal_to_date').value;
+
+    // Update hidden inputs
+    document.getElementById('from_date').value = fromDate;
+    document.getElementById('to_date').value = toDate;
+
+    // Update display inputs
+    document.getElementById('from_date_display').value = fromDate || '';
+    document.getElementById('to_date_display').value = toDate || '';
+
+    // Close modal
+    closeDateModal();
+
+    // Update charts
+    updateCharts();
+}
+
 // Close modal on ESC key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeChartModal();
         closeFilterHelp();
+        closeDateModal();
     }
 });
 
@@ -2560,6 +2731,13 @@ document.getElementById('chartModal')?.addEventListener('click', function(e) {
 document.getElementById('filterHelpModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
         closeFilterHelp();
+    }
+});
+
+// Close date modal on background click
+document.getElementById('dateModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDateModal();
     }
 });
 </script>
