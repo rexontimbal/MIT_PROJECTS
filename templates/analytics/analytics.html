@@ -1106,36 +1106,33 @@
     document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Initializing analytics...');
 
-    // Initialize charts first
-    initializeCharts();
-    loadPredictiveInsights();
-    displayActiveFilters();
-
     // Check if there are active filters in URL
     const params = new URLSearchParams(window.location.search);
     const hasActiveFilters = params.toString().length > 0;
+    const savedScrollPosition = sessionStorage.getItem('analyticsScrollPosition');
 
-    // RESTORE SCROLL POSITION OR SCROLL TO FILTERS
-    setTimeout(() => {
-        const savedScrollPosition = sessionStorage.getItem('analyticsScrollPosition');
-
-        if (savedScrollPosition) {
-            // Restore saved scroll position
-            console.log('📜 Restoring scroll position:', savedScrollPosition);
-            window.scrollTo({
-                top: parseInt(savedScrollPosition),
-                behavior: 'smooth'
-            });
-            sessionStorage.removeItem('analyticsScrollPosition');
-        } else if (hasActiveFilters) {
-            // If filters were applied, scroll to filter controls section
-            console.log('🎯 Scrolling to filter controls (filters detected)');
-            const filterControls = document.querySelector('.analytics-controls');
-            if (filterControls) {
-                filterControls.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+    // IMMEDIATELY scroll to the correct position BEFORE anything else loads
+    if (savedScrollPosition) {
+        // Restore saved scroll position instantly
+        console.log('📜 Restoring scroll position:', savedScrollPosition);
+        window.scrollTo({
+            top: parseInt(savedScrollPosition),
+            behavior: 'auto' // Instant, no animation
+        });
+        sessionStorage.removeItem('analyticsScrollPosition');
+    } else if (hasActiveFilters) {
+        // If filters were applied, scroll to filter controls section instantly
+        console.log('🎯 Scrolling to filter controls (filters detected)');
+        const filterControls = document.querySelector('.analytics-controls');
+        if (filterControls) {
+            filterControls.scrollIntoView({ behavior: 'auto', block: 'start' }); // Instant, no animation
         }
-    }, 800); // Wait 800ms for charts to render
+    }
+
+    // Now initialize charts and other content
+    initializeCharts();
+    loadPredictiveInsights();
+    displayActiveFilters();
 });
 
     function initializeCharts() {
