@@ -561,14 +561,21 @@
         font-size: 0.875rem;
         font-weight: 500;
         color: #6B7280;
-        border: none;
+        border: 2px solid transparent;
         background: transparent;
+    }
+
+    .view-option:hover:not(.active) {
+        border-color: #003087;
+        color: #003087;
+        background: rgba(0, 48, 135, 0.05);
     }
 
     .view-option.active {
         background: var(--primary-blue);
         color: white;
         box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        border-color: var(--primary-blue);
     }
 
     /* Pagination - Modern Flat (matching hotspots exactly) */

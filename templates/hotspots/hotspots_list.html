@@ -495,12 +495,20 @@
         font-size: 0.875rem;
         font-weight: 500;
         color: #6B7280;
+        border: 2px solid transparent;
+    }
+
+    .view-option:hover:not(.active) {
+        border-color: var(--hotspot-primary);
+        color: var(--hotspot-primary);
+        background: rgba(220, 20, 60, 0.05);
     }
 
     .view-option.active {
         background: var(--hotspot-primary);
         color: white;
         box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        border-color: var(--hotspot-primary);
     }
 
     /* Results Summary - Clean */
