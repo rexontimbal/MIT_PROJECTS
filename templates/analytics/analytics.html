@@ -727,7 +727,7 @@
     </div>
 
     <!-- Analytics Controls -->
-    <div class="analytics-controls">
+    <div class="analytics-controls" id="filter-controls">
         <h3>🎛️ Filter Controls</h3>
 
         <div class="control-row">
@@ -1106,30 +1106,8 @@
     document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Initializing analytics...');
 
-    // Check if there are active filters in URL
-    const params = new URLSearchParams(window.location.search);
-    const hasActiveFilters = params.toString().length > 0;
-    const savedScrollPosition = sessionStorage.getItem('analyticsScrollPosition');
-
-    // IMMEDIATELY scroll to the correct position BEFORE anything else loads
-    if (savedScrollPosition) {
-        // Restore saved scroll position instantly
-        console.log('📜 Restoring scroll position:', savedScrollPosition);
-        window.scrollTo({
-            top: parseInt(savedScrollPosition),
-            behavior: 'auto' // Instant, no animation
-        });
-        sessionStorage.removeItem('analyticsScrollPosition');
-    } else if (hasActiveFilters) {
-        // If filters were applied, scroll to filter controls section instantly
-        console.log('🎯 Scrolling to filter controls (filters detected)');
-        const filterControls = document.querySelector('.analytics-controls');
-        if (filterControls) {
-            filterControls.scrollIntoView({ behavior: 'auto', block: 'start' }); // Instant, no animation
-        }
-    }
-
-    // Now initialize charts and other content
+    // Initialize charts and content
+    // Browser automatically scrolls to #filter-controls if hash is present in URL
     initializeCharts();
     loadPredictiveInsights();
     displayActiveFilters();
@@ -1665,22 +1643,17 @@
     // ============================================================================
     function updateCharts() {
     console.log('🔄 Updating charts with filters...');
-    
-    // SAVE CURRENT SCROLL POSITION
-    const scrollPosition = window.scrollY || window.pageYOffset;
-    sessionStorage.setItem('analyticsScrollPosition', scrollPosition);
-    console.log('💾 Saved scroll position:', scrollPosition);
-    
+
     // Get current filter values
     const analysisType = document.getElementById('analysisType').value;
     const timeGranularity = document.getElementById('timeGranularity').value;
     const severityFilter = document.getElementById('severityFilter').value;
     const provinceFilter = document.getElementById('provinceFilter').value;
-    
+
     // Get current date range
     const fromDate = document.querySelector('input[name="from_date"]')?.value || '';
     const toDate = document.querySelector('input[name="to_date"]')?.value || '';
-    
+
     console.log('📊 Applied Filters:', {
         analysisType,
         timeGranularity,
@@ -1689,41 +1662,41 @@
         fromDate,
         toDate
     });
-    
+
     // Build URL with all parameters
     const params = new URLSearchParams();
-    
+
     // Add filters
     if (analysisType && analysisType !== 'overview') {
         params.append('analysis_type', analysisType);
     }
-    
+
     if (timeGranularity && timeGranularity !== 'monthly') {
         params.append('granularity', timeGranularity);
     }
-    
+
     if (severityFilter && severityFilter !== 'all') {
         params.append('severity', severityFilter);
     }
-    
+
     if (provinceFilter && provinceFilter !== 'all') {
         params.append('province', provinceFilter);
     }
-    
+
     // Add date range
     if (fromDate) {
         params.append('from_date', fromDate);
     }
-    
+
     if (toDate) {
         params.append('to_date', toDate);
     }
-    
+
     // Show loading overlay
     showLoadingOverlay();
-    
-    // Reload page with filters
-    const newUrl = window.location.pathname + '?' + params.toString();
+
+    // Reload page with filters AND hash anchor to filter-controls
+    const newUrl = window.location.pathname + '?' + params.toString() + '#filter-controls';
     console.log('🔗 Navigating to:', newUrl);
     window.location.href = newUrl;
 }
@@ -1827,10 +1800,6 @@
     }
 
     function removeFilter(filterName) {
-        // Save scroll position
-        const scrollPosition = window.scrollY || window.pageYOffset;
-        sessionStorage.setItem('analyticsScrollPosition', scrollPosition);
-
         // Get current URL parameters
         const params = new URLSearchParams(window.location.search);
 
@@ -1840,8 +1809,9 @@
         // Show loading
         showLoadingOverlay();
 
-        // Redirect to updated URL
-        const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        // Redirect to updated URL with hash anchor if there are still filters
+        const queryString = params.toString();
+        const newUrl = window.location.pathname + (queryString ? '?' + queryString + '#filter-controls' : '');
         window.location.href = newUrl;
     }
 
