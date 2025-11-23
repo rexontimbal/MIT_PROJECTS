@@ -1782,14 +1782,12 @@
     function removeFilter(filterName) {
         document.getElementById(filterName).value = '';
 
-        if (filterName === 'province') {
-            updateMunicipalityDropdown();
-        }
+        // Don't update municipality dropdown when removing province
+        // This preserves the municipality filter if it was set
+        // Only update municipality dropdown when province changes (not when removed)
 
-        if (filterName === 'sort_by') {
-            window.location.reload();
-            return;
-        }
+        // For sort_by, just reapply filters instead of reloading the page
+        // This preserves all other active filters
 
         applyClientSideFilters();
     }
