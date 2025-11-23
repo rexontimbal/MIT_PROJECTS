@@ -2726,9 +2726,9 @@
             if (input) input.value = '';
         }
 
-        // Redirect to updated URL with scroll to filter controls if filters remain
+        // Redirect to updated URL
         const queryString = params.toString();
-        const newUrl = window.location.pathname + (queryString ? '?' + queryString + '#filter-controls' : '');
+        const newUrl = window.location.pathname + (queryString ? '?' + queryString : '');
         window.location.href = newUrl;
     }
 
