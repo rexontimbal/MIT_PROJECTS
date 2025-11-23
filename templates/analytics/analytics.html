@@ -129,6 +129,39 @@
         color: var(--analytics-primary);
         font-size: 1rem;
         font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chart-title {
+        flex: 1;
+    }
+
+    .chart-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .chart-btn {
+        background: transparent;
+        border: 1px solid var(--border-light);
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8125rem;
+        color: var(--analytics-primary);
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    .chart-btn:hover {
+        background: var(--analytics-primary);
+        color: white;
+        border-color: var(--analytics-primary);
     }
 
     .chart-card canvas {
@@ -896,25 +929,65 @@
     <div class="analytics-grid">
         <!-- Accident Trends Over Time -->
         <div class="chart-card">
-            <h3>Accident Trends Over Time</h3>
+            <h3>
+                <span class="chart-title">Accident Trends Over Time</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('trendChart', 'Accident Trends Over Time')" title="Expand chart">
+                        <i class="fas fa-expand"></i> Expand
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('trendChart', 'accident-trends')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
             <canvas id="trendChart"></canvas>
         </div>
 
         <!-- Severity Distribution -->
         <div class="chart-card">
-            <h3>Accident Severity Distribution</h3>
+            <h3>
+                <span class="chart-title">Accident Severity Distribution</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('severityChart', 'Accident Severity Distribution')" title="Expand chart">
+                        <i class="fas fa-expand"></i> Expand
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('severityChart', 'severity-distribution')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
             <canvas id="severityChart"></canvas>
         </div>
 
         <!-- Vehicle Type Analysis -->
         <div class="chart-card">
-            <h3>Vehicle Types Involved</h3>
+            <h3>
+                <span class="chart-title">Vehicle Types Involved</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('vehicleChart', 'Vehicle Types Involved')" title="Expand chart">
+                        <i class="fas fa-expand"></i> Expand
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('vehicleChart', 'vehicle-types')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
             <canvas id="vehicleChart"></canvas>
         </div>
 
         <!-- Day of Week Analysis -->
         <div class="chart-card">
-            <h3>Day of Week Analysis</h3>
+            <h3>
+                <span class="chart-title">Day of Week Analysis</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('dowChart', 'Day of Week Analysis')" title="Expand chart">
+                        <i class="fas fa-expand"></i> Expand
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('dowChart', 'day-of-week')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
             <canvas id="dowChart"></canvas>
         </div>
     </div>
@@ -923,7 +996,17 @@
     <div class="analytics-grid" style="grid-template-columns: 1fr;">
         <!-- Hourly Pattern Analysis -->
         <div class="chart-card">
-            <h3>Hourly Accident Patterns</h3>
+            <h3>
+                <span class="chart-title">Hourly Accident Patterns</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('hourlyChart', 'Hourly Accident Patterns')" title="Expand chart">
+                        <i class="fas fa-expand"></i> Expand
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('hourlyChart', 'hourly-patterns')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
             <canvas id="hourlyChart"></canvas>
         </div>
     </div>
@@ -932,7 +1015,17 @@
     <!-- Province Comparison Chart -->
     <div class="analytics-grid" style="grid-template-columns: 1fr;">
         <div class="chart-card">
-            <h3>Province Comparison - Fatal vs Injury Accidents</h3>
+            <h3>
+                <span class="chart-title">Province Comparison - Fatal vs Injury Accidents</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('provinceComparisonChart', 'Province Comparison')" title="Expand chart">
+                        <i class="fas fa-expand"></i> Expand
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('provinceComparisonChart', 'province-comparison')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
             <canvas id="provinceComparisonChart"></canvas>
         </div>
     </div>
@@ -940,13 +1033,33 @@
     <!-- Incident Type Distribution & Trend Comparison -->
     <div class="analytics-grid">
         <div class="chart-card">
-            <h3>Top 5 Incident Types</h3>
+            <h3>
+                <span class="chart-title">Top 5 Incident Types</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('incidentTypeChart', 'Top 5 Incident Types')" title="Expand chart">
+                        <i class="fas fa-expand"></i> Expand
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('incidentTypeChart', 'incident-types')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
             <canvas id="incidentTypeChart"></canvas>
         </div>
 
         <!-- Time Series Trend -->
         <div class="chart-card">
-            <h3>Accident Trends - Fatal vs Injury Over Time</h3>
+            <h3>
+                <span class="chart-title">Accident Trends - Fatal vs Injury Over Time</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('trendComparisonChart', 'Trend Comparison')" title="Expand chart">
+                        <i class="fas fa-expand"></i> Expand
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('trendComparisonChart', 'trend-comparison')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
             <canvas id="trendComparisonChart"></canvas>
         </div>
     </div>
@@ -955,13 +1068,33 @@
     <div class="comparison-section">
         <!-- Monthly Comparison -->
         <div class="chart-card">
-            <h3>Monthly Comparison</h3>
+            <h3>
+                <span class="chart-title">Monthly Comparison</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('comparisonChart', 'Monthly Comparison')" title="Expand chart">
+                        <i class="fas fa-expand"></i> Expand
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('comparisonChart', 'monthly-comparison')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
             <canvas id="comparisonChart"></canvas>
         </div>
 
         <!-- Predictive Forecast -->
         <div class="chart-card">
-            <h3>30-Day Accident Forecast</h3>
+            <h3>
+                <span class="chart-title">30-Day Accident Forecast</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('forecastChart', '30-Day Forecast')" title="Expand chart">
+                        <i class="fas fa-expand"></i> Expand
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('forecastChart', 'forecast')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
             <canvas id="forecastChart"></canvas>
         </div>
     </div>
@@ -1790,7 +1923,7 @@
     // ============================================================================
     // EXPORT FUNCTIONS
     // ============================================================================
-    function exportChart(chartId) {
+    function exportChart(chartId, filename) {
         const chart = window.charts[chartId];
         if (!chart) {
             alert('Chart not available for export. Please wait for charts to load.');
@@ -1802,26 +1935,33 @@
             // Get the original canvas
             const originalCanvas = chart.canvas;
 
-            // Create a new canvas with white background
+            // Create HD canvas (3x resolution for high quality)
+            const scale = 3;
             const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = originalCanvas.width;
-            tempCanvas.height = originalCanvas.height;
+            tempCanvas.width = originalCanvas.width * scale;
+            tempCanvas.height = originalCanvas.height * scale;
             const ctx = tempCanvas.getContext('2d');
+
+            // Enable high quality rendering
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
 
             // Fill with white background
             ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-            // Draw the chart on top of white background
+            // Scale and draw the chart on top of white background
+            ctx.scale(scale, scale);
             ctx.drawImage(originalCanvas, 0, 0);
 
-            // Export with white background
+            // Export as HD PNG
             const link = document.createElement('a');
-            link.download = `${chartId}_${new Date().toISOString().split('T')[0]}.png`;
-            link.href = tempCanvas.toDataURL('image/png');
+            const timestamp = new Date().toISOString().split('T')[0];
+            link.download = `${filename || chartId}_${timestamp}_HD.png`;
+            link.href = tempCanvas.toDataURL('image/png', 1.0);
             link.click();
 
-            console.log(`✅ Exported chart with white background: ${chartId}`);
+            console.log(`✅ Exported HD chart (${tempCanvas.width}x${tempCanvas.height}): ${filename || chartId}`);
         } catch (error) {
             console.error('❌ Error exporting chart:', error);
             alert('Error exporting chart. Please try again.');
