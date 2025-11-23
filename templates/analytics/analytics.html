@@ -116,11 +116,25 @@
         border: 1px solid var(--border-light);
         overflow: hidden;
         transition: all 0.2s ease;
+        padding: 1.25rem;
     }
 
     .chart-card:hover {
         box-shadow: 0 4px 12px rgba(107, 70, 193, 0.08);
         border-color: var(--analytics-primary);
+    }
+
+    .chart-card h3 {
+        margin: 0 0 1rem 0;
+        color: var(--analytics-primary);
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .chart-card canvas {
+        max-height: 300px;
+        width: 100% !important;
+        height: 300px !important;
     }
 
     .chart-header {
@@ -919,7 +933,7 @@
     <div class="analytics-grid" style="grid-template-columns: 1fr;">
         <div class="chart-card">
             <h3>Province Comparison - Fatal vs Injury Accidents</h3>
-            <canvas id="provinceComparisonChart" style="height: 350px;"></canvas>
+            <canvas id="provinceComparisonChart"></canvas>
         </div>
     </div>
 
