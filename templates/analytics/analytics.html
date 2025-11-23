@@ -701,6 +701,9 @@
                     }
                 }
             }, 10);
+        } else {
+            // No filters - show page immediately
+            document.body.style.visibility = 'visible';
         }
     })();
 </script>
@@ -815,12 +818,12 @@
 
             <div class="form-group">
                 <label for="from_date">From Date</label>
-                <input type="date" name="from_date" value="{{ from_date }}" class="form-control" id="from_date" onchange="updateCharts()">
+                <input type="date" name="from_date" {% if from_date %}value="{{ from_date }}"{% endif %} class="form-control" id="from_date" onchange="updateCharts()">
             </div>
 
             <div class="form-group">
                 <label for="to_date">To Date</label>
-                <input type="date" name="to_date" value="{{ to_date }}" class="form-control" id="to_date" onchange="updateCharts()">
+                <input type="date" name="to_date" {% if to_date %}value="{{ to_date }}"{% endif %} class="form-control" id="to_date" onchange="updateCharts()">
             </div>
         </div>
 
