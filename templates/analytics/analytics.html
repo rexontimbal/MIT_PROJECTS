@@ -1260,11 +1260,49 @@
             width: 100%;
         }
     }
+
+    /* Loading Animation */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        display: none;
+    }
+
+    .loading-overlay.active {
+        display: flex;
+    }
+
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #003087;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="analytics-container">
+    <!-- Loading Overlay -->
+    <div class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <!-- Compact Header -->
     <div class="analytics-header">
         <div>
@@ -1273,6 +1311,8 @@
         </div>
     </div>
 
+    <!-- Main Content Wrapper for AJAX updates -->
+    <div id="analytics-main-content">
     <!-- Predictive Insights -->
     <div class="predictive-insights">
         <h3>🔮 Predictive Insights & Trends</h3>
@@ -1691,6 +1731,8 @@
             </button>
         </div>
     </div>
+    </div>
+    <!-- End of analytics-main-content -->
 
     <!-- Chart Expand Modal -->
     <div class="chart-modal" id="chartModal">
@@ -1964,16 +2006,76 @@
     let trendChart, severityChart, hourlyChart, vehicleChart, dowChart, comparisonChart, forecastChart;
     let provinceComparisonChart, incidentTypeChart, trendComparisonChart;
 
+// ===== SMOOTH PAGE UPDATES WITHOUT RELOAD =====
+
+function showLoading() {
+    document.querySelector('.loading-overlay').classList.add('active');
+}
+
+function hideLoading() {
+    document.querySelector('.loading-overlay').classList.remove('active');
+}
+
+function updatePageContent(url) {
+    showLoading();
+
+    fetch(url)
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Update the entire main content area (charts, insights, tables)
+            const newMainContent = doc.getElementById('analytics-main-content');
+            const currentMainContent = document.getElementById('analytics-main-content');
+            if (newMainContent && currentMainContent) {
+                currentMainContent.innerHTML = newMainContent.innerHTML;
+            }
+
+            // Update filter dropdowns to match URL parameters
+            const urlParams = new URLSearchParams(new URL(url).search);
+
+            const analysisTypeParam = urlParams.get('analysis_type') || 'overview';
+            const timeGranularityParam = urlParams.get('granularity') || 'monthly';
+            const severityParam = urlParams.get('severity') || 'all';
+            const provinceParam = urlParams.get('province') || '';
+            const fromDateParam = urlParams.get('from_date') || '';
+            const toDateParam = urlParams.get('to_date') || '';
+
+            const analysisTypeEl = document.getElementById('analysisType');
+            const timeGranularityEl = document.getElementById('timeGranularity');
+            const severityEl = document.getElementById('severityFilter');
+            const provinceEl = document.getElementById('provinceFilter');
+            const fromDateEl = document.querySelector('input[name="from_date"]');
+            const toDateEl = document.querySelector('input[name="to_date"]');
+
+            if (analysisTypeEl) analysisTypeEl.value = analysisTypeParam;
+            if (timeGranularityEl) timeGranularityEl.value = timeGranularityParam;
+            if (severityEl) severityEl.value = severityParam;
+            if (provinceEl) provinceEl.value = provinceParam;
+            if (fromDateEl) fromDateEl.value = fromDateParam;
+            if (toDateEl) toDateEl.value = toDateParam;
+
+            // Update browser URL without reload
+            history.pushState({}, '', url);
+
+            // Update active filters badges
+            displayActiveFilters();
+
+            // Re-initialize charts with new data
+            initializeCharts();
+
+            hideLoading();
+        })
+        .catch(error => {
+            console.error('Error loading content:', error);
+            // Fallback to normal page load if fetch fails
+            window.location.href = url;
+        });
+}
+
     document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Initializing analytics...');
-
-    // Restore scroll position if it was saved
-    const savedScrollPosition = sessionStorage.getItem('analyticsScrollPosition');
-    if (savedScrollPosition) {
-        window.scrollTo(0, parseInt(savedScrollPosition));
-        sessionStorage.removeItem('analyticsScrollPosition');
-        console.log('📍 Restored scroll position:', savedScrollPosition);
-    }
 
     // Populate date inputs from URL parameters ONLY
     populateDateInputsFromURL();
@@ -2589,14 +2691,10 @@
         params.append('to_date', toDate);
     }
 
-    // Save current scroll position before reload
-    sessionStorage.setItem('analyticsScrollPosition', window.pageYOffset.toString());
-    console.log('💾 Saved scroll position:', window.pageYOffset);
-
-    // Reload page with filters
-    const newUrl = window.location.pathname + '?' + params.toString();
-    console.log('🔗 Navigating to:', newUrl);
-    window.location.href = newUrl;
+    // Update page content without reload
+    const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+    console.log('🔗 Updating content:', newUrl);
+    updatePageContent(newUrl);
 }
 
     function showLoadingOverlay() {
@@ -2710,23 +2808,17 @@
             if (input) input.value = '';
         }
 
-        // Save current scroll position before reload
-        sessionStorage.setItem('analyticsScrollPosition', window.pageYOffset.toString());
-
-        // Redirect to updated URL
+        // Update page content without reload
         const queryString = params.toString();
         const newUrl = window.location.pathname + (queryString ? '?' + queryString : '');
-        window.location.href = newUrl;
+        updatePageContent(newUrl);
     }
 
     function clearAllFilters() {
         console.log('🗑️ Clearing all filters...');
 
-        // Save current scroll position before reload
-        sessionStorage.setItem('analyticsScrollPosition', window.pageYOffset.toString());
-
-        // Redirect to base URL without any parameters
-        window.location.href = window.location.pathname;
+        // Update page content without reload
+        updatePageContent(window.location.pathname);
     }
 
     // ============================================================================
