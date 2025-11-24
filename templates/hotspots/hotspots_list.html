@@ -2069,19 +2069,26 @@
     }
 
     function changePage(direction) {
-        currentPage += direction;
-        updatePagination();
+        showLoading();
 
-        const filtersSection = document.querySelector('.filters-section');
-        if (filtersSection) {
-            filtersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        // Small delay to show loading animation
+        setTimeout(() => {
+            currentPage += direction;
+            updatePagination();
+            hideLoading();
+        }, 300);
     }
 
     function changeItemsPerPage() {
-        itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
-        currentPage = 1;
-        updatePagination();
+        showLoading();
+
+        // Small delay to show loading animation
+        setTimeout(() => {
+            itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+            currentPage = 1;
+            updatePagination();
+            hideLoading();
+        }, 300);
     }
 
     function switchView(viewType) {
