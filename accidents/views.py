@@ -1347,6 +1347,7 @@ def analytics_view(request):
         # Provinces and Municipalities for dropdowns
         'provinces': provinces,
         'municipalities': municipalities,
+        'municipalities_json': json.dumps(municipalities),
         'municipalities_by_province': json.dumps(municipalities_by_province),
         
         # Trend Data (for line chart)

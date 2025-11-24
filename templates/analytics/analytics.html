@@ -2063,7 +2063,7 @@
 // ===== MUNICIPAL FILTER DATA =====
 // Municipalities grouped by province for smart filtering
 const municipalitiesByProvince = {{ municipalities_by_province|safe }};
-const allMunicipalities = {{ municipalities|safe|escapejs }};
+const allMunicipalities = {{ municipalities_json|safe }};
 
 // Handle province change - update municipal dropdown and manage badges
 function handleProvinceChange() {
