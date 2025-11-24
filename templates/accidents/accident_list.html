@@ -2447,15 +2447,23 @@ function removeFilter(filterName) {
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.delete(filterName);
 
-    // Show loading
-    document.querySelector('.loading-overlay').classList.add('active');
-
-    // Redirect to URL without this filter
-    window.location.href = currentUrl.toString();
+    // Update page content via AJAX (no page reload)
+    updatePageContent(currentUrl.toString());
 }
 
 // Clear all filters - Smooth update to base URL
 function clearAllFilters() {
+    // Clear all filter inputs first
+    document.getElementById('province').value = '';
+    document.getElementById('municipal').value = '';
+    document.getElementById('year').value = '';
+    document.getElementById('hotspotSearch').value = '';
+    document.getElementById('date_from').value = '';
+    document.getElementById('date_to').value = '';
+    document.getElementById('date_from_display').value = '';
+    document.getElementById('date_to_display').value = '';
+
+    // Update page content via AJAX (no page reload)
     updatePageContent(window.location.pathname);
 }
 
