@@ -559,24 +559,24 @@
         font-size: 0.8125rem;
     }
 
-    /* View Toggle - Flat Design */
+    /* View Toggle - Flat Design (Mini Size) */
     .view-toggle {
         display: flex;
         background: #F3F4F6;
         border-radius: 6px;
-        padding: 0.25rem;
-        margin-bottom: 1rem;
+        padding: 0.15rem;
+        margin-bottom: 0.75rem;
         border: 1px solid #E5E7EB;
     }
 
     .view-option {
         flex: 1;
-        padding: 0.5rem 1rem;
+        padding: 0.3rem 0.75rem;
         text-align: center;
         cursor: pointer;
         border-radius: 4px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        font-size: 0.875rem;
+        font-size: 0.8rem;
         font-weight: 500;
         color: #6B7280;
         border: 2px solid transparent;
@@ -2083,12 +2083,6 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <!-- View Toggle -->
-    <div class="view-toggle">
-        <button class="view-option active" onclick="switchView('cards')">📊 Cards View</button>
-        <button class="view-option" onclick="switchView('table')">📋 Table View</button>
-    </div>
-
     <!-- Summary Cards -->
     <div class="summary-cards">
         <div class="summary-card">
@@ -2230,6 +2224,12 @@ document.addEventListener('DOMContentLoaded', function() {
             <option value="100">100 per page</option>
             <option value="500">500 per page</option>
         </select>
+    </div>
+
+    <!-- View Toggle -->
+    <div class="view-toggle">
+        <button class="view-option active" onclick="switchView('cards')">📊 Cards View</button>
+        <button class="view-option" onclick="switchView('table')">📋 Table View</button>
     </div>
 
     <!-- Cards View -->
