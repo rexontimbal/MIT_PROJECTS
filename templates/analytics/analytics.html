@@ -3192,11 +3192,15 @@ let tempFromDate = null;
 let tempToDate = null;
 let currentCalendarMonth = new Date().getMonth();
 let currentCalendarYear = new Date().getFullYear();
+let hasSelectedDateInSession = false; // Track if user selected a day in current modal session
 
 // Date Selection Modal Functions
 function openDateModal(dateType = 'from') {
     const modal = document.getElementById('dateModal');
     currentEditingDate = dateType;
+
+    // Reset selection flag for new session
+    hasSelectedDateInSession = false;
 
     // Load current values
     const fromDate = document.getElementById('from_date').value;
@@ -3211,10 +3215,18 @@ function openDateModal(dateType = 'from') {
     // Set active tab
     switchDateTab(dateType);
 
-    // Initialize calendar
-    const now = new Date();
-    currentCalendarMonth = now.getMonth();
-    currentCalendarYear = now.getFullYear();
+    // Initialize calendar to existing date or current date
+    const existingDate = dateType === 'from' ? tempFromDate : tempToDate;
+    if (existingDate) {
+        // Show the month/year of the existing date
+        currentCalendarMonth = existingDate.getMonth();
+        currentCalendarYear = existingDate.getFullYear();
+    } else {
+        // Show current month/year if no date is set
+        const now = new Date();
+        currentCalendarMonth = now.getMonth();
+        currentCalendarYear = now.getFullYear();
+    }
 
     // Populate year dropdown
     populateYearDropdown();
@@ -3238,6 +3250,18 @@ function switchDateTab(dateType) {
     // Update tab styling
     document.getElementById('fromTab').classList.toggle('active', dateType === 'from');
     document.getElementById('toTab').classList.toggle('active', dateType === 'to');
+
+    // Initialize calendar to existing date if one is set
+    const existingDate = dateType === 'from' ? tempFromDate : tempToDate;
+    if (existingDate) {
+        // Show the month/year of the existing date
+        currentCalendarMonth = existingDate.getMonth();
+        currentCalendarYear = existingDate.getFullYear();
+
+        // Update dropdowns
+        document.getElementById('calendarMonth').value = currentCalendarMonth;
+        document.getElementById('calendarYear').value = currentCalendarYear;
+    }
 
     // Re-render calendar to show correct selection
     renderCalendar();
@@ -3369,6 +3393,9 @@ function selectDate(date) {
         tempToDate = date;
     }
 
+    // Mark that user has selected a date in this session
+    hasSelectedDateInSession = true;
+
     updateTabDisplay();
     renderCalendar();
 }
@@ -3429,11 +3456,22 @@ function clearCurrentDate() {
 function clearAllDates() {
     tempFromDate = null;
     tempToDate = null;
+
+    // Mark that user has made a change (clearing is a valid action)
+    hasSelectedDateInSession = true;
+
     updateTabDisplay();
     renderCalendar();
 }
 
 function applyDates() {
+    // Validation: User must have selected a day or cleared dates
+    if (!hasSelectedDateInSession) {
+        // Show error message
+        alert('⚠️ Please select a day from the calendar or click "Clear All" to remove dates.\n\nJust changing the month/year is not enough - you must click on a specific day.');
+        return;
+    }
+
     // Update hidden inputs
     document.getElementById('from_date').value = tempFromDate ? formatDate(tempFromDate) : '';
     document.getElementById('to_date').value = tempToDate ? formatDate(tempToDate) : '';
