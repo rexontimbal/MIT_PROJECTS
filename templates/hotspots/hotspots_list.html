@@ -1049,10 +1049,70 @@
             padding: 0.75rem 1rem;
         }
     }
+
+    /* ===== SIMPLE LOADING SPINNER (Analytics Style) ===== */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(0, 48, 135, 0.5) 0%, rgba(0, 32, 96, 0.6) 100%);
+        backdrop-filter: blur(5px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .loading-overlay.active {
+        display: flex;
+    }
+
+    .spinner-container {
+        position: relative;
+        width: 60px;
+        height: 60px;
+    }
+
+    .spinner {
+        border: 5px solid rgba(0, 48, 135, 0.1);
+        border-top: 5px solid #003087;
+        border-right: 5px solid #DC143C;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+    }
+
+    .spinner-inner {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        border: 3px solid rgba(255, 215, 0, 0.3);
+        border-top: 3px solid #FFD700;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1.5s linear infinite reverse;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Simple Loading Spinner -->
+<div class="loading-overlay">
+    <div class="spinner-container">
+        <div class="spinner"></div>
+        <div class="spinner-inner"></div>
+    </div>
+</div>
+
 <!-- Hero Header -->
 <div class="page-hero">
     <div class="page-hero-content">
@@ -1396,6 +1456,77 @@
     // Modal data storage
     let currentModalData = null;
 
+    // Loading overlay functions
+    function showLoading() {
+        document.querySelector('.loading-overlay').classList.add('active');
+    }
+
+    function hideLoading() {
+        document.querySelector('.loading-overlay').classList.remove('active');
+    }
+
+    // Update summary cards based on filtered/visible hotspots
+    function updateSummaryCards() {
+        const cards = Array.from(document.getElementsByClassName('hotspot-card'));
+        const visibleCards = cards.filter(card => card.getAttribute('data-search-visible') === 'true');
+
+        // Calculate stats from visible cards
+        let totalHotspots = visibleCards.length;
+        let totalAccidents = 0;
+        let totalCasualties = 0;
+        let criticalCount = 0;
+
+        visibleCards.forEach(card => {
+            const accidents = parseInt(card.getAttribute('data-accidents')) || 0;
+            const casualties = parseInt(card.getAttribute('data-casualties')) || 0;
+            const severity = parseFloat(card.getAttribute('data-severity')) || 0;
+
+            totalAccidents += accidents;
+            totalCasualties += casualties;
+            if (severity >= 70) {
+                criticalCount++;
+            }
+        });
+
+        // Update the summary card values with smooth animation
+        const summaryCards = document.querySelectorAll('.summary-card h3');
+        if (summaryCards.length >= 4) {
+            animateNumber(summaryCards[0], totalHotspots);
+            animateNumber(summaryCards[1], totalAccidents);
+            animateNumber(summaryCards[2], totalCasualties);
+            animateNumber(summaryCards[3], criticalCount);
+        }
+
+        // Also update the hero badge
+        const heroBadge = document.querySelector('.hero-badge');
+        if (heroBadge) {
+            heroBadge.textContent = `${totalHotspots} Detected`;
+        }
+    }
+
+    // Animate number changes smoothly
+    function animateNumber(element, newValue) {
+        const currentValue = parseInt(element.textContent) || 0;
+        if (currentValue === newValue) return;
+
+        const duration = 300; // ms
+        const steps = 20;
+        const stepValue = (newValue - currentValue) / steps;
+        const stepDuration = duration / steps;
+        let step = 0;
+
+        const interval = setInterval(() => {
+            step++;
+            const value = Math.round(currentValue + (stepValue * step));
+            element.textContent = value;
+
+            if (step >= steps) {
+                element.textContent = newValue;
+                clearInterval(interval);
+            }
+        }, stepDuration);
+    }
+
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         initializeHotspotCards();
@@ -1568,81 +1699,107 @@
 
     // CLIENT-SIDE FILTERING
     function applyClientSideFilters() {
-        const cards = Array.from(document.getElementsByClassName('hotspot-card'));
-        const searchTerm = document.getElementById('hotspotSearch').value.toLowerCase().trim();
-        const provinceFilter = document.getElementById('province').value.toLowerCase();
-        const severityFilter = document.getElementById('min_severity').value;
-        const accidentsFilter = document.getElementById('min_accidents').value;
-        const municipalityFilter = document.getElementById('municipality').value.toLowerCase();
+        // Show loading overlay
+        showLoading();
 
-        let visibleCount = 0;
+        // Use setTimeout to allow UI to update before heavy processing
+        setTimeout(() => {
+            const cards = Array.from(document.getElementsByClassName('hotspot-card'));
+            const searchTerm = document.getElementById('hotspotSearch').value.toLowerCase().trim();
+            const provinceFilter = document.getElementById('province').value.toLowerCase();
+            const severityFilter = document.getElementById('min_severity').value;
+            const accidentsFilter = document.getElementById('min_accidents').value;
+            const municipalityFilter = document.getElementById('municipality').value.toLowerCase();
 
-        cards.forEach(card => {
-            const location = (card.getAttribute('data-location') || '').toLowerCase();
-            const clusterId = (card.getAttribute('data-cluster') || '').toString().toLowerCase();
-            const municipalities = (card.getAttribute('data-municipalities') || '').toLowerCase();
-            const provinces = (card.getAttribute('data-provinces') || '').toLowerCase();
-            const severity = parseFloat(card.getAttribute('data-severity')) || 0;
-            const accidents = parseInt(card.getAttribute('data-accidents')) || 0;
+            let visibleCount = 0;
 
-            const searchMatch = searchTerm === '' ||
-                              location.includes(searchTerm) ||
-                              clusterId.includes(searchTerm) ||
-                              municipalities.includes(searchTerm) ||
-                              provinces.includes(searchTerm);
+            cards.forEach(card => {
+                const location = (card.getAttribute('data-location') || '').toLowerCase();
+                const clusterId = (card.getAttribute('data-cluster') || '').toString().toLowerCase();
+                const municipalities = (card.getAttribute('data-municipalities') || '').toLowerCase();
+                const provinces = (card.getAttribute('data-provinces') || '').toLowerCase();
+                const severity = parseFloat(card.getAttribute('data-severity')) || 0;
+                const accidents = parseInt(card.getAttribute('data-accidents')) || 0;
 
-            const provinceMatch = provinceFilter === '' || provinces.includes(provinceFilter);
-            const severityMatch = severityFilter === '' || severity >= parseFloat(severityFilter);
-            const accidentsMatch = accidentsFilter === '' || accidents >= parseInt(accidentsFilter);
-            const municipalityMatch = municipalityFilter === '' || municipalities.includes(municipalityFilter);
+                const searchMatch = searchTerm === '' ||
+                                  location.includes(searchTerm) ||
+                                  clusterId.includes(searchTerm) ||
+                                  municipalities.includes(searchTerm) ||
+                                  provinces.includes(searchTerm);
 
-            const allMatch = searchMatch && provinceMatch && severityMatch && accidentsMatch && municipalityMatch;
+                const provinceMatch = provinceFilter === '' || provinces.includes(provinceFilter);
+                const severityMatch = severityFilter === '' || severity >= parseFloat(severityFilter);
+                const accidentsMatch = accidentsFilter === '' || accidents >= parseInt(accidentsFilter);
+                const municipalityMatch = municipalityFilter === '' || municipalities.includes(municipalityFilter);
 
-            if (allMatch) {
-                card.setAttribute('data-search-visible', 'true');
-                visibleCount++;
+                const allMatch = searchMatch && provinceMatch && severityMatch && accidentsMatch && municipalityMatch;
+
+                if (allMatch) {
+                    card.setAttribute('data-search-visible', 'true');
+                    visibleCount++;
+                } else {
+                    card.setAttribute('data-search-visible', 'false');
+                }
+            });
+
+            if (visibleCount === 0) {
+                showNoResultsMessage('your filters');
             } else {
-                card.setAttribute('data-search-visible', 'false');
+                hideNoResultsMessage();
             }
-        });
 
-        if (visibleCount === 0) {
-            showNoResultsMessage('your filters');
-        } else {
-            hideNoResultsMessage();
-        }
+            updateActiveFilters();
+            currentPage = 1;
+            updatePagination();
 
-        updateActiveFilters();
-        currentPage = 1;
-        updatePagination();
+            // Update summary cards with new filtered values
+            updateSummaryCards();
+
+            // Hide loading overlay after a short delay for smooth animation
+            setTimeout(() => {
+                hideLoading();
+            }, 300);
+        }, 50);
     }
 
     function clearAllFiltersAndSearch() {
-        document.getElementById('hotspotSearch').value = '';
-        document.getElementById('province').value = '';
-        document.getElementById('min_severity').value = '';
-        document.getElementById('min_accidents').value = '';
-        document.getElementById('municipality').value = '';
-        const sortDropdown = document.getElementById('sort_by');
-        const wasSorted = sortDropdown.value !== '';
-        sortDropdown.value = '';
+        // Show loading
+        showLoading();
 
-        updateMunicipalityDropdown();
+        setTimeout(() => {
+            document.getElementById('hotspotSearch').value = '';
+            document.getElementById('province').value = '';
+            document.getElementById('min_severity').value = '';
+            document.getElementById('min_accidents').value = '';
+            document.getElementById('municipality').value = '';
+            const sortDropdown = document.getElementById('sort_by');
+            const wasSorted = sortDropdown.value !== '';
+            sortDropdown.value = '';
 
-        const cards = document.getElementsByClassName('hotspot-card');
-        Array.from(cards).forEach(card => {
-            card.setAttribute('data-search-visible', 'true');
-        });
+            updateMunicipalityDropdown();
 
-        hideNoResultsMessage();
-        updateActiveFilters();
-        currentPage = 1;
+            const cards = document.getElementsByClassName('hotspot-card');
+            Array.from(cards).forEach(card => {
+                card.setAttribute('data-search-visible', 'true');
+            });
 
-        if (wasSorted) {
-            window.location.reload();
-        } else {
-            updatePagination();
-        }
+            hideNoResultsMessage();
+            updateActiveFilters();
+            currentPage = 1;
+
+            if (wasSorted) {
+                window.location.reload();
+            } else {
+                updatePagination();
+                // Update summary cards to show all data
+                updateSummaryCards();
+
+                // Hide loading
+                setTimeout(() => {
+                    hideLoading();
+                }, 300);
+            }
+        }, 50);
     }
 
     function handleSortChange() {
