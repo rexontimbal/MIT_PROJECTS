@@ -1126,12 +1126,20 @@ def analytics_view(request):
         accidents = accidents.filter(municipal=municipal_filter)
 
     # ============================================================================
-    # BASIC STATISTICS
+    # BASIC STATISTICS (Optimized: Single query instead of 3)
     # ============================================================================
-    total_accidents = accidents.count()
-    fatal_count = accidents.filter(victim_killed=True).count()
-    injury_count = accidents.filter(victim_injured=True).count()
-    
+    from django.db.models import Count, Q
+
+    stats = accidents.aggregate(
+        total=Count('id'),
+        fatal=Count('id', filter=Q(victim_killed=True)),
+        injury=Count('id', filter=Q(victim_injured=True))
+    )
+
+    total_accidents = stats['total']
+    fatal_count = stats['fatal']
+    injury_count = stats['injury']
+
     # Calculate fatality rate
     fatality_rate = (fatal_count / total_accidents * 100) if total_accidents > 0 else 0
     
@@ -1204,17 +1212,20 @@ def analytics_view(request):
     incident_data = [item['count'] for item in incident_analysis]
     
     # ============================================================================
-    # VEHICLE TYPE ANALYSIS
+    # VEHICLE TYPE ANALYSIS (Optimized: Only fetch vehicle_kind field, not full objects)
     # ============================================================================
     vehicle_types = {}
-    for accident in accidents:
-        if accident.vehicle_kind:
-            kinds = accident.vehicle_kind.split(',')
+    # Only fetch vehicle_kind values instead of entire accident objects (much faster!)
+    vehicle_kinds = accidents.values_list('vehicle_kind', flat=True)
+
+    for vehicle_kind in vehicle_kinds:
+        if vehicle_kind:
+            kinds = vehicle_kind.split(',')
             for kind in kinds:
                 kind = kind.strip()
                 if kind:
                     vehicle_types[kind] = vehicle_types.get(kind, 0) + 1
-    
+
     # Get top 6 vehicle types
     sorted_vehicles = sorted(vehicle_types.items(), key=lambda x: x[1], reverse=True)[:6]
     vehicle_labels = [v[0] for v in sorted_vehicles] if sorted_vehicles else ['Motorcycle', 'Car', 'Truck', 'Bus', 'SUV', 'Van']
@@ -1313,16 +1324,25 @@ def analytics_view(request):
     municipalities = list(Accident.objects.values_list('municipal', flat=True).distinct().order_by('municipal'))
     municipalities = [m for m in municipalities if m and m.strip()]
 
-    # Get municipalities grouped by province for smart filtering
+    # Get municipalities grouped by province for smart filtering (Optimized: Single query instead of N)
     municipalities_by_province = {}
-    for prov in provinces:
-        prov_municipals = list(
-            Accident.objects.filter(province=prov)
-            .values_list('municipal', flat=True)
-            .distinct()
-            .order_by('municipal')
-        )
-        municipalities_by_province[prov] = [m for m in prov_municipals if m and m.strip()]
+
+    # Single query to get all province-municipal pairs
+    province_municipal_pairs = Accident.objects.values('province', 'municipal').distinct()
+
+    # Group municipalities by province in Python
+    for pair in province_municipal_pairs:
+        prov = pair['province']
+        municipal = pair['municipal']
+        if prov and prov.strip() and municipal and municipal.strip():
+            if prov not in municipalities_by_province:
+                municipalities_by_province[prov] = []
+            if municipal not in municipalities_by_province[prov]:
+                municipalities_by_province[prov].append(municipal)
+
+    # Sort municipalities within each province
+    for prov in municipalities_by_province:
+        municipalities_by_province[prov].sort()
 
     # ============================================================================
     # PREPARE CONTEXT WITH ALL DATA
