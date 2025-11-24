@@ -2065,11 +2065,45 @@
 const municipalitiesByProvince = {{ municipalities_by_province|safe }};
 const allMunicipalities = {{ municipalities_json|safe }};
 
+// Initialize municipal dropdown on page load based on current province
+function initializeMunicipalDropdown() {
+    const provinceFilter = document.getElementById('provinceFilter').value;
+    const municipalFilter = document.getElementById('municipalFilter');
+    const currentMunicipal = municipalFilter.value;
+
+    console.log('🔧 Initializing municipal dropdown for province:', provinceFilter);
+
+    // Get municipalities for selected province
+    let municipalities = [];
+    if (provinceFilter === 'all') {
+        municipalities = allMunicipalities;
+    } else {
+        municipalities = municipalitiesByProvince[provinceFilter] || [];
+    }
+
+    // Rebuild municipal dropdown
+    municipalFilter.innerHTML = '<option value="all">All</option>';
+    municipalities.forEach(function(municipal) {
+        const option = document.createElement('option');
+        option.value = municipal;
+        option.textContent = municipal;
+        // Keep selected if it's in the new list
+        if (municipal === currentMunicipal) {
+            option.selected = true;
+        }
+        municipalFilter.appendChild(option);
+    });
+
+    console.log('✓ Municipal dropdown initialized with', municipalities.length, 'municipalities');
+}
+
 // Handle province change - update municipal dropdown and manage badges
 function handleProvinceChange() {
     const provinceFilter = document.getElementById('provinceFilter').value;
     const municipalFilter = document.getElementById('municipalFilter');
     const currentMunicipal = municipalFilter.value;
+
+    console.log('🔄 Province changed to:', provinceFilter);
 
     // Get municipalities for selected province
     let municipalities = [];
@@ -2100,6 +2134,8 @@ function handleProvinceChange() {
         municipalFilter.value = 'all';
         console.log('🗑️ Municipal filter auto-cleared (not in selected province)');
     }
+
+    console.log('✓ Municipal dropdown updated with', municipalities.length, 'municipalities');
 
     // Update charts with new filters
     updateCharts();
@@ -2181,6 +2217,9 @@ function updatePageContent(url) {
 
     // Populate date inputs from URL parameters ONLY
     populateDateInputsFromURL();
+
+    // Initialize municipal dropdown based on current province
+    initializeMunicipalDropdown();
 
     // Initialize charts and content
     initializeCharts();
