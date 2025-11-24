@@ -1415,20 +1415,20 @@
             </div>
         </div>
 
-        <div class="control-row">
-            <div class="form-group">
-                <label for="analysisType">Analysis Type</label>
-                <select id="analysisType" name="analysis_type" class="form-control" onchange="updateCharts()">
+        <div class="control-row" style="display: grid; grid-template-columns: 1.1fr 0.9fr 0.9fr 0.95fr 1.1fr 1.2fr; gap: 0.75rem; align-items: end;">
+            <div class="form-group" style="margin: 0;">
+                <label for="analysisType" style="font-size: 0.8rem;">Analysis Type</label>
+                <select id="analysisType" name="analysis_type" class="form-control" onchange="updateCharts()" style="font-size: 0.85rem;">
                     <option value="overview" {% if current_analysis_type == 'overview' %}selected{% endif %}>Overview</option>
-                    <option value="temporal" {% if current_analysis_type == 'temporal' %}selected{% endif %}>Temporal Analysis</option>
-                    <option value="spatial" {% if current_analysis_type == 'spatial' %}selected{% endif %}>Spatial Analysis</option>
-                    <option value="severity" {% if current_analysis_type == 'severity' %}selected{% endif %}>Severity Analysis</option>
+                    <option value="temporal" {% if current_analysis_type == 'temporal' %}selected{% endif %}>Temporal</option>
+                    <option value="spatial" {% if current_analysis_type == 'spatial' %}selected{% endif %}>Spatial</option>
+                    <option value="severity" {% if current_analysis_type == 'severity' %}selected{% endif %}>Severity</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <label for="timeGranularity">Time Granularity</label>
-                <select id="timeGranularity" name="granularity" class="form-control" onchange="updateCharts()">
+            <div class="form-group" style="margin: 0;">
+                <label for="timeGranularity" style="font-size: 0.8rem;">Granularity</label>
+                <select id="timeGranularity" name="granularity" class="form-control" onchange="updateCharts()" style="font-size: 0.85rem;">
                     <option value="daily" {% if current_time_granularity == 'daily' %}selected{% endif %}>Daily</option>
                     <option value="weekly" {% if current_time_granularity == 'weekly' %}selected{% endif %}>Weekly</option>
                     <option value="monthly" {% if current_time_granularity == 'monthly' %}selected{% endif %}>Monthly</option>
@@ -1436,35 +1436,45 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label for="severityFilter">Severity Filter</label>
-                <select id="severityFilter" name="severity" class="form-control" onchange="updateCharts()">
-                    <option value="all" {% if current_severity_filter == 'all' %}selected{% endif %}>All Severities</option>
-                    <option value="fatal" {% if current_severity_filter == 'fatal' %}selected{% endif %}>Fatal Only</option>
-                    <option value="injury" {% if current_severity_filter == 'injury' %}selected{% endif %}>Injury Only</option>
-                    <option value="property" {% if current_severity_filter == 'property' %}selected{% endif %}>Property Damage Only</option>
+            <div class="form-group" style="margin: 0;">
+                <label for="severityFilter" style="font-size: 0.8rem;">Severity</label>
+                <select id="severityFilter" name="severity" class="form-control" onchange="updateCharts()" style="font-size: 0.85rem;">
+                    <option value="all" {% if current_severity_filter == 'all' %}selected{% endif %}>All</option>
+                    <option value="fatal" {% if current_severity_filter == 'fatal' %}selected{% endif %}>Fatal</option>
+                    <option value="injury" {% if current_severity_filter == 'injury' %}selected{% endif %}>Injury</option>
+                    <option value="property" {% if current_severity_filter == 'property' %}selected{% endif %}>Property</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <label for="provinceFilter">Province Filter</label>
-                <select id="provinceFilter" name="province" class="form-control" onchange="updateCharts()">
-                    <option value="all" {% if current_province_filter == 'all' %}selected{% endif %}>All Provinces</option>
+            <div class="form-group" style="margin: 0;">
+                <label for="provinceFilter" style="font-size: 0.8rem;">Province</label>
+                <select id="provinceFilter" name="province" class="form-control" onchange="handleProvinceChange()" style="font-size: 0.85rem;">
+                    <option value="all" {% if current_province_filter == 'all' %}selected{% endif %}>All</option>
                     {% for province in provinces %}
                     <option value="{{ province }}" {% if current_province_filter == province %}selected{% endif %}>{{ province }}</option>
                     {% endfor %}
                 </select>
             </div>
 
-            <div class="form-group" style="display: flex; gap: 0.75rem; align-items: flex-end;">
+            <div class="form-group" style="margin: 0;">
+                <label for="municipalFilter" style="font-size: 0.8rem;">Municipal</label>
+                <select id="municipalFilter" name="municipal" class="form-control" onchange="updateCharts()" style="font-size: 0.85rem;">
+                    <option value="all" {% if current_municipal_filter == 'all' %}selected{% endif %}>All</option>
+                    {% for municipal in municipalities %}
+                    <option value="{{ municipal }}" {% if current_municipal_filter == municipal %}selected{% endif %}>{{ municipal }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" style="margin: 0; display: flex; gap: 0.5rem;">
                 <div style="flex: 1;">
-                    <label for="from_date" style="font-size: 0.875rem; margin-bottom: 0.25rem;">From</label>
-                    <input type="text" readonly class="form-control date-selector" id="from_date_display" placeholder="Start date" onclick="openDateModal('from')" style="cursor: pointer; background: white; font-size: 0.875rem;">
+                    <label for="from_date" style="font-size: 0.8rem; margin-bottom: 0.25rem;">From</label>
+                    <input type="text" readonly class="form-control date-selector" id="from_date_display" placeholder="Start" onclick="openDateModal('from')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.375rem 0.5rem;">
                     <input type="hidden" name="from_date" id="from_date">
                 </div>
                 <div style="flex: 1;">
-                    <label for="to_date" style="font-size: 0.875rem; margin-bottom: 0.25rem;">To</label>
-                    <input type="text" readonly class="form-control date-selector" id="to_date_display" placeholder="End date" onclick="openDateModal('to')" style="cursor: pointer; background: white; font-size: 0.875rem;">
+                    <label for="to_date" style="font-size: 0.8rem; margin-bottom: 0.25rem;">To</label>
+                    <input type="text" readonly class="form-control date-selector" id="to_date_display" placeholder="End" onclick="openDateModal('to')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.375rem 0.5rem;">
                     <input type="hidden" name="to_date" id="to_date">
                 </div>
             </div>
@@ -2050,6 +2060,51 @@
     let trendChart, severityChart, hourlyChart, vehicleChart, dowChart, comparisonChart, forecastChart;
     let provinceComparisonChart, incidentTypeChart, trendComparisonChart;
 
+// ===== MUNICIPAL FILTER DATA =====
+// Municipalities grouped by province for smart filtering
+const municipalitiesByProvince = {{ municipalities_by_province|safe }};
+const allMunicipalities = {{ municipalities|safe|escapejs }};
+
+// Handle province change - update municipal dropdown and manage badges
+function handleProvinceChange() {
+    const provinceFilter = document.getElementById('provinceFilter').value;
+    const municipalFilter = document.getElementById('municipalFilter');
+    const currentMunicipal = municipalFilter.value;
+
+    // Get municipalities for selected province
+    let municipalities = [];
+    if (provinceFilter === 'all') {
+        municipalities = allMunicipalities;
+    } else {
+        municipalities = municipalitiesByProvince[provinceFilter] || [];
+    }
+
+    // Rebuild municipal dropdown
+    municipalFilter.innerHTML = '<option value="all">All</option>';
+    municipalities.forEach(function(municipal) {
+        const option = document.createElement('option');
+        option.value = municipal;
+        option.textContent = municipal;
+        // Keep selected if it's in the new list
+        if (municipal === currentMunicipal) {
+            option.selected = true;
+        }
+        municipalFilter.appendChild(option);
+    });
+
+    // Check if current municipal is still valid for new province
+    const municipalStillValid = municipalities.includes(currentMunicipal);
+
+    // If municipal is no longer valid (not in province), auto-clear it
+    if (currentMunicipal !== 'all' && !municipalStillValid) {
+        municipalFilter.value = 'all';
+        console.log('🗑️ Municipal filter auto-cleared (not in selected province)');
+    }
+
+    // Update charts with new filters
+    updateCharts();
+}
+
 // ===== SMOOTH PAGE UPDATES WITHOUT RELOAD =====
 
 function showLoading() {
@@ -2082,7 +2137,8 @@ function updatePageContent(url) {
             const analysisTypeParam = urlParams.get('analysis_type') || 'overview';
             const timeGranularityParam = urlParams.get('granularity') || 'monthly';
             const severityParam = urlParams.get('severity') || 'all';
-            const provinceParam = urlParams.get('province') || '';
+            const provinceParam = urlParams.get('province') || 'all';
+            const municipalParam = urlParams.get('municipal') || 'all';
             const fromDateParam = urlParams.get('from_date') || '';
             const toDateParam = urlParams.get('to_date') || '';
 
@@ -2090,6 +2146,7 @@ function updatePageContent(url) {
             const timeGranularityEl = document.getElementById('timeGranularity');
             const severityEl = document.getElementById('severityFilter');
             const provinceEl = document.getElementById('provinceFilter');
+            const municipalEl = document.getElementById('municipalFilter');
             const fromDateEl = document.querySelector('input[name="from_date"]');
             const toDateEl = document.querySelector('input[name="to_date"]');
 
@@ -2097,6 +2154,7 @@ function updatePageContent(url) {
             if (timeGranularityEl) timeGranularityEl.value = timeGranularityParam;
             if (severityEl) severityEl.value = severityParam;
             if (provinceEl) provinceEl.value = provinceParam;
+            if (municipalEl) municipalEl.value = municipalParam;
             if (fromDateEl) fromDateEl.value = fromDateParam;
             if (toDateEl) toDateEl.value = toDateParam;
 
@@ -2692,6 +2750,7 @@ function updatePageContent(url) {
     const timeGranularity = document.getElementById('timeGranularity').value;
     const severityFilter = document.getElementById('severityFilter').value;
     const provinceFilter = document.getElementById('provinceFilter').value;
+    const municipalFilter = document.getElementById('municipalFilter').value;
 
     // Get current date range
     const fromDate = document.querySelector('input[name="from_date"]')?.value || '';
@@ -2702,6 +2761,7 @@ function updatePageContent(url) {
         timeGranularity,
         severityFilter,
         provinceFilter,
+        municipalFilter,
         fromDate,
         toDate
     });
@@ -2724,6 +2784,10 @@ function updatePageContent(url) {
 
     if (provinceFilter && provinceFilter !== 'all') {
         params.append('province', provinceFilter);
+    }
+
+    if (municipalFilter && municipalFilter !== 'all') {
+        params.append('municipal', municipalFilter);
     }
 
     // Add date range
@@ -2811,6 +2875,13 @@ function updatePageContent(url) {
             </span>`;
         }
 
+        if (params.get('municipal') && params.get('municipal') !== 'all') {
+            activeFiltersHTML += `<span class="filter-tag">
+                Municipal: ${params.get('municipal')}
+                <button onclick="removeFilter('municipal')" style="background: none; border: none; color: var(--analytics-primary); cursor: pointer; font-weight: 600; font-size: 1.125rem; line-height: 1; padding: 0; margin-left: 0.25rem;">×</button>
+            </span>`;
+        }
+
         if (params.get('granularity') && params.get('granularity') !== 'monthly') {
             const granularityMap = {
                 'daily': 'Daily',
@@ -2866,6 +2937,7 @@ function updatePageContent(url) {
         const timeGranularityEl = document.getElementById('timeGranularity');
         const severityEl = document.getElementById('severityFilter');
         const provinceEl = document.getElementById('provinceFilter');
+        const municipalEl = document.getElementById('municipalFilter');
         const fromDateEl = document.querySelector('input[name="from_date"]');
         const toDateEl = document.querySelector('input[name="to_date"]');
         const fromDateDisplayEl = document.getElementById('from_date_display');
@@ -2874,7 +2946,18 @@ function updatePageContent(url) {
         if (analysisTypeEl) analysisTypeEl.value = 'overview';
         if (timeGranularityEl) timeGranularityEl.value = 'monthly';
         if (severityEl) severityEl.value = 'all';
-        if (provinceEl) provinceEl.value = '';
+        if (provinceEl) provinceEl.value = 'all';
+        if (municipalEl) {
+            // Reset municipal to show all municipalities
+            municipalEl.innerHTML = '<option value="all">All</option>';
+            allMunicipalities.forEach(function(municipal) {
+                const option = document.createElement('option');
+                option.value = municipal;
+                option.textContent = municipal;
+                municipalEl.appendChild(option);
+            });
+            municipalEl.value = 'all';
+        }
         if (fromDateEl) fromDateEl.value = '';
         if (toDateEl) toDateEl.value = '';
         if (fromDateDisplayEl) fromDateDisplayEl.value = '';

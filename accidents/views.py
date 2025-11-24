@@ -1061,6 +1061,7 @@ def analytics_view(request):
     # ============================================================================
     severity_filter = request.GET.get('severity', 'all')
     province_filter = request.GET.get('province', 'all')
+    municipal_filter = request.GET.get('municipal', 'all')  # NEW: Municipal filter
     time_granularity = request.GET.get('granularity', 'monthly')
     analysis_type = request.GET.get('analysis_type', 'overview')
     
@@ -1117,7 +1118,13 @@ def analytics_view(request):
     # ============================================================================
     if province_filter and province_filter != 'all':
         accidents = accidents.filter(province=province_filter)
-    
+
+    # ============================================================================
+    # APPLY MUNICIPAL FILTER
+    # ============================================================================
+    if municipal_filter and municipal_filter != 'all':
+        accidents = accidents.filter(municipal=municipal_filter)
+
     # ============================================================================
     # BASIC STATISTICS
     # ============================================================================
@@ -1301,7 +1308,22 @@ def analytics_view(request):
     # Get unique provinces for filter dropdown
     provinces = list(Accident.objects.values_list('province', flat=True).distinct().order_by('province'))
     provinces = [p for p in provinces if p and p.strip()]
-    
+
+    # Get all unique municipalities for filter dropdown
+    municipalities = list(Accident.objects.values_list('municipal', flat=True).distinct().order_by('municipal'))
+    municipalities = [m for m in municipalities if m and m.strip()]
+
+    # Get municipalities grouped by province for smart filtering
+    municipalities_by_province = {}
+    for prov in provinces:
+        prov_municipals = list(
+            Accident.objects.filter(province=prov)
+            .values_list('municipal', flat=True)
+            .distinct()
+            .order_by('municipal')
+        )
+        municipalities_by_province[prov] = [m for m in prov_municipals if m and m.strip()]
+
     # ============================================================================
     # PREPARE CONTEXT WITH ALL DATA
     # ============================================================================
@@ -1318,11 +1340,14 @@ def analytics_view(request):
         # Filter values (to maintain state)
         'current_severity_filter': severity_filter,
         'current_province_filter': province_filter,
+        'current_municipal_filter': municipal_filter,
         'current_time_granularity': time_granularity,
         'current_analysis_type': analysis_type,
-        
-        # Provinces for dropdown
+
+        # Provinces and Municipalities for dropdowns
         'provinces': provinces,
+        'municipalities': municipalities,
+        'municipalities_by_province': json.dumps(municipalities_by_province),
         
         # Trend Data (for line chart)
         'trend_labels': json.dumps(trend_labels),
