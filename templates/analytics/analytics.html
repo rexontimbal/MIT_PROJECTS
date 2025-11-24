@@ -1983,7 +1983,7 @@
                             <i class="fas fa-chevron-left"></i>
                         </button>
                         <div class="calendar-title">
-                            <select id="calendarMonth" class="calendar-select" onchange="renderCalendar()">
+                            <select id="calendarMonth" class="calendar-select" onchange="updateCalendarDate()">
                                 <option value="0">January</option>
                                 <option value="1">February</option>
                                 <option value="2">March</option>
@@ -1997,7 +1997,7 @@
                                 <option value="10">November</option>
                                 <option value="11">December</option>
                             </select>
-                            <select id="calendarYear" class="calendar-select" onchange="renderCalendar()">
+                            <select id="calendarYear" class="calendar-select" onchange="updateCalendarDate()">
                                 <!-- Years will be populated by JavaScript -->
                             </select>
                         </div>
@@ -3236,15 +3236,11 @@ let tempFromDate = null;
 let tempToDate = null;
 let currentCalendarMonth = new Date().getMonth();
 let currentCalendarYear = new Date().getFullYear();
-let hasSelectedDateInSession = false; // Track if user selected a day in current modal session
 
 // Date Selection Modal Functions
 function openDateModal(dateType = 'from') {
     const modal = document.getElementById('dateModal');
     currentEditingDate = dateType;
-
-    // Reset selection flag for new session
-    hasSelectedDateInSession = false;
 
     // Hide any previous alerts
     hideDateAlert();
@@ -3369,6 +3365,29 @@ function populateYearDropdown() {
     }
 }
 
+// Update date when month/year dropdowns change
+function updateCalendarDate() {
+    const monthSelect = document.getElementById('calendarMonth');
+    const yearSelect = document.getElementById('calendarYear');
+
+    currentCalendarMonth = parseInt(monthSelect.value);
+    currentCalendarYear = parseInt(yearSelect.value);
+
+    // Update the temp date for current editing field to 1st of selected month/year
+    const newDate = new Date(currentCalendarYear, currentCalendarMonth, 1);
+
+    if (currentEditingDate === 'from') {
+        tempFromDate = newDate;
+    } else {
+        tempToDate = newDate;
+    }
+
+    // Update display and re-render
+    updateTabDisplay();
+    renderCalendar();
+    hideDateAlert(); // Hide any validation alerts
+}
+
 function renderCalendar() {
     const monthSelect = document.getElementById('calendarMonth');
     const yearSelect = document.getElementById('calendarYear');
@@ -3457,9 +3476,6 @@ function selectDate(date) {
         tempToDate = date;
     }
 
-    // Mark that user has selected a date in this session
-    hasSelectedDateInSession = true;
-
     // Hide alert since user is taking action
     hideDateAlert();
 
@@ -3524,21 +3540,12 @@ function clearAllDates() {
     tempFromDate = null;
     tempToDate = null;
 
-    // Mark that user has made a change (clearing is a valid action)
-    hasSelectedDateInSession = true;
-
     updateTabDisplay();
     renderCalendar();
 }
 
 function applyDates() {
-    // Validation 1: User must have interacted with the calendar
-    if (!hasSelectedDateInSession) {
-        showDateAlert('Please select a day from the calendar. Just changing the month/year is not enough.');
-        return;
-    }
-
-    // Validation 2: At least one date must be set
+    // Validation: At least one date must be set
     if (!tempFromDate && !tempToDate) {
         showDateAlert('Please select at least one date. You cannot apply with both dates cleared.');
         return;
