@@ -1387,6 +1387,351 @@
             flex-direction: column;
         }
     }
+
+    /* Date Selection Modal Styles */
+    .date-modal-body {
+        padding: 0.75rem;
+    }
+
+    /* Date Range Tabs - Mini Size */
+    .date-range-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .date-tab {
+        flex: 1;
+        background: var(--bg-light);
+        border: 2px solid var(--border-light);
+        border-radius: 6px;
+        padding: 0.35rem 0.6rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1rem;
+    }
+
+    .date-tab:hover {
+        border-color: var(--primary-blue);
+        background: white;
+    }
+
+    .date-tab.active {
+        background: var(--primary-blue);
+        border-color: var(--primary-blue);
+        color: white;
+    }
+
+    .tab-label {
+        font-size: 0.625rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        opacity: 0.85;
+        line-height: 1;
+    }
+
+    .tab-value {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    /* Date Modal Alert - Beautiful & Clean */
+    .date-modal-alert {
+        background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+        border-left: 4px solid #FF9800;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        animation: slideDown 0.3s ease;
+        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.15);
+    }
+
+    .date-modal-alert .alert-icon {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+
+    .date-modal-alert .alert-message {
+        font-size: 0.875rem;
+        color: #E65100;
+        line-height: 1.4;
+        font-weight: 500;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Calendar Container - Compact */
+    .calendar-container {
+        background: white;
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .calendar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.4rem;
+        gap: 0.4rem;
+    }
+
+    .calendar-nav {
+        background: var(--bg-light);
+        border: none;
+        width: 26px;
+        height: 26px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--primary-blue);
+        transition: all 0.2s ease;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .calendar-nav:hover {
+        background: var(--primary-blue);
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .calendar-title {
+        display: flex;
+        gap: 0.4rem;
+        flex: 1;
+    }
+
+    .calendar-select {
+        flex: 1;
+        padding: 0.3rem 0.4rem;
+        border: 2px solid var(--border-light);
+        border-radius: 5px;
+        font-weight: 600;
+        color: var(--primary-blue);
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: white;
+    }
+
+    .calendar-select:hover {
+        border-color: var(--primary-blue);
+    }
+
+    .calendar-select:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 2px rgba(0, 48, 135, 0.1);
+    }
+
+    /* Calendar Grid - Compact */
+    .calendar-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.15rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .weekday {
+        text-align: center;
+        font-size: 0.625rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        padding: 0.2rem 0;
+        text-transform: uppercase;
+        letter-spacing: 0.2px;
+    }
+
+    .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.15rem;
+    }
+
+    .calendar-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: white;
+        border: 2px solid transparent;
+        min-height: 30px;
+        max-height: 38px;
+    }
+
+    .calendar-day:hover {
+        background: var(--bg-light);
+        border-color: var(--primary-blue);
+    }
+
+    .calendar-day.other-month {
+        color: var(--text-secondary);
+        opacity: 0.25;
+    }
+
+    .calendar-day.selected {
+        background: var(--primary-blue);
+        color: white;
+        border-color: var(--primary-blue);
+        font-weight: 600;
+    }
+
+    .calendar-day.today {
+        border-color: var(--primary-blue);
+        font-weight: 600;
+    }
+
+    .calendar-day.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    .calendar-day.disabled:hover {
+        background: white;
+        border-color: transparent;
+    }
+
+    /* Modal Actions - Mini Buttons */
+    .date-modal-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-light);
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: var(--primary-blue);
+        color: white;
+        border: 2px solid var(--primary-blue);
+        padding: 0.35rem 0.9rem;
+        border-radius: 5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+    }
+
+    .btn-primary:hover {
+        background: #002060;
+        border-color: #002060;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0, 48, 135, 0.3);
+    }
+
+    .btn-outline {
+        background: white;
+        color: var(--primary-blue);
+        border: 2px solid var(--border-light);
+        padding: 0.35rem 0.9rem;
+        border-radius: 5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+    }
+
+    .btn-outline:hover {
+        border-color: var(--primary-blue);
+        background: var(--bg-light);
+    }
+
+    /* Responsive adjustments for smaller screens */
+    @media (max-width: 768px) {
+        #dateModal .chart-modal-content {
+            width: 95%;
+            max-width: 100%;
+        }
+
+        .date-modal-body {
+            padding: 0.75rem;
+        }
+
+        .date-tab {
+            padding: 0.5rem;
+            min-height: 55px;
+        }
+
+        .tab-label {
+            font-size: 0.65rem;
+        }
+
+        .tab-value {
+            font-size: 0.8rem;
+        }
+
+        .calendar-container {
+            padding: 0.75rem;
+        }
+
+        .calendar-day {
+            min-height: 35px;
+            max-height: 45px;
+            font-size: 0.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .date-modal-body {
+            padding: 1rem;
+        }
+
+        .calendar-container {
+            padding: 1rem;
+        }
+
+        .date-modal-actions {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .date-modal-actions > * {
+            width: 100%;
+        }
+
+        .date-modal-actions > div {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .date-modal-actions button {
+            flex: 1;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -2051,6 +2396,299 @@ document.addEventListener('DOMContentLoaded', function() {
     // Display active filter badges
     updateActiveFilters();
 });
+
+// Date Selection Modal Variables
+let currentEditingDate = 'from'; // 'from' or 'to'
+let tempFromDate = null;
+let tempToDate = null;
+let currentCalendarMonth = new Date().getMonth();
+let currentCalendarYear = new Date().getFullYear();
+
+// Date Selection Modal Functions
+function openDateModal(dateType = 'from') {
+    const modal = document.getElementById('dateModal');
+    currentEditingDate = dateType;
+
+    // Hide any previous alerts
+    hideDateAlert();
+
+    // Load current values
+    const fromDate = document.getElementById('date_from').value;
+    const toDate = document.getElementById('date_to').value;
+
+    tempFromDate = fromDate ? new Date(fromDate) : null;
+    tempToDate = toDate ? new Date(toDate) : null;
+
+    // Update tab display
+    updateTabDisplay();
+
+    // Set active tab
+    switchDateTab(dateType);
+
+    // Initialize calendar to existing date or current date
+    const existingDate = dateType === 'from' ? tempFromDate : tempToDate;
+    if (existingDate) {
+        currentCalendarMonth = existingDate.getMonth();
+        currentCalendarYear = existingDate.getFullYear();
+    } else {
+        const now = new Date();
+        currentCalendarMonth = now.getMonth();
+        currentCalendarYear = now.getFullYear();
+    }
+
+    // Populate year dropdown
+    populateYearDropdown();
+
+    // Render calendar
+    renderCalendar();
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDateModal() {
+    const modal = document.getElementById('dateModal');
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+    hideDateAlert();
+}
+
+function showDateAlert(message) {
+    const alert = document.getElementById('dateModalAlert');
+    const messageEl = document.getElementById('dateAlertMessage');
+    messageEl.textContent = message;
+    alert.style.display = 'flex';
+}
+
+function hideDateAlert() {
+    const alert = document.getElementById('dateModalAlert');
+    alert.style.display = 'none';
+}
+
+function switchDateTab(dateType) {
+    currentEditingDate = dateType;
+    hideDateAlert();
+
+    document.getElementById('fromTab').classList.toggle('active', dateType === 'from');
+    document.getElementById('toTab').classList.toggle('active', dateType === 'to');
+
+    const existingDate = dateType === 'from' ? tempFromDate : tempToDate;
+    if (existingDate) {
+        currentCalendarMonth = existingDate.getMonth();
+        currentCalendarYear = existingDate.getFullYear();
+        document.getElementById('calendarMonth').value = currentCalendarMonth;
+        document.getElementById('calendarYear').value = currentCalendarYear;
+    }
+
+    renderCalendar();
+}
+
+function updateTabDisplay() {
+    const fromTabValue = document.getElementById('fromTabValue');
+    const toTabValue = document.getElementById('toTabValue');
+
+    fromTabValue.textContent = tempFromDate ? formatDisplayDate(tempFromDate) : 'Not set';
+    toTabValue.textContent = tempToDate ? formatDisplayDate(tempToDate) : 'Not set';
+}
+
+function formatDate(date) {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function formatDisplayDate(date) {
+    if (!date) return '';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+}
+
+function populateYearDropdown() {
+    const yearSelect = document.getElementById('calendarYear');
+    yearSelect.innerHTML = '';
+
+    const currentYear = new Date().getFullYear();
+    for (let year = currentYear - 10; year <= currentYear + 5; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        if (year === currentCalendarYear) {
+            option.selected = true;
+        }
+        yearSelect.appendChild(option);
+    }
+}
+
+function updateCalendarDate() {
+    const monthSelect = document.getElementById('calendarMonth');
+    const yearSelect = document.getElementById('calendarYear');
+
+    currentCalendarMonth = parseInt(monthSelect.value);
+    currentCalendarYear = parseInt(yearSelect.value);
+
+    const newDate = new Date(currentCalendarYear, currentCalendarMonth, 1);
+
+    if (currentEditingDate === 'from') {
+        tempFromDate = newDate;
+    } else {
+        tempToDate = newDate;
+    }
+
+    updateTabDisplay();
+    renderCalendar();
+    hideDateAlert();
+}
+
+function renderCalendar() {
+    const monthSelect = document.getElementById('calendarMonth');
+    const yearSelect = document.getElementById('calendarYear');
+
+    currentCalendarMonth = parseInt(monthSelect.value);
+    currentCalendarYear = parseInt(yearSelect.value);
+
+    const daysContainer = document.getElementById('calendarDays');
+    daysContainer.innerHTML = '';
+
+    const firstDay = new Date(currentCalendarYear, currentCalendarMonth, 1);
+    const lastDay = new Date(currentCalendarYear, currentCalendarMonth + 1, 0);
+    const prevLastDay = new Date(currentCalendarYear, currentCalendarMonth, 0);
+
+    const firstDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+    const daysInPrevMonth = prevLastDay.getDate();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Previous month days
+    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+        const day = daysInPrevMonth - i;
+        const dayElement = createDayElement(day, true);
+        daysContainer.appendChild(dayElement);
+    }
+
+    // Current month days
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayDate = new Date(currentCalendarYear, currentCalendarMonth, day);
+        const dayElement = createDayElement(day, false, dayDate);
+        daysContainer.appendChild(dayElement);
+    }
+
+    // Next month days
+    const totalCells = daysContainer.children.length;
+    const remainingCells = 42 - totalCells;
+    for (let day = 1; day <= remainingCells; day++) {
+        const dayElement = createDayElement(day, true);
+        daysContainer.appendChild(dayElement);
+    }
+}
+
+function createDayElement(day, isOtherMonth, fullDate = null) {
+    const dayElement = document.createElement('div');
+    dayElement.className = 'calendar-day';
+    dayElement.textContent = day;
+
+    if (isOtherMonth) {
+        dayElement.classList.add('other-month');
+        return dayElement;
+    }
+
+    if (fullDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (fullDate.getTime() === today.getTime()) {
+            dayElement.classList.add('today');
+        }
+
+        const selectedDate = currentEditingDate === 'from' ? tempFromDate : tempToDate;
+        if (selectedDate) {
+            const selected = new Date(selectedDate);
+            selected.setHours(0, 0, 0, 0);
+            if (fullDate.getTime() === selected.getTime()) {
+                dayElement.classList.add('selected');
+            }
+        }
+
+        dayElement.addEventListener('click', () => selectDate(fullDate));
+    }
+
+    return dayElement;
+}
+
+function selectDate(date) {
+    if (currentEditingDate === 'from') {
+        tempFromDate = date;
+    } else {
+        tempToDate = date;
+    }
+
+    hideDateAlert();
+    updateTabDisplay();
+    renderCalendar();
+}
+
+function changeMonth(delta) {
+    currentCalendarMonth += delta;
+
+    if (currentCalendarMonth > 11) {
+        currentCalendarMonth = 0;
+        currentCalendarYear++;
+    } else if (currentCalendarMonth < 0) {
+        currentCalendarMonth = 11;
+        currentCalendarYear--;
+    }
+
+    document.getElementById('calendarMonth').value = currentCalendarMonth;
+    document.getElementById('calendarYear').value = currentCalendarYear;
+
+    renderCalendar();
+}
+
+function clearAllDates() {
+    tempFromDate = null;
+    tempToDate = null;
+    updateTabDisplay();
+    renderCalendar();
+}
+
+function applyDates() {
+    // Validation: At least one date must be set
+    if (!tempFromDate && !tempToDate) {
+        showDateAlert('Please select at least one date. You cannot apply with both dates cleared.');
+        return;
+    }
+
+    // Update hidden inputs
+    document.getElementById('date_from').value = tempFromDate ? formatDate(tempFromDate) : '';
+    document.getElementById('date_to').value = tempToDate ? formatDate(tempToDate) : '';
+
+    // Update display inputs
+    document.getElementById('date_from_display').value = tempFromDate ? formatDisplayDate(tempFromDate) : '';
+    document.getElementById('date_to_display').value = tempToDate ? formatDisplayDate(tempToDate) : '';
+
+    // Close modal
+    closeDateModal();
+
+    // Apply server-side filters
+    applyServerSideFilters();
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeDateModal();
+    }
+});
+
+// Close date modal on background click
+document.getElementById('dateModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDateModal();
+    }
+});
 </script>
 {% endblock %}
 
@@ -2178,14 +2816,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 </select>
             </div>
 
-            <div class="filter-group">
-                <label for="date_from">From Date</label>
-                <input type="date" name="date_from" id="date_from" onchange="applyServerSideFilters()">
-            </div>
-
-            <div class="filter-group">
-                <label for="date_to">To Date</label>
-                <input type="date" name="date_to" id="date_to" onchange="applyServerSideFilters()">
+            <div class="filter-group" style="margin: 0; display: flex; gap: 0.5rem;">
+                <div style="flex: 1;">
+                    <label for="date_from" style="font-size: 0.8rem; margin-bottom: 0.25rem;">From</label>
+                    <input type="text" readonly class="form-control date-selector" id="date_from_display" placeholder="Start" onclick="openDateModal('from')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.375rem 0.5rem;">
+                    <input type="hidden" name="date_from" id="date_from">
+                </div>
+                <div style="flex: 1;">
+                    <label for="date_to" style="font-size: 0.8rem; margin-bottom: 0.25rem;">To</label>
+                    <input type="text" readonly class="form-control date-selector" id="date_to_display" placeholder="End" onclick="openDateModal('to')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.375rem 0.5rem;">
+                    <input type="hidden" name="date_to" id="date_to">
+                </div>
             </div>
         </div>
 
@@ -2475,6 +3116,96 @@ document.addEventListener('DOMContentLoaded', function() {
             <button class="modal-btn btn-detail" id="modalDetailBtn">
                 <i class="fas fa-file-alt"></i> View Details
             </button>
+        </div>
+    </div>
+
+    <!-- Date Selection Modal -->
+    <div class="chart-modal" id="dateModal">
+        <div class="chart-modal-content">
+            <div class="chart-modal-header">
+                <h3>📅 Select Date Range</h3>
+                <button class="chart-modal-close" onclick="closeDateModal()">×</button>
+            </div>
+            <div class="date-modal-body">
+                <!-- Date Range Tabs -->
+                <div class="date-range-tabs">
+                    <button class="date-tab active" onclick="switchDateTab('from')" id="fromTab">
+                        <span class="tab-label">From Date</span>
+                        <span class="tab-value" id="fromTabValue">Not set</span>
+                    </button>
+                    <button class="date-tab" onclick="switchDateTab('to')" id="toTab">
+                        <span class="tab-label">To Date</span>
+                        <span class="tab-value" id="toTabValue">Not set</span>
+                    </button>
+                </div>
+
+                <!-- Mini Alert (hidden by default) -->
+                <div class="date-modal-alert" id="dateModalAlert" style="display: none;">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-message" id="dateAlertMessage"></div>
+                </div>
+
+                <!-- Calendar Container -->
+                <div class="calendar-container">
+                    <!-- Calendar Header (Month/Year Selector) -->
+                    <div class="calendar-header">
+                        <button class="calendar-nav" onclick="changeMonth(-1)">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="calendar-title">
+                            <select id="calendarMonth" class="calendar-select" onchange="updateCalendarDate()">
+                                <option value="0">January</option>
+                                <option value="1">February</option>
+                                <option value="2">March</option>
+                                <option value="3">April</option>
+                                <option value="4">May</option>
+                                <option value="5">June</option>
+                                <option value="6">July</option>
+                                <option value="7">August</option>
+                                <option value="8">September</option>
+                                <option value="9">October</option>
+                                <option value="10">November</option>
+                                <option value="11">December</option>
+                            </select>
+                            <select id="calendarYear" class="calendar-select" onchange="updateCalendarDate()">
+                                <!-- Years will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <button class="calendar-nav" onclick="changeMonth(1)">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div class="calendar-weekdays">
+                        <div class="weekday">Su</div>
+                        <div class="weekday">Mo</div>
+                        <div class="weekday">Tu</div>
+                        <div class="weekday">We</div>
+                        <div class="weekday">Th</div>
+                        <div class="weekday">Fr</div>
+                        <div class="weekday">Sa</div>
+                    </div>
+                    <div class="calendar-days" id="calendarDays">
+                        <!-- Days will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="date-modal-actions">
+                    <button class="btn btn-outline" onclick="clearAllDates()">
+                        <i class="fas fa-eraser"></i> Clear All
+                    </button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-outline" onclick="closeDateModal()">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary" onclick="applyDates()">
+                            <i class="fas fa-check"></i> Apply
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
