@@ -2256,6 +2256,9 @@ function hideLoading() {
 function updatePageContent(url) {
     showLoading();
 
+    // Save current scroll position BEFORE updating content
+    const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+
     fetch(url)
         .then(response => response.text())
         .then(html => {
@@ -2306,6 +2309,9 @@ function updatePageContent(url) {
             initializeCharts();
 
             hideLoading();
+
+            // Restore scroll position AFTER content is updated
+            window.scrollTo(0, scrollPosition);
         })
         .catch(error => {
             console.error('Error loading content:', error);
