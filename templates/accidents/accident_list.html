@@ -1486,12 +1486,6 @@ function updatePageContent(url, pushState = true) {
             // Update active filters badges AFTER URL is updated
             updateActiveFilters();
 
-            // Scroll to search section
-            const searchSection = document.getElementById('search-section');
-            if (searchSection) {
-                searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-
             hideLoading();
         })
         .catch(error => {
@@ -2054,16 +2048,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Display active filter badges
     updateActiveFilters();
-
-    // Scroll to search section when navigating pagination
-    if (window.location.hash === '#search-section') {
-        setTimeout(() => {
-            const searchSection = document.getElementById('search-section');
-            if (searchSection) {
-                searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }, 100);
-    }
 });
 </script>
 {% endblock %}
