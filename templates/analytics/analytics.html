@@ -2250,12 +2250,7 @@ function showLoading() {
 
 function hideLoading() {
     document.querySelector('.loading-overlay').classList.remove('active');
-
-    // Auto-scroll to Filter Controls section after loading completes
-    const filterControls = document.getElementById('filter-controls');
-    if (filterControls) {
-        filterControls.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // Maintain scroll position - don't auto-scroll (matches hotspot page behavior)
 }
 
 function updatePageContent(url) {
