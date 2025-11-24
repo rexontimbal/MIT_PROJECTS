@@ -1884,6 +1884,9 @@ function hideLoading() {
 }
 
 function updatePageContent(url, pushState = true) {
+    // Save current scroll position
+    const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+
     showLoading();
 
     fetch(url)
@@ -1945,6 +1948,9 @@ function updatePageContent(url, pushState = true) {
 
             // Update active filters badges AFTER URL is updated
             updateActiveFilters();
+
+            // Restore scroll position
+            window.scrollTo(0, scrollPosition);
 
             hideLoading();
         })
