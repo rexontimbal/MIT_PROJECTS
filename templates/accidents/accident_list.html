@@ -1949,10 +1949,16 @@ function updatePageContent(url, pushState = true) {
             // Update active filters badges AFTER URL is updated
             updateActiveFilters();
 
-            // Restore scroll position
-            window.scrollTo(0, scrollPosition);
-
             hideLoading();
+
+            // Restore scroll position after DOM updates complete
+            // Use multiple attempts to ensure it works even with slow rendering
+            requestAnimationFrame(() => {
+                window.scrollTo(0, scrollPosition);
+                setTimeout(() => {
+                    window.scrollTo(0, scrollPosition);
+                }, 50);
+            });
         })
         .catch(error => {
             console.error('Error loading content:', error);
