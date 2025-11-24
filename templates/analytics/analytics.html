@@ -2258,6 +2258,7 @@ function updatePageContent(url) {
 
     // Save current scroll position BEFORE updating content
     const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    console.log('💾 Saving scroll position:', scrollPosition);
 
     fetch(url)
         .then(response => response.text())
@@ -2310,14 +2311,34 @@ function updatePageContent(url) {
 
             hideLoading();
 
-            // Restore scroll position AFTER charts finish rendering
-            // Use requestAnimationFrame to wait for layout to complete
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    window.scrollTo(0, scrollPosition);
-                    console.log('📍 Scroll position restored to:', scrollPosition);
-                });
-            });
+            // AGGRESSIVE SCROLL POSITION RESTORATION
+            // Temporarily disable smooth scrolling
+            const htmlElement = document.documentElement;
+            const originalScrollBehavior = htmlElement.style.scrollBehavior;
+            htmlElement.style.scrollBehavior = 'auto';
+
+            // Use multiple methods with delays to ensure scroll is restored
+            const restoreScroll = () => {
+                window.scrollTo(0, scrollPosition);
+                document.documentElement.scrollTop = scrollPosition;
+                document.body.scrollTop = scrollPosition;
+                console.log('📍 Scroll restored to:', scrollPosition, 'Current:', window.pageYOffset);
+            };
+
+            // Attempt 1: Immediate
+            setTimeout(restoreScroll, 0);
+
+            // Attempt 2: After 50ms
+            setTimeout(restoreScroll, 50);
+
+            // Attempt 3: After 100ms
+            setTimeout(restoreScroll, 100);
+
+            // Attempt 4: After 200ms and restore smooth scroll
+            setTimeout(() => {
+                restoreScroll();
+                htmlElement.style.scrollBehavior = originalScrollBehavior;
+            }, 200);
         })
         .catch(error => {
             console.error('Error loading content:', error);
