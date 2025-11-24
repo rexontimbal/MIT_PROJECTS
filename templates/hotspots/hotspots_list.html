@@ -484,24 +484,24 @@
         font-size: 0.8125rem;
     }
 
-    /* View Toggle - Flat Design */
+    /* View Toggle - Mini Compact Design */
     .view-toggle {
         display: flex;
         background: #F3F4F6;
         border-radius: 6px;
-        padding: 0.25rem;
-        margin-bottom: 1rem;
+        padding: 0.15rem;
+        margin-bottom: 0.5rem;
         border: 1px solid #E5E7EB;
     }
 
     .view-option {
         flex: 1;
-        padding: 0.5rem 1rem;
+        padding: 0.35rem 1rem;
         text-align: center;
         cursor: pointer;
         border-radius: 4px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        font-size: 0.875rem;
+        font-size: 0.8125rem;
         font-weight: 500;
         color: #6B7280;
         border: 2px solid transparent;
@@ -1144,12 +1144,6 @@
     </div>
 </div>
 
-<!-- View Toggle -->
-<div class="view-toggle">
-    <div class="view-option active" onclick="switchView('grid')">📊 Grid View</div>
-    <div class="view-option" onclick="switchView('list')">📋 List View</div>
-</div>
-
 <!-- Summary Cards -->
 <div class="summary-cards">
     <div class="summary-card">
@@ -1278,6 +1272,12 @@
         <option value="48">48 per page</option>
         <option value="999999">Show all</option>
     </select>
+</div>
+
+<!-- View Toggle (Mini) -->
+<div class="view-toggle">
+    <div class="view-option active" onclick="switchView('grid')">📊 Grid View</div>
+    <div class="view-option" onclick="switchView('list')">📋 List View</div>
 </div>
 
 <!-- Hotspots Grid -->
