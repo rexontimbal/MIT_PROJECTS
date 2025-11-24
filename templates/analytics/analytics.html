@@ -2310,8 +2310,14 @@ function updatePageContent(url) {
 
             hideLoading();
 
-            // Restore scroll position AFTER content is updated
-            window.scrollTo(0, scrollPosition);
+            // Restore scroll position AFTER charts finish rendering
+            // Use requestAnimationFrame to wait for layout to complete
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    window.scrollTo(0, scrollPosition);
+                    console.log('📍 Scroll position restored to:', scrollPosition);
+                });
+            });
         })
         .catch(error => {
             console.error('Error loading content:', error);
