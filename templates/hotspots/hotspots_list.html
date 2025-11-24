@@ -1080,8 +1080,26 @@
 
     .spinner-container {
         position: relative;
-        width: 60px;
-        height: 60px;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .spinner-logo {
+        position: absolute;
+        width: 45px;
+        height: 45px;
+        z-index: 1;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    .spinner-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 4px rgba(0, 48, 135, 0.3));
     }
 
     .spinner {
@@ -1089,26 +1107,31 @@
         border-top: 5px solid #003087;
         border-right: 5px solid #DC143C;
         border-radius: 50%;
-        width: 60px;
-        height: 60px;
+        width: 80px;
+        height: 80px;
         animation: spin 1s linear infinite;
     }
 
     .spinner-inner {
         position: absolute;
-        top: 10px;
-        left: 10px;
+        top: 12px;
+        left: 12px;
         border: 3px solid rgba(255, 215, 0, 0.3);
         border-top: 3px solid #FFD700;
         border-radius: 50%;
-        width: 40px;
-        height: 40px;
+        width: 56px;
+        height: 56px;
         animation: spin 1.5s linear infinite reverse;
     }
 
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.9; }
     }
 </style>
 {% endblock %}
@@ -1117,6 +1140,9 @@
 <!-- Simple Loading Spinner -->
 <div class="loading-overlay">
     <div class="spinner-container">
+        <div class="spinner-logo">
+            <img src="{% static 'images/pnp-logo.png' %}" alt="PNP Logo">
+        </div>
         <div class="spinner"></div>
         <div class="spinner-inner"></div>
     </div>
