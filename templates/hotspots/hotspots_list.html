@@ -254,11 +254,20 @@
         line-height: 1;
         padding: 0;
         margin-left: 0.25rem;
-        transition: color 0.2s;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        width: 22px;
+        height: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .filter-tag button:hover {
-        color: var(--btn-primary-hover);
+        background: var(--hotspot-primary);
+        color: white;
+        transform: scale(1.2) rotate(90deg);
+        box-shadow: 0 2px 6px rgba(220, 20, 60, 0.3);
     }
 
     /* Summary Cards - Flat & Clean */
