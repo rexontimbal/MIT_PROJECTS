@@ -1409,9 +1409,9 @@
                 <button onclick="openFilterHelp()" class="btn btn-outline btn-sm" style="padding: 0.4rem 0.75rem;" title="Filter Guide">
                     <i class="fas fa-question-circle"></i> Guide
                 </button>
-                <a href="{% url 'analytics' %}" class="btn btn-outline btn-sm">
+                <button onclick="clearAllFilters()" class="btn btn-outline btn-sm" title="Reset all filters">
                     <i class="fas fa-redo"></i> Reset
-                </a>
+                </button>
             </div>
         </div>
 
@@ -2861,7 +2861,26 @@ function updatePageContent(url) {
     function clearAllFilters() {
         console.log('🗑️ Clearing all filters...');
 
-        // Update page content without reload
+        // Reset all filter form fields to defaults
+        const analysisTypeEl = document.getElementById('analysisType');
+        const timeGranularityEl = document.getElementById('timeGranularity');
+        const severityEl = document.getElementById('severityFilter');
+        const provinceEl = document.getElementById('provinceFilter');
+        const fromDateEl = document.querySelector('input[name="from_date"]');
+        const toDateEl = document.querySelector('input[name="to_date"]');
+        const fromDateDisplayEl = document.getElementById('from_date_display');
+        const toDateDisplayEl = document.getElementById('to_date_display');
+
+        if (analysisTypeEl) analysisTypeEl.value = 'overview';
+        if (timeGranularityEl) timeGranularityEl.value = 'monthly';
+        if (severityEl) severityEl.value = 'all';
+        if (provinceEl) provinceEl.value = '';
+        if (fromDateEl) fromDateEl.value = '';
+        if (toDateEl) toDateEl.value = '';
+        if (fromDateDisplayEl) fromDateDisplayEl.value = '';
+        if (toDateDisplayEl) toDateDisplayEl.value = '';
+
+        // Update page content without reload (this will show loading overlay)
         updatePageContent(window.location.pathname);
     }
 
