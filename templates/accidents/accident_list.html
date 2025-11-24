@@ -1886,6 +1886,12 @@ function hideLoading() {
 function updatePageContent(url, pushState = true) {
     // Save current scroll position
     const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    console.log('🔵 Saving scroll position:', scrollPosition);
+
+    // Disable smooth scrolling temporarily
+    const htmlElement = document.documentElement;
+    const originalScrollBehavior = htmlElement.style.scrollBehavior;
+    htmlElement.style.scrollBehavior = 'auto';
 
     showLoading();
 
@@ -1949,16 +1955,34 @@ function updatePageContent(url, pushState = true) {
             // Update active filters badges AFTER URL is updated
             updateActiveFilters();
 
+            // Aggressively restore scroll position BEFORE hiding loading
+            window.scrollTo(0, scrollPosition);
+            document.documentElement.scrollTop = scrollPosition;
+            document.body.scrollTop = scrollPosition;
+            console.log('🟢 Restoring scroll position (immediate):', scrollPosition);
+
             hideLoading();
 
-            // Restore scroll position after DOM updates complete
-            // Use multiple attempts to ensure it works even with slow rendering
-            requestAnimationFrame(() => {
+            // Continue restoring scroll position after hiding loading
+            setTimeout(() => {
                 window.scrollTo(0, scrollPosition);
-                setTimeout(() => {
-                    window.scrollTo(0, scrollPosition);
-                }, 50);
-            });
+                document.documentElement.scrollTop = scrollPosition;
+                document.body.scrollTop = scrollPosition;
+                console.log('🟡 Restoring scroll position (50ms):', scrollPosition);
+            }, 50);
+
+            setTimeout(() => {
+                window.scrollTo(0, scrollPosition);
+                document.documentElement.scrollTop = scrollPosition;
+                document.body.scrollTop = scrollPosition;
+                htmlElement.style.scrollBehavior = originalScrollBehavior;
+                console.log('🟠 Restoring scroll position (100ms):', scrollPosition);
+            }, 100);
+
+            setTimeout(() => {
+                window.scrollTo(0, scrollPosition);
+                console.log('🔴 Final scroll restoration (200ms):', scrollPosition);
+            }, 200);
         })
         .catch(error => {
             console.error('Error loading content:', error);
