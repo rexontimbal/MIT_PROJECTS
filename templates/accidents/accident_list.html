@@ -258,10 +258,10 @@
         font-size: 0.75rem;
     }
 
-    /* Filter Grid - Clean Layout (matching analytics) */
+    /* Filter Grid - Clean Layout (matching analytics - 5 columns) */
     .filters-grid {
         display: grid;
-        grid-template-columns: 1.1fr 1.2fr 0.9fr 1.3fr;
+        grid-template-columns: 1.1fr 1.2fr 0.8fr 1fr 1fr;
         gap: 0.75rem;
         margin-top: 1.25rem;
         align-items: end;
@@ -2929,17 +2929,16 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                 </select>
             </div>
 
-            <div class="filter-group" style="display: flex; gap: 0.5rem;">
-                <div style="flex: 1;">
-                    <label for="date_from" style="display: block; margin-bottom: 0.4rem;">From</label>
-                    <input type="text" readonly class="form-control date-selector" id="date_from_display" placeholder="Start" onclick="openDateModal('from')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.625rem 0.875rem; border: 1.5px solid #D1D5DB; border-radius: 6px; width: 100%;">
-                    <input type="hidden" name="date_from" id="date_from">
-                </div>
-                <div style="flex: 1;">
-                    <label for="date_to" style="display: block; margin-bottom: 0.4rem;">To</label>
-                    <input type="text" readonly class="form-control date-selector" id="date_to_display" placeholder="End" onclick="openDateModal('to')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.625rem 0.875rem; border: 1.5px solid #D1D5DB; border-radius: 6px; width: 100%;">
-                    <input type="hidden" name="date_to" id="date_to">
-                </div>
+            <div class="filter-group">
+                <label for="date_from">From</label>
+                <input type="text" readonly class="form-control date-selector" id="date_from_display" placeholder="Start" onclick="openDateModal('from')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.625rem 0.875rem; border: 1.5px solid #D1D5DB; border-radius: 6px; width: 100%;">
+                <input type="hidden" name="date_from" id="date_from">
+            </div>
+
+            <div class="filter-group">
+                <label for="date_to">To</label>
+                <input type="text" readonly class="form-control date-selector" id="date_to_display" placeholder="End" onclick="openDateModal('to')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.625rem 0.875rem; border: 1.5px solid #D1D5DB; border-radius: 6px; width: 100%;">
+                <input type="hidden" name="date_to" id="date_to">
             </div>
         </div>
 
@@ -3231,92 +3230,92 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
             </button>
         </div>
     </div>
+</div>
 
-    <!-- Date Selection Modal -->
-    <div class="chart-modal" id="dateModal">
-        <div class="chart-modal-content">
-            <div class="chart-modal-header">
-                <h3>📅 Select Date Range</h3>
-                <button class="chart-modal-close" onclick="closeDateModal()">×</button>
+<!-- Date Selection Modal (must be outside container) -->
+<div class="chart-modal" id="dateModal">
+    <div class="chart-modal-content">
+        <div class="chart-modal-header">
+            <h3>📅 Select Date Range</h3>
+            <button class="chart-modal-close" onclick="closeDateModal()">×</button>
+        </div>
+        <div class="date-modal-body">
+            <!-- Date Range Tabs -->
+            <div class="date-range-tabs">
+                <button class="date-tab active" onclick="switchDateTab('from')" id="fromTab">
+                    <span class="tab-label">From Date</span>
+                    <span class="tab-value" id="fromTabValue">Not set</span>
+                </button>
+                <button class="date-tab" onclick="switchDateTab('to')" id="toTab">
+                    <span class="tab-label">To Date</span>
+                    <span class="tab-value" id="toTabValue">Not set</span>
+                </button>
             </div>
-            <div class="date-modal-body">
-                <!-- Date Range Tabs -->
-                <div class="date-range-tabs">
-                    <button class="date-tab active" onclick="switchDateTab('from')" id="fromTab">
-                        <span class="tab-label">From Date</span>
-                        <span class="tab-value" id="fromTabValue">Not set</span>
+
+            <!-- Mini Alert (hidden by default) -->
+            <div class="date-modal-alert" id="dateModalAlert" style="display: none;">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-message" id="dateAlertMessage"></div>
+            </div>
+
+            <!-- Calendar Container -->
+            <div class="calendar-container">
+                <!-- Calendar Header (Month/Year Selector) -->
+                <div class="calendar-header">
+                    <button class="calendar-nav" onclick="changeMonth(-1)">
+                        <i class="fas fa-chevron-left"></i>
                     </button>
-                    <button class="date-tab" onclick="switchDateTab('to')" id="toTab">
-                        <span class="tab-label">To Date</span>
-                        <span class="tab-value" id="toTabValue">Not set</span>
+                    <div class="calendar-title">
+                        <select id="calendarMonth" class="calendar-select" onchange="updateCalendarDate()">
+                            <option value="0">January</option>
+                            <option value="1">February</option>
+                            <option value="2">March</option>
+                            <option value="3">April</option>
+                            <option value="4">May</option>
+                            <option value="5">June</option>
+                            <option value="6">July</option>
+                            <option value="7">August</option>
+                            <option value="8">September</option>
+                            <option value="9">October</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
+                        <select id="calendarYear" class="calendar-select" onchange="updateCalendarDate()">
+                            <!-- Years will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    <button class="calendar-nav" onclick="changeMonth(1)">
+                        <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
 
-                <!-- Mini Alert (hidden by default) -->
-                <div class="date-modal-alert" id="dateModalAlert" style="display: none;">
-                    <div class="alert-icon">⚠️</div>
-                    <div class="alert-message" id="dateAlertMessage"></div>
+                <!-- Calendar Grid -->
+                <div class="calendar-weekdays">
+                    <div class="weekday">Su</div>
+                    <div class="weekday">Mo</div>
+                    <div class="weekday">Tu</div>
+                    <div class="weekday">We</div>
+                    <div class="weekday">Th</div>
+                    <div class="weekday">Fr</div>
+                    <div class="weekday">Sa</div>
                 </div>
-
-                <!-- Calendar Container -->
-                <div class="calendar-container">
-                    <!-- Calendar Header (Month/Year Selector) -->
-                    <div class="calendar-header">
-                        <button class="calendar-nav" onclick="changeMonth(-1)">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <div class="calendar-title">
-                            <select id="calendarMonth" class="calendar-select" onchange="updateCalendarDate()">
-                                <option value="0">January</option>
-                                <option value="1">February</option>
-                                <option value="2">March</option>
-                                <option value="3">April</option>
-                                <option value="4">May</option>
-                                <option value="5">June</option>
-                                <option value="6">July</option>
-                                <option value="7">August</option>
-                                <option value="8">September</option>
-                                <option value="9">October</option>
-                                <option value="10">November</option>
-                                <option value="11">December</option>
-                            </select>
-                            <select id="calendarYear" class="calendar-select" onchange="updateCalendarDate()">
-                                <!-- Years will be populated by JavaScript -->
-                            </select>
-                        </div>
-                        <button class="calendar-nav" onclick="changeMonth(1)">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-
-                    <!-- Calendar Grid -->
-                    <div class="calendar-weekdays">
-                        <div class="weekday">Su</div>
-                        <div class="weekday">Mo</div>
-                        <div class="weekday">Tu</div>
-                        <div class="weekday">We</div>
-                        <div class="weekday">Th</div>
-                        <div class="weekday">Fr</div>
-                        <div class="weekday">Sa</div>
-                    </div>
-                    <div class="calendar-days" id="calendarDays">
-                        <!-- Days will be populated by JavaScript -->
-                    </div>
+                <div class="calendar-days" id="calendarDays">
+                    <!-- Days will be populated by JavaScript -->
                 </div>
+            </div>
 
-                <!-- Modal Actions -->
-                <div class="date-modal-actions">
-                    <button class="btn btn-outline" onclick="clearAllDates()">
-                        <i class="fas fa-eraser"></i> Clear All
+            <!-- Modal Actions -->
+            <div class="date-modal-actions">
+                <button class="btn btn-outline" onclick="clearAllDates()">
+                    <i class="fas fa-eraser"></i> Clear All
+                </button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-outline" onclick="closeDateModal()">
+                        Cancel
                     </button>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn btn-outline" onclick="closeDateModal()">
-                            Cancel
-                        </button>
-                        <button class="btn btn-primary" onclick="applyDates()">
-                            <i class="fas fa-check"></i> Apply
-                        </button>
-                    </div>
+                    <button class="btn btn-primary" onclick="applyDates()">
+                        <i class="fas fa-check"></i> Apply
+                    </button>
                 </div>
             </div>
         </div>
