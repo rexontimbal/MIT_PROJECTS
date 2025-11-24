@@ -739,6 +739,44 @@
         line-height: 1.2;
     }
 
+    /* Date Modal Alert - Beautiful & Clean */
+    .date-modal-alert {
+        background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+        border-left: 4px solid #FF9800;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        animation: slideDown 0.3s ease;
+        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.15);
+    }
+
+    .date-modal-alert .alert-icon {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+
+    .date-modal-alert .alert-message {
+        font-size: 0.875rem;
+        color: #E65100;
+        line-height: 1.4;
+        font-weight: 500;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     /* Calendar Container - Compact */
     .calendar-container {
         background: white;
@@ -1929,6 +1967,12 @@
                         <span class="tab-label">To Date</span>
                         <span class="tab-value" id="toTabValue">Not set</span>
                     </button>
+                </div>
+
+                <!-- Mini Alert (hidden by default) -->
+                <div class="date-modal-alert" id="dateModalAlert" style="display: none;">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-message" id="dateAlertMessage"></div>
                 </div>
 
                 <!-- Calendar Container -->
@@ -3202,6 +3246,9 @@ function openDateModal(dateType = 'from') {
     // Reset selection flag for new session
     hasSelectedDateInSession = false;
 
+    // Hide any previous alerts
+    hideDateAlert();
+
     // Load current values
     const fromDate = document.getElementById('from_date').value;
     const toDate = document.getElementById('to_date').value;
@@ -3242,10 +3289,27 @@ function closeDateModal() {
     const modal = document.getElementById('dateModal');
     modal.classList.remove('show');
     document.body.style.overflow = '';
+    hideDateAlert(); // Hide alert when closing modal
+}
+
+// Alert functions for date modal
+function showDateAlert(message) {
+    const alert = document.getElementById('dateModalAlert');
+    const messageEl = document.getElementById('dateAlertMessage');
+    messageEl.textContent = message;
+    alert.style.display = 'flex';
+}
+
+function hideDateAlert() {
+    const alert = document.getElementById('dateModalAlert');
+    alert.style.display = 'none';
 }
 
 function switchDateTab(dateType) {
     currentEditingDate = dateType;
+
+    // Hide alert when switching tabs
+    hideDateAlert();
 
     // Update tab styling
     document.getElementById('fromTab').classList.toggle('active', dateType === 'from');
@@ -3396,6 +3460,9 @@ function selectDate(date) {
     // Mark that user has selected a date in this session
     hasSelectedDateInSession = true;
 
+    // Hide alert since user is taking action
+    hideDateAlert();
+
     updateTabDisplay();
     renderCalendar();
 }
@@ -3465,10 +3532,15 @@ function clearAllDates() {
 }
 
 function applyDates() {
-    // Validation: User must have selected a day or cleared dates
+    // Validation 1: User must have interacted with the calendar
     if (!hasSelectedDateInSession) {
-        // Show error message
-        alert('⚠️ Please select a day from the calendar or click "Clear All" to remove dates.\n\nJust changing the month/year is not enough - you must click on a specific day.');
+        showDateAlert('Please select a day from the calendar. Just changing the month/year is not enough.');
+        return;
+    }
+
+    // Validation 2: At least one date must be set
+    if (!tempFromDate && !tempToDate) {
+        showDateAlert('Please select at least one date. You cannot apply with both dates cleared.');
         return;
     }
 
