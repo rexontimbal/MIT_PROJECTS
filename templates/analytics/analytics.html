@@ -3987,12 +3987,8 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Close chart modal on background click
-document.getElementById('chartModal')?.addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeChartModal();
-    }
-});
+// Chart modal ONLY closes via X button - backdrop click disabled
+// (Removed backdrop click handler to prevent accidental closes during resize)
 
 // Close filter help modal on background click
 document.getElementById('filterHelpModal')?.addEventListener('click', function(e) {
