@@ -1299,7 +1299,7 @@
         }
     }
 
-    /* Loading Animation - PNP Themed */
+    /* Loading Animation - PNP Themed (Matches Accident/Hotspot pages) */
     .loading-overlay {
         position: fixed;
         top: 0;
@@ -1308,47 +1308,38 @@
         bottom: 0;
         background: linear-gradient(135deg, rgba(0, 48, 135, 0.5) 0%, rgba(0, 32, 96, 0.6) 100%);
         backdrop-filter: blur(5px);
-        display: flex;
+        display: none;
         align-items: center;
         justify-content: center;
         z-index: 9999;
-        display: none;
     }
 
     .loading-overlay.active {
         display: flex;
     }
 
-    .loading-card {
-        background: white;
-        padding: 3rem 4rem;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        text-align: center;
-        animation: fadeInScale 0.3s ease-out;
-        border-top: 5px solid #FFD700;
-        border-bottom: 5px solid #DC143C;
-    }
-
-    .loading-logo {
+    .spinner-container {
+        position: relative;
         width: 80px;
         height: 80px;
-        margin: 0 auto 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .spinner-logo {
+        position: absolute;
+        width: 45px;
+        height: 45px;
+        z-index: 1;
         animation: pulse 2s ease-in-out infinite;
     }
 
-    .loading-logo img {
+    .spinner-logo img {
         width: 100%;
         height: 100%;
         object-fit: contain;
-        filter: drop-shadow(0 4px 8px rgba(0, 48, 135, 0.2));
-    }
-
-    .spinner-container {
-        position: relative;
-        width: 60px;
-        height: 60px;
-        margin: 1.5rem auto;
+        filter: drop-shadow(0 2px 4px rgba(0, 48, 135, 0.3));
     }
 
     .spinner {
@@ -1356,36 +1347,21 @@
         border-top: 5px solid #003087;
         border-right: 5px solid #DC143C;
         border-radius: 50%;
-        width: 60px;
-        height: 60px;
+        width: 80px;
+        height: 80px;
         animation: spin 1s linear infinite;
     }
 
     .spinner-inner {
         position: absolute;
-        top: 10px;
-        left: 10px;
+        top: 12px;
+        left: 12px;
         border: 3px solid rgba(255, 215, 0, 0.3);
         border-top: 3px solid #FFD700;
         border-radius: 50%;
-        width: 40px;
-        height: 40px;
+        width: 56px;
+        height: 56px;
         animation: spin 1.5s linear infinite reverse;
-    }
-
-    .loading-text {
-        color: #003087;
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-top: 1.5rem;
-        letter-spacing: 0.5px;
-    }
-
-    .loading-subtext {
-        color: #666;
-        font-size: 0.85rem;
-        margin-top: 0.5rem;
-        font-weight: 500;
     }
 
     .pnp-badge {
@@ -1426,19 +1402,14 @@
 
 {% block content %}
 <div class="analytics-container">
-    <!-- Loading Overlay - PNP Themed -->
+    <!-- Loading Overlay - PNP Themed (Matches Accident/Hotspot pages) -->
     <div class="loading-overlay">
-        <div class="loading-card">
-            <div class="loading-logo">
+        <div class="spinner-container">
+            <div class="spinner-logo">
                 <img src="{% static 'images/pnp-logo.png' %}" alt="PNP Logo">
             </div>
-            <div class="spinner-container">
-                <div class="spinner"></div>
-                <div class="spinner-inner"></div>
-            </div>
-            <div class="loading-text">Processing Analytics Data</div>
-            <div class="loading-subtext">Please wait while we update the charts...</div>
-            <div class="pnp-badge">PHILIPPINE NATIONAL POLICE</div>
+            <div class="spinner"></div>
+            <div class="spinner-inner"></div>
         </div>
     </div>
 
@@ -2253,12 +2224,13 @@ function hideLoading() {
     // Maintain scroll position - don't auto-scroll (matches hotspot page behavior)
 }
 
-function updatePageContent(url) {
+function updatePageContent(url, forcedScrollPosition = null) {
     showLoading();
 
-    // Save current scroll position BEFORE updating content
-    const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-    console.log('💾 Saving scroll position:', scrollPosition);
+    // Use forced scroll position if provided, otherwise save current position
+    const scrollPosition = forcedScrollPosition !== null ? forcedScrollPosition :
+                          (window.pageYOffset || document.documentElement.scrollTop);
+    console.log('💾 Saving scroll position:', scrollPosition, forcedScrollPosition !== null ? '(forced)' : '(auto)');
 
     fetch(url)
         .then(response => response.text())
@@ -3085,6 +3057,9 @@ function updatePageContent(url) {
     }
 
     function removeFilter(filterName) {
+        // CRITICAL: Save scroll position BEFORE clearing inputs
+        const savedScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+
         // Get current URL parameters
         const params = new URLSearchParams(window.location.search);
 
@@ -3097,14 +3072,19 @@ function updatePageContent(url) {
             if (input) input.value = '';
         }
 
-        // Update page content without reload
+        // Update page content without reload, passing saved scroll position
         const queryString = params.toString();
         const newUrl = window.location.pathname + (queryString ? '?' + queryString : '');
-        updatePageContent(newUrl);
+        updatePageContent(newUrl, savedScrollPosition);
     }
 
     function clearAllFilters() {
         console.log('🗑️ Clearing all filters...');
+
+        // CRITICAL: Save scroll position BEFORE clearing inputs
+        // Clearing inputs can trigger auto-scroll behavior
+        const savedScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+        console.log('💾 Scroll BEFORE clearing inputs:', savedScrollPosition);
 
         // Reset all filter form fields to defaults
         const analysisTypeEl = document.getElementById('analysisType');
@@ -3137,8 +3117,10 @@ function updatePageContent(url) {
         if (fromDateDisplayEl) fromDateDisplayEl.value = '';
         if (toDateDisplayEl) toDateDisplayEl.value = '';
 
-        // Update page content without reload (this will show loading overlay)
-        updatePageContent(window.location.pathname);
+        console.log('🔍 Scroll AFTER clearing inputs:', window.pageYOffset || document.documentElement.scrollTop);
+
+        // Update page content without reload, passing saved scroll position
+        updatePageContent(window.location.pathname, savedScrollPosition);
     }
 
     // ============================================================================
