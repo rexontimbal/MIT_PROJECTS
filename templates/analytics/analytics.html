@@ -3505,6 +3505,7 @@ function closeChartModal() {
     let startX = 0;
     let startWidth = 0;
     let modalContent = null;
+    let lastResizeEndTime = 0; // Track when resize ended to prevent immediate close
 
     document.addEventListener('DOMContentLoaded', function() {
         const resizeHandles = document.querySelectorAll('.modal-resize-handle');
@@ -3559,10 +3560,11 @@ function closeChartModal() {
             }
         });
 
-        document.addEventListener('mouseup', function() {
+        document.addEventListener('mouseup', function(e) {
             if (isResizing) {
                 isResizing = false;
                 resizeDirection = null;
+                lastResizeEndTime = Date.now(); // Record when resize ended
                 document.body.style.cursor = '';
                 document.body.style.userSelect = '';
 
@@ -3576,12 +3578,23 @@ function closeChartModal() {
                         modalChartInstance.resize();
                     }, 100);
                 }
+
+                // Prevent the mouseup from immediately triggering a click
+                e.stopPropagation();
             }
         });
 
-        // Close modal on backdrop click (but not when resizing)
+        // Close modal on backdrop click (but not when resizing or just finished resizing)
         document.getElementById('chartModal')?.addEventListener('click', function(e) {
-            if (!isResizing && e.target === this) {
+            // Don't close if currently resizing
+            if (isResizing) return;
+
+            // Don't close if resize just finished (within 300ms)
+            const timeSinceResize = Date.now() - lastResizeEndTime;
+            if (timeSinceResize < 300) return;
+
+            // Only close if clicking the backdrop (not the modal content)
+            if (e.target === this) {
                 closeChartModal();
             }
         });
