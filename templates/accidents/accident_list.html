@@ -1883,10 +1883,11 @@ function hideLoading() {
     document.querySelector('.loading-overlay').classList.remove('active');
 }
 
-function updatePageContent(url, pushState = true) {
-    // Save current scroll position
-    const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-    console.log('🔵 Saving scroll position:', scrollPosition);
+function updatePageContent(url, pushState = true, forcedScrollPosition = null) {
+    // Use forced scroll position if provided, otherwise save current position
+    const scrollPosition = forcedScrollPosition !== null ? forcedScrollPosition :
+                          (window.pageYOffset || document.documentElement.scrollTop);
+    console.log('🔵 Saving scroll position:', scrollPosition, forcedScrollPosition !== null ? '(forced)' : '(auto)');
 
     // Disable smooth scrolling temporarily
     const htmlElement = document.documentElement;
@@ -2477,7 +2478,12 @@ function removeFilter(filterName) {
 
 // Clear all filters - Smooth update to base URL
 function clearAllFilters() {
-    // Clear all filter inputs first
+    // CRITICAL: Save scroll position BEFORE clearing inputs
+    // Clearing inputs can trigger auto-scroll behavior
+    const savedScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    console.log('💾 Scroll BEFORE clearing inputs:', savedScrollPosition);
+
+    // Clear all filter inputs
     document.getElementById('province').value = '';
     document.getElementById('municipal').value = '';
     document.getElementById('year').value = '';
@@ -2487,8 +2493,10 @@ function clearAllFilters() {
     document.getElementById('date_from_display').value = '';
     document.getElementById('date_to_display').value = '';
 
-    // Update page content via AJAX (no page reload)
-    updatePageContent(window.location.pathname);
+    console.log('🔍 Scroll AFTER clearing inputs:', window.pageYOffset || document.documentElement.scrollTop);
+
+    // Update page content via AJAX (no page reload), passing saved scroll position
+    updatePageContent(window.location.pathname, true, savedScrollPosition);
 }
 
 // ===== SERVER-SIDE PAGINATION FUNCTIONS =====
