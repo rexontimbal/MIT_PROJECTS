@@ -428,12 +428,68 @@
         padding: 0;
         width: 85%;
         max-width: 1000px;
+        min-width: 600px;
         height: 95vh;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         overflow: hidden;
         animation: slideUp 0.4s ease;
         display: flex;
         flex-direction: column;
+        position: relative;
+    }
+
+    /* Resize Handles - Left and Right */
+    .modal-resize-handle {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 8px;
+        cursor: ew-resize;
+        z-index: 10;
+        transition: background 0.2s ease;
+    }
+
+    .modal-resize-handle:hover {
+        background: rgba(0, 48, 135, 0.3);
+    }
+
+    .modal-resize-handle.left {
+        left: 0;
+        border-left: 2px solid transparent;
+    }
+
+    .modal-resize-handle.right {
+        right: 0;
+        border-right: 2px solid transparent;
+    }
+
+    .modal-resize-handle:hover.left {
+        border-left-color: var(--analytics-primary);
+    }
+
+    .modal-resize-handle:hover.right {
+        border-right-color: var(--analytics-primary);
+    }
+
+    /* Show resize indicator on modal hover */
+    .chart-modal-content:hover .modal-resize-handle::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 40px;
+        background: var(--analytics-primary);
+        border-radius: 2px;
+        opacity: 0.5;
+    }
+
+    .modal-resize-handle.left::after {
+        left: 2px;
+    }
+
+    .modal-resize-handle.right::after {
+        right: 2px;
     }
 
     .chart-modal-header {
@@ -1856,7 +1912,11 @@
 
     <!-- Chart Expand Modal -->
     <div class="chart-modal" id="chartModal">
-        <div class="chart-modal-content">
+        <div class="chart-modal-content" id="chartModalContent">
+            <!-- Resize Handles -->
+            <div class="modal-resize-handle left" data-direction="left"></div>
+            <div class="modal-resize-handle right" data-direction="right"></div>
+
             <div class="chart-modal-header">
                 <h3 id="modalChartTitle">Chart View</h3>
                 <div class="chart-modal-actions">
@@ -3419,10 +3479,17 @@ function expandChart(chartId, chartTitle) {
 
 function closeChartModal() {
     const modal = document.getElementById('chartModal');
+    const modalContent = document.getElementById('chartModalContent');
 
     // Hide modal with animation
     modal.classList.remove('show');
     document.body.style.overflow = ''; // Restore scrolling
+
+    // Reset modal width to default
+    if (modalContent) {
+        modalContent.style.width = '85%';
+        modalContent.style.maxWidth = '1000px';
+    }
 
     // Destroy modal chart
     if (modalChartInstance) {
@@ -3430,6 +3497,96 @@ function closeChartModal() {
         modalChartInstance = null;
     }
 }
+
+// Modal Resize Functionality
+(function initModalResize() {
+    let isResizing = false;
+    let resizeDirection = null;
+    let startX = 0;
+    let startWidth = 0;
+    let modalContent = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const resizeHandles = document.querySelectorAll('.modal-resize-handle');
+
+        resizeHandles.forEach(handle => {
+            handle.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                isResizing = true;
+                resizeDirection = this.dataset.direction;
+                startX = e.clientX;
+                modalContent = document.getElementById('chartModalContent');
+                startWidth = modalContent.offsetWidth;
+
+                // Add resizing class for visual feedback
+                modalContent.style.transition = 'none';
+                document.body.style.cursor = 'ew-resize';
+                document.body.style.userSelect = 'none';
+            });
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isResizing || !modalContent) return;
+
+            const deltaX = e.clientX - startX;
+            let newWidth;
+
+            if (resizeDirection === 'right') {
+                // Dragging right edge - increase width
+                newWidth = startWidth + deltaX;
+            } else if (resizeDirection === 'left') {
+                // Dragging left edge - increase width (but in opposite direction)
+                newWidth = startWidth - deltaX;
+            }
+
+            // Apply constraints (min 600px, max 95% of window width)
+            const maxWidth = window.innerWidth * 0.95;
+            newWidth = Math.max(600, Math.min(newWidth, maxWidth));
+
+            // Update modal width
+            modalContent.style.width = newWidth + 'px';
+            modalContent.style.maxWidth = 'none'; // Remove max-width constraint while resizing
+
+            // Resize the chart if it exists
+            if (modalChartInstance) {
+                // Debounced chart resize - only resize after a short delay
+                clearTimeout(window.chartResizeTimeout);
+                window.chartResizeTimeout = setTimeout(() => {
+                    modalChartInstance.resize();
+                }, 50);
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (isResizing) {
+                isResizing = false;
+                resizeDirection = null;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+
+                if (modalContent) {
+                    modalContent.style.transition = '';
+                }
+
+                // Final chart resize
+                if (modalChartInstance) {
+                    setTimeout(() => {
+                        modalChartInstance.resize();
+                    }, 100);
+                }
+            }
+        });
+
+        // Close modal on backdrop click (but not when resizing)
+        document.getElementById('chartModal')?.addEventListener('click', function(e) {
+            if (!isResizing && e.target === this) {
+                closeChartModal();
+            }
+        });
+    });
+})();
 
 function exportModalChart() {
     if (!modalChartInstance) {
