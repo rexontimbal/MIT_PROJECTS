@@ -108,28 +108,6 @@
         padding: 1.25rem;
     }
 
-    .chart-insight {
-        margin-top: 1rem;
-        padding: 0.875rem 1rem;
-        background: linear-gradient(135deg, rgba(0, 48, 135, 0.03) 0%, rgba(0, 48, 135, 0.01) 100%);
-        border-left: 3px solid var(--analytics-primary);
-        border-radius: 6px;
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        line-height: 1.6;
-    }
-
-    .chart-insight strong {
-        color: var(--analytics-primary);
-        font-weight: 600;
-    }
-
-    .chart-insight-icon {
-        display: inline-block;
-        margin-right: 0.5rem;
-        color: var(--analytics-primary);
-    }
-
     .chart-card:hover {
         box-shadow: 0 4px 12px rgba(107, 70, 193, 0.08);
         border-color: var(--analytics-primary);
@@ -1713,21 +1691,6 @@
                 </div>
             </h3>
             <canvas id="severityChart"></canvas>
-            <div class="chart-insight">
-                <span class="chart-insight-icon">💡</span>
-                <strong>Insight:</strong>
-                {% with fatal_pct=fatal_count|floatformat:0|add:"0"|default:0 total=total_accidents|add:"0"|default:1 %}
-                {% widthratio fatal_count total 100 as fatal_rate %}
-                {% widthratio injury_count total 100 as injury_rate %}
-                {% if fatal_rate >= 15 %}
-                Fatal accidents represent <strong>{{ fatal_rate }}%</strong> of all incidents - a critical safety concern requiring immediate intervention and enhanced enforcement measures.
-                {% elif injury_rate >= 60 %}
-                Injury-related accidents dominate at <strong>{{ injury_rate }}%</strong>, indicating need for improved road safety infrastructure and driver awareness programs.
-                {% else %}
-                Most accidents ({{ 100|add:"-"|add:fatal_rate|add:"-"|add:injury_rate }}%) result in property damage only, suggesting effective safety measures but room for accident prevention.
-                {% endif %}
-                {% endwith %}
-            </div>
         </div>
         {% endif %}
 
@@ -2539,6 +2502,25 @@ function updatePageContent(url, forcedScrollPosition = null) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    return datasets.map((dataset, i) => {
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        return {
+                                            text: `${dataset.label}: ${total} total`,
+                                            fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true
@@ -2643,6 +2625,25 @@ function updatePageContent(url, forcedScrollPosition = null) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    return datasets.map((dataset, i) => {
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        return {
+                                            text: `${dataset.label}: ${total} total`,
+                                            fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true
@@ -2677,6 +2678,25 @@ function updatePageContent(url, forcedScrollPosition = null) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    return datasets.map((dataset, i) => {
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        return {
+                                            text: `${dataset.label}: ${total} total`,
+                                            fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true
@@ -2711,6 +2731,25 @@ function updatePageContent(url, forcedScrollPosition = null) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    return datasets.map((dataset, i) => {
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        return {
+                                            text: `${dataset.label}: ${total} total`,
+                                            fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true
@@ -2751,6 +2790,25 @@ function updatePageContent(url, forcedScrollPosition = null) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    return datasets.map((dataset, i) => {
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        return {
+                                            text: `${dataset.label}: ${total} total`,
+                                            fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true
@@ -2798,6 +2856,25 @@ function updatePageContent(url, forcedScrollPosition = null) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    return datasets.map((dataset, i) => {
+                                        const total = dataset.data.filter(v => v !== null).reduce((a, b) => a + b, 0);
+                                        return {
+                                            text: `${dataset.label}: ${Math.round(total)} total`,
+                                            fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true
@@ -2862,6 +2939,20 @@ function updatePageContent(url, forcedScrollPosition = null) {
                     plugins: {
                         legend: {
                             position: 'top',
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    return datasets.map((dataset, i) => {
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        return {
+                                            text: `${dataset.label}: ${total} total`,
+                                            fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
                         }
                     }
                 }
@@ -2903,7 +2994,21 @@ function updatePageContent(url, forcedScrollPosition = null) {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: false
+                            display: true,
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    return datasets.map((dataset, i) => {
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        return {
+                                            text: `${dataset.label}: ${total} total`,
+                                            fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -2973,6 +3078,20 @@ function updatePageContent(url, forcedScrollPosition = null) {
                     plugins: {
                         legend: {
                             position: 'top',
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    return datasets.map((dataset, i) => {
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        return {
+                                            text: `${dataset.label}: ${total} total`,
+                                            fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -3514,6 +3633,22 @@ function expandChart(chartId, chartTitle) {
         data: JSON.parse(JSON.stringify(originalChart.config.data)),
         options: JSON.parse(JSON.stringify(originalChart.config.options))
     };
+
+    // Preserve generateLabels function from original chart (lost in JSON serialization)
+    if (originalChart.config.options &&
+        originalChart.config.options.plugins &&
+        originalChart.config.options.plugins.legend &&
+        originalChart.config.options.plugins.legend.labels &&
+        originalChart.config.options.plugins.legend.labels.generateLabels) {
+
+        if (!config.options.plugins) config.options.plugins = {};
+        if (!config.options.plugins.legend) config.options.plugins.legend = {};
+        if (!config.options.plugins.legend.labels) config.options.plugins.legend.labels = {};
+
+        // Copy the generateLabels function directly
+        config.options.plugins.legend.labels.generateLabels =
+            originalChart.config.options.plugins.legend.labels.generateLabels;
+    }
 
     // Enhance options for larger view
     if (config.options) {
