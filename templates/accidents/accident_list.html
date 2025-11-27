@@ -409,14 +409,35 @@
     .filter-tag {
         background: #E8F0FE;
         color: #003087;
-        padding: 0.375rem 0.75rem;
-        border-radius: 6px;
+        padding: 0.5rem 0.875rem;
+        border-radius: 8px;
         font-size: 0.8125rem;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
         font-weight: 500;
         border: 1px solid #BBDEFB;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 48, 135, 0.1);
+    }
+
+    .filter-tag:hover {
+        box-shadow: 0 2px 6px rgba(0, 48, 135, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .filter-icon {
+        font-size: 1rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .filter-content {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
     }
 
     .filter-tag button {
@@ -462,14 +483,35 @@
     .filter-tag {
         background: #E8F0FE;
         color: #003087;
-        padding: 0.375rem 0.75rem;
-        border-radius: 6px;
+        padding: 0.5rem 0.875rem;
+        border-radius: 8px;
         font-size: 0.8125rem;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
         font-weight: 500;
         border: 1px solid #BBDEFB;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 48, 135, 0.1);
+    }
+
+    .filter-tag:hover {
+        box-shadow: 0 2px 6px rgba(0, 48, 135, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .filter-icon {
+        font-size: 1rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .filter-content {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
     }
 
     .filter-tag button {
@@ -2090,42 +2132,48 @@ function updateActiveFilters() {
 
     if (searchTerm) {
         activeFiltersHTML += `<div class="filter-tag">
-            <i class="fas fa-search"></i> Search: "${searchTerm}"
+            <span class="filter-icon"><i class="fas fa-magnifying-glass"></i></span>
+            <span class="filter-content"><strong>Search:</strong> "${searchTerm}"</span>
             <button onclick="removeServerFilter('search')">×</button>
         </div>`;
     }
 
     if (province) {
         activeFiltersHTML += `<div class="filter-tag">
-            <i class="fas fa-map-marker-alt"></i> Province: ${province}
+            <span class="filter-icon"><i class="fa-solid fa-landmark"></i></span>
+            <span class="filter-content"><strong>Province:</strong> ${province}</span>
             <button onclick="removeServerFilter('province')">×</button>
         </div>`;
     }
 
     if (municipal) {
         activeFiltersHTML += `<div class="filter-tag">
-            <i class="fas fa-city"></i> Municipality: ${municipal}
+            <span class="filter-icon"><i class="fa-solid fa-city"></i></span>
+            <span class="filter-content"><strong>Municipality:</strong> ${municipal}</span>
             <button onclick="removeServerFilter('municipal')">×</button>
         </div>`;
     }
 
     if (year) {
         activeFiltersHTML += `<div class="filter-tag">
-            <i class="fas fa-calendar"></i> Year: ${year}
+            <span class="filter-icon"><i class="fa-regular fa-calendar-days"></i></span>
+            <span class="filter-content"><strong>Year:</strong> ${year}</span>
             <button onclick="removeServerFilter('year')">×</button>
         </div>`;
     }
 
     if (dateFrom) {
         activeFiltersHTML += `<div class="filter-tag">
-            <i class="fas fa-calendar-day"></i> From: ${dateFrom}
+            <span class="filter-icon"><i class="fa-regular fa-calendar-check"></i></span>
+            <span class="filter-content"><strong>From:</strong> ${dateFrom}</span>
             <button onclick="removeServerFilter('date_from')">×</button>
         </div>`;
     }
 
     if (dateTo) {
         activeFiltersHTML += `<div class="filter-tag">
-            <i class="fas fa-calendar-day"></i> To: ${dateTo}
+            <span class="filter-icon"><i class="fa-regular fa-calendar-days"></i></span>
+            <span class="filter-content"><strong>To:</strong> ${dateTo}</span>
             <button onclick="removeServerFilter('date_to')">×</button>
         </div>`;
     }

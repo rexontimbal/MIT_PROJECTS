@@ -235,14 +235,40 @@
     .filter-tag {
         background: #FEE2E2;
         color: #991B1B;
-        padding: 0.375rem 0.75rem;
-        border-radius: 6px;
+        padding: 0.5rem 0.875rem;
+        border-radius: 8px;
         font-size: 0.8125rem;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 0.5rem;
         font-weight: 500;
         border: 1px solid #FECACA;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(220, 20, 60, 0.1);
+    }
+
+    .filter-tag:hover {
+        box-shadow: 0 2px 6px rgba(220, 20, 60, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .filter-icon {
+        font-size: 1rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .filter-content {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .filter-content strong {
+        font-weight: 600;
+        color: #991B1B;
     }
 
     .filter-tag button {
@@ -1959,21 +1985,24 @@
 
         if (searchTerm) {
             activeFiltersHTML += `<div class="filter-tag">
-                Search: "${searchTerm}"
+                <span class="filter-icon"><i class="fas fa-magnifying-glass"></i></span>
+                <span class="filter-content"><strong>Search:</strong> "${searchTerm}"</span>
                 <button onclick="removeSearchFilter()">×</button>
             </div>`;
         }
 
         if (province) {
             activeFiltersHTML += `<div class="filter-tag">
-                Province: ${province}
+                <span class="filter-icon"><i class="fa-solid fa-landmark"></i></span>
+                <span class="filter-content"><strong>Province:</strong> ${province}</span>
                 <button onclick="removeFilter('province')">×</button>
             </div>`;
         }
 
         if (municipality) {
             activeFiltersHTML += `<div class="filter-tag">
-                Municipality: ${municipality}
+                <span class="filter-icon"><i class="fa-solid fa-city"></i></span>
+                <span class="filter-content"><strong>Municipality:</strong> ${municipality}</span>
                 <button onclick="removeFilter('municipality')">×</button>
             </div>`;
         }
@@ -1986,22 +2015,25 @@
             else if (minSeverity === '0') level = 'Low (0+)';
 
             activeFiltersHTML += `<div class="filter-tag">
-                Min Severity: ${level}
+                <span class="filter-icon"><i class="fa-solid fa-circle-exclamation"></i></span>
+                <span class="filter-content"><strong>Min Severity:</strong> ${level}</span>
                 <button onclick="removeFilter('min_severity')">×</button>
             </div>`;
         }
 
         if (minAccidents) {
             activeFiltersHTML += `<div class="filter-tag">
-                Min Accidents: ${minAccidents}+
+                <span class="filter-icon"><i class="fa-solid fa-car-burst"></i></span>
+                <span class="filter-content"><strong>Min Accidents:</strong> ${minAccidents}+</span>
                 <button onclick="removeFilter('min_accidents')">×</button>
             </div>`;
         }
 
         if (sortBy) {
-            const sortLabel = sortBy === 'accidents' ? 'Sorted by Accidents' : 'Sorted by Severity';
+            const sortLabel = sortBy === 'accidents' ? 'Accidents (High to Low)' : 'Severity (High to Low)';
             activeFiltersHTML += `<div class="filter-tag">
-                ${sortLabel}
+                <span class="filter-icon"><i class="fa-solid fa-arrow-down-wide-short"></i></span>
+                <span class="filter-content"><strong>Sort:</strong> ${sortLabel}</span>
                 <button onclick="removeFilter('sort_by')">×</button>
             </div>`;
         }
