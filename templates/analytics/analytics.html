@@ -1230,14 +1230,40 @@
     .filter-tag {
         background: #F3E8FF;
         color: #6B46C1;
-        padding: 0.375rem 0.75rem;
-        border-radius: 6px;
+        padding: 0.5rem 0.875rem;
+        border-radius: 8px;
         font-size: 0.8125rem;
         font-weight: 500;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
         border: 1px solid #E9D5FF;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(107, 70, 193, 0.1);
+    }
+
+    .filter-tag:hover {
+        box-shadow: 0 2px 6px rgba(107, 70, 193, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .filter-icon {
+        font-size: 1.125rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .filter-content {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .filter-content strong {
+        font-weight: 600;
+        color: #6B46C1;
     }
 
     .filter-tag button {
@@ -3231,66 +3257,108 @@ function updatePageContent(url, forcedScrollPosition = null) {
     function displayActiveFilters() {
         const params = new URLSearchParams(window.location.search);
         const list = document.getElementById('activeFiltersList');
+
+        // Get or initialize filter order tracking
+        let filterOrder = JSON.parse(sessionStorage.getItem('analyticsFilterOrder') || '[]');
+
+        // Define all possible filters with their icons and display info
+        const filterConfig = {
+            'from_date': {
+                icon: '📅',
+                label: 'From',
+                getValue: () => params.get('from_date')
+            },
+            'to_date': {
+                icon: '📅',
+                label: 'To',
+                getValue: () => params.get('to_date')
+            },
+            'province': {
+                icon: '🏛️',
+                label: 'Province',
+                getValue: () => params.get('province') !== 'all' ? params.get('province') : null
+            },
+            'municipal': {
+                icon: '🏘️',
+                label: 'Municipal',
+                getValue: () => params.get('municipal') !== 'all' ? params.get('municipal') : null
+            },
+            'severity': {
+                icon: '⚠️',
+                label: 'Severity',
+                getValue: () => {
+                    const val = params.get('severity');
+                    if (!val || val === 'all') return null;
+                    const severityMap = {
+                        'fatal': 'Fatal Only',
+                        'injury': 'Injury Only',
+                        'property': 'Property Damage Only'
+                    };
+                    return severityMap[val] || val;
+                }
+            },
+            'granularity': {
+                icon: '⏱️',
+                label: 'Time',
+                getValue: () => {
+                    const val = params.get('granularity');
+                    if (!val || val === 'monthly') return null;
+                    const granularityMap = {
+                        'daily': 'Daily',
+                        'weekly': 'Weekly',
+                        'quarterly': 'Quarterly'
+                    };
+                    return granularityMap[val] || val;
+                }
+            },
+            'analysis_type': {
+                icon: '📊',
+                label: 'Analysis',
+                getValue: () => {
+                    const val = params.get('analysis_type');
+                    return (val && val !== 'overview') ? val : null;
+                }
+            }
+        };
+
+        // Collect active filters
+        const activeFilters = [];
+        for (const [filterName, config] of Object.entries(filterConfig)) {
+            const value = config.getValue();
+            if (value) {
+                // Track order: add to filterOrder if not already there
+                if (!filterOrder.includes(filterName)) {
+                    filterOrder.push(filterName);
+                }
+                activeFilters.push({
+                    name: filterName,
+                    icon: config.icon,
+                    label: config.label,
+                    value: value,
+                    order: filterOrder.indexOf(filterName)
+                });
+            }
+        }
+
+        // Remove filters from order that are no longer active
+        filterOrder = filterOrder.filter(name => activeFilters.some(f => f.name === name));
+        sessionStorage.setItem('analyticsFilterOrder', JSON.stringify(filterOrder));
+
+        // Sort by order (earliest first, left to right)
+        activeFilters.sort((a, b) => a.order - b.order);
+
+        // Build HTML with icons
         let activeFiltersHTML = '';
-
-        // Check each filter and create dismissible tags
-        if (params.get('from_date')) {
-            activeFiltersHTML += `<span class="filter-tag">
-                From: ${params.get('from_date')}
-                <button onclick="removeFilter('from_date')" style="background: none; border: none; color: var(--analytics-primary); cursor: pointer; font-weight: 600; font-size: 1.125rem; line-height: 1; padding: 0; margin-left: 0.25rem;">×</button>
-            </span>`;
-        }
-
-        if (params.get('to_date')) {
-            activeFiltersHTML += `<span class="filter-tag">
-                To: ${params.get('to_date')}
-                <button onclick="removeFilter('to_date')" style="background: none; border: none; color: var(--analytics-primary); cursor: pointer; font-weight: 600; font-size: 1.125rem; line-height: 1; padding: 0; margin-left: 0.25rem;">×</button>
-            </span>`;
-        }
-
-        if (params.get('severity') && params.get('severity') !== 'all') {
-            const severityMap = {
-                'fatal': 'Fatal Only',
-                'injury': 'Injury Only',
-                'property': 'Property Damage Only'
-            };
-            activeFiltersHTML += `<span class="filter-tag">
-                Severity: ${severityMap[params.get('severity')] || params.get('severity')}
-                <button onclick="removeFilter('severity')" style="background: none; border: none; color: var(--analytics-primary); cursor: pointer; font-weight: 600; font-size: 1.125rem; line-height: 1; padding: 0; margin-left: 0.25rem;">×</button>
-            </span>`;
-        }
-
-        if (params.get('province') && params.get('province') !== 'all') {
-            activeFiltersHTML += `<span class="filter-tag">
-                Province: ${params.get('province')}
-                <button onclick="removeFilter('province')" style="background: none; border: none; color: var(--analytics-primary); cursor: pointer; font-weight: 600; font-size: 1.125rem; line-height: 1; padding: 0; margin-left: 0.25rem;">×</button>
-            </span>`;
-        }
-
-        if (params.get('municipal') && params.get('municipal') !== 'all') {
-            activeFiltersHTML += `<span class="filter-tag">
-                Municipal: ${params.get('municipal')}
-                <button onclick="removeFilter('municipal')" style="background: none; border: none; color: var(--analytics-primary); cursor: pointer; font-weight: 600; font-size: 1.125rem; line-height: 1; padding: 0; margin-left: 0.25rem;">×</button>
-            </span>`;
-        }
-
-        if (params.get('granularity') && params.get('granularity') !== 'monthly') {
-            const granularityMap = {
-                'daily': 'Daily',
-                'weekly': 'Weekly',
-                'quarterly': 'Quarterly'
-            };
-            activeFiltersHTML += `<span class="filter-tag">
-                Time: ${granularityMap[params.get('granularity')] || params.get('granularity')}
-                <button onclick="removeFilter('granularity')" style="background: none; border: none; color: var(--analytics-primary); cursor: pointer; font-weight: 600; font-size: 1.125rem; line-height: 1; padding: 0; margin-left: 0.25rem;">×</button>
-            </span>`;
-        }
-
-        if (params.get('analysis_type') && params.get('analysis_type') !== 'overview') {
-            activeFiltersHTML += `<span class="filter-tag">
-                Analysis: ${params.get('analysis_type')}
-                <button onclick="removeFilter('analysis_type')" style="background: none; border: none; color: var(--analytics-primary); cursor: pointer; font-weight: 600; font-size: 1.125rem; line-height: 1; padding: 0; margin-left: 0.25rem;">×</button>
-            </span>`;
+        for (const filter of activeFilters) {
+            activeFiltersHTML += `
+                <span class="filter-tag" data-filter="${filter.name}">
+                    <span class="filter-icon">${filter.icon}</span>
+                    <span class="filter-content">
+                        <strong>${filter.label}:</strong> ${filter.value}
+                    </span>
+                    <button onclick="removeFilter('${filter.name}')" title="Remove filter">×</button>
+                </span>
+            `;
         }
 
         // Display active filters
@@ -3299,6 +3367,8 @@ function updatePageContent(url, forcedScrollPosition = null) {
             list.style.display = 'flex';
         } else {
             list.style.display = 'none';
+            // Clear order when no filters
+            sessionStorage.removeItem('analyticsFilterOrder');
         }
     }
 
@@ -3364,6 +3434,9 @@ function updatePageContent(url, forcedScrollPosition = null) {
         if (toDateDisplayEl) toDateDisplayEl.value = '';
 
         console.log('🔍 Scroll AFTER clearing inputs:', window.pageYOffset || document.documentElement.scrollTop);
+
+        // Clear filter order tracking
+        sessionStorage.removeItem('analyticsFilterOrder');
 
         // Update page content without reload, passing saved scroll position
         updatePageContent(window.location.pathname, savedScrollPosition);
