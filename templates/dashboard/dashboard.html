@@ -1213,12 +1213,31 @@
         // Accidents Over Time Chart
         const timeLabels = {{ time_labels|safe }};
         const timeData = {{ time_data|safe }};
-        AGNESSystem.createLineChart(
-            'accidentsTimeChart',
-            timeLabels,
-            timeData,
-            'Number of Accidents'
-        );
+
+        // Debug: Log data to console
+        console.log('Accidents Over Time - Labels:', timeLabels);
+        console.log('Accidents Over Time - Data:', timeData);
+
+        // Create chart only if data exists
+        if (timeLabels && timeLabels.length > 0) {
+            AGNESSystem.createLineChart(
+                'accidentsTimeChart',
+                timeLabels,
+                timeData,
+                'Number of Accidents'
+            );
+        } else {
+            console.warn('No data available for Accidents Over Time chart');
+            // Display message in canvas area
+            const canvas = document.getElementById('accidentsTimeChart');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#666';
+                ctx.textAlign = 'center';
+                ctx.fillText('No accident data available for the last 12 months', canvas.width / 2, canvas.height / 2);
+            }
+        }
 
         // Province Chart
         const provinceLabels = {{ province_labels|safe }};

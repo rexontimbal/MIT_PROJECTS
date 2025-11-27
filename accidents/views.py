@@ -173,12 +173,14 @@ def dashboard(request):
 
 
 def get_accidents_over_time(months=12):
-    """Get accident counts for the last N months"""
+    """Get accident counts for the last N months - Always returns all months"""
     from django.db.models.functions import TruncMonth
-    
+    from dateutil.relativedelta import relativedelta
+
     end_date = timezone.now().date()
-    start_date = end_date - timedelta(days=months * 30)
-    
+    start_date = end_date - relativedelta(months=months)
+
+    # Get actual accident counts by month
     accidents_by_month = Accident.objects.filter(
         date_committed__gte=start_date,
         date_committed__lte=end_date
@@ -187,15 +189,32 @@ def get_accidents_over_time(months=12):
     ).values('month').annotate(
         count=Count('id')
     ).order_by('month')
-    
-    # Format labels and data
+
+    # Create a dictionary of month -> count
+    accident_counts = {}
+    for item in accidents_by_month:
+        if item['month']:
+            month_key = item['month'].strftime('%Y-%m')
+            accident_counts[month_key] = item['count']
+
+    # Generate all months in range (even if no accidents)
     labels = []
     data = []
-    
-    for item in accidents_by_month:
-        labels.append(item['month'].strftime('%B %Y'))
-        data.append(item['count'])
-    
+
+    current_month = start_date.replace(day=1)
+    end_month = end_date.replace(day=1)
+
+    while current_month <= end_month:
+        # Format label
+        labels.append(current_month.strftime('%B %Y'))
+
+        # Get count for this month (0 if no accidents)
+        month_key = current_month.strftime('%Y-%m')
+        data.append(accident_counts.get(month_key, 0))
+
+        # Move to next month
+        current_month = current_month + relativedelta(months=1)
+
     return {'labels': labels, 'data': data}
 
 
