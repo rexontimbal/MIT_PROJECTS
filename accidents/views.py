@@ -35,8 +35,8 @@ def dashboard(request):
     from django.db.models import Count, Q, Sum
     from django.core.cache import cache
 
-    # Cache key for dashboard data (v2 = all historical data)
-    cache_key = 'dashboard_data_v2'
+    # Cache key for dashboard data
+    cache_key = 'dashboard_data'
     cached_data = cache.get(cache_key)
 
     if cached_data and not is_ajax:
@@ -114,8 +114,7 @@ def dashboard(request):
         ).order_by('-severity_score')[:5]
 
         # Get chart data (these are already optimized in their functions)
-        # Show ALL historical data (from earliest accident to present)
-        time_data = get_accidents_over_time()  # No parameter = all historical data
+        time_data = get_accidents_over_time(12)
         province_data = get_accidents_by_province()
         type_data = get_accidents_by_type()
         time_of_day_data = get_accidents_by_time_of_day()
@@ -173,25 +172,13 @@ def dashboard(request):
         return render(request, 'dashboard/dashboard.html', context)
 
 
-def get_accidents_over_time(months=None):
-    """Get accident counts over time - Shows ALL historical data by default"""
+def get_accidents_over_time(months=12):
+    """Get accident counts for the last N months - Always returns all months"""
     from django.db.models.functions import TruncMonth
     from dateutil.relativedelta import relativedelta
 
     end_date = timezone.now().date()
-
-    # Get earliest accident date to show all historical data
-    earliest_accident = Accident.objects.order_by('date_committed').first()
-
-    if earliest_accident:
-        start_date = earliest_accident.date_committed.replace(day=1)
-    else:
-        # Fallback if no accidents: show last 12 months
-        start_date = end_date - relativedelta(months=12)
-
-    # Override with months parameter if provided (for compatibility)
-    if months:
-        start_date = end_date - relativedelta(months=months)
+    start_date = end_date - relativedelta(months=months)
 
     # Get actual accident counts by month
     accidents_by_month = Accident.objects.filter(
@@ -218,14 +205,8 @@ def get_accidents_over_time(months=None):
     end_month = end_date.replace(day=1)
 
     while current_month <= end_month:
-        # Format label: Show year only once per year for readability
-        # For years with many months, use compact format
-        if current_month.month == 1:
-            # January: show "Jan 2019"
-            labels.append(current_month.strftime('%b %Y'))
-        else:
-            # Other months: show "Feb", "Mar", etc (cleaner)
-            labels.append(current_month.strftime('%b'))
+        # Format label
+        labels.append(current_month.strftime('%B %Y'))
 
         # Get count for this month (0 if no accidents)
         month_key = current_month.strftime('%Y-%m')
