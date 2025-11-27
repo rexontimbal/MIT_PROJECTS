@@ -3264,27 +3264,27 @@ function updatePageContent(url, forcedScrollPosition = null) {
         // Define all possible filters with their icons and display info
         const filterConfig = {
             'from_date': {
-                icon: '📅',
+                icon: '<i class="fa-regular fa-calendar-check"></i>',
                 label: 'From',
                 getValue: () => params.get('from_date')
             },
             'to_date': {
-                icon: '📅',
+                icon: '<i class="fa-regular fa-calendar-days"></i>',
                 label: 'To',
                 getValue: () => params.get('to_date')
             },
             'province': {
-                icon: '🏛️',
+                icon: '<i class="fa-solid fa-landmark"></i>',
                 label: 'Province',
                 getValue: () => params.get('province') !== 'all' ? params.get('province') : null
             },
             'municipal': {
-                icon: '🏘️',
+                icon: '<i class="fa-solid fa-city"></i>',
                 label: 'Municipal',
                 getValue: () => params.get('municipal') !== 'all' ? params.get('municipal') : null
             },
             'severity': {
-                icon: '⚠️',
+                icon: '<i class="fa-solid fa-circle-exclamation"></i>',
                 label: 'Severity',
                 getValue: () => {
                     const val = params.get('severity');
@@ -3298,7 +3298,7 @@ function updatePageContent(url, forcedScrollPosition = null) {
                 }
             },
             'granularity': {
-                icon: '⏱️',
+                icon: '<i class="fa-regular fa-clock"></i>',
                 label: 'Time',
                 getValue: () => {
                     const val = params.get('granularity');
@@ -3312,7 +3312,7 @@ function updatePageContent(url, forcedScrollPosition = null) {
                 }
             },
             'analysis_type': {
-                icon: '📊',
+                icon: '<i class="fa-solid fa-chart-line"></i>',
                 label: 'Analysis',
                 getValue: () => {
                     const val = params.get('analysis_type');
