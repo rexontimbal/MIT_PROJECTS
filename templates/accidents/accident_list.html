@@ -300,10 +300,10 @@
 
     .filter-group select,
     .filter-group input[type="date"] {
-        padding: 0.625rem 0.875rem;
+        padding: 0.5rem 0.75rem;
         border: 1.5px solid #D1D5DB;
         border-radius: 6px;
-        font-size: 0.875rem;
+        font-size: 0.85rem;
         transition: all 0.2s ease;
         background: white;
         cursor: pointer;
@@ -424,6 +424,7 @@
     .filter-tag:hover {
         box-shadow: 0 2px 6px rgba(0, 48, 135, 0.2);
         transform: translateY(-1px);
+        border-color: #003087;
     }
 
     .filter-icon {
@@ -498,6 +499,7 @@
     .filter-tag:hover {
         box-shadow: 0 2px 6px rgba(0, 48, 135, 0.2);
         transform: translateY(-1px);
+        border-color: #003087;
     }
 
     .filter-icon {
@@ -2121,60 +2123,77 @@ function updateActiveFilters() {
     const activeFilters = document.getElementById('activeFilters');
     const urlParams = new URLSearchParams(window.location.search);
 
-    const searchTerm = urlParams.get('search') || '';
-    const province = urlParams.get('province') || '';
-    const municipal = urlParams.get('municipal') || '';
-    const year = urlParams.get('year') || '';
-    const dateFrom = urlParams.get('date_from') || '';
-    const dateTo = urlParams.get('date_to') || '';
+    // Get or initialize filter order tracking
+    let filterOrder = JSON.parse(sessionStorage.getItem('accidentFilterOrder') || '[]');
 
+    // Define all possible filters with their icons and display info
+    const filterConfig = {
+        'search': {
+            icon: '<i class="fas fa-magnifying-glass"></i>',
+            label: 'Search',
+            getValue: () => urlParams.get('search') || null
+        },
+        'province': {
+            icon: '<i class="fa-solid fa-landmark"></i>',
+            label: 'Province',
+            getValue: () => urlParams.get('province') || null
+        },
+        'municipal': {
+            icon: '<i class="fa-solid fa-city"></i>',
+            label: 'Municipality',
+            getValue: () => urlParams.get('municipal') || null
+        },
+        'year': {
+            icon: '<i class="fa-regular fa-calendar-days"></i>',
+            label: 'Year',
+            getValue: () => urlParams.get('year') || null
+        },
+        'date_from': {
+            icon: '<i class="fa-regular fa-calendar-check"></i>',
+            label: 'From',
+            getValue: () => urlParams.get('date_from') || null
+        },
+        'date_to': {
+            icon: '<i class="fa-regular fa-calendar-days"></i>',
+            label: 'To',
+            getValue: () => urlParams.get('date_to') || null
+        }
+    };
+
+    // Collect active filters
+    const activeFiltersList = [];
+    for (const [filterName, config] of Object.entries(filterConfig)) {
+        const value = config.getValue();
+        if (value) {
+            // Track order: add to filterOrder if not already there
+            if (!filterOrder.includes(filterName)) {
+                filterOrder.push(filterName);
+            }
+            activeFiltersList.push({
+                name: filterName,
+                icon: config.icon,
+                label: config.label,
+                value: value,
+                order: filterOrder.indexOf(filterName)
+            });
+        }
+    }
+
+    // Remove filters from order that are no longer active
+    filterOrder = filterOrder.filter(name => activeFiltersList.some(f => f.name === name));
+    sessionStorage.setItem('accidentFilterOrder', JSON.stringify(filterOrder));
+
+    // Sort by order (earliest first, left to right)
+    activeFiltersList.sort((a, b) => a.order - b.order);
+
+    // Build HTML
     let activeFiltersHTML = '';
-
-    if (searchTerm) {
+    for (const filter of activeFiltersList) {
+        const displayValue = filter.name === 'search' ? `"${filter.value}"` : filter.value;
         activeFiltersHTML += `<div class="filter-tag">
-            <span class="filter-icon"><i class="fas fa-magnifying-glass"></i></span>
-            <span class="filter-content"><strong>Search:</strong> "${searchTerm}"</span>
-            <button onclick="removeServerFilter('search')">×</button>
-        </div>`;
-    }
-
-    if (province) {
-        activeFiltersHTML += `<div class="filter-tag">
-            <span class="filter-icon"><i class="fa-solid fa-landmark"></i></span>
-            <span class="filter-content"><strong>Province:</strong> ${province}</span>
-            <button onclick="removeServerFilter('province')">×</button>
-        </div>`;
-    }
-
-    if (municipal) {
-        activeFiltersHTML += `<div class="filter-tag">
-            <span class="filter-icon"><i class="fa-solid fa-city"></i></span>
-            <span class="filter-content"><strong>Municipality:</strong> ${municipal}</span>
-            <button onclick="removeServerFilter('municipal')">×</button>
-        </div>`;
-    }
-
-    if (year) {
-        activeFiltersHTML += `<div class="filter-tag">
-            <span class="filter-icon"><i class="fa-regular fa-calendar-days"></i></span>
-            <span class="filter-content"><strong>Year:</strong> ${year}</span>
-            <button onclick="removeServerFilter('year')">×</button>
-        </div>`;
-    }
-
-    if (dateFrom) {
-        activeFiltersHTML += `<div class="filter-tag">
-            <span class="filter-icon"><i class="fa-regular fa-calendar-check"></i></span>
-            <span class="filter-content"><strong>From:</strong> ${dateFrom}</span>
-            <button onclick="removeServerFilter('date_from')">×</button>
-        </div>`;
-    }
-
-    if (dateTo) {
-        activeFiltersHTML += `<div class="filter-tag">
-            <span class="filter-icon"><i class="fa-regular fa-calendar-days"></i></span>
-            <span class="filter-content"><strong>To:</strong> ${dateTo}</span>
-            <button onclick="removeServerFilter('date_to')">×</button>
+            <span class="filter-icon">${filter.icon}</span>
+            <span class="filter-content"><strong>${filter.label}:</strong> ${displayValue}</span>
+            <button onclick="removeServerFilter('${filter.name}')">×</button>
         </div>`;
     }
 
@@ -2183,6 +2202,8 @@ function updateActiveFilters() {
         activeFilters.classList.remove('hidden');
     } else {
         activeFilters.classList.add('hidden');
+        // Clear order when no filters
+        sessionStorage.removeItem('accidentFilterOrder');
     }
 }
 
@@ -3026,13 +3047,13 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
 
             <div class="filter-group">
                 <label for="date_from">From</label>
-                <input type="text" readonly class="form-control date-selector" id="date_from_display" placeholder="Start" onclick="openDateModal('from')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.625rem 0.875rem; border: 1.5px solid #D1D5DB; border-radius: 6px; width: 100%;">
+                <input type="text" readonly class="form-control date-selector" id="date_from_display" placeholder="Start" onclick="openDateModal('from')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.375rem 0.5rem; border: 1.5px solid #D1D5DB; border-radius: 6px; width: 100%;">
                 <input type="hidden" name="date_from" id="date_from">
             </div>
 
             <div class="filter-group">
                 <label for="date_to">To</label>
-                <input type="text" readonly class="form-control date-selector" id="date_to_display" placeholder="End" onclick="openDateModal('to')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.625rem 0.875rem; border: 1.5px solid #D1D5DB; border-radius: 6px; width: 100%;">
+                <input type="text" readonly class="form-control date-selector" id="date_to_display" placeholder="End" onclick="openDateModal('to')" style="cursor: pointer; background: white; font-size: 0.85rem; padding: 0.375rem 0.5rem; border: 1.5px solid #D1D5DB; border-radius: 6px; width: 100%;">
                 <input type="hidden" name="date_to" id="date_to">
             </div>
         </div>
