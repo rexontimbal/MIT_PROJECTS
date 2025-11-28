@@ -1738,13 +1738,31 @@
         const currentlySelectedMunicipality = municipalitySelect.value;
 
         // Clear the dropdown
-        municipalitySelect.value = '';
         municipalitySelect.innerHTML = '<option value="">All Municipalities</option>';
 
         // Determine which municipalities to show
         let municipalitiesToShow = selectedProvince ?
             (provinceMunicipalityMap[selectedProvince] || []) :
             allMunicipalities;
+
+        // Check if current municipality doesn't match the selected province
+        if (currentlySelectedMunicipality && selectedProvince && !municipalitiesToShow.includes(currentlySelectedMunicipality)) {
+            // Municipality doesn't belong to this province - clear it
+            municipalitySelect.value = '';
+            console.log('❌ Municipality auto-cleared:', currentlySelectedMunicipality, 'not in', selectedProvince);
+
+            // Rebuild dropdown
+            municipalitiesToShow.forEach(function(mun) {
+                const option = document.createElement('option');
+                option.value = mun;
+                option.textContent = mun;
+                municipalitySelect.appendChild(option);
+            });
+
+            // Trigger filter update to remove badge
+            updateActiveFilters();
+            return;
+        }
 
         // Rebuild the dropdown
         municipalitiesToShow.forEach(function(mun) {
@@ -1758,8 +1776,6 @@
         if (currentlySelectedMunicipality && municipalitiesToShow.includes(currentlySelectedMunicipality)) {
             municipalitySelect.value = currentlySelectedMunicipality;
             console.log('✅ Municipality preserved:', currentlySelectedMunicipality, 'is in', selectedProvince);
-        } else if (currentlySelectedMunicipality) {
-            console.log('❌ Municipality cleared:', currentlySelectedMunicipality, 'not in', selectedProvince);
         }
     }
 

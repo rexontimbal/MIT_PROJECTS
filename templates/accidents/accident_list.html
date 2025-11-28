@@ -2282,20 +2282,49 @@ function updateMunicipalityDropdown() {
     const provinceSelect = document.getElementById('province');
     const municipalitySelect = document.getElementById('municipal');
     const selectedProvince = provinceSelect.value;
+    const currentMunicipal = municipalitySelect.value;
 
-    municipalitySelect.value = '';
+    // Clear and reset dropdown
     municipalitySelect.innerHTML = '<option value="">All Municipalities</option>';
 
-    let municipalitiesToShow = selectedProvince ?
-        (municipalityData[selectedProvince] || []) :
-        [];
+    let municipalitiesToShow = [];
 
+    if (selectedProvince) {
+        // Show only municipalities for selected province
+        municipalitiesToShow = municipalityData[selectedProvince] || [];
+
+        // Check if current municipal belongs to the new province
+        if (currentMunicipal && !municipalitiesToShow.includes(currentMunicipal)) {
+            // Municipal doesn't belong to this province - clear it and trigger update
+            municipalitySelect.value = '';
+            // Update URL to remove municipal parameter
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.delete('municipal');
+            currentUrl.searchParams.delete('page'); // Reset to first page
+            updatePageContent(currentUrl.toString());
+            return; // Exit early since we're triggering a page update
+        }
+    } else {
+        // No province selected - show ALL municipalities from all provinces
+        const allMunicipalities = new Set();
+        for (const province in municipalityData) {
+            municipalityData[province].forEach(mun => allMunicipalities.add(mun));
+        }
+        municipalitiesToShow = Array.from(allMunicipalities).sort();
+    }
+
+    // Populate dropdown
     municipalitiesToShow.forEach(function(mun) {
         const option = document.createElement('option');
         option.value = mun;
         option.textContent = mun;
         municipalitySelect.appendChild(option);
     });
+
+    // Restore current municipal value if it's in the list
+    if (currentMunicipal && municipalitiesToShow.includes(currentMunicipal)) {
+        municipalitySelect.value = currentMunicipal;
+    }
 }
 
 // Export to CSV
@@ -2393,12 +2422,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initialize municipalities
-    updateMunicipalities();
-    
+    updateMunicipalityDropdown();
+
     // Province change handler
     const provinceSelect = document.getElementById('province');
     if (provinceSelect) {
-        provinceSelect.addEventListener('change', updateMunicipalities);
+        provinceSelect.addEventListener('change', updateMunicipalityDropdown);
     }
     
     // Set active quick filter based on URL
