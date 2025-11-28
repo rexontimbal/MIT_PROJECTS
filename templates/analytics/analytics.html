@@ -3780,6 +3780,22 @@ function expandChart(chartId, chartTitle) {
     // Store the chart ID for AJAX filtering
     currentChartId = chartId;
 
+    // Pre-populate chart date filter with main page's current date range
+    const mainFromDate = document.getElementById('from_date')?.value;
+    const mainToDate = document.getElementById('to_date')?.value;
+
+    if (mainFromDate) {
+        chartAppliedFromDate = new Date(mainFromDate);
+    } else {
+        chartAppliedFromDate = null;
+    }
+
+    if (mainToDate) {
+        chartAppliedToDate = new Date(mainToDate);
+    } else {
+        chartAppliedToDate = null;
+    }
+
     // Show modal with animation
     modal.classList.add('show');
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
