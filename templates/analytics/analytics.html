@@ -1968,7 +1968,7 @@
 
     <!-- Chart Date Range Modal -->
     <div class="chart-modal" id="chartDateModal">
-        <div class="chart-modal-content" style="max-width: 420px; height: auto;">
+        <div class="chart-modal-content" style="max-width: 520px; height: auto;">
             <div class="chart-modal-header">
                 <h3>📅 Chart Date Range</h3>
                 <button class="chart-modal-close" onclick="closeChartDateModal()">×</button>
@@ -3843,6 +3843,15 @@ function expandChart(chartId, chartTitle) {
     setTimeout(() => {
         const ctx = modalCanvas.getContext('2d');
         modalChartInstance = new Chart(ctx, config);
+
+        // Store the original unfiltered data for date filtering
+        currentChartData = JSON.parse(JSON.stringify(modalChartInstance.data));
+        currentChartId = chartId;
+
+        // If there are applied date filters, reapply them
+        if (chartAppliedFromDate || chartAppliedToDate) {
+            filterChartByDateRange();
+        }
     }, 100);
 }
 
@@ -4367,11 +4376,8 @@ let currentChartConfig = null;
 function openChartDateModal() {
     const modal = document.getElementById('chartDateModal');
 
-    // Store current chart data for filtering
-    if (modalChartInstance) {
-        currentChartConfig = JSON.parse(JSON.stringify(modalChartInstance.config));
-        currentChartData = JSON.parse(JSON.stringify(modalChartInstance.data));
-    }
+    // Note: currentChartData is already set in expandChart() with the original unfiltered data
+    // We don't overwrite it here to preserve the original data even if chart is currently filtered
 
     // Reset to 'from' tab
     chartCurrentEditingDate = 'from';
