@@ -1947,6 +1947,9 @@
             <div class="chart-modal-header">
                 <h3 id="modalChartTitle">Chart View</h3>
                 <div class="chart-modal-actions">
+                    <button class="chart-btn" onclick="openChartDateModal()" title="Filter chart by date range">
+                        <i class="far fa-calendar-days"></i> Date Range
+                    </button>
                     <button class="chart-btn" onclick="exportModalChart()" title="Export chart as HD image">
                         <i class="fas fa-download"></i> Export
                     </button>
@@ -1958,6 +1961,96 @@
             <div class="chart-modal-body">
                 <div class="chart-modal-canvas-container">
                     <canvas id="modalChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Date Range Modal -->
+    <div class="chart-modal" id="chartDateModal">
+        <div class="chart-modal-content" style="max-width: 420px; height: auto;">
+            <div class="chart-modal-header">
+                <h3>📅 Chart Date Range</h3>
+                <button class="chart-modal-close" onclick="closeChartDateModal()">×</button>
+            </div>
+            <div class="date-modal-body">
+                <!-- Date Range Tabs -->
+                <div class="date-range-tabs">
+                    <button class="date-tab active" onclick="switchChartDateTab('from')" id="chartFromTab">
+                        <span class="tab-label">From Date</span>
+                        <span class="tab-value" id="chartFromTabValue">Not set</span>
+                    </button>
+                    <button class="date-tab" onclick="switchChartDateTab('to')" id="chartToTab">
+                        <span class="tab-label">To Date</span>
+                        <span class="tab-value" id="chartToTabValue">Not set</span>
+                    </button>
+                </div>
+
+                <!-- Mini Alert (hidden by default) -->
+                <div class="date-modal-alert" id="chartDateModalAlert" style="display: none;">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-message" id="chartDateAlertMessage"></div>
+                </div>
+
+                <!-- Calendar Container -->
+                <div class="calendar-container">
+                    <!-- Calendar Header (Month/Year Selector) -->
+                    <div class="calendar-header">
+                        <button class="calendar-nav" onclick="changeChartMonth(-1)">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="calendar-title">
+                            <select id="chartCalendarMonth" class="calendar-select" onchange="updateChartCalendarDate()">
+                                <option value="0">January</option>
+                                <option value="1">February</option>
+                                <option value="2">March</option>
+                                <option value="3">April</option>
+                                <option value="4">May</option>
+                                <option value="5">June</option>
+                                <option value="6">July</option>
+                                <option value="7">August</option>
+                                <option value="8">September</option>
+                                <option value="9">October</option>
+                                <option value="10">November</option>
+                                <option value="11">December</option>
+                            </select>
+                            <select id="chartCalendarYear" class="calendar-select" onchange="updateChartCalendarDate()">
+                                <!-- Years will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <button class="calendar-nav" onclick="changeChartMonth(1)">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div class="calendar-weekdays">
+                        <div class="weekday">Su</div>
+                        <div class="weekday">Mo</div>
+                        <div class="weekday">Tu</div>
+                        <div class="weekday">We</div>
+                        <div class="weekday">Th</div>
+                        <div class="weekday">Fr</div>
+                        <div class="weekday">Sa</div>
+                    </div>
+                    <div class="calendar-days" id="chartCalendarDays">
+                        <!-- Days will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="date-modal-actions">
+                    <button class="btn btn-outline" onclick="clearChartDates()">
+                        <i class="fas fa-eraser"></i> Clear All
+                    </button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-outline" onclick="closeChartDateModal()">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary" onclick="applyChartDates()">
+                            <i class="fas fa-check"></i> Apply
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4254,12 +4347,360 @@ function applyDates() {
     updateCharts();
 }
 
+// ===== CHART DATE RANGE MODAL FUNCTIONS =====
+// Separate date tracking for chart-specific filtering
+let chartCurrentEditingDate = 'from'; // 'from' or 'to'
+let chartTempFromDate = null;
+let chartTempToDate = null;
+let chartCurrentCalendarMonth = new Date().getMonth();
+let chartCurrentCalendarYear = new Date().getFullYear();
+
+// Store the current chart being viewed
+let currentChartId = null;
+let currentChartData = null;
+let currentChartConfig = null;
+
+function openChartDateModal() {
+    const modal = document.getElementById('chartDateModal');
+
+    // Store current chart data for filtering
+    if (modalChartInstance) {
+        currentChartConfig = JSON.parse(JSON.stringify(modalChartInstance.config));
+        currentChartData = JSON.parse(JSON.stringify(modalChartInstance.data));
+    }
+
+    // Reset to 'from' tab
+    chartCurrentEditingDate = 'from';
+
+    // Hide any previous alerts
+    hideChartDateAlert();
+
+    // Reset temporary dates (chart filtering is independent)
+    chartTempFromDate = null;
+    chartTempToDate = null;
+
+    // Update tab display
+    updateChartTabDisplay();
+
+    // Set active tab
+    switchChartDateTab('from');
+
+    // Initialize calendar to current month
+    chartCurrentCalendarMonth = new Date().getMonth();
+    chartCurrentCalendarYear = new Date().getFullYear();
+
+    // Populate year dropdown
+    populateChartYearDropdown();
+
+    // Render calendar
+    renderChartCalendar();
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeChartDateModal() {
+    const modal = document.getElementById('chartDateModal');
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+    hideChartDateAlert();
+}
+
+function showChartDateAlert(message) {
+    const alert = document.getElementById('chartDateModalAlert');
+    const messageEl = document.getElementById('chartDateAlertMessage');
+    messageEl.textContent = message;
+    alert.style.display = 'flex';
+}
+
+function hideChartDateAlert() {
+    const alert = document.getElementById('chartDateModalAlert');
+    alert.style.display = 'none';
+}
+
+function switchChartDateTab(dateType) {
+    chartCurrentEditingDate = dateType;
+
+    // Hide alert when switching tabs
+    hideChartDateAlert();
+
+    // Update tab styling
+    document.getElementById('chartFromTab').classList.toggle('active', dateType === 'from');
+    document.getElementById('chartToTab').classList.toggle('active', dateType === 'to');
+
+    // Initialize calendar to existing date if one is set
+    const existingDate = dateType === 'from' ? chartTempFromDate : chartTempToDate;
+    if (existingDate) {
+        chartCurrentCalendarMonth = existingDate.getMonth();
+        chartCurrentCalendarYear = existingDate.getFullYear();
+
+        // Update dropdowns
+        document.getElementById('chartCalendarMonth').value = chartCurrentCalendarMonth;
+        document.getElementById('chartCalendarYear').value = chartCurrentCalendarYear;
+    }
+
+    // Re-render calendar
+    renderChartCalendar();
+}
+
+function updateChartTabDisplay() {
+    const fromTabValue = document.getElementById('chartFromTabValue');
+    const toTabValue = document.getElementById('chartToTabValue');
+
+    fromTabValue.textContent = chartTempFromDate ? formatDisplayDate(chartTempFromDate) : 'Not set';
+    toTabValue.textContent = chartTempToDate ? formatDisplayDate(chartTempToDate) : 'Not set';
+}
+
+function populateChartYearDropdown() {
+    const yearSelect = document.getElementById('chartCalendarYear');
+    yearSelect.innerHTML = '';
+
+    const currentYear = new Date().getFullYear();
+    for (let year = currentYear - 10; year <= currentYear + 5; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        if (year === chartCurrentCalendarYear) {
+            option.selected = true;
+        }
+        yearSelect.appendChild(option);
+    }
+}
+
+function updateChartCalendarDate() {
+    const monthSelect = document.getElementById('chartCalendarMonth');
+    const yearSelect = document.getElementById('chartCalendarYear');
+
+    chartCurrentCalendarMonth = parseInt(monthSelect.value);
+    chartCurrentCalendarYear = parseInt(yearSelect.value);
+
+    // Update the temp date for current editing field to 1st of selected month/year
+    const newDate = new Date(chartCurrentCalendarYear, chartCurrentCalendarMonth, 1);
+
+    if (chartCurrentEditingDate === 'from') {
+        chartTempFromDate = newDate;
+    } else {
+        chartTempToDate = newDate;
+    }
+
+    // Update display and re-render
+    updateChartTabDisplay();
+    renderChartCalendar();
+    hideChartDateAlert();
+}
+
+function renderChartCalendar() {
+    const monthSelect = document.getElementById('chartCalendarMonth');
+    const yearSelect = document.getElementById('chartCalendarYear');
+
+    chartCurrentCalendarMonth = parseInt(monthSelect.value);
+    chartCurrentCalendarYear = parseInt(yearSelect.value);
+
+    const daysContainer = document.getElementById('chartCalendarDays');
+    daysContainer.innerHTML = '';
+
+    // Get first day of month
+    const firstDay = new Date(chartCurrentCalendarYear, chartCurrentCalendarMonth, 1);
+    const lastDay = new Date(chartCurrentCalendarYear, chartCurrentCalendarMonth + 1, 0);
+    const prevLastDay = new Date(chartCurrentCalendarYear, chartCurrentCalendarMonth, 0);
+
+    const firstDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+    const daysInPrevMonth = prevLastDay.getDate();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Previous month days
+    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+        const day = daysInPrevMonth - i;
+        const dayElement = createChartDayElement(day, true);
+        daysContainer.appendChild(dayElement);
+    }
+
+    // Current month days
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayDate = new Date(chartCurrentCalendarYear, chartCurrentCalendarMonth, day);
+        const dayElement = createChartDayElement(day, false, dayDate);
+        daysContainer.appendChild(dayElement);
+    }
+
+    // Next month days to fill grid
+    const totalCells = daysContainer.children.length;
+    const remainingCells = 42 - totalCells;
+    for (let day = 1; day <= remainingCells; day++) {
+        const dayElement = createChartDayElement(day, true);
+        daysContainer.appendChild(dayElement);
+    }
+}
+
+function createChartDayElement(day, isOtherMonth, fullDate = null) {
+    const dayElement = document.createElement('div');
+    dayElement.className = 'calendar-day';
+    dayElement.textContent = day;
+
+    if (isOtherMonth) {
+        dayElement.classList.add('other-month');
+        return dayElement;
+    }
+
+    if (fullDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Check if today
+        if (fullDate.getTime() === today.getTime()) {
+            dayElement.classList.add('today');
+        }
+
+        // Check if selected
+        const selectedDate = chartCurrentEditingDate === 'from' ? chartTempFromDate : chartTempToDate;
+        if (selectedDate) {
+            const selected = new Date(selectedDate);
+            selected.setHours(0, 0, 0, 0);
+            if (fullDate.getTime() === selected.getTime()) {
+                dayElement.classList.add('selected');
+            }
+        }
+
+        // Add click handler
+        dayElement.addEventListener('click', () => selectChartDate(fullDate));
+    }
+
+    return dayElement;
+}
+
+function selectChartDate(date) {
+    if (chartCurrentEditingDate === 'from') {
+        chartTempFromDate = date;
+    } else {
+        chartTempToDate = date;
+    }
+
+    // Hide alert
+    hideChartDateAlert();
+
+    updateChartTabDisplay();
+    renderChartCalendar();
+}
+
+function changeChartMonth(delta) {
+    chartCurrentCalendarMonth += delta;
+
+    if (chartCurrentCalendarMonth > 11) {
+        chartCurrentCalendarMonth = 0;
+        chartCurrentCalendarYear++;
+    } else if (chartCurrentCalendarMonth < 0) {
+        chartCurrentCalendarMonth = 11;
+        chartCurrentCalendarYear--;
+    }
+
+    document.getElementById('chartCalendarMonth').value = chartCurrentCalendarMonth;
+    document.getElementById('chartCalendarYear').value = chartCurrentCalendarYear;
+
+    renderChartCalendar();
+}
+
+function clearChartDates() {
+    chartTempFromDate = null;
+    chartTempToDate = null;
+
+    updateChartTabDisplay();
+    renderChartCalendar();
+}
+
+function applyChartDates() {
+    // Validation: At least one date must be set
+    if (!chartTempFromDate && !chartTempToDate) {
+        showChartDateAlert('Please select at least one date to filter the chart.');
+        return;
+    }
+
+    // Filter the chart data based on selected dates
+    if (modalChartInstance && currentChartData) {
+        filterChartByDateRange();
+    }
+
+    // Close modal
+    closeChartDateModal();
+}
+
+function filterChartByDateRange() {
+    // This function filters the chart data based on the selected date range
+    // We need to filter the data labels and datasets
+
+    const fromDate = chartTempFromDate ? new Date(chartTempFromDate) : null;
+    const toDate = chartTempToDate ? new Date(chartTempToDate) : null;
+
+    // Clone the original data
+    const filteredData = JSON.parse(JSON.stringify(currentChartData));
+
+    // Get labels (these are usually dates)
+    const labels = filteredData.labels || [];
+    const datasets = filteredData.datasets || [];
+
+    // Find indices of labels within the date range
+    const filteredIndices = [];
+    labels.forEach((label, index) => {
+        // Try to parse the label as a date
+        let labelDate = null;
+
+        // Handle different label formats (e.g., "2024-01-15", "Jan 15", "January 2024")
+        try {
+            labelDate = new Date(label);
+            // Check if valid date
+            if (isNaN(labelDate.getTime())) {
+                // Try alternative parsing for formats like "Jan 2024" or "Week 1"
+                // For now, include all labels if parsing fails
+                filteredIndices.push(index);
+                return;
+            }
+        } catch (e) {
+            // If parsing fails, include the index
+            filteredIndices.push(index);
+            return;
+        }
+
+        // Check if date is within range
+        let inRange = true;
+        if (fromDate) {
+            inRange = inRange && labelDate >= fromDate;
+        }
+        if (toDate) {
+            // Include the entire "to" date by setting time to end of day
+            const toDateEnd = new Date(toDate);
+            toDateEnd.setHours(23, 59, 59, 999);
+            inRange = inRange && labelDate <= toDateEnd;
+        }
+
+        if (inRange) {
+            filteredIndices.push(index);
+        }
+    });
+
+    // Filter labels
+    filteredData.labels = filteredIndices.map(i => labels[i]);
+
+    // Filter datasets
+    filteredData.datasets = datasets.map(dataset => {
+        return {
+            ...dataset,
+            data: filteredIndices.map(i => dataset.data[i])
+        };
+    });
+
+    // Update the modal chart with filtered data
+    modalChartInstance.data = filteredData;
+    modalChartInstance.update();
+}
+
 // Close modal on ESC key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeChartModal();
         closeFilterHelp();
         closeDateModal();
+        closeChartDateModal();
     }
 });
 
@@ -4277,6 +4718,13 @@ document.getElementById('filterHelpModal')?.addEventListener('click', function(e
 document.getElementById('dateModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
         closeDateModal();
+    }
+});
+
+// Close chart date modal on background click
+document.getElementById('chartDateModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeChartDateModal();
     }
 });
 </script>
