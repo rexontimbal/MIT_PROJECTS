@@ -500,15 +500,7 @@
         align-items: center;
         background: white;
         flex-shrink: 0;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .chart-modal-header-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
+        position: relative;
     }
 
     .chart-modal-header h3 {
@@ -516,10 +508,13 @@
         color: var(--analytics-primary);
         font-size: 1.125rem;
         font-weight: 600;
-        flex: 1;
+        flex: 0 0 auto;
     }
 
     .chart-modal-date-range {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
         display: none;
         align-items: center;
         gap: 0.5rem;
@@ -1982,26 +1977,24 @@
             <div class="modal-resize-handle right" data-direction="right"></div>
 
             <div class="chart-modal-header">
-                <div class="chart-modal-header-top">
-                    <h3 id="modalChartTitle">Chart View</h3>
-                    <div class="chart-modal-actions">
-                        <button class="chart-btn" onclick="openChartDateModal()" title="Filter chart by date range">
-                            <i class="far fa-calendar-days"></i> Date Range
-                        </button>
-                        <button class="chart-btn" onclick="exportModalChart()" title="Export chart as HD image">
-                            <i class="fas fa-download"></i> Export
-                        </button>
-                    </div>
-                    <button class="chart-modal-close" onclick="closeChartModal()">
-                        ×
-                    </button>
-                </div>
+                <h3 id="modalChartTitle">Chart View</h3>
                 <div class="chart-modal-date-range" id="chartModalDateDisplay">
                     <i class="far fa-calendar-days"></i>
                     <span id="chartModalFromDate"></span>
                     <span class="date-separator">→</span>
                     <span id="chartModalToDate"></span>
                 </div>
+                <div class="chart-modal-actions">
+                    <button class="chart-btn" onclick="openChartDateModal()" title="Filter chart by date range">
+                        <i class="far fa-calendar-days"></i> Date Range
+                    </button>
+                    <button class="chart-btn" onclick="exportModalChart()" title="Export chart as HD image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+                <button class="chart-modal-close" onclick="closeChartModal()">
+                    ×
+                </button>
             </div>
             <div class="chart-modal-body">
                 <div class="chart-modal-canvas-container">
