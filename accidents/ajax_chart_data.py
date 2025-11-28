@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from django.db.models import Count, Q
 from django.db.models.functions import TruncMonth, TruncQuarter, TruncWeek, TruncDay, ExtractWeekDay, ExtractHour
 from .models import Accident
-from .decorators import pnp_login_required
+from .auth_utils import pnp_login_required
 import calendar
 
 
