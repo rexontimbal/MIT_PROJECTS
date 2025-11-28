@@ -4762,11 +4762,17 @@ function filterChartByDateRange() {
 
     // Find indices of labels within the date range
     const filteredIndices = [];
+
+    console.log('🔍 Starting date range filtering...');
+    console.log('From Date:', fromDate ? fromDate.toISOString() : 'Not set');
+    console.log('To Date:', toDate ? toDate.toISOString() : 'Not set');
+
     labels.forEach((label, index) => {
         const labelDate = parseFlexibleDate(label);
 
         // Check if valid date
         if (labelDate === null) {
+            if (index < 5) console.log(`⚠️ Label[${index}] "${label}" - Could not parse as date`);
             return; // Skip this label
         }
 
@@ -4780,19 +4786,31 @@ function filterChartByDateRange() {
         if (fromDate) {
             const fromDateStart = new Date(fromDate);
             fromDateStart.setHours(0, 0, 0, 0);
-            inRange = inRange && labelDateNormalized >= fromDateStart;
+            const fromCheck = labelDateNormalized >= fromDateStart;
+            inRange = inRange && fromCheck;
+
+            if (index < 5) {
+                console.log(`Label[${index}] "${label}" → ${labelDateNormalized.toISOString().split('T')[0]} >= ${fromDateStart.toISOString().split('T')[0]} = ${fromCheck}`);
+            }
         }
 
         if (toDate) {
             const toDateEnd = new Date(toDate);
             toDateEnd.setHours(23, 59, 59, 999);
-            inRange = inRange && labelDateNormalized <= toDateEnd;
+            const toCheck = labelDateNormalized <= toDateEnd;
+            inRange = inRange && toCheck;
+
+            if (index < 5) {
+                console.log(`  ... and <= ${toDateEnd.toISOString().split('T')[0]} = ${toCheck} → inRange: ${inRange}`);
+            }
         }
 
         if (inRange) {
             filteredIndices.push(index);
         }
     });
+
+    console.log(`📊 Filtering result: ${filteredIndices.length} out of ${labels.length} data points match the date range`);
 
     // Check if any data remains after filtering
     if (filteredIndices.length === 0) {
@@ -4812,11 +4830,19 @@ function filterChartByDateRange() {
         };
     });
 
+    console.log('📝 Filtered labels (first 10):', filteredData.labels.slice(0, 10));
+    console.log('📝 Filtered data points (first dataset, first 10):', filteredData.datasets[0]?.data?.slice(0, 10));
+
     // Update the modal chart with filtered data
-    modalChartInstance.data = filteredData;
-    modalChartInstance.update();
+    modalChartInstance.data.labels = filteredData.labels;
+    modalChartInstance.data.datasets = filteredData.datasets;
+
+    // Force a complete chart update with animation
+    modalChartInstance.update('active');
 
     console.log(`✅ Chart filtered successfully: ${filteredIndices.length} of ${labels.length} data points shown`);
+    console.log('✅ Chart update complete!');
+
     return true; // Return true to close modal
 }
 
