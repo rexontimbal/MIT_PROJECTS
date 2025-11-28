@@ -1,5 +1,6 @@
 from django.urls import path, include
 from . import views
+from .ajax_chart_data import get_chart_data_ajax
 
 urlpatterns = [
     # Authentication
@@ -32,6 +33,7 @@ urlpatterns = [
     # Analytics
     path('analytics/', views.analytics_view, name='analytics'),
     path('analytics/advanced/', views.advanced_analytics_view, name='advanced_analytics'),
+    path('api/chart-data/', get_chart_data_ajax, name='get_chart_data_ajax'),  # AJAX endpoint for chart filtering
 
     # Other pages
     path('about/', views.about, name='about'),
