@@ -4763,7 +4763,7 @@ function filterChartByDateRange() {
         return null;
     }
 
-    // Detect if this chart has temporal (date-based) labels
+    // Detect if this chart has temporal (date-based) labels for informational purposes
     // Check if at least 50% of labels can be parsed as valid dates
     let parseableCount = 0;
     const sampleSize = Math.min(labels.length, 10); // Sample first 10 labels
@@ -4775,21 +4775,15 @@ function filterChartByDateRange() {
         }
     }
 
-    // If less than 50% of labels are parseable as dates, this is not a temporal chart
     const isTemporalChart = (parseableCount / sampleSize) >= 0.5;
-
     console.log('📈 Temporal detection:', parseableCount, '/', sampleSize, 'parseable →', isTemporalChart ? 'TEMPORAL' : 'NON-TEMPORAL');
 
     if (!isTemporalChart) {
-        console.log('⚠️ This chart does not have temporal labels. Date filtering skipped.');
-        // For non-temporal charts, we can't filter by label dates
-        // Keep the original data unchanged
-        showChartDateAlert('Date filtering is not applicable to this chart type (non-temporal data).');
-        return false; // Return false to keep modal open
+        console.log('⚠️ This chart has non-temporal labels, but attempting filtering anyway...');
     }
 
-    // This is a temporal chart, proceed with filtering
-    console.log('✅ Temporal chart detected. Applying date filter...');
+    // Proceed with filtering for all charts
+    console.log('✅ Attempting date filter...');
 
     // Find indices of labels within the date range
     const filteredIndices = [];
@@ -4863,7 +4857,11 @@ function filterChartByDateRange() {
     // Check if any data remains after filtering
     if (filteredIndices.length === 0) {
         console.log('❌ No data found in selected range');
-        showChartDateAlert('No data found in the selected date range.');
+        if (!isTemporalChart) {
+            showChartDateAlert('This chart does not have date-based labels. Date filtering cannot be applied to category-based charts (hours, days, provinces, etc.).');
+        } else {
+            showChartDateAlert('No data found in the selected date range. Try selecting a wider date range.');
+        }
         return false; // Return false to keep modal open
     }
 
