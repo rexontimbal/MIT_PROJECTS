@@ -525,6 +525,7 @@
         border-radius: 10px;
         white-space: nowrap;
         border: 1px solid #e9ecef;
+        pointer-events: none;
     }
 
     .chart-modal-date-range.visible {
@@ -542,11 +543,17 @@
         margin: 0 0.15rem;
     }
 
+    .chart-modal-right-group {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex: 0 0 auto;
+    }
+
     .chart-modal-actions {
         display: flex;
         gap: 0.5rem;
         align-items: center;
-        margin-right: 1rem;
     }
 
     .chart-modal-close {
@@ -1984,17 +1991,19 @@
                     <span class="date-separator">→</span>
                     <span id="chartModalToDate"></span>
                 </div>
-                <div class="chart-modal-actions">
-                    <button class="chart-btn" onclick="openChartDateModal()" title="Filter chart by date range">
-                        <i class="far fa-calendar-days"></i> Date Range
-                    </button>
-                    <button class="chart-btn" onclick="exportModalChart()" title="Export chart as HD image">
-                        <i class="fas fa-download"></i> Export
+                <div class="chart-modal-right-group">
+                    <div class="chart-modal-actions">
+                        <button class="chart-btn" onclick="openChartDateModal()" title="Filter chart by date range">
+                            <i class="far fa-calendar-days"></i> Date Range
+                        </button>
+                        <button class="chart-btn" onclick="exportModalChart()" title="Export chart as HD image">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                    <button class="chart-modal-close" onclick="closeChartModal()">
+                        ×
                     </button>
                 </div>
-                <button class="chart-modal-close" onclick="closeChartModal()">
-                    ×
-                </button>
             </div>
             <div class="chart-modal-body">
                 <div class="chart-modal-canvas-container">
