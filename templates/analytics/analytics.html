@@ -4355,6 +4355,10 @@ let chartTempToDate = null;
 let chartCurrentCalendarMonth = new Date().getMonth();
 let chartCurrentCalendarYear = new Date().getFullYear();
 
+// Store applied dates (persistent across modal opens)
+let chartAppliedFromDate = null;
+let chartAppliedToDate = null;
+
 // Store the current chart being viewed
 let currentChartId = null;
 let currentChartData = null;
@@ -4375,9 +4379,9 @@ function openChartDateModal() {
     // Hide any previous alerts
     hideChartDateAlert();
 
-    // Reset temporary dates (chart filtering is independent)
-    chartTempFromDate = null;
-    chartTempToDate = null;
+    // Load previously applied dates (so they persist when reopening)
+    chartTempFromDate = chartAppliedFromDate ? new Date(chartAppliedFromDate) : null;
+    chartTempToDate = chartAppliedToDate ? new Date(chartAppliedToDate) : null;
 
     // Update tab display
     updateChartTabDisplay();
@@ -4385,9 +4389,15 @@ function openChartDateModal() {
     // Set active tab
     switchChartDateTab('from');
 
-    // Initialize calendar to current month
-    chartCurrentCalendarMonth = new Date().getMonth();
-    chartCurrentCalendarYear = new Date().getFullYear();
+    // Initialize calendar to existing date or current month
+    const existingDate = chartTempFromDate || chartTempToDate;
+    if (existingDate) {
+        chartCurrentCalendarMonth = existingDate.getMonth();
+        chartCurrentCalendarYear = existingDate.getFullYear();
+    } else {
+        chartCurrentCalendarMonth = new Date().getMonth();
+        chartCurrentCalendarYear = new Date().getFullYear();
+    }
 
     // Populate year dropdown
     populateChartYearDropdown();
@@ -4602,6 +4612,7 @@ function changeChartMonth(delta) {
 }
 
 function clearChartDates() {
+    // Clear temporary dates (applied dates will only be cleared when user applies)
     chartTempFromDate = null;
     chartTempToDate = null;
 
@@ -4610,15 +4621,22 @@ function clearChartDates() {
 }
 
 function applyChartDates() {
-    // Validation: At least one date must be set
-    if (!chartTempFromDate && !chartTempToDate) {
-        showChartDateAlert('Please select at least one date to filter the chart.');
-        return;
-    }
+    // Save applied dates to persistent storage (so they persist when reopening)
+    chartAppliedFromDate = chartTempFromDate ? new Date(chartTempFromDate) : null;
+    chartAppliedToDate = chartTempToDate ? new Date(chartTempToDate) : null;
 
-    // Filter the chart data based on selected dates
-    if (modalChartInstance && currentChartData) {
-        filterChartByDateRange();
+    // If both dates are cleared, restore original chart data
+    if (!chartTempFromDate && !chartTempToDate) {
+        if (modalChartInstance && currentChartData) {
+            // Restore original data
+            modalChartInstance.data = JSON.parse(JSON.stringify(currentChartData));
+            modalChartInstance.update();
+        }
+    } else {
+        // Filter the chart data based on selected dates
+        if (modalChartInstance && currentChartData) {
+            filterChartByDateRange();
+        }
     }
 
     // Close modal
