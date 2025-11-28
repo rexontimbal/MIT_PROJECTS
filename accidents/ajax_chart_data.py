@@ -12,6 +12,33 @@ from .auth_utils import pnp_login_required
 import calendar
 
 
+def format_period_labels(trend_data, granularity):
+    """
+    Format period labels consistently with main analytics view
+    Matches the exact logic from views.py for consistency
+    """
+    labels = []
+
+    if granularity == 'daily':
+        date_format = '%Y-%m-%d'
+    elif granularity == 'weekly':
+        date_format = 'Week of %b %d, %Y'
+    elif granularity == 'quarterly':
+        # Special handling for quarterly
+        for item in trend_data:
+            quarter = (item['period'].month - 1) // 3 + 1
+            labels.append(f"Q{quarter} {item['period'].year}")
+        return labels
+    else:  # monthly (default)
+        date_format = '%b %Y'
+
+    # For non-quarterly granularities
+    for item in trend_data:
+        labels.append(item['period'].strftime(date_format))
+
+    return labels
+
+
 @pnp_login_required
 def get_chart_data_ajax(request):
     """
@@ -106,15 +133,14 @@ def get_chart_data_ajax(request):
             else:  # monthly
                 trunc_func = TruncMonth
 
-            trend_data = accidents.annotate(
+            trend_data = list(accidents.annotate(
                 period=trunc_func('date_committed')
             ).values('period').annotate(
                 count=Count('id')
-            ).order_by('period')
+            ).order_by('period'))
 
             chart_data = {
-                'labels': [item['period'].strftime('%b %Y') if granularity == 'monthly' else
-                          item['period'].strftime('%Y-%m-%d') for item in trend_data],
+                'labels': format_period_labels(trend_data, granularity),
                 'data': [item['count'] for item in trend_data]
             }
 
@@ -207,23 +233,28 @@ def get_chart_data_ajax(request):
             }
 
         elif chart_type == 'trendComparison':
-            # Trend Comparison (Fatal vs Injury over time)
-            if granularity == 'monthly':
-                trunc_func = TruncMonth
+            # Trend Comparison (Total, Fatal, Injury over time)
+            # Match main page logic exactly from views.py
+            if granularity == 'daily':
+                trunc_func = TruncDay
+            elif granularity == 'weekly':
+                trunc_func = TruncWeek
             elif granularity == 'quarterly':
                 trunc_func = TruncQuarter
-            else:
+            else:  # monthly (default)
                 trunc_func = TruncMonth
 
-            trend_data = accidents.annotate(
+            trend_data = list(accidents.annotate(
                 period=trunc_func('date_committed')
             ).values('period').annotate(
+                total=Count('id'),
                 fatal=Count('id', filter=Q(victim_killed=True)),
                 injury=Count('id', filter=Q(victim_injured=True))
-            ).order_by('period')
+            ).order_by('period'))
 
             chart_data = {
-                'labels': [item['period'].strftime('%b %Y') for item in trend_data],
+                'labels': format_period_labels(trend_data, granularity),
+                'total': [item['total'] for item in trend_data],
                 'fatal': [item['fatal'] for item in trend_data],
                 'injury': [item['injury'] for item in trend_data]
             }

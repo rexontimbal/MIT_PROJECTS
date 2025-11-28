@@ -4730,16 +4730,28 @@ function filterChartByDateRange() {
 
                 // Update datasets - handle both single and multi-dataset charts
                 if (modalChartInstance.data.datasets && modalChartInstance.data.datasets.length > 0) {
-                    // Check if this is a multi-dataset chart (provinceComparison, trendComparison)
-                    if (data.chart_data.fatal !== undefined && data.chart_data.injury !== undefined) {
-                        // Multi-dataset chart
+                    // Check if this is a three-dataset chart (trendComparison)
+                    if (data.chart_data.total !== undefined && data.chart_data.fatal !== undefined && data.chart_data.injury !== undefined) {
+                        // Three-dataset chart (Total, Fatal, Injury)
+                        if (modalChartInstance.data.datasets[0]) {
+                            modalChartInstance.data.datasets[0].data = data.chart_data.total;
+                        }
+                        if (modalChartInstance.data.datasets[1]) {
+                            modalChartInstance.data.datasets[1].data = data.chart_data.fatal;
+                        }
+                        if (modalChartInstance.data.datasets[2]) {
+                            modalChartInstance.data.datasets[2].data = data.chart_data.injury;
+                        }
+                        console.log('📊 Updated three-dataset chart (Total + Fatal + Injury)');
+                    } else if (data.chart_data.fatal !== undefined && data.chart_data.injury !== undefined) {
+                        // Two-dataset chart (provinceComparison)
                         if (modalChartInstance.data.datasets[0]) {
                             modalChartInstance.data.datasets[0].data = data.chart_data.fatal;
                         }
                         if (modalChartInstance.data.datasets[1]) {
                             modalChartInstance.data.datasets[1].data = data.chart_data.injury;
                         }
-                        console.log('📊 Updated multi-dataset chart (Fatal + Injury)');
+                        console.log('📊 Updated two-dataset chart (Fatal + Injury)');
                     } else {
                         // Single dataset chart
                         modalChartInstance.data.datasets[0].data = data.chart_data.data;
