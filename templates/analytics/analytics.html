@@ -4652,7 +4652,6 @@ function applyChartDates() {
 
 function filterChartByDateRange() {
     // This function filters the chart data based on the selected date range
-    // We need to filter the data labels and datasets
 
     const fromDate = chartTempFromDate ? new Date(chartTempFromDate) : null;
     const toDate = chartTempToDate ? new Date(chartTempToDate) : null;
@@ -4660,41 +4659,118 @@ function filterChartByDateRange() {
     // Clone the original data
     const filteredData = JSON.parse(JSON.stringify(currentChartData));
 
-    // Get labels (these are usually dates)
+    // Get labels and datasets
     const labels = filteredData.labels || [];
     const datasets = filteredData.datasets || [];
+
+    // Helper function to parse various date formats
+    function parseFlexibleDate(label) {
+        // Try standard date parsing first
+        let date = new Date(label);
+        if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            if (year >= 1900 && year <= 2100) {
+                return date;
+            }
+        }
+
+        // Try parsing "Month Year" format (e.g., "Jan 2024", "January 2024")
+        const monthYearMatch = label.match(/^(\w+)\s+(\d{4})$/);
+        if (monthYearMatch) {
+            date = new Date(`${monthYearMatch[1]} 1, ${monthYearMatch[2]}`);
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+
+        // Try parsing "Year-Month" format (e.g., "2024-01")
+        const yearMonthMatch = label.match(/^(\d{4})-(\d{2})$/);
+        if (yearMonthMatch) {
+            date = new Date(`${yearMonthMatch[1]}-${yearMonthMatch[2]}-01`);
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+
+        // Try parsing "Quarter Year" format (e.g., "Q1 2024", "2024-Q1")
+        const quarterMatch = label.match(/Q(\d)\s+(\d{4})|(\d{4})-Q(\d)/);
+        if (quarterMatch) {
+            const quarter = quarterMatch[1] || quarterMatch[4];
+            const year = quarterMatch[2] || quarterMatch[3];
+            const month = (parseInt(quarter) - 1) * 3; // Q1 = month 0 (Jan), Q2 = month 3 (Apr), etc.
+            date = new Date(parseInt(year), month, 1);
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+
+        // Try parsing "Week Number Year" format (e.g., "Week 1 2024", "2024-W01")
+        const weekMatch = label.match(/Week\s+(\d+)\s+(\d{4})|(\d{4})-W(\d+)/);
+        if (weekMatch) {
+            const week = weekMatch[1] || weekMatch[4];
+            const year = weekMatch[2] || weekMatch[3];
+            // Approximate: week 1 starts on Jan 1
+            date = new Date(parseInt(year), 0, 1 + (parseInt(week) - 1) * 7);
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+
+        return null;
+    }
+
+    // Detect if this chart has temporal (date-based) labels
+    // Check if at least 50% of labels can be parsed as valid dates
+    let parseableCount = 0;
+    const sampleSize = Math.min(labels.length, 10); // Sample first 10 labels
+
+    for (let i = 0; i < sampleSize; i++) {
+        const parsedDate = parseFlexibleDate(labels[i]);
+        if (parsedDate !== null) {
+            parseableCount++;
+        }
+    }
+
+    // If less than 50% of labels are parseable as dates, this is not a temporal chart
+    const isTemporalChart = (parseableCount / sampleSize) >= 0.5;
+
+    if (!isTemporalChart) {
+        console.log('⚠️ This chart does not have temporal labels. Date filtering skipped.');
+        // For non-temporal charts, we can't filter by label dates
+        // Keep the original data unchanged
+        showChartDateAlert('Date filtering is not applicable to this chart type (non-temporal data).');
+        return;
+    }
+
+    // This is a temporal chart, proceed with filtering
+    console.log('✅ Temporal chart detected. Applying date filter...');
 
     // Find indices of labels within the date range
     const filteredIndices = [];
     labels.forEach((label, index) => {
-        // Try to parse the label as a date
-        let labelDate = null;
+        const labelDate = parseFlexibleDate(label);
 
-        // Handle different label formats (e.g., "2024-01-15", "Jan 15", "January 2024")
-        try {
-            labelDate = new Date(label);
-            // Check if valid date
-            if (isNaN(labelDate.getTime())) {
-                // Try alternative parsing for formats like "Jan 2024" or "Week 1"
-                // For now, include all labels if parsing fails
-                filteredIndices.push(index);
-                return;
-            }
-        } catch (e) {
-            // If parsing fails, include the index
-            filteredIndices.push(index);
-            return;
+        // Check if valid date
+        if (labelDate === null) {
+            return; // Skip this label
         }
 
         // Check if date is within range
         let inRange = true;
         if (fromDate) {
-            inRange = inRange && labelDate >= fromDate;
+            const fromDateStart = new Date(fromDate);
+            fromDateStart.setHours(0, 0, 0, 0);
+            labelDate.setHours(0, 0, 0, 0);
+            inRange = inRange && labelDate >= fromDateStart;
         }
         if (toDate) {
             // Include the entire "to" date by setting time to end of day
             const toDateEnd = new Date(toDate);
             toDateEnd.setHours(23, 59, 59, 999);
+            if (labelDate.getHours() === 0) {
+                // If labelDate is at midnight, set to end of day for comparison
+                labelDate.setHours(23, 59, 59, 999);
+            }
             inRange = inRange && labelDate <= toDateEnd;
         }
 
@@ -4702,6 +4778,12 @@ function filterChartByDateRange() {
             filteredIndices.push(index);
         }
     });
+
+    // Check if any data remains after filtering
+    if (filteredIndices.length === 0) {
+        showChartDateAlert('No data found in the selected date range.');
+        return;
+    }
 
     // Filter labels
     filteredData.labels = filteredIndices.map(i => labels[i]);
@@ -4717,6 +4799,8 @@ function filterChartByDateRange() {
     // Update the modal chart with filtered data
     modalChartInstance.data = filteredData;
     modalChartInstance.update();
+
+    console.log(`✅ Chart filtered: ${filteredIndices.length} of ${labels.length} data points shown`);
 }
 
 // Close modal on ESC key
