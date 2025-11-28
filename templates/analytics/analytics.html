@@ -4674,8 +4674,13 @@ function filterChartByDateRange() {
     // Map chart IDs to chart types
     const chartTypeMap = {
         'trendChart': 'trend',
-        'hourlyChart': 'hourly',
+        'severityChart': 'severity',
+        'vehicleChart': 'vehicle',
         'dowChart': 'dow',
+        'hourlyChart': 'hourly',
+        'provinceComparisonChart': 'provinceComparison',
+        'incidentTypeChart': 'incidentType',
+        'trendComparisonChart': 'trendComparison',
         'comparisonChart': 'comparison',
         'forecastChart': 'forecast'
     };
@@ -4723,9 +4728,23 @@ function filterChartByDateRange() {
                 // Update the modal chart with new data
                 modalChartInstance.data.labels = data.chart_data.labels;
 
-                // Update datasets
+                // Update datasets - handle both single and multi-dataset charts
                 if (modalChartInstance.data.datasets && modalChartInstance.data.datasets.length > 0) {
-                    modalChartInstance.data.datasets[0].data = data.chart_data.data;
+                    // Check if this is a multi-dataset chart (provinceComparison, trendComparison)
+                    if (data.chart_data.fatal !== undefined && data.chart_data.injury !== undefined) {
+                        // Multi-dataset chart
+                        if (modalChartInstance.data.datasets[0]) {
+                            modalChartInstance.data.datasets[0].data = data.chart_data.fatal;
+                        }
+                        if (modalChartInstance.data.datasets[1]) {
+                            modalChartInstance.data.datasets[1].data = data.chart_data.injury;
+                        }
+                        console.log('📊 Updated multi-dataset chart (Fatal + Injury)');
+                    } else {
+                        // Single dataset chart
+                        modalChartInstance.data.datasets[0].data = data.chart_data.data;
+                        console.log('📊 Updated single-dataset chart');
+                    }
                 }
 
                 // Force chart update

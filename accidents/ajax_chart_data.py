@@ -154,6 +154,80 @@ def get_chart_data_ajax(request):
                 'data': [item['count'] for item in trend_data]
             }
 
+        elif chart_type == 'severity':
+            # Severity Distribution (Fatal, Injury, Property Damage)
+            severity_data = accidents.aggregate(
+                fatal=Count('id', filter=Q(victim_killed=True)),
+                injury=Count('id', filter=Q(victim_injured=True)),
+                property=Count('id', filter=Q(victim_killed=False, victim_injured=False))
+            )
+
+            chart_data = {
+                'labels': ['Fatal', 'Injury', 'Property Damage'],
+                'data': [
+                    severity_data['fatal'],
+                    severity_data['injury'],
+                    severity_data['property']
+                ]
+            }
+
+        elif chart_type == 'vehicle':
+            # Vehicle Types Involved
+            vehicle_data = accidents.values('vehicle_kind').annotate(
+                count=Count('id')
+            ).exclude(vehicle_kind__isnull=True).exclude(vehicle_kind='').order_by('-count')[:10]
+
+            chart_data = {
+                'labels': [item['vehicle_kind'] for item in vehicle_data],
+                'data': [item['count'] for item in vehicle_data]
+            }
+
+        elif chart_type == 'provinceComparison':
+            # Province Comparison - Fatal vs Injury
+            province_data = accidents.values('province').annotate(
+                fatal=Count('id', filter=Q(victim_killed=True)),
+                injury=Count('id', filter=Q(victim_injured=True))
+            ).order_by('province')
+
+            chart_data = {
+                'labels': [item['province'] for item in province_data],
+                'fatal': [item['fatal'] for item in province_data],
+                'injury': [item['injury'] for item in province_data]
+            }
+
+        elif chart_type == 'incidentType':
+            # Top 5 Incident Types
+            incident_data = accidents.values('incident_type').annotate(
+                count=Count('id')
+            ).exclude(incident_type__isnull=True).exclude(incident_type='').order_by('-count')[:5]
+
+            chart_data = {
+                'labels': [item['incident_type'] for item in incident_data],
+                'data': [item['count'] for item in incident_data]
+            }
+
+        elif chart_type == 'trendComparison':
+            # Trend Comparison (Fatal vs Injury over time)
+            if granularity == 'monthly':
+                trunc_func = TruncMonth
+            elif granularity == 'quarterly':
+                trunc_func = TruncQuarter
+            else:
+                trunc_func = TruncMonth
+
+            trend_data = accidents.annotate(
+                period=trunc_func('date_committed')
+            ).values('period').annotate(
+                fatal=Count('id', filter=Q(victim_killed=True)),
+                injury=Count('id', filter=Q(victim_injured=True))
+            ).order_by('period')
+
+            chart_data = {
+                'labels': [item['period'].strftime('%b %Y') for item in trend_data],
+                'fatal': [item['fatal'] for item in trend_data],
+                'injury': [item['injury'] for item in trend_data]
+            }
+
         else:
             return JsonResponse({'error': 'Invalid chart type'}, status=400)
 
