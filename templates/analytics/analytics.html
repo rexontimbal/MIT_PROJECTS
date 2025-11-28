@@ -500,6 +500,15 @@
         align-items: center;
         background: white;
         flex-shrink: 0;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .chart-modal-header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
     }
 
     .chart-modal-header h3 {
@@ -508,6 +517,34 @@
         font-size: 1.125rem;
         font-weight: 600;
         flex: 1;
+    }
+
+    .chart-modal-date-range {
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.7rem;
+        color: #666;
+        background: #f8f9fa;
+        padding: 0.2rem 0.6rem;
+        border-radius: 10px;
+        white-space: nowrap;
+        border: 1px solid #e9ecef;
+    }
+
+    .chart-modal-date-range.visible {
+        display: flex;
+    }
+
+    .chart-modal-date-range i {
+        font-size: 0.65rem;
+        color: var(--analytics-primary);
+    }
+
+    .chart-modal-date-range .date-separator {
+        color: #adb5bd;
+        font-weight: 300;
+        margin: 0 0.15rem;
     }
 
     .chart-modal-actions {
@@ -1945,18 +1982,26 @@
             <div class="modal-resize-handle right" data-direction="right"></div>
 
             <div class="chart-modal-header">
-                <h3 id="modalChartTitle">Chart View</h3>
-                <div class="chart-modal-actions">
-                    <button class="chart-btn" onclick="openChartDateModal()" title="Filter chart by date range">
-                        <i class="far fa-calendar-days"></i> Date Range
-                    </button>
-                    <button class="chart-btn" onclick="exportModalChart()" title="Export chart as HD image">
-                        <i class="fas fa-download"></i> Export
+                <div class="chart-modal-header-top">
+                    <h3 id="modalChartTitle">Chart View</h3>
+                    <div class="chart-modal-actions">
+                        <button class="chart-btn" onclick="openChartDateModal()" title="Filter chart by date range">
+                            <i class="far fa-calendar-days"></i> Date Range
+                        </button>
+                        <button class="chart-btn" onclick="exportModalChart()" title="Export chart as HD image">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                    <button class="chart-modal-close" onclick="closeChartModal()">
+                        ×
                     </button>
                 </div>
-                <button class="chart-modal-close" onclick="closeChartModal()">
-                    ×
-                </button>
+                <div class="chart-modal-date-range" id="chartModalDateDisplay">
+                    <i class="far fa-calendar-days"></i>
+                    <span id="chartModalFromDate"></span>
+                    <span class="date-separator">→</span>
+                    <span id="chartModalToDate"></span>
+                </div>
             </div>
             <div class="chart-modal-body">
                 <div class="chart-modal-canvas-container">
@@ -3796,6 +3841,9 @@ function expandChart(chartId, chartTitle) {
         chartAppliedToDate = null;
     }
 
+    // Update date display in modal header
+    updateChartModalDateDisplay();
+
     // Show modal with animation
     modal.classList.add('show');
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
@@ -3888,6 +3936,12 @@ function closeChartModal() {
     chartAppliedToDate = null;
     chartTempFromDate = null;
     chartTempToDate = null;
+
+    // Clear date display in header
+    const dateDisplay = document.getElementById('chartModalDateDisplay');
+    if (dateDisplay) {
+        dateDisplay.classList.remove('visible');
+    }
 
     // Destroy modal chart
     if (modalChartInstance) {
@@ -4651,6 +4705,9 @@ function applyChartDates() {
     chartAppliedFromDate = chartTempFromDate ? new Date(chartTempFromDate) : null;
     chartAppliedToDate = chartTempToDate ? new Date(chartTempToDate) : null;
 
+    // Update the date display in modal header
+    updateChartModalDateDisplay();
+
     // If both dates are cleared, restore original chart data
     if (!chartTempFromDate && !chartTempToDate) {
         if (modalChartInstance && currentChartData) {
@@ -4671,6 +4728,33 @@ function applyChartDates() {
             }
             // If not successful, modal stays open with alert message
         }
+    }
+}
+
+function updateChartModalDateDisplay() {
+    const dateDisplay = document.getElementById('chartModalDateDisplay');
+    const fromDateEl = document.getElementById('chartModalFromDate');
+    const toDateEl = document.getElementById('chartModalToDate');
+
+    if (chartAppliedFromDate || chartAppliedToDate) {
+        // Show the date range display
+        dateDisplay.classList.add('visible');
+
+        // Format and display dates
+        if (chartAppliedFromDate) {
+            fromDateEl.textContent = formatDisplayDate(chartAppliedFromDate);
+        } else {
+            fromDateEl.textContent = 'Start';
+        }
+
+        if (chartAppliedToDate) {
+            toDateEl.textContent = formatDisplayDate(chartAppliedToDate);
+        } else {
+            toDateEl.textContent = 'End';
+        }
+    } else {
+        // Hide the date range display if no dates are set
+        dateDisplay.classList.remove('visible');
     }
 }
 
