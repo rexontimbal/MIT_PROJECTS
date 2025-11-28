@@ -4638,23 +4638,34 @@ function applyChartDates() {
             // Restore original data
             modalChartInstance.data = JSON.parse(JSON.stringify(currentChartData));
             modalChartInstance.update();
+            console.log('✅ Chart reset to original data');
         }
+        // Close modal after successful reset
+        closeChartDateModal();
     } else {
         // Filter the chart data based on selected dates
         if (modalChartInstance && currentChartData) {
-            filterChartByDateRange();
+            const success = filterChartByDateRange();
+            // Only close modal if filtering was successful
+            if (success) {
+                closeChartDateModal();
+            }
+            // If not successful, modal stays open with alert message
         }
     }
-
-    // Close modal
-    closeChartDateModal();
 }
 
 function filterChartByDateRange() {
     // This function filters the chart data based on the selected date range
+    // Returns true if filtering was successful, false otherwise
 
     const fromDate = chartTempFromDate ? new Date(chartTempFromDate) : null;
     const toDate = chartTempToDate ? new Date(chartTempToDate) : null;
+
+    console.log('🔍 Filtering chart data:', {
+        from: fromDate ? formatDate(fromDate) : 'Not set',
+        to: toDate ? formatDate(toDate) : 'Not set'
+    });
 
     // Clone the original data
     const filteredData = JSON.parse(JSON.stringify(currentChartData));
@@ -4662,6 +4673,8 @@ function filterChartByDateRange() {
     // Get labels and datasets
     const labels = filteredData.labels || [];
     const datasets = filteredData.datasets || [];
+
+    console.log('📊 Chart has', labels.length, 'data points. First 5 labels:', labels.slice(0, 5));
 
     // Helper function to parse various date formats
     function parseFlexibleDate(label) {
@@ -4734,12 +4747,14 @@ function filterChartByDateRange() {
     // If less than 50% of labels are parseable as dates, this is not a temporal chart
     const isTemporalChart = (parseableCount / sampleSize) >= 0.5;
 
+    console.log('📈 Temporal detection:', parseableCount, '/', sampleSize, 'parseable →', isTemporalChart ? 'TEMPORAL' : 'NON-TEMPORAL');
+
     if (!isTemporalChart) {
         console.log('⚠️ This chart does not have temporal labels. Date filtering skipped.');
         // For non-temporal charts, we can't filter by label dates
         // Keep the original data unchanged
         showChartDateAlert('Date filtering is not applicable to this chart type (non-temporal data).');
-        return;
+        return false; // Return false to keep modal open
     }
 
     // This is a temporal chart, proceed with filtering
@@ -4755,23 +4770,23 @@ function filterChartByDateRange() {
             return; // Skip this label
         }
 
+        // Normalize to start of day for comparison (don't mutate original)
+        const labelDateNormalized = new Date(labelDate);
+        labelDateNormalized.setHours(0, 0, 0, 0);
+
         // Check if date is within range
         let inRange = true;
+
         if (fromDate) {
             const fromDateStart = new Date(fromDate);
             fromDateStart.setHours(0, 0, 0, 0);
-            labelDate.setHours(0, 0, 0, 0);
-            inRange = inRange && labelDate >= fromDateStart;
+            inRange = inRange && labelDateNormalized >= fromDateStart;
         }
+
         if (toDate) {
-            // Include the entire "to" date by setting time to end of day
             const toDateEnd = new Date(toDate);
             toDateEnd.setHours(23, 59, 59, 999);
-            if (labelDate.getHours() === 0) {
-                // If labelDate is at midnight, set to end of day for comparison
-                labelDate.setHours(23, 59, 59, 999);
-            }
-            inRange = inRange && labelDate <= toDateEnd;
+            inRange = inRange && labelDateNormalized <= toDateEnd;
         }
 
         if (inRange) {
@@ -4781,8 +4796,9 @@ function filterChartByDateRange() {
 
     // Check if any data remains after filtering
     if (filteredIndices.length === 0) {
+        console.log('❌ No data found in selected range');
         showChartDateAlert('No data found in the selected date range.');
-        return;
+        return false; // Return false to keep modal open
     }
 
     // Filter labels
@@ -4800,7 +4816,8 @@ function filterChartByDateRange() {
     modalChartInstance.data = filteredData;
     modalChartInstance.update();
 
-    console.log(`✅ Chart filtered: ${filteredIndices.length} of ${labels.length} data points shown`);
+    console.log(`✅ Chart filtered successfully: ${filteredIndices.length} of ${labels.length} data points shown`);
+    return true; // Return true to close modal
 }
 
 // Close modal on ESC key
