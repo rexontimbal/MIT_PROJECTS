@@ -3847,11 +3847,6 @@ function expandChart(chartId, chartTitle) {
         // Store the original unfiltered data for date filtering
         currentChartData = JSON.parse(JSON.stringify(modalChartInstance.data));
         currentChartId = chartId;
-
-        // If there are applied date filters, reapply them
-        if (chartAppliedFromDate || chartAppliedToDate) {
-            filterChartByDateRange();
-        }
     }, 100);
 }
 
@@ -3868,6 +3863,12 @@ function closeChartModal() {
         modalContent.style.width = '85%';
         modalContent.style.maxWidth = '1000px';
     }
+
+    // Reset date range filters (so next chart opens fresh)
+    chartAppliedFromDate = null;
+    chartAppliedToDate = null;
+    chartTempFromDate = null;
+    chartTempToDate = null;
 
     // Destroy modal chart
     if (modalChartInstance) {
