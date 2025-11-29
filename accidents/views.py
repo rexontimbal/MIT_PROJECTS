@@ -1318,16 +1318,65 @@ def analytics_view(request):
     else:
         predicted_next_month = 0
     
-    # Risk level calculation
-    if fatality_rate >= 15:
-        risk_level = "CRITICAL"
-    elif fatality_rate >= 10:
-        risk_level = "HIGH"
-    elif fatality_rate >= 5:
-        risk_level = "MEDIUM"
+    # ============================================================================
+    # MULTI-FACTOR RISK ASSESSMENT
+    # Considers: Total volume, Fatality rate, and Trend direction
+    # ============================================================================
+    risk_score = 0
+
+    # Factor 1: Total Accident Volume (0-40 points)
+    # High volume = higher risk regardless of fatality rate
+    if total_accidents >= 10000:
+        risk_score += 40  # Very high volume
+    elif total_accidents >= 5000:
+        risk_score += 35  # High volume
+    elif total_accidents >= 2000:
+        risk_score += 25  # Moderate volume
+    elif total_accidents >= 1000:
+        risk_score += 15  # Low-moderate volume
+    elif total_accidents >= 500:
+        risk_score += 10  # Low volume
     else:
-        risk_level = "LOW"
-    
+        risk_score += 5   # Very low volume
+
+    # Factor 2: Fatality Rate (0-40 points)
+    # Higher death rate = higher risk
+    if fatality_rate >= 15:
+        risk_score += 40  # Very high fatality rate
+    elif fatality_rate >= 10:
+        risk_score += 30  # High fatality rate
+    elif fatality_rate >= 5:
+        risk_score += 20  # Moderate fatality rate
+    elif fatality_rate >= 2:
+        risk_score += 10  # Low fatality rate
+    else:
+        risk_score += 5   # Very low fatality rate
+
+    # Factor 3: Trend Direction (0-20 points)
+    # Increasing trend = higher risk
+    if trend_direction == "increasing":
+        if trend_percentage >= 20:
+            risk_score += 20  # Rapidly increasing
+        elif trend_percentage >= 10:
+            risk_score += 15  # Moderately increasing
+        else:
+            risk_score += 10  # Slowly increasing
+    elif trend_direction == "decreasing":
+        risk_score += 0   # Decreasing trend = no added risk
+    else:
+        risk_score += 5   # Stable
+
+    # Convert risk score to risk level
+    # Total possible: 100 points
+    if risk_score >= 80:
+        risk_level = "CRITICAL"  # 80-100 points
+    elif risk_score >= 60:
+        risk_level = "HIGH"      # 60-79 points
+    elif risk_score >= 40:
+        risk_level = "MEDIUM"    # 40-59 points
+    else:
+        risk_level = "LOW"       # 0-39 points
+
     # Peak hours calculation
     if hourly_data and max(hourly_data) > 0:
         peak_hour = hourly_data.index(max(hourly_data))
@@ -1414,6 +1463,9 @@ def analytics_view(request):
     else:
         risk_action_text = "Under control - Continue current operations"
         risk_color = "#10B981"  # Green
+
+    # Add context about what drove the risk score
+    risk_factors_breakdown = f"Volume: {total_accidents:,} | Fatality Rate: {fatality_rate:.1f}% | Trend: {trend_direction}"
 
     # Get unique provinces for filter dropdown
     provinces = list(Accident.objects.values_list('province', flat=True).distinct().order_by('province'))
@@ -1518,6 +1570,8 @@ def analytics_view(request):
         'three_month_trend_direction': 'increasing' if three_month_trend > 0 else 'decreasing' if three_month_trend < 0 else 'stable',
         'risk_action_text': risk_action_text,
         'risk_color': risk_color,
+        'risk_score': risk_score,
+        'risk_factors_breakdown': risk_factors_breakdown,
     }
     
     return render(request, 'analytics/analytics.html', context)
