@@ -1298,10 +1298,10 @@ def analytics_view(request):
     province_injury = [item['injury'] for item in province_stats]
     
     # ============================================================================
-    # PREDICTIVE INSIGHTS (Simple Moving Average)
+    # ENHANCED PREDICTIVE INSIGHTS (Evidence-Based)
     # ============================================================================
-    
-    # Calculate trend direction
+
+    # Calculate trend direction (3-month moving average)
     if len(trend_total) >= 3:
         recent_avg = sum(trend_total[-3:]) / 3
         previous_avg = sum(trend_total[-6:-3]) / 3 if len(trend_total) >= 6 else recent_avg
@@ -1310,25 +1310,217 @@ def analytics_view(request):
     else:
         trend_direction = "stable"
         trend_percentage = 0
-    
-    # Calculate predicted next period (simple linear extrapolation)
-    if len(trend_total) >= 2:
-        predicted_next_month = int(trend_total[-1] + (trend_total[-1] - trend_total[-2]))
-        predicted_next_month = max(0, predicted_next_month)  # Can't be negative
+
+    # ===========================================================================
+    # ACTIONABLE INSIGHT 1: HIGHEST RISK HOURS (for patrol deployment)
+    # ===========================================================================
+    # Find the 3 most dangerous hours
+    high_risk_hours = []
+    if hourly_data and max(hourly_data) > 0:
+        hourly_with_index = [(hour, count) for hour, count in enumerate(hourly_data)]
+        hourly_sorted = sorted(hourly_with_index, key=lambda x: x[1], reverse=True)
+
+        for i in range(min(3, len(hourly_sorted))):
+            if hourly_sorted[i][1] > 0:
+                hour = hourly_sorted[i][0]
+                count = hourly_sorted[i][1]
+                percentage = (count / sum(hourly_data) * 100) if sum(hourly_data) > 0 else 0
+                high_risk_hours.append({
+                    'hour': hour,
+                    'time_range': f"{hour:02d}:00-{(hour+1):02d}:00",
+                    'count': count,
+                    'percentage': round(percentage, 1)
+                })
+
+    # ===========================================================================
+    # ACTIONABLE INSIGHT 2: HIGHEST RISK DAYS (for shift planning)
+    # ===========================================================================
+    # Calculate which days of week are most dangerous
+    high_risk_days = []
+    if dow_data and max(dow_data) > 0:
+        days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        dow_with_index = [(days[i], dow_data[i]) for i in range(7)]
+        dow_sorted = sorted(dow_with_index, key=lambda x: x[1], reverse=True)
+
+        for i in range(min(3, len(dow_sorted))):
+            if dow_sorted[i][1] > 0:
+                day_name = dow_sorted[i][0]
+                count = dow_sorted[i][1]
+                percentage = (count / sum(dow_data) * 100) if sum(dow_data) > 0 else 0
+                high_risk_days.append({
+                    'day': day_name,
+                    'count': count,
+                    'percentage': round(percentage, 1)
+                })
+
+    # ===========================================================================
+    # ACTIONABLE INSIGHT 3: HOTSPOT LOCATIONS (for targeted enforcement)
+    # ===========================================================================
+    # Get top 5 locations with highest crash concentration
+    hotspot_locations = list(accidents.values('municipal', 'province').annotate(
+        total_crashes=Count('id'),
+        fatal_crashes=Count('id', filter=Q(victim_killed=True)),
+        injury_crashes=Count('id', filter=Q(victim_injured=True))
+    ).order_by('-total_crashes')[:5])
+
+    # Calculate each hotspot's severity score
+    for hotspot in hotspot_locations:
+        # Severity score: fatal=10 points, injury=3 points, property=1 point
+        severity_score = (
+            hotspot['fatal_crashes'] * 10 +
+            hotspot['injury_crashes'] * 3 +
+            (hotspot['total_crashes'] - hotspot['fatal_crashes'] - hotspot['injury_crashes']) * 1
+        )
+        hotspot['severity_score'] = severity_score
+
+        # Classify hotspot type based on fatality rate
+        fatality_rate_local = (hotspot['fatal_crashes'] / hotspot['total_crashes'] * 100) if hotspot['total_crashes'] > 0 else 0
+        if fatality_rate_local >= 10:
+            hotspot['classification'] = 'CRITICAL'
+            hotspot['classification_color'] = '#DC143C'
+        elif fatality_rate_local >= 5:
+            hotspot['classification'] = 'HIGH RISK'
+            hotspot['classification_color'] = '#FF6B35'
+        else:
+            hotspot['classification'] = 'MODERATE'
+            hotspot['classification_color'] = '#FFA500'
+
+    # ===========================================================================
+    # ACTIONABLE INSIGHT 4: TREND PROJECTION (honest, not misleading)
+    # ===========================================================================
+    # Instead of "prediction", show trend-based projection with disclaimer
+    if len(trend_total) >= 3:
+        # Use 3-month moving average as baseline
+        recent_average = int(sum(trend_total[-3:]) / 3)
+        trend_projection = {
+            'baseline': recent_average,
+            'direction': trend_direction,
+            'percentage': abs(round(trend_percentage, 1)),
+            'confidence': 'Low - based on recent trends only',
+            'disclaimer': 'Trend projection, not a scientific prediction'
+        }
     else:
-        predicted_next_month = 0
-    
-    # Risk level calculation
+        trend_projection = {
+            'baseline': trend_total[-1] if trend_total else 0,
+            'direction': 'stable',
+            'percentage': 0,
+            'confidence': 'Insufficient data',
+            'disclaimer': 'Insufficient historical data for trend analysis'
+        }
+
+    # ===========================================================================
+    # ACTIONABLE INSIGHT 5: CURRENT RISK LEVEL (evidence-based thresholds)
+    # ===========================================================================
+    # Multi-factor risk assessment
+    risk_factors = []
+    risk_score = 0
+
+    # Factor 1: Fatality rate (40% weight)
     if fatality_rate >= 15:
-        risk_level = "CRITICAL"
+        risk_score += 40
+        risk_factors.append("Very high fatality rate (≥15%)")
     elif fatality_rate >= 10:
-        risk_level = "HIGH"
+        risk_score += 30
+        risk_factors.append("High fatality rate (10-15%)")
     elif fatality_rate >= 5:
+        risk_score += 20
+        risk_factors.append("Moderate fatality rate (5-10%)")
+    else:
+        risk_score += 10
+        risk_factors.append("Low fatality rate (<5%)")
+
+    # Factor 2: Recent trend (30% weight)
+    if trend_direction == "increasing" and trend_percentage > 20:
+        risk_score += 30
+        risk_factors.append(f"Rapidly increasing trend (+{abs(round(trend_percentage, 1))}%)")
+    elif trend_direction == "increasing" and trend_percentage > 0:
+        risk_score += 20
+        risk_factors.append(f"Moderate increase trend (+{abs(round(trend_percentage, 1))}%)")
+    elif trend_direction == "decreasing":
+        risk_score += 10
+        risk_factors.append(f"Improving trend (-{abs(round(trend_percentage, 1))}%)")
+
+    # Factor 3: Crash volume (30% weight)
+    if total_accidents > 0:
+        # Calculate crashes per day
+        days_in_period = (to_date - from_date).days + 1
+        crashes_per_day = total_accidents / days_in_period if days_in_period > 0 else 0
+
+        if crashes_per_day >= 2:
+            risk_score += 30
+            risk_factors.append(f"High crash rate ({crashes_per_day:.1f}/day)")
+        elif crashes_per_day >= 1:
+            risk_score += 20
+            risk_factors.append(f"Moderate crash rate ({crashes_per_day:.1f}/day)")
+        else:
+            risk_score += 10
+            risk_factors.append(f"Low crash rate ({crashes_per_day:.1f}/day)")
+
+    # Determine overall risk level based on composite score
+    if risk_score >= 80:
+        risk_level = "CRITICAL"
+        risk_color = "#DC143C"
+        risk_action = "Immediate action required - Deploy additional patrols"
+    elif risk_score >= 60:
+        risk_level = "HIGH"
+        risk_color = "#FF6B35"
+        risk_action = "High priority monitoring - Increase enforcement"
+    elif risk_score >= 40:
         risk_level = "MEDIUM"
+        risk_color = "#FFA500"
+        risk_action = "Regular monitoring - Maintain current patrols"
     else:
         risk_level = "LOW"
-    
-    # Peak hours calculation
+        risk_color = "#28A745"
+        risk_action = "Under control - Continue routine operations"
+
+    # ===========================================================================
+    # ACTIONABLE INSIGHT 6: DEPLOYMENT RECOMMENDATIONS
+    # ===========================================================================
+    deployment_recommendations = []
+
+    # Recommendation 1: High-risk hour patrols
+    if high_risk_hours:
+        top_hour = high_risk_hours[0]
+        deployment_recommendations.append({
+            'priority': 1,
+            'action': f"Deploy patrols during {top_hour['time_range']}",
+            'reason': f"{top_hour['count']} crashes ({top_hour['percentage']}%) occur during this hour",
+            'type': 'time-based'
+        })
+
+    # Recommendation 2: High-risk day enforcement
+    if high_risk_days:
+        top_day = high_risk_days[0]
+        deployment_recommendations.append({
+            'priority': 2,
+            'action': f"Increase staffing on {top_day['day']}",
+            'reason': f"{top_day['count']} crashes ({top_day['percentage']}%) occur on this day",
+            'type': 'schedule-based'
+        })
+
+    # Recommendation 3: Hotspot focus
+    if hotspot_locations:
+        top_location = hotspot_locations[0]
+        deployment_recommendations.append({
+            'priority': 3,
+            'action': f"Target enforcement in {top_location['municipal']}",
+            'reason': f"{top_location['total_crashes']} crashes ({top_location['classification']} hotspot)",
+            'type': 'location-based'
+        })
+
+    # Recommendation 4: Severity-based response
+    if fatal_count > 0 and total_accidents > 0:
+        fatal_percentage = (fatal_count / total_accidents * 100)
+        if fatal_percentage > 10:
+            deployment_recommendations.append({
+                'priority': 4,
+                'action': "Implement stricter traffic enforcement",
+                'reason': f"High fatality rate ({fatal_percentage:.1f}%) indicates severe accidents",
+                'type': 'severity-based'
+            })
+
+    # Peak hours calculation (for backward compatibility)
     if hourly_data and max(hourly_data) > 0:
         peak_hour = hourly_data.index(max(hourly_data))
         peak_hours = f"{peak_hour:02d}:00-{(peak_hour+1):02d}:00"
@@ -1421,12 +1613,24 @@ def analytics_view(request):
         # Incident Types
         'incident_labels': json.dumps(incident_labels),
         'incident_data': json.dumps(incident_data),
-        
-        # Predictive Insights
-        'predicted_next_month': predicted_next_month,
+
+        # Enhanced Predictive Insights (Evidence-Based)
+        'high_risk_hours': high_risk_hours,
+        'high_risk_days': high_risk_days,
+        'hotspot_locations': hotspot_locations,
+        'trend_projection': trend_projection,
+        'deployment_recommendations': deployment_recommendations,
+
+        # Multi-Factor Risk Assessment
+        'risk_level': risk_level,
+        'risk_color': risk_color,
+        'risk_action': risk_action,
+        'risk_score': risk_score,
+        'risk_factors': risk_factors,
+
+        # Legacy/Backward Compatibility
         'trend_direction': trend_direction,
         'trend_percentage': abs(round(trend_percentage, 1)),
-        'risk_level': risk_level,
         'peak_hours': peak_hours,
     }
     
