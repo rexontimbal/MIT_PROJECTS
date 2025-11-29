@@ -1545,51 +1545,64 @@
 
     <!-- Main Content Wrapper for AJAX updates -->
     <div id="analytics-main-content">
-    <!-- Predictive Insights -->
+    <!-- Actionable Intelligence -->
     <div class="predictive-insights">
-        <h3>🔮 Predictive Insights & Trends</h3>
+        <h3>📊 Actionable Intelligence</h3>
         <div class="insight-grid">
+            <!-- Risk Assessment -->
             <div class="insight-card">
-                <div class="insight-value">{{ predicted_next_month }}</div>
-                <div class="insight-label">Predicted Accidents (Next Month)</div>
-                <div class="trend-indicator {% if trend_direction == 'increasing' %}trend-up{% else %}trend-down{% endif %}">
-                    {% if trend_direction == 'increasing' %}
-                        ⬆️ +{{ trend_percentage }}% vs last period
-                    {% else %}
-                        ⬇️ -{{ trend_percentage }}% vs last period
-                    {% endif %}
+                <div class="insight-value" style="font-size: 1.8rem; color: {{ risk_color }};">{{ risk_level }}</div>
+                <div class="insight-label">Risk Assessment</div>
+                <div class="trend-indicator" style="font-size: 0.75rem; margin-top: 0.5rem; color: rgba(255,255,255,0.9);">
+                    {{ risk_action_text }}
                 </div>
             </div>
-            
+
+            <!-- Priority Patrol Hour -->
+            {% if priority_patrol_hour %}
             <div class="insight-card">
-                <div class="insight-value" style="font-size: 1.8rem;">{{ risk_level }}</div>
-                <div class="insight-label">Current Risk Level</div>
-                <div class="trend-indicator {% if risk_level == 'CRITICAL' %}trend-up{% elif risk_level == 'LOW' %}trend-down{% else %}trend-neutral{% endif %}">
-                    {% if risk_level == 'CRITICAL' %}
-                        🚨 Immediate action required
-                    {% elif risk_level == 'HIGH' %}
-                        ⚠️ High priority monitoring
-                    {% elif risk_level == 'MEDIUM' %}
-                        ⚡ Regular monitoring
-                    {% else %}
-                        ✅ Under control
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="insight-card">
-                <div class="insight-value" style="font-size: 1.5rem;">{{ peak_hours }}</div>
-                <div class="insight-label">Peak Accident Hours</div>
+                <div class="insight-value" style="font-size: 1.5rem;">{{ priority_patrol_hour.time_range }}</div>
+                <div class="insight-label">Priority Patrol Hour</div>
                 <div class="trend-indicator trend-neutral">
-                    🕐 Highest risk period
+                    {{ priority_patrol_hour.count }} crashes ({{ priority_patrol_hour.percentage }}%)
                 </div>
             </div>
-            
+            {% endif %}
+
+            <!-- Priority Staffing Day -->
+            {% if priority_staffing_day %}
             <div class="insight-card">
-                <div class="insight-value">{{ fatality_rate|floatformat:1 }}%</div>
-                <div class="insight-label">Fatality Rate</div>
-                <div class="trend-indicator {% if fatality_rate >= 10 %}trend-up{% else %}trend-down{% endif %}">
-                    {{ fatal_count }} fatal / {{ total_accidents }} total
+                <div class="insight-value" style="font-size: 1.5rem;">{{ priority_staffing_day.day }}</div>
+                <div class="insight-label">Priority Staffing Day</div>
+                <div class="trend-indicator trend-neutral">
+                    {{ priority_staffing_day.count }} crashes ({{ priority_staffing_day.percentage }}%)
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Priority Enforcement Area -->
+            {% if priority_enforcement_area %}
+            <div class="insight-card">
+                <div class="insight-value" style="font-size: 1.2rem;">{{ priority_enforcement_area.location }}</div>
+                <div class="insight-label">Priority Enforcement Area</div>
+                <div class="trend-indicator" style="background: {{ priority_enforcement_area.classification_color }}; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-top: 0.5rem;">
+                    {{ priority_enforcement_area.total_crashes }} crashes • {{ priority_enforcement_area.classification }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 3-Month Average -->
+            <div class="insight-card">
+                <div class="insight-value">{{ three_month_avg }}</div>
+                <div class="insight-label">3-Month Average</div>
+                <div class="trend-indicator {% if three_month_trend_direction == 'increasing' %}trend-up{% elif three_month_trend_direction == 'decreasing' %}trend-down{% else %}trend-neutral{% endif %}">
+                    {% if three_month_trend_direction == 'increasing' %}
+                        ⬆️ +{{ three_month_trend }}% trend
+                    {% elif three_month_trend_direction == 'decreasing' %}
+                        ⬇️ -{{ three_month_trend }}% trend
+                    {% else %}
+                        ➡️ Stable
+                    {% endif %}
                 </div>
             </div>
         </div>

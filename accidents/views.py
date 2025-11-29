@@ -1334,7 +1334,87 @@ def analytics_view(request):
         peak_hours = f"{peak_hour:02d}:00-{(peak_hour+1):02d}:00"
     else:
         peak_hours = "Unknown"
-    
+
+    # ============================================================================
+    # ACTIONABLE INTELLIGENCE CALCULATIONS
+    # ============================================================================
+
+    # Priority Patrol Hour (most dangerous hour)
+    priority_patrol_hour = None
+    if hourly_data and max(hourly_data) > 0:
+        peak_hour_idx = hourly_data.index(max(hourly_data))
+        hour_count = hourly_data[peak_hour_idx]
+        hour_percentage = (hour_count / total_accidents * 100) if total_accidents > 0 else 0
+        priority_patrol_hour = {
+            'time_range': f"{peak_hour_idx:02d}:00-{(peak_hour_idx+1):02d}:00",
+            'count': hour_count,
+            'percentage': round(hour_percentage, 1)
+        }
+
+    # Priority Staffing Day (most dangerous day)
+    priority_staffing_day = None
+    if dow_data and max(dow_data) > 0:
+        peak_day_idx = dow_data.index(max(dow_data))
+        day_count = dow_data[peak_day_idx]
+        day_percentage = (day_count / total_accidents * 100) if total_accidents > 0 else 0
+        priority_staffing_day = {
+            'day': days[peak_day_idx] + 'day',  # 'Sunday', 'Monday', etc.
+            'count': day_count,
+            'percentage': round(day_percentage, 1)
+        }
+
+    # Priority Enforcement Area (top hotspot location)
+    priority_enforcement_area = None
+    if severity_by_location:
+        top_location = severity_by_location[0]
+        location_total = top_location['total']
+        # Classify based on severity
+        if location_total >= 2000:
+            classification = 'CRITICAL'
+            classification_color = '#DC2626'
+        elif location_total >= 1000:
+            classification = 'HIGH'
+            classification_color = '#F59E0B'
+        elif location_total >= 500:
+            classification = 'MODERATE'
+            classification_color = '#F59E0B'
+        else:
+            classification = 'LOW'
+            classification_color = '#10B981'
+
+        priority_enforcement_area = {
+            'location': top_location['municipal'],
+            'province': top_location['province'],
+            'total_crashes': location_total,
+            'classification': classification,
+            'classification_color': classification_color
+        }
+
+    # 3-Month Average with Trend
+    three_month_avg = 0
+    three_month_trend = 0
+    if len(trend_total) >= 3:
+        three_month_avg = int(sum(trend_total[-3:]) / 3)
+        if len(trend_total) >= 6:
+            previous_3m_avg = sum(trend_total[-6:-3]) / 3
+            three_month_trend = ((three_month_avg - previous_3m_avg) / previous_3m_avg * 100) if previous_3m_avg > 0 else 0
+
+    # Risk Assessment with Action Text
+    risk_action_text = ""
+    risk_color = ""
+    if risk_level == "CRITICAL":
+        risk_action_text = "Immediate action required - Deploy all resources"
+        risk_color = "#DC2626"  # Red
+    elif risk_level == "HIGH":
+        risk_action_text = "High priority monitoring - Increase enforcement"
+        risk_color = "#F59E0B"  # Orange
+    elif risk_level == "MEDIUM":
+        risk_action_text = "Regular monitoring - Maintain vigilance"
+        risk_color = "#F59E0B"  # Orange
+    else:
+        risk_action_text = "Under control - Continue current operations"
+        risk_color = "#10B981"  # Green
+
     # Get unique provinces for filter dropdown
     provinces = list(Accident.objects.values_list('province', flat=True).distinct().order_by('province'))
     provinces = [p for p in provinces if p and p.strip()]
@@ -1428,6 +1508,16 @@ def analytics_view(request):
         'trend_percentage': abs(round(trend_percentage, 1)),
         'risk_level': risk_level,
         'peak_hours': peak_hours,
+
+        # Actionable Intelligence (Enhanced)
+        'priority_patrol_hour': priority_patrol_hour,
+        'priority_staffing_day': priority_staffing_day,
+        'priority_enforcement_area': priority_enforcement_area,
+        'three_month_avg': three_month_avg,
+        'three_month_trend': abs(round(three_month_trend, 1)),
+        'three_month_trend_direction': 'increasing' if three_month_trend > 0 else 'decreasing' if three_month_trend < 0 else 'stable',
+        'risk_action_text': risk_action_text,
+        'risk_color': risk_color,
     }
     
     return render(request, 'analytics/analytics.html', context)
