@@ -1558,15 +1558,6 @@
                 </div>
             </div>
 
-            <!-- Fatality Rate -->
-            <div class="insight-card">
-                <div class="insight-value">{{ fatality_rate|floatformat:1 }}%</div>
-                <div class="insight-label">Fatality Rate</div>
-                <div class="trend-indicator {% if fatality_rate >= 10 %}trend-up{% else %}trend-down{% endif %}">
-                    {{ fatal_count }} fatal / {{ total_accidents }} total
-                </div>
-            </div>
-
             <!-- Peak Hour (Priority Patrol Time) -->
             {% if high_risk_hours %}
             <div class="insight-card">
