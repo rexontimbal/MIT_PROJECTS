@@ -1545,31 +1545,20 @@
 
     <!-- Main Content Wrapper for AJAX updates -->
     <div id="analytics-main-content">
-    <!-- Enhanced Actionable Insights & Intelligence -->
+    <!-- Actionable Insights (Compact & Focused) -->
     <div class="predictive-insights">
-        <h3>📊 Actionable Intelligence & Deployment Guidance</h3>
-
-        <!-- Multi-Factor Risk Assessment -->
-        <div class="insight-grid" style="margin-bottom: 1.5rem;">
-            <div class="insight-card" style="grid-column: span 2;">
+        <h3>📊 Actionable Intelligence</h3>
+        <div class="insight-grid">
+            <!-- Risk Level -->
+            <div class="insight-card">
                 <div class="insight-value" style="font-size: 1.8rem; color: {{ risk_color }};">{{ risk_level }}</div>
-                <div class="insight-label">Current Risk Assessment</div>
-                <div class="trend-indicator" style="background: rgba(255, 255, 255, 0.2); margin-top: 0.5rem; padding: 0.5rem; border-radius: 6px; font-size: 0.85rem;">
-                    <strong>{{ risk_action }}</strong><br>
-                    <small style="opacity: 0.9;">Risk Score: {{ risk_score }}/100</small>
+                <div class="insight-label">Risk Assessment</div>
+                <div class="trend-indicator" style="font-size: 0.75rem; margin-top: 0.5rem;">
+                    {{ risk_action }}
                 </div>
-                {% if risk_factors %}
-                <div style="margin-top: 0.75rem; font-size: 0.75rem; opacity: 0.95;">
-                    <strong>Contributing Factors:</strong>
-                    <ul style="margin: 0.25rem 0 0 1.2rem; padding: 0;">
-                        {% for factor in risk_factors %}
-                        <li>{{ factor }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
             </div>
 
+            <!-- Fatality Rate -->
             <div class="insight-card">
                 <div class="insight-value">{{ fatality_rate|floatformat:1 }}%</div>
                 <div class="insight-label">Fatality Rate</div>
@@ -1578,93 +1567,53 @@
                 </div>
             </div>
 
+            <!-- Peak Hour (Priority Patrol Time) -->
+            {% if high_risk_hours %}
+            <div class="insight-card">
+                <div class="insight-value" style="font-size: 1.5rem;">{{ high_risk_hours.0.time_range }}</div>
+                <div class="insight-label">Priority Patrol Hour</div>
+                <div class="trend-indicator trend-neutral">
+                    {{ high_risk_hours.0.count }} crashes ({{ high_risk_hours.0.percentage }}%)
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- High Risk Day (Priority Staffing) -->
+            {% if high_risk_days %}
+            <div class="insight-card">
+                <div class="insight-value" style="font-size: 1.5rem;">{{ high_risk_days.0.day }}</div>
+                <div class="insight-label">Priority Staffing Day</div>
+                <div class="trend-indicator trend-neutral">
+                    {{ high_risk_days.0.count }} crashes ({{ high_risk_days.0.percentage }}%)
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Top Hotspot (Priority Location) -->
+            {% if hotspot_locations %}
+            <div class="insight-card">
+                <div class="insight-value" style="font-size: 1.2rem;">{{ hotspot_locations.0.municipal }}</div>
+                <div class="insight-label">Priority Enforcement Area</div>
+                <div class="trend-indicator" style="background: {{ hotspot_locations.0.classification_color }}; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-top: 0.5rem;">
+                    {{ hotspot_locations.0.total_crashes }} crashes • {{ hotspot_locations.0.classification }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Trend -->
             <div class="insight-card">
                 <div class="insight-value">{{ trend_projection.baseline }}</div>
-                <div class="insight-label">Trend Projection (3-Mo Avg)</div>
+                <div class="insight-label">3-Month Average</div>
                 <div class="trend-indicator {% if trend_projection.direction == 'increasing' %}trend-up{% elif trend_projection.direction == 'decreasing' %}trend-down{% else %}trend-neutral{% endif %}">
                     {% if trend_projection.direction == 'increasing' %}
                         ⬆️ +{{ trend_projection.percentage }}% trend
                     {% elif trend_projection.direction == 'decreasing' %}
                         ⬇️ -{{ trend_projection.percentage }}% trend
                     {% else %}
-                        ➡️ Stable trend
+                        ➡️ Stable
                     {% endif %}
                 </div>
-                <small style="font-size: 0.65rem; opacity: 0.8; display: block; margin-top: 0.25rem;">{{ trend_projection.disclaimer }}</small>
             </div>
-        </div>
-
-        <!-- Deployment Recommendations -->
-        {% if deployment_recommendations %}
-        <div style="background: rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
-            <h4 style="color: white; font-size: 1rem; margin: 0 0 0.75rem 0;">🎯 Priority Deployment Recommendations</h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem;">
-                {% for rec in deployment_recommendations %}
-                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.75rem; border-left: 3px solid rgba(255, 255, 255, 0.6);">
-                    <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">{{ rec.action }}</div>
-                    <div style="font-size: 0.75rem; opacity: 0.9;">{{ rec.reason }}</div>
-                    <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 0.25rem; text-transform: uppercase;">Priority {{ rec.priority }} • {{ rec.type }}</div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Temporal & Spatial Intelligence -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-            <!-- High Risk Hours -->
-            {% if high_risk_hours %}
-            <div style="background: rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 1rem;">
-                <h4 style="color: white; font-size: 0.95rem; margin: 0 0 0.75rem 0;">🕐 High-Risk Hours (Patrol Deployment)</h4>
-                {% for hour in high_risk_hours %}
-                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 0.6rem; margin-bottom: 0.5rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 600; font-size: 0.9rem;">{{ hour.time_range }}</span>
-                        <span style="font-size: 0.85rem; opacity: 0.9;">{{ hour.count }} crashes ({{ hour.percentage }}%)</span>
-                    </div>
-                </div>
-                {% endfor %}
-                <small style="font-size: 0.7rem; opacity: 0.8; display: block; margin-top: 0.5rem;">💡 Deploy visible patrols during these hours</small>
-            </div>
-            {% endif %}
-
-            <!-- High Risk Days -->
-            {% if high_risk_days %}
-            <div style="background: rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 1rem;">
-                <h4 style="color: white; font-size: 0.95rem; margin: 0 0 0.75rem 0;">📅 High-Risk Days (Shift Planning)</h4>
-                {% for day in high_risk_days %}
-                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 0.6rem; margin-bottom: 0.5rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 600; font-size: 0.9rem;">{{ day.day }}</span>
-                        <span style="font-size: 0.85rem; opacity: 0.9;">{{ day.count }} crashes ({{ day.percentage }}%)</span>
-                    </div>
-                </div>
-                {% endfor %}
-                <small style="font-size: 0.7rem; opacity: 0.8; display: block; margin-top: 0.5rem;">💡 Increase staffing levels on these days</small>
-            </div>
-            {% endif %}
-
-            <!-- Hotspot Locations -->
-            {% if hotspot_locations %}
-            <div style="background: rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 1rem;">
-                <h4 style="color: white; font-size: 0.95rem; margin: 0 0 0.75rem 0;">📍 Critical Hotspot Locations</h4>
-                {% for hotspot in hotspot_locations %}
-                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 0.6rem; margin-bottom: 0.5rem;">
-                    <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.2rem;">{{ hotspot.municipal }}, {{ hotspot.province }}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
-                        <span>{{ hotspot.total_crashes }} crashes ({{ hotspot.fatal_crashes }} fatal)</span>
-                        <span style="background: {{ hotspot.classification_color }}; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">{{ hotspot.classification }}</span>
-                    </div>
-                </div>
-                {% endfor %}
-                <small style="font-size: 0.7rem; opacity: 0.8; display: block; margin-top: 0.5rem;">💡 Prioritize enforcement in these areas</small>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Disclaimer -->
-        <div style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.75rem; margin-top: 1rem; font-size: 0.75rem; opacity: 0.9;">
-            <strong>📌 Methodology Note:</strong> Risk assessments combine fatality rates (40%), recent trends (30%), and crash volume (30%). Deployment recommendations are data-driven based on historical patterns. These insights support decision-making but should be combined with ground intelligence and operational experience.
         </div>
     </div>
 
