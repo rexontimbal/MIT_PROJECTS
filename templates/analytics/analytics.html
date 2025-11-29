@@ -2401,34 +2401,43 @@ const allMunicipalities = {{ municipalities_json|safe }};
 
 // Initialize municipal dropdown on page load based on current province
 function initializeMunicipalDropdown() {
-    const provinceFilter = document.getElementById('provinceFilter').value;
-    const municipalFilter = document.getElementById('municipalFilter');
-    const currentMunicipal = municipalFilter.value;
+    try {
+        const provinceFilter = document.getElementById('provinceFilter');
+        const municipalFilter = document.getElementById('municipalFilter');
 
-    console.log('🔧 Initializing municipal dropdown for province:', provinceFilter);
-
-    // Get municipalities for selected province
-    let municipalities = [];
-    if (provinceFilter === 'all') {
-        municipalities = allMunicipalities;
-    } else {
-        municipalities = municipalitiesByProvince[provinceFilter] || [];
-    }
-
-    // Rebuild municipal dropdown
-    municipalFilter.innerHTML = '<option value="all">All</option>';
-    municipalities.forEach(function(municipal) {
-        const option = document.createElement('option');
-        option.value = municipal;
-        option.textContent = municipal;
-        // Keep selected if it's in the new list
-        if (municipal === currentMunicipal) {
-            option.selected = true;
+        if (!provinceFilter || !municipalFilter) {
+            console.error('❌ Filter elements not found');
+            return;
         }
-        municipalFilter.appendChild(option);
-    });
 
-    console.log('✓ Municipal dropdown initialized with', municipalities.length, 'municipalities');
+        const currentMunicipal = municipalFilter.value;
+        console.log('🔧 Initializing municipal dropdown for province:', provinceFilter.value);
+
+        // Get municipalities for selected province
+        let municipalities = [];
+        if (provinceFilter.value === 'all') {
+            municipalities = allMunicipalities;
+        } else {
+            municipalities = municipalitiesByProvince[provinceFilter.value] || [];
+        }
+
+        // Rebuild municipal dropdown
+        municipalFilter.innerHTML = '<option value="all">All</option>';
+        municipalities.forEach(function(municipal) {
+            const option = document.createElement('option');
+            option.value = municipal;
+            option.textContent = municipal;
+            // Keep selected if it's in the new list
+            if (municipal === currentMunicipal) {
+                option.selected = true;
+            }
+            municipalFilter.appendChild(option);
+        });
+
+        console.log('✓ Municipal dropdown initialized with', municipalities.length, 'municipalities');
+    } catch (error) {
+        console.error('❌ Error initializing municipal dropdown:', error);
+    }
 }
 
 // Handle province change - update municipal dropdown and manage badges
@@ -2499,6 +2508,21 @@ function updatePageContent(url, forcedScrollPosition = null) {
         .then(html => {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
+
+            // Extract chart data BEFORE replacing content (important!)
+            const chartDataElement = doc.getElementById('chart-data');
+            if (chartDataElement) {
+                try {
+                    window.currentChartData = JSON.parse(chartDataElement.textContent);
+                    console.log('✅ Chart data extracted successfully:', window.currentChartData);
+                } catch (e) {
+                    console.error('❌ Error parsing chart data:', e);
+                    window.currentChartData = null;
+                }
+            } else {
+                console.warn('⚠️ Chart data element not found in new content');
+                window.currentChartData = null;
+            }
 
             // Update the entire main content area (charts, insights, tables)
             const newMainContent = doc.getElementById('analytics-main-content');
@@ -2584,16 +2608,23 @@ function updatePageContent(url, forcedScrollPosition = null) {
     document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Initializing analytics...');
 
-    // Populate date inputs from URL parameters ONLY
-    populateDateInputsFromURL();
+    try {
+        // Populate date inputs from URL parameters ONLY
+        populateDateInputsFromURL();
 
-    // Initialize municipal dropdown based on current province
-    initializeMunicipalDropdown();
+        // Initialize municipal dropdown based on current province (don't trigger update)
+        initializeMunicipalDropdown();
 
-    // Initialize charts and content
-    initializeCharts();
-    loadPredictiveInsights();
-    displayActiveFilters();
+        // Initialize charts and content
+        initializeCharts();
+        loadPredictiveInsights();
+        displayActiveFilters();
+
+        console.log('✅ Analytics initialization complete');
+    } catch (error) {
+        console.error('❌ Critical error during initialization:', error);
+        alert('Error loading analytics page. Please refresh and try again.');
+    }
 });
 
     function populateDateInputsFromURL() {
@@ -2640,20 +2671,31 @@ function updatePageContent(url, forcedScrollPosition = null) {
     if (window.charts.trendComparisonChart) window.charts.trendComparisonChart.destroy();
 
     // ============================================================================
-    // GET DATA FROM JSON SCRIPT TAG (UPDATED BY AJAX)
+    // GET DATA FROM GLOBAL VARIABLE OR FALLBACK TO DOM ELEMENT
     // ============================================================================
     let chartData;
-    try {
-        const chartDataElement = document.getElementById('chart-data');
-        if (chartDataElement) {
-            chartData = JSON.parse(chartDataElement.textContent);
-        } else {
-            console.error('❌ Chart data element not found!');
+
+    // Try to use pre-extracted data from AJAX update
+    if (window.currentChartData) {
+        chartData = window.currentChartData;
+        console.log('✅ Using pre-extracted chart data');
+    } else {
+        // Fallback: Try to get from DOM (initial page load)
+        try {
+            const chartDataElement = document.getElementById('chart-data');
+            if (chartDataElement) {
+                chartData = JSON.parse(chartDataElement.textContent);
+                window.currentChartData = chartData; // Cache it
+                console.log('✅ Parsed chart data from DOM');
+            } else {
+                console.error('❌ Chart data element not found!');
+                return;
+            }
+        } catch (e) {
+            console.error('❌ Error parsing chart data:', e);
+            console.error('Chart data content:', document.getElementById('chart-data')?.textContent);
             return;
         }
-    } catch (e) {
-        console.error('❌ Error parsing chart data:', e);
-        return;
     }
 
     const rawTrendLabels = chartData.trendLabels;
@@ -3367,64 +3409,69 @@ function updatePageContent(url, forcedScrollPosition = null) {
     function updateCharts() {
     console.log('🔄 Updating charts with filters...');
 
-    // Get current filter values
-    const analysisType = document.getElementById('analysisType').value;
-    const timeGranularity = document.getElementById('timeGranularity').value;
-    const severityFilter = document.getElementById('severityFilter').value;
-    const provinceFilter = document.getElementById('provinceFilter').value;
-    const municipalFilter = document.getElementById('municipalFilter').value;
+    try {
+        // Get current filter values
+        const analysisType = document.getElementById('analysisType')?.value || 'overview';
+        const timeGranularity = document.getElementById('timeGranularity')?.value || 'monthly';
+        const severityFilter = document.getElementById('severityFilter')?.value || 'all';
+        const provinceFilter = document.getElementById('provinceFilter')?.value || 'all';
+        const municipalFilter = document.getElementById('municipalFilter')?.value || 'all';
 
-    // Get current date range
-    const fromDate = document.querySelector('input[name="from_date"]')?.value || '';
-    const toDate = document.querySelector('input[name="to_date"]')?.value || '';
+        // Get current date range
+        const fromDate = document.querySelector('input[name="from_date"]')?.value || '';
+        const toDate = document.querySelector('input[name="to_date"]')?.value || '';
 
-    console.log('📊 Applied Filters:', {
-        analysisType,
-        timeGranularity,
-        severityFilter,
-        provinceFilter,
-        municipalFilter,
-        fromDate,
-        toDate
-    });
+        console.log('📊 Applied Filters:', {
+            analysisType,
+            timeGranularity,
+            severityFilter,
+            provinceFilter,
+            municipalFilter,
+            fromDate,
+            toDate
+        });
 
-    // Build URL with all parameters
-    const params = new URLSearchParams();
+        // Build URL with all parameters
+        const params = new URLSearchParams();
 
-    // Add filters
-    if (analysisType && analysisType !== 'overview') {
-        params.append('analysis_type', analysisType);
+        // Add filters
+        if (analysisType && analysisType !== 'overview') {
+            params.append('analysis_type', analysisType);
+        }
+
+        if (timeGranularity && timeGranularity !== 'monthly') {
+            params.append('granularity', timeGranularity);
+        }
+
+        if (severityFilter && severityFilter !== 'all') {
+            params.append('severity', severityFilter);
+        }
+
+        if (provinceFilter && provinceFilter !== 'all') {
+            params.append('province', provinceFilter);
+        }
+
+        if (municipalFilter && municipalFilter !== 'all') {
+            params.append('municipal', municipalFilter);
+        }
+
+        // Add date range
+        if (fromDate) {
+            params.append('from_date', fromDate);
+        }
+
+        if (toDate) {
+            params.append('to_date', toDate);
+        }
+
+        // Update page content without reload
+        const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        console.log('🔗 Updating content:', newUrl);
+        updatePageContent(newUrl);
+    } catch (error) {
+        console.error('❌ Error in updateCharts:', error);
+        alert('Error updating charts. Please refresh the page and try again.');
     }
-
-    if (timeGranularity && timeGranularity !== 'monthly') {
-        params.append('granularity', timeGranularity);
-    }
-
-    if (severityFilter && severityFilter !== 'all') {
-        params.append('severity', severityFilter);
-    }
-
-    if (provinceFilter && provinceFilter !== 'all') {
-        params.append('province', provinceFilter);
-    }
-
-    if (municipalFilter && municipalFilter !== 'all') {
-        params.append('municipal', municipalFilter);
-    }
-
-    // Add date range
-    if (fromDate) {
-        params.append('from_date', fromDate);
-    }
-
-    if (toDate) {
-        params.append('to_date', toDate);
-    }
-
-    // Update page content without reload
-    const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-    console.log('🔗 Updating content:', newUrl);
-    updatePageContent(newUrl);
 }
 
     function showLoadingOverlay() {
