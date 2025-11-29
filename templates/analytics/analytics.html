@@ -2360,6 +2360,28 @@
             </div>
         </div>
     </div>
+
+    <!-- Chart Data (Updated by AJAX) -->
+    <script id="chart-data" type="application/json">
+    {
+        "trendLabels": {{ trend_labels|safe }},
+        "trendTotal": {{ trend_total|safe }},
+        "trendFatal": {{ trend_fatal|safe }},
+        "trendInjury": {{ trend_injury|safe }},
+        "vehicleLabels": {{ vehicle_labels|safe }},
+        "vehicleData": {{ vehicle_data|safe }},
+        "hourlyLabels": {{ hourly_labels|safe }},
+        "hourlyData": {{ hourly_data|safe }},
+        "dowData": {{ dow_data|safe }},
+        "provinceLabels": {{ province_labels|safe }},
+        "provinceTotal": {{ province_total|safe }},
+        "provinceFatal": {{ province_fatal|safe }},
+        "provinceInjury": {{ province_injury|safe }},
+        "incidentLabels": {{ incident_labels|safe }},
+        "incidentData": {{ incident_data|safe }},
+        "totalAccidents": {{ total_accidents }}
+    }
+    </script>
 </div>
 {% endblock %}
 
@@ -2602,38 +2624,66 @@ function updatePageContent(url, forcedScrollPosition = null) {
 
     function initializeCharts() {
     console.log('📊 Starting chart initialization...');
-    
+
     // ============================================================================
-    // GET DATA FROM DJANGO WITH FALLBACKS FOR EMPTY DATA
+    // DESTROY EXISTING CHARTS FIRST
     // ============================================================================
-    const rawTrendLabels = {{ trend_labels|safe }};
-    const rawTrendTotal = {{ trend_total|safe }};
-    const rawTrendFatal = {{ trend_fatal|safe }};
-    const rawTrendInjury = {{ trend_injury|safe }};
-    
-    const rawVehicleLabels = {{ vehicle_labels|safe }};
-    const rawVehicleData = {{ vehicle_data|safe }};
-    
-    const rawHourlyLabels = {{ hourly_labels|safe }};
-    const rawHourlyData = {{ hourly_data|safe }};
-    
-    const rawDowData = {{ dow_data|safe }};
-    
-    const rawProvinceLabels = {{ province_labels|safe }};
-    const rawProvinceTotal = {{ province_total|safe }};
-    const rawProvinceFatal = {{ province_fatal|safe }};
-    const rawProvinceInjury = {{ province_injury|safe }};
-    
-    const rawIncidentLabels = {{ incident_labels|safe }};
-    const rawIncidentData = {{ incident_data|safe }};
-    
+    if (window.charts.trendChart) window.charts.trendChart.destroy();
+    if (window.charts.severityChart) window.charts.severityChart.destroy();
+    if (window.charts.hourlyChart) window.charts.hourlyChart.destroy();
+    if (window.charts.vehicleChart) window.charts.vehicleChart.destroy();
+    if (window.charts.dowChart) window.charts.dowChart.destroy();
+    if (window.charts.comparisonChart) window.charts.comparisonChart.destroy();
+    if (window.charts.forecastChart) window.charts.forecastChart.destroy();
+    if (window.charts.provinceComparisonChart) window.charts.provinceComparisonChart.destroy();
+    if (window.charts.incidentTypeChart) window.charts.incidentTypeChart.destroy();
+    if (window.charts.trendComparisonChart) window.charts.trendComparisonChart.destroy();
+
+    // ============================================================================
+    // GET DATA FROM JSON SCRIPT TAG (UPDATED BY AJAX)
+    // ============================================================================
+    let chartData;
+    try {
+        const chartDataElement = document.getElementById('chart-data');
+        if (chartDataElement) {
+            chartData = JSON.parse(chartDataElement.textContent);
+        } else {
+            console.error('❌ Chart data element not found!');
+            return;
+        }
+    } catch (e) {
+        console.error('❌ Error parsing chart data:', e);
+        return;
+    }
+
+    const rawTrendLabels = chartData.trendLabels;
+    const rawTrendTotal = chartData.trendTotal;
+    const rawTrendFatal = chartData.trendFatal;
+    const rawTrendInjury = chartData.trendInjury;
+
+    const rawVehicleLabels = chartData.vehicleLabels;
+    const rawVehicleData = chartData.vehicleData;
+
+    const rawHourlyLabels = chartData.hourlyLabels;
+    const rawHourlyData = chartData.hourlyData;
+
+    const rawDowData = chartData.dowData;
+
+    const rawProvinceLabels = chartData.provinceLabels;
+    const rawProvinceTotal = chartData.provinceTotal;
+    const rawProvinceFatal = chartData.provinceFatal;
+    const rawProvinceInjury = chartData.provinceInjury;
+
+    const rawIncidentLabels = chartData.incidentLabels;
+    const rawIncidentData = chartData.incidentData;
+
     // Check if data is empty and provide fallbacks
     const hasData = rawTrendLabels && rawTrendLabels.length > 0;
     
     console.log('📊 Data Check:', {
         hasData: hasData,
         trendLabels: rawTrendLabels ? rawTrendLabels.length : 0,
-        totalAccidents: {{ total_accidents }}
+        totalAccidents: chartData.totalAccidents
     });
     
     // Use actual data or sample data
