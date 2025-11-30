@@ -24,12 +24,6 @@ urlpatterns = [
     # System Monitoring
     path('system/', admin_views.system_monitoring, name='system_monitoring'),
 
-    # Data Import (CSV Upload)
-    path('csv-upload/', admin_views.csv_upload, name='csv_upload'),
-    path('csv-upload/process/', admin_views.csv_upload_process, name='csv_upload_process'),
-    path('csv-upload/results/', admin_views.csv_upload_results, name='csv_upload_results'),
-    path('data-view/', admin_views.data_view, name='data_view'),
-
     # AJAX Endpoints
     path('api/user-stats/', admin_views.get_user_stats, name='api_user_stats'),
     path('api/system-health/', admin_views.get_system_health, name='api_system_health'),
