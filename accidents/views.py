@@ -572,8 +572,219 @@ def accident_detail(request, pk):
         'accident': accident,
         'nearby_accidents': nearby_accidents,
     }
-    
+
     return render(request, 'accidents/accident_detail.html', context)
+
+
+# ============================================================================
+# SUPER ADMIN ONLY: CSV UPLOAD & EDIT FUNCTIONALITY (ON ACCIDENT PAGE)
+# ============================================================================
+
+@pnp_login_required
+def accident_csv_upload(request):
+    """CSV upload functionality for super_admin only (on accident page)"""
+
+    # Check if user is super_admin
+    if not (hasattr(request.user, 'profile') and request.user.profile.role == 'super_admin'):
+        messages.error(request, 'Permission denied. Only super admins can import CSV data.')
+        return redirect('accident_list')
+
+    if request.method != 'POST':
+        return redirect('accident_list')
+
+    if 'csv_file' not in request.FILES:
+        messages.error(request, 'No file uploaded')
+        return redirect('accident_list')
+
+    csv_file = request.FILES['csv_file']
+
+    # Validate file type
+    if not csv_file.name.endswith('.csv'):
+        messages.error(request, 'Invalid file type. Please upload a CSV file.')
+        return redirect('accident_list')
+
+    # Validate file size (max 50MB)
+    max_size = 50 * 1024 * 1024
+    if csv_file.size > max_size:
+        messages.error(request, f'File too large. Maximum size is 50MB.')
+        return redirect('accident_list')
+
+    try:
+        import pandas as pd
+        import numpy as np
+        from datetime import datetime
+        from decimal import Decimal
+        from .management.commands.import_accidents import Command as ImportCommand
+
+        # Create import command instance to reuse helper methods
+        import_cmd = ImportCommand()
+
+        # Read CSV
+        try:
+            df = pd.read_csv(csv_file, encoding='cp1252')
+        except:
+            try:
+                df = pd.read_csv(csv_file, encoding='utf-8')
+            except:
+                df = pd.read_csv(csv_file, encoding='latin-1')
+
+        total_rows = len(df)
+        df = df.replace({np.nan: None})
+
+        imported = 0
+        errors = 0
+        batch = []
+        batch_size = 500
+
+        # Process rows
+        for index, row in df.iterrows():
+            try:
+                # Parse date
+                date_committed = import_cmd.safe_parse_date(row.get('dateCommitted'))
+                if not date_committed:
+                    year_value = import_cmd.safe_parse_int(row.get('Year'))
+                    if year_value:
+                        date_committed = datetime(year_value, 1, 1).date()
+                    else:
+                        date_committed = datetime(2020, 1, 1).date()
+
+                # Parse coordinates
+                latitude = import_cmd.safe_parse_float(row.get('lat'))
+                longitude = import_cmd.safe_parse_float(row.get('lng'))
+
+                if latitude and (latitude < 7.0 or latitude > 11.0):
+                    latitude = None
+                if longitude and (longitude < 124.0 or longitude > 128.0):
+                    longitude = None
+
+                if not latitude or not longitude:
+                    approx_coords = import_cmd.get_approximate_coordinates(
+                        row.get('province'), row.get('municipal'), row.get('barangay')
+                    )
+                    if approx_coords:
+                        latitude, longitude = approx_coords
+                    else:
+                        latitude, longitude = 9.0, 125.5
+
+                # Create accident
+                accident = Accident(
+                    pro=import_cmd.safe_string(row.get('pro')),
+                    ppo=import_cmd.safe_string(row.get('ppo')),
+                    station=import_cmd.safe_string(row.get('stn')),
+                    region=import_cmd.safe_string(row.get('region'), 'CARAGA'),
+                    province=import_cmd.safe_string(row.get('province'), 'UNKNOWN'),
+                    municipal=import_cmd.safe_string(row.get('municipal'), 'UNKNOWN'),
+                    barangay=import_cmd.safe_string(row.get('barangay'), 'UNKNOWN'),
+                    street=import_cmd.safe_string(row.get('street')),
+                    type_of_place=import_cmd.safe_string(row.get('typeofPlace')),
+                    latitude=Decimal(str(latitude)),
+                    longitude=Decimal(str(longitude)),
+                    date_reported=import_cmd.safe_parse_date(row.get('dateReported')),
+                    time_reported=import_cmd.safe_parse_time(row.get('timeReported')),
+                    date_committed=date_committed,
+                    time_committed=import_cmd.safe_parse_time(row.get('timeCommitted')),
+                    year=import_cmd.safe_parse_int(row.get('Year')),
+                    incident_type=import_cmd.safe_string(row.get('incidentType'), 'UNKNOWN'),
+                    offense=import_cmd.safe_string(row.get('offense')),
+                    offense_type=import_cmd.safe_string(row.get('offenseType')),
+                    stage_of_felony=import_cmd.safe_string(row.get('stageoffelony')),
+                    victim_killed=import_cmd.safe_parse_boolean(row.get('victimKilled')),
+                    victim_injured=import_cmd.safe_parse_boolean(row.get('victimInjured')),
+                    victim_unharmed=import_cmd.safe_parse_boolean(row.get('victimUnharmed')),
+                    victim_count=import_cmd.safe_parse_int(row.get('victimCount'), default=0),
+                    suspect_count=import_cmd.safe_parse_int(row.get('suspectCount'), default=0),
+                    vehicle_kind=import_cmd.safe_string(row.get('vehicleKind')),
+                    vehicle_make=import_cmd.safe_string(row.get('vehicleMake')),
+                    vehicle_model=import_cmd.safe_string(row.get('vehicleModel')),
+                    vehicle_plate_no=import_cmd.safe_string(row.get('vehiclePlateNo')),
+                    victim_details=import_cmd.safe_string(row.get('victim')),
+                    suspect_details=import_cmd.safe_string(row.get('suspect')),
+                    narrative=import_cmd.safe_string(row.get('narrative'), 'No details available'),
+                    case_status=import_cmd.safe_string(row.get('casestatus'), 'UNKNOWN'),
+                    case_solve_type=import_cmd.safe_string(row.get('caseSolveType')),
+                )
+
+                batch.append(accident)
+
+                if len(batch) >= batch_size:
+                    Accident.objects.bulk_create(batch, ignore_conflicts=True)
+                    imported += len(batch)
+                    batch = []
+
+            except Exception as e:
+                errors += 1
+
+        # Insert remaining
+        if batch:
+            Accident.objects.bulk_create(batch, ignore_conflicts=True)
+            imported += len(batch)
+
+        # Success message
+        if errors > 0:
+            messages.warning(request, f'Import completed: {imported} records imported, {errors} errors encountered.')
+        else:
+            messages.success(request, f'Successfully imported {imported} accident records from {csv_file.name}!')
+
+    except Exception as e:
+        messages.error(request, f'Import failed: {str(e)}')
+
+    return redirect('accident_list')
+
+
+@pnp_login_required
+def accident_edit(request, pk):
+    """Edit accident - super_admin only"""
+
+    # Check if user is super_admin
+    if not (hasattr(request.user, 'profile') and request.user.profile.role == 'super_admin'):
+        messages.error(request, 'Permission denied. Only super admins can edit accidents.')
+        return redirect('accident_list')
+
+    accident = get_object_or_404(Accident, pk=pk)
+
+    if request.method == 'POST':
+        try:
+            # Update fields from POST data
+            accident.province = request.POST.get('province', accident.province)
+            accident.municipal = request.POST.get('municipal', accident.municipal)
+            accident.barangay = request.POST.get('barangay', accident.barangay)
+            accident.street = request.POST.get('street', accident.street)
+            accident.incident_type = request.POST.get('incident_type', accident.incident_type)
+
+            # Update casualties
+            accident.victim_killed = request.POST.get('victim_killed') == 'true'
+            accident.victim_injured = request.POST.get('victim_injured') == 'true'
+            accident.victim_unharmed = request.POST.get('victim_unharmed') == 'true'
+
+            # Update narrative
+            accident.narrative = request.POST.get('narrative', accident.narrative)
+
+            accident.save()
+
+            messages.success(request, f'Accident #{pk} updated successfully!')
+
+        except Exception as e:
+            messages.error(request, f'Failed to update accident: {str(e)}')
+
+        return redirect('accident_list')
+
+    # GET request - return accident data as JSON for modal
+    from django.http import JsonResponse
+    data = {
+        'id': accident.pk,
+        'province': accident.province,
+        'municipal': accident.municipal,
+        'barangay': accident.barangay,
+        'street': accident.street or '',
+        'incident_type': accident.incident_type or '',
+        'victim_killed': accident.victim_killed,
+        'victim_injured': accident.victim_injured,
+        'victim_unharmed': accident.victim_unharmed,
+        'narrative': accident.narrative or '',
+        'date_committed': accident.date_committed.strftime('%Y-%m-%d') if accident.date_committed else '',
+    }
+    return JsonResponse(data)
+
 
 @pnp_login_required
 def hotspots_view(request):

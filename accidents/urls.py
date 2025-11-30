@@ -18,6 +18,10 @@ urlpatterns = [
     path('accidents/', views.accident_list, name='accident_list'),
     path('accidents/<int:pk>/', views.accident_detail, name='accident_detail'),
 
+    # Super Admin: CSV Upload & Edit (on accident page)
+    path('accidents/csv-upload/', views.accident_csv_upload, name='accident_csv_upload'),
+    path('accidents/<int:pk>/edit/', views.accident_edit, name='accident_edit'),
+
     # Hotspots
     path('hotspots/', views.hotspots_view, name='hotspots'),
     path('hotspots/<int:cluster_id>/', views.hotspot_detail, name='hotspot_detail'),
