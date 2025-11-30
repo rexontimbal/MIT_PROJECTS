@@ -1,0 +1,247 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}View Accident Data{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">
+            <i class="fas fa-database"></i>
+            Accident Data
+        </h1>
+        <div class="admin-breadcrumb">
+            <a href="{% url 'admin_panel:dashboard' %}"><i class="fas fa-home"></i> Admin</a>
+            <span>/</span>
+            <span>Data View</span>
+        </div>
+    </div>
+    <div>
+        <a href="{% url 'admin_panel:csv_upload' %}" class="btn btn-primary">
+            <i class="fas fa-file-upload"></i>
+            Import CSV
+        </a>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card green">
+        <div class="stat-header">
+            <span class="stat-title">Filtered Results</span>
+            <i class="fas fa-filter stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ total_count }}</div>
+        <div class="stat-label">Matching records</div>
+    </div>
+
+    <div class="stat-card blue">
+        <div class="stat-header">
+            <span class="stat-title">Current Page</span>
+            <i class="fas fa-file-alt stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ page_obj.number }}</div>
+        <div class="stat-label">of {{ page_obj.paginator.num_pages }} pages</div>
+    </div>
+
+    <div class="stat-card orange">
+        <div class="stat-header">
+            <span class="stat-title">Showing</span>
+            <i class="fas fa-list stat-icon"></i>
+        </div>
+        <div class="stat-value">{{ page_obj.object_list.count }}</div>
+        <div class="stat-label">Records per page</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="admin-card" style="margin-bottom: 2rem;">
+    <div class="admin-card-header">
+        <h2 class="admin-card-title">
+            <i class="fas fa-filter"></i>
+            Filters & Search
+        </h2>
+    </div>
+
+    <div style="padding: 1.5rem;">
+        <form method="get" action="{% url 'admin_panel:data_view' %}">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <!-- Search -->
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark);">
+                        <i class="fas fa-search"></i> Search
+                    </label>
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Province, municipal, barangay..." class="form-control">
+                </div>
+
+                <!-- Province Filter -->
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark);">
+                        <i class="fas fa-map-marker-alt"></i> Province
+                    </label>
+                    <select name="province" class="form-control">
+                        <option value="">All Provinces</option>
+                        {% for prov in provinces %}
+                        <option value="{{ prov }}" {% if prov == selected_province %}selected{% endif %}>{{ prov }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Year Filter -->
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark);">
+                        <i class="fas fa-calendar"></i> Year
+                    </label>
+                    <select name="year" class="form-control">
+                        <option value="">All Years</option>
+                        {% for yr in years %}
+                        <option value="{{ yr }}" {% if yr|stringformat:"i" == selected_year %}selected{% endif %}>{{ yr }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                    Apply Filters
+                </button>
+                <a href="{% url 'admin_panel:data_view' %}" class="btn btn-outline">
+                    <i class="fas fa-redo"></i>
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h2 class="admin-card-title">
+            <i class="fas fa-table"></i>
+            Accident Records
+        </h2>
+    </div>
+
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Incident Type</th>
+                    <th>Casualties</th>
+                    <th>Coordinates</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for accident in page_obj %}
+                <tr>
+                    <td>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-weight: 600; color: var(--text-dark);">{{ accident.date_committed|date:"M d, Y" }}</span>
+                            {% if accident.time_committed %}
+                            <span style="font-size: 0.875rem; color: var(--text-light);">{{ accident.time_committed|time:"H:i" }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-weight: 600; color: var(--text-dark);">{{ accident.municipal }}</span>
+                            <span style="font-size: 0.875rem; color: var(--text-light);">{{ accident.barangay }}, {{ accident.province }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="background: #e0e7ff; color: #4338ca; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; white-space: nowrap;">
+                            {{ accident.incident_type|truncatewords:3 }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            {% if accident.victim_killed %}
+                            <span class="badge badge-danger">
+                                <i class="fas fa-skull-crossbones"></i> Killed
+                            </span>
+                            {% endif %}
+                            {% if accident.victim_injured %}
+                            <span class="badge badge-warning">
+                                <i class="fas fa-user-injured"></i> Injured
+                            </span>
+                            {% endif %}
+                            {% if accident.victim_unharmed %}
+                            <span class="badge badge-success">
+                                <i class="fas fa-check"></i> Unharmed
+                            </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-family: monospace; font-size: 0.875rem; color: var(--text-light);">
+                            <div>{{ accident.latitude }}</div>
+                            <div>{{ accident.longitude }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if accident.case_status %}
+                        <span style="background: #f3f4f6; color: #374151; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; white-space: nowrap;">
+                            {{ accident.case_status }}
+                        </span>
+                        {% else %}
+                        <span style="color: var(--text-light);">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-light);">
+                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.3;"></i>
+                        <div style="font-size: 1.1rem; margin-bottom: 0.5rem;">No accidents found</div>
+                        <div style="font-size: 0.875rem;">Try adjusting your filters or import data</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div style="padding: 1.5rem; border-top: 1px solid var(--border-color);">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <!-- Page Info -->
+            <div style="color: var(--text-light); font-size: 0.875rem;">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ total_count }} results
+            </div>
+
+            <!-- Pagination Controls -->
+            <div style="display: flex; gap: 0.5rem;">
+                {% if page_obj.has_previous %}
+                <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_province %}&province={{ selected_province }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="btn btn-outline" style="padding: 0.5rem 0.75rem;">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_province %}&province={{ selected_province }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="btn btn-outline" style="padding: 0.5rem 0.75rem;">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+                {% endif %}
+
+                <!-- Page Numbers -->
+                <div style="display: flex; align-items: center; padding: 0 1rem; font-weight: 600; color: var(--text-dark);">
+                    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                </div>
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_province %}&province={{ selected_province }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="btn btn-outline" style="padding: 0.5rem 0.75rem;">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_province %}&province={{ selected_province }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="btn btn-outline" style="padding: 0.5rem 0.75rem;">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -871,3 +871,296 @@ def get_system_health(request):
     }
 
     return JsonResponse(health)
+
+
+# ============================================================================
+# DATA IMPORT (CSV UPLOAD)
+# ============================================================================
+
+@login_required
+@user_passes_test(is_admin)
+def csv_upload(request):
+    """CSV file upload interface for importing accident data"""
+
+    # Get recent imports (from audit logs)
+    recent_imports = AuditLog.objects.filter(
+        action='csv_import'
+    ).select_related('user').order_by('-timestamp')[:10]
+
+    # Get total accident count
+    total_accidents = Accident.objects.count()
+
+    context = {
+        'recent_imports': recent_imports,
+        'total_accidents': total_accidents,
+    }
+
+    return render(request, 'admin_panel/csv_upload.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def csv_upload_process(request):
+    """Process uploaded CSV file and import accidents"""
+
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method')
+        return redirect('admin_panel:csv_upload')
+
+    if 'csv_file' not in request.FILES:
+        messages.error(request, 'No file uploaded')
+        return redirect('admin_panel:csv_upload')
+
+    csv_file = request.FILES['csv_file']
+
+    # Validate file type
+    if not csv_file.name.endswith('.csv'):
+        messages.error(request, 'Please upload a CSV file (.csv extension required)')
+        return redirect('admin_panel:csv_upload')
+
+    # Validate file size (max 50MB)
+    max_size = 50 * 1024 * 1024  # 50MB in bytes
+    if csv_file.size > max_size:
+        messages.error(request, f'File too large. Maximum size is 50MB. Your file is {csv_file.size / (1024*1024):.1f}MB')
+        return redirect('admin_panel:csv_upload')
+
+    try:
+        import pandas as pd
+        import numpy as np
+        from datetime import datetime
+        from decimal import Decimal
+        from .management.commands.import_accidents import Command as ImportCommand
+
+        # Create an instance of the import command to reuse helper methods
+        import_cmd = ImportCommand()
+
+        # Read CSV with pandas
+        try:
+            df = pd.read_csv(csv_file, encoding='cp1252')
+        except:
+            try:
+                df = pd.read_csv(csv_file, encoding='utf-8')
+            except:
+                df = pd.read_csv(csv_file, encoding='latin-1')
+
+        total_rows = len(df)
+
+        # Replace NaN with None
+        df = df.replace({np.nan: None})
+
+        imported = 0
+        errors = 0
+        error_messages = []
+        batch_size = 500
+        batch = []
+
+        # Process each row
+        for index, row in df.iterrows():
+            try:
+                # Parse dates
+                date_committed = import_cmd.safe_parse_date(row.get('dateCommitted'))
+                if not date_committed:
+                    year_value = import_cmd.safe_parse_int(row.get('Year'))
+                    if year_value:
+                        date_committed = datetime(year_value, 1, 1).date()
+                    else:
+                        date_committed = datetime(2020, 1, 1).date()
+
+                # Parse coordinates
+                latitude = import_cmd.safe_parse_float(row.get('lat'))
+                longitude = import_cmd.safe_parse_float(row.get('lng'))
+
+                # Validate coordinates
+                if latitude and (latitude < 7.0 or latitude > 11.0):
+                    latitude = None
+                if longitude and (longitude < 124.0 or longitude > 128.0):
+                    longitude = None
+
+                # Use approximate coordinates if missing
+                if not latitude or not longitude:
+                    approx_coords = import_cmd.get_approximate_coordinates(
+                        row.get('province'),
+                        row.get('municipal'),
+                        row.get('barangay')
+                    )
+                    if approx_coords:
+                        latitude, longitude = approx_coords
+                    else:
+                        latitude = 9.0
+                        longitude = 125.5
+
+                # Create accident object
+                accident = Accident(
+                    pro=import_cmd.safe_string(row.get('pro')),
+                    ppo=import_cmd.safe_string(row.get('ppo')),
+                    station=import_cmd.safe_string(row.get('stn')),
+                    region=import_cmd.safe_string(row.get('region'), 'CARAGA'),
+                    province=import_cmd.safe_string(row.get('province'), 'UNKNOWN'),
+                    municipal=import_cmd.safe_string(row.get('municipal'), 'UNKNOWN'),
+                    barangay=import_cmd.safe_string(row.get('barangay'), 'UNKNOWN'),
+                    street=import_cmd.safe_string(row.get('street')),
+                    type_of_place=import_cmd.safe_string(row.get('typeofPlace')),
+                    latitude=Decimal(str(latitude)),
+                    longitude=Decimal(str(longitude)),
+                    date_reported=import_cmd.safe_parse_date(row.get('dateReported')),
+                    time_reported=import_cmd.safe_parse_time(row.get('timeReported')),
+                    date_committed=date_committed,
+                    time_committed=import_cmd.safe_parse_time(row.get('timeCommitted')),
+                    year=import_cmd.safe_parse_int(row.get('Year')),
+                    incident_type=import_cmd.safe_string(row.get('incidentType'), 'UNKNOWN'),
+                    offense=import_cmd.safe_string(row.get('offense')),
+                    offense_type=import_cmd.safe_string(row.get('offenseType')),
+                    stage_of_felony=import_cmd.safe_string(row.get('stageoffelony')),
+                    victim_killed=import_cmd.safe_parse_boolean(row.get('victimKilled')),
+                    victim_injured=import_cmd.safe_parse_boolean(row.get('victimInjured')),
+                    victim_unharmed=import_cmd.safe_parse_boolean(row.get('victimUnharmed')),
+                    victim_count=import_cmd.safe_parse_int(row.get('victimCount'), default=0),
+                    suspect_count=import_cmd.safe_parse_int(row.get('suspectCount'), default=0),
+                    vehicle_kind=import_cmd.safe_string(row.get('vehicleKind')),
+                    vehicle_make=import_cmd.safe_string(row.get('vehicleMake')),
+                    vehicle_model=import_cmd.safe_string(row.get('vehicleModel')),
+                    vehicle_plate_no=import_cmd.safe_string(row.get('vehiclePlateNo')),
+                    victim_details=import_cmd.safe_string(row.get('victim')),
+                    suspect_details=import_cmd.safe_string(row.get('suspect')),
+                    narrative=import_cmd.safe_string(row.get('narrative'), 'No details available'),
+                    case_status=import_cmd.safe_string(row.get('casestatus'), 'UNKNOWN'),
+                    case_solve_type=import_cmd.safe_string(row.get('caseSolveType')),
+                )
+
+                batch.append(accident)
+
+                # Bulk insert
+                if len(batch) >= batch_size:
+                    Accident.objects.bulk_create(batch, ignore_conflicts=True)
+                    imported += len(batch)
+                    batch = []
+
+            except Exception as e:
+                errors += 1
+                if len(error_messages) < 10:  # Store first 10 errors
+                    error_messages.append(f"Row {index + 2}: {str(e)}")
+
+        # Insert remaining records
+        if batch:
+            Accident.objects.bulk_create(batch, ignore_conflicts=True)
+            imported += len(batch)
+
+        # Log the import
+        log_user_action(
+            request=request,
+            action='csv_import',
+            description=f'Imported {imported}/{total_rows} accidents from {csv_file.name}',
+            severity='info',
+            success=True
+        )
+
+        # Success message
+        if errors > 0:
+            messages.warning(
+                request,
+                f'Import completed with warnings: {imported} records imported, {errors} errors encountered'
+            )
+        else:
+            messages.success(
+                request,
+                f'Successfully imported {imported} accident records from {csv_file.name}'
+            )
+
+        # Store import results in session for display
+        request.session['import_results'] = {
+            'total_rows': total_rows,
+            'imported': imported,
+            'errors': errors,
+            'error_messages': error_messages,
+            'filename': csv_file.name,
+        }
+
+        return redirect('admin_panel:csv_upload_results')
+
+    except Exception as e:
+        messages.error(request, f'Import failed: {str(e)}')
+        log_user_action(
+            request=request,
+            action='csv_import',
+            description=f'Failed to import {csv_file.name}: {str(e)}',
+            severity='error',
+            success=False
+        )
+        return redirect('admin_panel:csv_upload')
+
+
+@login_required
+@user_passes_test(is_admin)
+def csv_upload_results(request):
+    """Show results of CSV import"""
+
+    # Get import results from session
+    import_results = request.session.get('import_results', None)
+
+    if not import_results:
+        messages.info(request, 'No import results to display')
+        return redirect('admin_panel:csv_upload')
+
+    # Clear from session after reading
+    del request.session['import_results']
+
+    context = {
+        'results': import_results,
+    }
+
+    return render(request, 'admin_panel/csv_upload_results.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def data_view(request):
+    """View imported accident data with pagination and search"""
+
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+    province = request.GET.get('province', '')
+    year = request.GET.get('year', '')
+
+    # Start with all accidents
+    accidents = Accident.objects.all().order_by('-date_committed')
+
+    # Apply search filter
+    if search_query:
+        accidents = accidents.filter(
+            Q(province__icontains=search_query) |
+            Q(municipal__icontains=search_query) |
+            Q(barangay__icontains=search_query) |
+            Q(incident_type__icontains=search_query)
+        )
+
+    # Apply province filter
+    if province:
+        accidents = accidents.filter(province=province)
+
+    # Apply year filter
+    if year:
+        accidents = accidents.filter(year=year)
+
+    # Pagination (50 per page)
+    paginator = Paginator(accidents, 50)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Get unique provinces and years for filters
+    provinces = Accident.objects.values_list('province', flat=True).distinct().order_by('province')
+    provinces = [p for p in provinces if p and p.strip()]
+
+    years = Accident.objects.values_list('year', flat=True).distinct().order_by('-year')
+    years = [y for y in years if y]
+
+    context = {
+        'page_obj': page_obj,
+        'total_count': accidents.count(),
+        'provinces': provinces,
+        'years': years,
+        'search_query': search_query,
+        'selected_province': province,
+        'selected_year': year,
+    }
+
+    return render(request, 'admin_panel/data_view.html', context)

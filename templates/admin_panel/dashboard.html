@@ -78,8 +78,16 @@
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <a href="{% url 'admin_panel:csv_upload' %}" class="btn btn-primary" style="justify-content: center;">
+                <i class="fas fa-file-upload"></i>
+                Import CSV Data
+            </a>
+            <a href="{% url 'admin_panel:data_view' %}" class="btn btn-outline" style="justify-content: center;">
+                <i class="fas fa-database"></i>
+                View Accident Data
+            </a>
             {% if user.is_superuser %}
-            <a href="{% url 'admin_panel:user_create' %}" class="btn btn-primary" style="justify-content: center;">
+            <a href="{% url 'admin_panel:user_create' %}" class="btn btn-outline" style="justify-content: center;">
                 <i class="fas fa-user-plus"></i>
                 Create New User
             </a>
