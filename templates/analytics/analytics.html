@@ -2465,12 +2465,21 @@ function hideLoading() {
 }
 
 function updatePageContent(url, forcedScrollPosition = null) {
-    showLoading();
-
-    // Use forced scroll position if provided, otherwise save current position
-    const scrollPosition = forcedScrollPosition !== null ? forcedScrollPosition :
+    // SAVE SCROLL POSITION FIRST (before any operations that might scroll)
+    const savedScrollPosition = forcedScrollPosition !== null ? forcedScrollPosition :
                           (window.pageYOffset || document.documentElement.scrollTop);
-    console.log('💾 Saving scroll position:', scrollPosition, forcedScrollPosition !== null ? '(forced)' : '(auto)');
+    console.log('💾 Saving scroll position:', savedScrollPosition, forcedScrollPosition !== null ? '(forced)' : '(auto)');
+
+    // Prevent automatic scrolling during update
+    const htmlElement = document.documentElement;
+    const bodyElement = document.body;
+    const originalScrollBehavior = htmlElement.style.scrollBehavior;
+
+    // Disable smooth scrolling immediately
+    htmlElement.style.scrollBehavior = 'auto';
+    bodyElement.style.scrollBehavior = 'auto';
+
+    showLoading();
 
     fetch(url)
         .then(response => response.text())
@@ -2478,12 +2487,18 @@ function updatePageContent(url, forcedScrollPosition = null) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
+            // Store scroll position again before DOM manipulation
+            const currentScroll = savedScrollPosition;
+
             // Update the entire main content area (charts, insights, tables)
             const newMainContent = doc.getElementById('analytics-main-content');
             const currentMainContent = document.getElementById('analytics-main-content');
             if (newMainContent && currentMainContent) {
                 currentMainContent.innerHTML = newMainContent.innerHTML;
             }
+
+            // Immediately restore scroll after content update
+            window.scrollTo(0, currentScroll);
 
             // Update filter dropdowns to match URL parameters
             const urlParams = new URLSearchParams(new URL(url).search);
@@ -2512,8 +2527,11 @@ function updatePageContent(url, forcedScrollPosition = null) {
             if (fromDateEl) fromDateEl.value = fromDateParam;
             if (toDateEl) toDateEl.value = toDateParam;
 
-            // Update browser URL without reload
+            // Update browser URL without reload (this shouldn't scroll, but just in case)
             history.pushState({}, '', url);
+
+            // Restore scroll again after URL update
+            window.scrollTo(0, currentScroll);
 
             // Update active filters badges
             displayActiveFilters();
@@ -2523,37 +2541,44 @@ function updatePageContent(url, forcedScrollPosition = null) {
 
             hideLoading();
 
-            // AGGRESSIVE SCROLL POSITION RESTORATION
-            // Temporarily disable smooth scrolling
-            const htmlElement = document.documentElement;
-            const originalScrollBehavior = htmlElement.style.scrollBehavior;
-            htmlElement.style.scrollBehavior = 'auto';
-
-            // Use multiple methods with delays to ensure scroll is restored
-            const restoreScroll = () => {
-                window.scrollTo(0, scrollPosition);
-                document.documentElement.scrollTop = scrollPosition;
-                document.body.scrollTop = scrollPosition;
-                console.log('📍 Scroll restored to:', scrollPosition, 'Current:', window.pageYOffset);
+            // FINAL SCROLL RESTORATION with multiple attempts
+            // Use requestAnimationFrame for smooth, reliable restoration
+            const finalRestoreScroll = () => {
+                window.scrollTo(0, currentScroll);
+                document.documentElement.scrollTop = currentScroll;
+                document.body.scrollTop = currentScroll;
+                console.log('📍 Final scroll restored to:', currentScroll, 'Current:', window.pageYOffset);
             };
 
-            // Attempt 1: Immediate
-            setTimeout(restoreScroll, 0);
+            // Immediate restoration
+            finalRestoreScroll();
 
-            // Attempt 2: After 50ms
-            setTimeout(restoreScroll, 50);
+            // After 0ms (next tick)
+            setTimeout(finalRestoreScroll, 0);
 
-            // Attempt 3: After 100ms
-            setTimeout(restoreScroll, 100);
+            // After 10ms (for chart rendering)
+            setTimeout(finalRestoreScroll, 10);
 
-            // Attempt 4: After 200ms and restore smooth scroll
+            // After 50ms (for any animations)
+            setTimeout(finalRestoreScroll, 50);
+
+            // After 100ms (final check)
+            setTimeout(finalRestoreScroll, 100);
+
+            // After 200ms - restore smooth scrolling behavior
             setTimeout(() => {
-                restoreScroll();
+                finalRestoreScroll();
                 htmlElement.style.scrollBehavior = originalScrollBehavior;
+                bodyElement.style.scrollBehavior = originalScrollBehavior;
+                console.log('✅ Scroll restoration complete. Position maintained at:', currentScroll);
             }, 200);
         })
         .catch(error => {
             console.error('Error loading content:', error);
+            hideLoading();
+            // Restore scroll behavior on error
+            htmlElement.style.scrollBehavior = originalScrollBehavior;
+            bodyElement.style.scrollBehavior = originalScrollBehavior;
             // Fallback to normal page load if fetch fails
             window.location.href = url;
         });
