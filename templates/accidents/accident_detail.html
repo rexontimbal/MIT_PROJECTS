@@ -1343,15 +1343,26 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div class="form-group">
                                 <label for="editProvince">Province <span style="color: red;">*</span></label>
-                                <input type="text" id="editProvince" name="province" class="form-control" required>
+                                <select id="editProvince" name="province" class="form-control" required onchange="loadMunicipalities()">
+                                    <option value="">Select Province</option>
+                                    <option value="Agusan del Norte">Agusan del Norte</option>
+                                    <option value="Agusan del Sur">Agusan del Sur</option>
+                                    <option value="Surigao del Norte">Surigao del Norte</option>
+                                    <option value="Surigao del Sur">Surigao del Sur</option>
+                                    <option value="Dinagat Islands">Dinagat Islands</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="editMunicipal">Municipality <span style="color: red;">*</span></label>
-                                <input type="text" id="editMunicipal" name="municipal" class="form-control" required>
+                                <select id="editMunicipal" name="municipal" class="form-control" required onchange="loadBarangays()">
+                                    <option value="">Select Municipality</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="editBarangay">Barangay <span style="color: red;">*</span></label>
-                                <input type="text" id="editBarangay" name="barangay" class="form-control" required>
+                                <select id="editBarangay" name="barangay" class="form-control" required>
+                                    <option value="">Select Barangay</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="editStreet">Street</label>
@@ -1359,7 +1370,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <div class="form-group">
                                 <label for="editTypeOfPlace">Type of Place</label>
-                                <input type="text" id="editTypeOfPlace" name="type_of_place" class="form-control" placeholder="e.g., Road/Highway">
+                                <select id="editTypeOfPlace" name="type_of_place" class="form-control">
+                                    <option value="">Select Type</option>
+                                    <option value="Road/Highway">Road/Highway</option>
+                                    <option value="Intersection">Intersection</option>
+                                    <option value="Residential Area">Residential Area</option>
+                                    <option value="Commercial Area">Commercial Area</option>
+                                    <option value="School Zone">School Zone</option>
+                                    <option value="Bridge">Bridge</option>
+                                    <option value="Parking Area">Parking Area</option>
+                                    <option value="Other">Other</option>
+                                </select>
                             </div>
                         </div>
 
@@ -1447,7 +1468,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem;">Vehicle Information</h3>
                         <div class="form-group">
                             <label for="editVehicleKind">Vehicle Kind/Type</label>
-                            <input type="text" id="editVehicleKind" name="vehicle_kind" class="form-control" placeholder="e.g., Motorcycle, Car, Truck">
+                            <select id="editVehicleKind" name="vehicle_kind" class="form-control">
+                                <option value="">Select Vehicle Type</option>
+                                <option value="Motorcycle">Motorcycle</option>
+                                <option value="Tricycle">Tricycle</option>
+                                <option value="Car/Sedan">Car/Sedan</option>
+                                <option value="SUV">SUV</option>
+                                <option value="Van">Van</option>
+                                <option value="Jeepney">Jeepney</option>
+                                <option value="Bus">Bus</option>
+                                <option value="Truck">Truck</option>
+                                <option value="Bicycle">Bicycle</option>
+                                <option value="Pedestrian">Pedestrian</option>
+                                <option value="Multiple Vehicles">Multiple Vehicles</option>
+                                <option value="Other">Other</option>
+                            </select>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
                             <div class="form-group">
@@ -1487,7 +1522,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div class="form-group">
                                 <label for="editCaseStatus">Case Status</label>
-                                <input type="text" id="editCaseStatus" name="case_status" class="form-control" placeholder="e.g., Under Investigation, Resolved">
+                                <select id="editCaseStatus" name="case_status" class="form-control">
+                                    <option value="">Select Status</option>
+                                    <option value="Under Investigation">Under Investigation</option>
+                                    <option value="Solved">Solved</option>
+                                    <option value="Closed">Closed</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Cold Case">Cold Case</option>
+                                    <option value="Filed in Court">Filed in Court</option>
+                                    <option value="Dismissed">Dismissed</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="editCaseSolveType">Case Solution Type</label>
@@ -1719,6 +1763,109 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 // Edit Modal Functions
 let currentEditId = null;
+let locationData = null;
+
+// Load location data
+async function loadLocationData() {
+    if (!locationData) {
+        try {
+            const response = await fetch('/static/data/caraga_locations.json');
+            locationData = await response.json();
+        } catch (error) {
+            console.error('Error loading location data:', error);
+            locationData = {};
+        }
+    }
+    return locationData;
+}
+
+// Load municipalities based on selected province
+async function loadMunicipalities() {
+    const provinceSelect = document.getElementById('editProvince');
+    const municipalSelect = document.getElementById('editMunicipal');
+    const barangaySelect = document.getElementById('editBarangay');
+
+    const province = provinceSelect.value;
+
+    // Clear municipalities and barangays
+    municipalSelect.innerHTML = '<option value="">Select Municipality</option>';
+    barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+
+    if (!province) return;
+
+    const data = await loadLocationData();
+    const municipalities = data[province];
+
+    if (municipalities) {
+        Object.keys(municipalities).sort().forEach(municipality => {
+            const option = document.createElement('option');
+            option.value = municipality;
+            option.textContent = municipality;
+            municipalSelect.appendChild(option);
+        });
+    }
+}
+
+// Load barangays based on selected municipality
+async function loadBarangays() {
+    const provinceSelect = document.getElementById('editProvince');
+    const municipalSelect = document.getElementById('editMunicipal');
+    const barangaySelect = document.getElementById('editBarangay');
+
+    const province = provinceSelect.value;
+    const municipality = municipalSelect.value;
+
+    // Clear barangays
+    barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+
+    if (!province || !municipality) return;
+
+    const data = await loadLocationData();
+    const barangays = data[province]?.[municipality];
+
+    if (barangays) {
+        barangays.sort().forEach(barangay => {
+            const option = document.createElement('option');
+            option.value = barangay;
+            option.textContent = barangay;
+            barangaySelect.appendChild(option);
+        });
+    }
+}
+
+// Set location dropdowns to existing values
+async function setLocationValues(province, municipal, barangay) {
+    const data = await loadLocationData();
+
+    // Set province
+    document.getElementById('editProvince').value = province || '';
+
+    // Load and set municipalities
+    if (province && data[province]) {
+        const municipalSelect = document.getElementById('editMunicipal');
+        municipalSelect.innerHTML = '<option value="">Select Municipality</option>';
+        Object.keys(data[province]).sort().forEach(mun => {
+            const option = document.createElement('option');
+            option.value = mun;
+            option.textContent = mun;
+            if (mun === municipal) option.selected = true;
+            municipalSelect.appendChild(option);
+        });
+
+        // Load and set barangays
+        if (municipal && data[province][municipal]) {
+            const barangaySelect = document.getElementById('editBarangay');
+            barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+            data[province][municipal].sort().forEach(brgy => {
+                const option = document.createElement('option');
+                option.value = brgy;
+                option.textContent = brgy;
+                if (brgy === barangay) option.selected = true;
+                barangaySelect.appendChild(option);
+            });
+        }
+    }
+}
 
 function switchEditTab(event, tabId) {
     // Remove active class from all tabs and panels
@@ -1740,10 +1887,8 @@ function openEditModal(accidentId) {
             // Set accident ID in header
             document.getElementById('editAccidentId').textContent = `#${data.id}`;
 
-            // Location fields
-            document.getElementById('editProvince').value = data.province || '';
-            document.getElementById('editMunicipal').value = data.municipal || '';
-            document.getElementById('editBarangay').value = data.barangay || '';
+            // Location fields (use cascading dropdowns)
+            setLocationValues(data.province, data.municipal, data.barangay);
             document.getElementById('editStreet').value = data.street || '';
             document.getElementById('editTypeOfPlace').value = data.type_of_place || '';
 
