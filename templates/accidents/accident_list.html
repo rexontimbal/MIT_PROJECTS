@@ -4045,44 +4045,86 @@ async function loadBarangays() {
 async function setLocationValues(province, municipal, barangay) {
     const data = await loadLocationData();
 
-    // Set province
-    document.getElementById('editProvince').value = province || '';
+    const provinceSelect = document.getElementById('editProvince');
+    const municipalSelect = document.getElementById('editMunicipal');
+    const barangaySelect = document.getElementById('editBarangay');
 
-    // Load and set municipalities
-    if (province && data[province]) {
-        const municipalSelect = document.getElementById('editMunicipal');
-        municipalSelect.innerHTML = '<option value="">Select Municipality</option>';
+    // Reset all dropdowns first
+    municipalSelect.innerHTML = '<option value="">Select Municipality</option>';
+    barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+
+    // Set province
+    if (province && province !== '') {
+        provinceSelect.value = province;
+    } else {
+        provinceSelect.value = '';
+    }
+
+    // Load and set municipalities if province is selected
+    if (province && province !== '' && data[province]) {
         Object.keys(data[province]).sort().forEach(mun => {
             const option = document.createElement('option');
             option.value = mun;
             option.textContent = mun;
-            if (mun === municipal) option.selected = true;
             municipalSelect.appendChild(option);
         });
 
-        // Load and set barangays
-        if (municipal && data[province][municipal]) {
-            const barangaySelect = document.getElementById('editBarangay');
-            barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+        // Set selected municipality
+        if (municipal && municipal !== '') {
+            municipalSelect.value = municipal;
+        }
+
+        // Load and set barangays if municipality is selected
+        if (municipal && municipal !== '' && data[province][municipal]) {
             data[province][municipal].sort().forEach(brgy => {
                 const option = document.createElement('option');
                 option.value = brgy;
                 option.textContent = brgy;
-                if (brgy === barangay) option.selected = true;
                 barangaySelect.appendChild(option);
             });
+
+            // Set selected barangay
+            if (barangay && barangay !== '') {
+                barangaySelect.value = barangay;
+            }
         }
     }
 }
 
-// Helper function to set dropdown value (adds option if not exists)
-function setDropdownValue(selectId, value) {
-    if (!value) return;
-
+// Helper function to reset dropdown to original options
+function resetDropdown(selectId) {
     const select = document.getElementById(selectId);
-    let optionExists = false;
+    // Remove all dynamically added options (keep only original options with data-original attribute or first N options)
+    const options = Array.from(select.options);
+    options.forEach(option => {
+        // Remove options that were dynamically added (not in the original HTML)
+        if (option.hasAttribute('data-dynamic')) {
+            option.remove();
+        }
+    });
+    select.value = ''; // Reset to empty
+}
 
-    // Check if option exists
+// Helper function to set dropdown value (properly handles custom values)
+function setDropdownValue(selectId, value) {
+    const select = document.getElementById(selectId);
+
+    // First, reset the dropdown (remove previously added dynamic options)
+    const options = Array.from(select.options);
+    options.forEach(option => {
+        if (option.hasAttribute('data-dynamic')) {
+            option.remove();
+        }
+    });
+
+    // If no value, just set to empty
+    if (!value || value === '') {
+        select.value = '';
+        return;
+    }
+
+    // Check if the value exists in the dropdown
+    let optionExists = false;
     for (let i = 0; i < select.options.length; i++) {
         if (select.options[i].value === value) {
             optionExists = true;
@@ -4090,11 +4132,12 @@ function setDropdownValue(selectId, value) {
         }
     }
 
-    // If option doesn't exist, add it
-    if (!optionExists && value !== '') {
+    // If option doesn't exist, add it as a dynamic option
+    if (!optionExists) {
         const option = document.createElement('option');
         option.value = value;
         option.textContent = value;
+        option.setAttribute('data-dynamic', 'true'); // Mark as dynamically added
         select.appendChild(option);
     }
 
@@ -4112,8 +4155,45 @@ function switchEditTab(event, tabId) {
     document.getElementById(tabId).classList.add('active');
 }
 
+// Reset all form fields to empty state
+function resetEditModal() {
+    // Reset dropdowns by removing dynamic options
+    resetDropdown('editTypeOfPlace');
+    resetDropdown('editVehicleKind');
+    resetDropdown('editCaseStatus');
+
+    // Reset all text inputs
+    document.getElementById('editStreet').value = '';
+    document.getElementById('editLatitude').value = '';
+    document.getElementById('editLongitude').value = '';
+    document.getElementById('editIncidentType').value = '';
+    document.getElementById('editOffense').value = '';
+    document.getElementById('editOffenseType').value = '';
+    document.getElementById('editStageOfFelony').value = '';
+    document.getElementById('editVictimCount').value = '';
+    document.getElementById('editSuspectCount').value = '';
+    document.getElementById('editVictimDetails').value = '';
+    document.getElementById('editSuspectDetails').value = '';
+    document.getElementById('editVehicleMake').value = '';
+    document.getElementById('editVehicleModel').value = '';
+    document.getElementById('editVehiclePlateNo').value = '';
+    document.getElementById('editPro').value = '';
+    document.getElementById('editPpo').value = '';
+    document.getElementById('editStation').value = '';
+    document.getElementById('editCaseSolveType').value = '';
+    document.getElementById('editNarrative').value = '';
+
+    // Reset checkboxes
+    document.getElementById('editVictimKilled').checked = false;
+    document.getElementById('editVictimInjured').checked = false;
+    document.getElementById('editVictimUnharmed').checked = false;
+}
+
 function openEditModal(accidentId) {
     currentEditId = accidentId;
+
+    // Reset the modal first to ensure clean state
+    resetEditModal();
 
     // Fetch accident data
     fetch(`/accidents/${accidentId}/edit/`)
