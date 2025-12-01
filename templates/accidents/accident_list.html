@@ -1029,13 +1029,16 @@
     }
 
     .table-action-btn {
-        padding: 6px 12px;
+        padding: 4px 10px;
         border: none;
-        border-radius: 6px;
-        font-size: 0.85rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
         cursor: pointer;
         transition: all 0.2s;
         font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
     }
 
     .table-action-btn.view {
@@ -1046,6 +1049,8 @@
     .table-action-btn.view:hover {
         background: var(--primary-blue);
         color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 48, 135, 0.2);
     }
 
     .table-action-btn.map {
@@ -1056,6 +1061,8 @@
     .table-action-btn.map:hover {
         background: var(--success-green);
         color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
     }
 
     .text-center {
