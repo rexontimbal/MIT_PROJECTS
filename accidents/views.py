@@ -744,20 +744,61 @@ def accident_edit(request, pk):
 
     if request.method == 'POST':
         try:
-            # Update fields from POST data
+            from decimal import Decimal
+
+            # Police/Administrative Info
+            accident.pro = request.POST.get('pro', accident.pro)
+            accident.ppo = request.POST.get('ppo', accident.ppo)
+            accident.station = request.POST.get('station', accident.station)
+
+            # Location fields
             accident.province = request.POST.get('province', accident.province)
             accident.municipal = request.POST.get('municipal', accident.municipal)
             accident.barangay = request.POST.get('barangay', accident.barangay)
             accident.street = request.POST.get('street', accident.street)
-            accident.incident_type = request.POST.get('incident_type', accident.incident_type)
+            accident.type_of_place = request.POST.get('type_of_place', accident.type_of_place)
 
-            # Update casualties
+            # Coordinates
+            lat_str = request.POST.get('latitude')
+            lng_str = request.POST.get('longitude')
+            if lat_str:
+                accident.latitude = Decimal(lat_str)
+            if lng_str:
+                accident.longitude = Decimal(lng_str)
+
+            # Incident details
+            accident.incident_type = request.POST.get('incident_type', accident.incident_type)
+            accident.offense = request.POST.get('offense', accident.offense)
+            accident.offense_type = request.POST.get('offense_type', accident.offense_type)
+            accident.stage_of_felony = request.POST.get('stage_of_felony', accident.stage_of_felony)
+
+            # Casualties
             accident.victim_killed = request.POST.get('victim_killed') == 'true'
             accident.victim_injured = request.POST.get('victim_injured') == 'true'
             accident.victim_unharmed = request.POST.get('victim_unharmed') == 'true'
 
-            # Update narrative
+            victim_count_str = request.POST.get('victim_count')
+            if victim_count_str:
+                accident.victim_count = int(victim_count_str)
+
+            suspect_count_str = request.POST.get('suspect_count')
+            if suspect_count_str:
+                accident.suspect_count = int(suspect_count_str)
+
+            # Vehicle information
+            accident.vehicle_kind = request.POST.get('vehicle_kind', accident.vehicle_kind)
+            accident.vehicle_make = request.POST.get('vehicle_make', accident.vehicle_make)
+            accident.vehicle_model = request.POST.get('vehicle_model', accident.vehicle_model)
+            accident.vehicle_plate_no = request.POST.get('vehicle_plate_no', accident.vehicle_plate_no)
+
+            # Detailed information
+            accident.victim_details = request.POST.get('victim_details', accident.victim_details)
+            accident.suspect_details = request.POST.get('suspect_details', accident.suspect_details)
             accident.narrative = request.POST.get('narrative', accident.narrative)
+
+            # Case status
+            accident.case_status = request.POST.get('case_status', accident.case_status)
+            accident.case_solve_type = request.POST.get('case_solve_type', accident.case_solve_type)
 
             accident.save()
 
@@ -772,16 +813,45 @@ def accident_edit(request, pk):
     from django.http import JsonResponse
     data = {
         'id': accident.pk,
-        'province': accident.province,
-        'municipal': accident.municipal,
-        'barangay': accident.barangay,
+        # Police/Administrative Info
+        'pro': accident.pro or '',
+        'ppo': accident.ppo or '',
+        'station': accident.station or '',
+        # Location
+        'province': accident.province or '',
+        'municipal': accident.municipal or '',
+        'barangay': accident.barangay or '',
         'street': accident.street or '',
+        'type_of_place': accident.type_of_place or '',
+        # Coordinates
+        'latitude': str(accident.latitude) if accident.latitude else '',
+        'longitude': str(accident.longitude) if accident.longitude else '',
+        # Incident details
         'incident_type': accident.incident_type or '',
+        'offense': accident.offense or '',
+        'offense_type': accident.offense_type or '',
+        'stage_of_felony': accident.stage_of_felony or '',
+        # Casualties
         'victim_killed': accident.victim_killed,
         'victim_injured': accident.victim_injured,
         'victim_unharmed': accident.victim_unharmed,
+        'victim_count': accident.victim_count or 0,
+        'suspect_count': accident.suspect_count or 0,
+        # Vehicle information
+        'vehicle_kind': accident.vehicle_kind or '',
+        'vehicle_make': accident.vehicle_make or '',
+        'vehicle_model': accident.vehicle_model or '',
+        'vehicle_plate_no': accident.vehicle_plate_no or '',
+        # Detailed information
+        'victim_details': accident.victim_details or '',
+        'suspect_details': accident.suspect_details or '',
         'narrative': accident.narrative or '',
+        # Case status
+        'case_status': accident.case_status or '',
+        'case_solve_type': accident.case_solve_type or '',
+        # Temporal (read-only in modal)
         'date_committed': accident.date_committed.strftime('%Y-%m-%d') if accident.date_committed else '',
+        'time_committed': accident.time_committed.strftime('%H:%M') if accident.time_committed else '',
     }
     return JsonResponse(data)
 

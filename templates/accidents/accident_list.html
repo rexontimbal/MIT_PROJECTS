@@ -3563,85 +3563,236 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
 <!-- Edit Accident Modal -->
 <div id="editModal" class="accident-modal" style="display: none;">
     <div class="modal-overlay" onclick="closeEditModal()"></div>
-    <div class="modal-content" style="max-width: 700px;">
+    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
         <button class="modal-close" onclick="closeEditModal()">
             <i class="fas fa-times"></i>
         </button>
 
         <div class="modal-header">
-            <h2><i class="fas fa-edit"></i> Edit Accident Record</h2>
-            <p style="margin-top: 0.5rem; color: #666; font-size: 0.95rem;">Update accident information</p>
+            <h2><i class="fas fa-edit"></i> Edit Accident Record <span id="editAccidentId" style="color: #666; font-size: 0.9rem;"></span></h2>
+            <p style="margin-top: 0.5rem; color: #666; font-size: 0.95rem;">Update all accident information and details</p>
         </div>
 
         <div class="modal-body">
             <form id="editForm" method="POST">
                 {% csrf_token %}
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <!-- Province -->
-                    <div class="form-group">
-                        <label for="editProvince">Province</label>
-                        <input type="text" id="editProvince" name="province" class="form-control" required>
-                    </div>
-
-                    <!-- Municipality -->
-                    <div class="form-group">
-                        <label for="editMunicipal">Municipality</label>
-                        <input type="text" id="editMunicipal" name="municipal" class="form-control" required>
-                    </div>
-
-                    <!-- Barangay -->
-                    <div class="form-group">
-                        <label for="editBarangay">Barangay</label>
-                        <input type="text" id="editBarangay" name="barangay" class="form-control" required>
-                    </div>
-
-                    <!-- Street -->
-                    <div class="form-group">
-                        <label for="editStreet">Street</label>
-                        <input type="text" id="editStreet" name="street" class="form-control">
-                    </div>
+                <!-- Tab Navigation -->
+                <div class="edit-tabs">
+                    <button type="button" class="edit-tab active" onclick="switchEditTab(event, 'locationTab')">
+                        <i class="fas fa-map-marker-alt"></i> Location
+                    </button>
+                    <button type="button" class="edit-tab" onclick="switchEditTab(event, 'incidentTab')">
+                        <i class="fas fa-car-crash"></i> Incident
+                    </button>
+                    <button type="button" class="edit-tab" onclick="switchEditTab(event, 'casualtiesTab')">
+                        <i class="fas fa-user-injured"></i> Casualties
+                    </button>
+                    <button type="button" class="edit-tab" onclick="switchEditTab(event, 'vehicleTab')">
+                        <i class="fas fa-car"></i> Vehicle
+                    </button>
+                    <button type="button" class="edit-tab" onclick="switchEditTab(event, 'policeTab')">
+                        <i class="fas fa-shield-alt"></i> Police Info
+                    </button>
+                    <button type="button" class="edit-tab" onclick="switchEditTab(event, 'detailsTab')">
+                        <i class="fas fa-file-alt"></i> Details
+                    </button>
                 </div>
 
-                <!-- Incident Type -->
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label for="editIncidentType">Incident Type</label>
-                    <input type="text" id="editIncidentType" name="incident_type" class="form-control">
-                </div>
+                <!-- Tab Content -->
+                <div class="edit-tab-content">
+                    <!-- Location Tab -->
+                    <div id="locationTab" class="edit-tab-panel active">
+                        <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem;">Location Information</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="editProvince">Province <span style="color: red;">*</span></label>
+                                <input type="text" id="editProvince" name="province" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editMunicipal">Municipality <span style="color: red;">*</span></label>
+                                <input type="text" id="editMunicipal" name="municipal" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editBarangay">Barangay <span style="color: red;">*</span></label>
+                                <input type="text" id="editBarangay" name="barangay" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editStreet">Street</label>
+                                <input type="text" id="editStreet" name="street" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="editTypeOfPlace">Type of Place</label>
+                                <input type="text" id="editTypeOfPlace" name="type_of_place" class="form-control" placeholder="e.g., Road/Highway">
+                            </div>
+                        </div>
 
-                <!-- Casualties -->
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label>Casualties</label>
-                    <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" id="editVictimKilled" name="victim_killed" value="true">
-                            <span>Killed</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" id="editVictimInjured" name="victim_injured" value="true">
-                            <span>Injured</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" id="editVictimUnharmed" name="victim_unharmed" value="true">
-                            <span>Unharmed</span>
-                        </label>
+                        <h4 style="margin: 1.5rem 0 1rem; color: #333; font-size: 1rem;">Coordinates</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="editLatitude">Latitude <span style="color: red;">*</span></label>
+                                <input type="number" step="0.0000001" id="editLatitude" name="latitude" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editLongitude">Longitude <span style="color: red;">*</span></label>
+                                <input type="number" step="0.0000001" id="editLongitude" name="longitude" class="form-control" required>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Narrative -->
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label for="editNarrative">Narrative</label>
-                    <textarea id="editNarrative" name="narrative" class="form-control" rows="4" style="resize: vertical;"></textarea>
+                    <!-- Incident Tab -->
+                    <div id="incidentTab" class="edit-tab-panel">
+                        <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem;">Incident Information</h3>
+                        <div class="form-group">
+                            <label for="editIncidentType">Incident Type</label>
+                            <input type="text" id="editIncidentType" name="incident_type" class="form-control">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                            <div class="form-group">
+                                <label for="editOffense">Offense</label>
+                                <textarea id="editOffense" name="offense" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="editOffenseType">Offense Type</label>
+                                <input type="text" id="editOffenseType" name="offense_type" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label for="editStageOfFelony">Stage of Felony</label>
+                            <input type="text" id="editStageOfFelony" name="stage_of_felony" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Casualties Tab -->
+                    <div id="casualtiesTab" class="edit-tab-panel">
+                        <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem;">Casualty Information</h3>
+                        <div class="form-group">
+                            <label>Casualty Status</label>
+                            <div style="display: flex; gap: 2rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" id="editVictimKilled" name="victim_killed" value="true">
+                                    <span><i class="fas fa-skull-crossbones" style="color: #dc3545;"></i> Killed</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" id="editVictimInjured" name="victim_injured" value="true">
+                                    <span><i class="fas fa-user-injured" style="color: #ffc107;"></i> Injured</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" id="editVictimUnharmed" name="victim_unharmed" value="true">
+                                    <span><i class="fas fa-user-check" style="color: #28a745;"></i> Unharmed</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                            <div class="form-group">
+                                <label for="editVictimCount">Victim Count</label>
+                                <input type="number" id="editVictimCount" name="victim_count" class="form-control" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="editSuspectCount">Suspect Count</label>
+                                <input type="number" id="editSuspectCount" name="suspect_count" class="form-control" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label for="editVictimDetails">Victim Details</label>
+                            <textarea id="editVictimDetails" name="victim_details" class="form-control" rows="3" placeholder="Enter detailed information about victims"></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label for="editSuspectDetails">Suspect Details</label>
+                            <textarea id="editSuspectDetails" name="suspect_details" class="form-control" rows="3" placeholder="Enter detailed information about suspects"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Vehicle Tab -->
+                    <div id="vehicleTab" class="edit-tab-panel">
+                        <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem;">Vehicle Information</h3>
+                        <div class="form-group">
+                            <label for="editVehicleKind">Vehicle Kind/Type</label>
+                            <input type="text" id="editVehicleKind" name="vehicle_kind" class="form-control" placeholder="e.g., Motorcycle, Car, Truck">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                            <div class="form-group">
+                                <label for="editVehicleMake">Vehicle Make</label>
+                                <input type="text" id="editVehicleMake" name="vehicle_make" class="form-control" placeholder="e.g., Toyota, Honda">
+                            </div>
+                            <div class="form-group">
+                                <label for="editVehicleModel">Vehicle Model</label>
+                                <input type="text" id="editVehicleModel" name="vehicle_model" class="form-control" placeholder="e.g., Vios, Civic">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label for="editVehiclePlateNo">Plate Number</label>
+                            <input type="text" id="editVehiclePlateNo" name="vehicle_plate_no" class="form-control" placeholder="e.g., ABC-1234" style="text-transform: uppercase;">
+                        </div>
+                    </div>
+
+                    <!-- Police Info Tab -->
+                    <div id="policeTab" class="edit-tab-panel">
+                        <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem;">Police Information</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="editPro">PRO (Police Regional Office)</label>
+                                <input type="text" id="editPro" name="pro" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="editPpo">PPO (Police Provincial Office)</label>
+                                <input type="text" id="editPpo" name="ppo" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label for="editStation">Police Station</label>
+                            <input type="text" id="editStation" name="station" class="form-control">
+                        </div>
+
+                        <h4 style="margin: 1.5rem 0 1rem; color: #333; font-size: 1rem;">Case Status</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="editCaseStatus">Case Status</label>
+                                <input type="text" id="editCaseStatus" name="case_status" class="form-control" placeholder="e.g., Under Investigation, Resolved">
+                            </div>
+                            <div class="form-group">
+                                <label for="editCaseSolveType">Case Solution Type</label>
+                                <input type="text" id="editCaseSolveType" name="case_solve_type" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Details Tab -->
+                    <div id="detailsTab" class="edit-tab-panel">
+                        <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem;">Narrative & Additional Details</h3>
+                        <div class="form-group">
+                            <label for="editNarrative">Narrative</label>
+                            <textarea id="editNarrative" name="narrative" class="form-control" rows="8" style="resize: vertical;" placeholder="Enter detailed narrative of the accident"></textarea>
+                        </div>
+
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #2196f3;">
+                            <div style="font-weight: 600; color: #1976d2; margin-bottom: 0.5rem;">
+                                <i class="fas fa-info-circle"></i> Read-Only Information
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.9rem; color: #555;">
+                                <div><strong>Date:</strong> <span id="editDateDisplay"></span></div>
+                                <div><strong>Time:</strong> <span id="editTimeDisplay"></span></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Modal Actions -->
-                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
-                    <button type="button" class="btn btn-outline" onclick="closeEditModal()">
-                        Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0;">
+                    <div style="font-size: 0.9rem; color: #666;">
+                        <i class="fas fa-exclamation-circle"></i> Fields marked with <span style="color: red;">*</span> are required
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button type="button" class="btn btn-outline" onclick="closeEditModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -3747,6 +3898,16 @@ function formatFileSize(bytes) {
 // Edit Modal Functions
 let currentEditId = null;
 
+function switchEditTab(event, tabId) {
+    // Remove active class from all tabs and panels
+    document.querySelectorAll('.edit-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.edit-tab-panel').forEach(panel => panel.classList.remove('active'));
+
+    // Add active class to clicked tab and corresponding panel
+    event.currentTarget.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
 function openEditModal(accidentId) {
     currentEditId = accidentId;
 
@@ -3754,19 +3915,63 @@ function openEditModal(accidentId) {
     fetch(`/accidents/${accidentId}/edit/`)
         .then(response => response.json())
         .then(data => {
-            // Populate form fields
+            // Set accident ID in header
+            document.getElementById('editAccidentId').textContent = `#${data.id}`;
+
+            // Location fields
             document.getElementById('editProvince').value = data.province || '';
             document.getElementById('editMunicipal').value = data.municipal || '';
             document.getElementById('editBarangay').value = data.barangay || '';
             document.getElementById('editStreet').value = data.street || '';
+            document.getElementById('editTypeOfPlace').value = data.type_of_place || '';
+
+            // Coordinates
+            document.getElementById('editLatitude').value = data.latitude || '';
+            document.getElementById('editLongitude').value = data.longitude || '';
+
+            // Incident details
             document.getElementById('editIncidentType').value = data.incident_type || '';
+            document.getElementById('editOffense').value = data.offense || '';
+            document.getElementById('editOffenseType').value = data.offense_type || '';
+            document.getElementById('editStageOfFelony').value = data.stage_of_felony || '';
+
+            // Casualties
             document.getElementById('editVictimKilled').checked = data.victim_killed || false;
             document.getElementById('editVictimInjured').checked = data.victim_injured || false;
             document.getElementById('editVictimUnharmed').checked = data.victim_unharmed || false;
+            document.getElementById('editVictimCount').value = data.victim_count || 0;
+            document.getElementById('editSuspectCount').value = data.suspect_count || 0;
+            document.getElementById('editVictimDetails').value = data.victim_details || '';
+            document.getElementById('editSuspectDetails').value = data.suspect_details || '';
+
+            // Vehicle information
+            document.getElementById('editVehicleKind').value = data.vehicle_kind || '';
+            document.getElementById('editVehicleMake').value = data.vehicle_make || '';
+            document.getElementById('editVehicleModel').value = data.vehicle_model || '';
+            document.getElementById('editVehiclePlateNo').value = data.vehicle_plate_no || '';
+
+            // Police information
+            document.getElementById('editPro').value = data.pro || '';
+            document.getElementById('editPpo').value = data.ppo || '';
+            document.getElementById('editStation').value = data.station || '';
+            document.getElementById('editCaseStatus').value = data.case_status || '';
+            document.getElementById('editCaseSolveType').value = data.case_solve_type || '';
+
+            // Narrative and details
             document.getElementById('editNarrative').value = data.narrative || '';
+
+            // Read-only date/time display
+            document.getElementById('editDateDisplay').textContent = data.date_committed || 'N/A';
+            document.getElementById('editTimeDisplay').textContent = data.time_committed || 'N/A';
 
             // Set form action
             document.getElementById('editForm').action = `/accidents/${accidentId}/edit/`;
+
+            // Reset to first tab
+            document.querySelectorAll('.edit-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.edit-tab-panel').forEach(panel => panel.classList.remove('active'));
+            document.querySelector('.edit-tab').classList.add('active');
+            document.getElementById('locationTab').classList.add('active');
 
             // Show modal
             document.getElementById('editModal').style.display = 'flex';
@@ -3894,6 +4099,71 @@ function closeEditModal() {
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
+}
+
+/* Edit Modal Tabs */
+.edit-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    flex-wrap: wrap;
+}
+
+.edit-tab {
+    padding: 0.75rem 1.25rem;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #666;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.edit-tab:hover {
+    color: #2196f3;
+    background: rgba(33, 150, 243, 0.05);
+}
+
+.edit-tab.active {
+    color: #2196f3;
+    border-bottom-color: #2196f3;
+    font-weight: 600;
+}
+
+.edit-tab i {
+    font-size: 1rem;
+}
+
+.edit-tab-content {
+    min-height: 300px;
+}
+
+.edit-tab-panel {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.edit-tab-panel.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>
 
