@@ -1867,6 +1867,33 @@ async function setLocationValues(province, municipal, barangay) {
     }
 }
 
+// Helper function to set dropdown value (adds option if not exists)
+function setDropdownValue(selectId, value) {
+    if (!value) return;
+
+    const select = document.getElementById(selectId);
+    let optionExists = false;
+
+    // Check if option exists
+    for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === value) {
+            optionExists = true;
+            break;
+        }
+    }
+
+    // If option doesn't exist, add it
+    if (!optionExists && value !== '') {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+    }
+
+    // Set the value
+    select.value = value;
+}
+
 function switchEditTab(event, tabId) {
     // Remove active class from all tabs and panels
     document.querySelectorAll('.edit-tab').forEach(tab => tab.classList.remove('active'));
@@ -1890,7 +1917,7 @@ function openEditModal(accidentId) {
             // Location fields (use cascading dropdowns)
             setLocationValues(data.province, data.municipal, data.barangay);
             document.getElementById('editStreet').value = data.street || '';
-            document.getElementById('editTypeOfPlace').value = data.type_of_place || '';
+            setDropdownValue('editTypeOfPlace', data.type_of_place);
 
             // Coordinates
             document.getElementById('editLatitude').value = data.latitude || '';
@@ -1912,7 +1939,7 @@ function openEditModal(accidentId) {
             document.getElementById('editSuspectDetails').value = data.suspect_details || '';
 
             // Vehicle information
-            document.getElementById('editVehicleKind').value = data.vehicle_kind || '';
+            setDropdownValue('editVehicleKind', data.vehicle_kind);
             document.getElementById('editVehicleMake').value = data.vehicle_make || '';
             document.getElementById('editVehicleModel').value = data.vehicle_model || '';
             document.getElementById('editVehiclePlateNo').value = data.vehicle_plate_no || '';
@@ -1921,7 +1948,7 @@ function openEditModal(accidentId) {
             document.getElementById('editPro').value = data.pro || '';
             document.getElementById('editPpo').value = data.ppo || '';
             document.getElementById('editStation').value = data.station || '';
-            document.getElementById('editCaseStatus').value = data.case_status || '';
+            setDropdownValue('editCaseStatus', data.case_status);
             document.getElementById('editCaseSolveType').value = data.case_solve_type || '';
 
             // Narrative and details
