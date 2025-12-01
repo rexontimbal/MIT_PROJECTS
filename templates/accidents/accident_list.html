@@ -878,29 +878,31 @@
 
     .card-action-btn {
         flex: 1;
-        padding: 9px 12px;
+        padding: 6px 10px;
         border: 1px solid #E5E7EB;
         background: white;
         color: #374151;
-        border-radius: 6px;
+        border-radius: 4px;
         font-weight: 500;
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         cursor: pointer;
         transition: all 0.15s ease;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
+        gap: 4px;
     }
 
     .card-action-btn i {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: #6B7280;
     }
 
     .card-action-btn:hover {
         background: #F9FAFB;
         border-color: #D1D5DB;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     /* Card View Button - View */
@@ -943,6 +945,27 @@
 
     .card-action-btn.btn-map:hover i {
         color: white;
+    }
+
+    /* Card View Button - Edit (Solid Blue → Light Blue on hover) */
+    .card-action-btn.btn-edit {
+        background: var(--primary-blue);
+        color: white;
+        border-color: var(--primary-blue);
+    }
+
+    .card-action-btn.btn-edit i {
+        color: white;
+    }
+
+    .card-action-btn.btn-edit:hover {
+        background: #E3F2FD;
+        color: var(--primary-blue);
+        border-color: #BBDEFB;
+    }
+
+    .card-action-btn.btn-edit:hover i {
+        color: var(--primary-blue);
     }
 
     /* Table View */
@@ -4064,25 +4087,17 @@ function closeEditModal() {
     box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
 }
 
-/* Edit Button Styles */
-.card-action-btn.btn-edit {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.card-action-btn.btn-edit:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
+/* Edit Button Styles - Solid Blue (opposite of View button) */
 .table-action-btn.edit {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--primary-blue);
     color: white;
 }
 
 .table-action-btn.edit:hover {
+    background: #E3F2FD;
+    color: var(--primary-blue);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 2px 4px rgba(0, 48, 135, 0.2);
 }
 
 /* Modal enhancements */
