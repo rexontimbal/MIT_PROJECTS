@@ -7,6 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('accidents.urls')),  # This should handle the root URL
     path('api/', include('accidents.api_urls')),
+    path('clustering/', include('clustering.urls')),  # Clustering validation metrics
 ]
 
 # Serve media files in development

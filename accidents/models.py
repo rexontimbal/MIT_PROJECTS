@@ -321,6 +321,97 @@ class ClusteringJob(models.Model):
         return f"Clustering Job {self.id} - {self.status}"
 
 
+class ClusterValidationMetrics(models.Model):
+    """Stores clustering validation metrics for quality assessment"""
+
+    # Relationship to clustering job (optional)
+    clustering_job = models.OneToOneField(
+        ClusteringJob,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='validation_metrics'
+    )
+
+    # Clustering metadata
+    clustering_date = models.DateTimeField(auto_now_add=True)
+    num_clusters = models.IntegerField(
+        validators=[MinValueValidator(2)],
+        help_text="Number of clusters in this analysis"
+    )
+    total_accidents = models.IntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="Total accidents analyzed"
+    )
+
+    # Validation Metrics
+    silhouette_score = models.FloatField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(-1.0), MaxValueValidator(1.0)],
+        help_text="Silhouette Score: -1 to 1, higher is better (measures cluster cohesion)"
+    )
+    davies_bouldin_index = models.FloatField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0.0)],
+        help_text="Davies-Bouldin Index: 0 to ∞, lower is better (measures cluster separation)"
+    )
+    calinski_harabasz_score = models.FloatField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0.0)],
+        help_text="Calinski-Harabasz Score: 0 to ∞, higher is better (variance ratio)"
+    )
+
+    # Quality interpretation
+    cluster_quality = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text="Overall cluster quality assessment (Excellent, Good, Fair, Poor)"
+    )
+
+    # Clustering parameters used
+    linkage_method = models.CharField(max_length=20, default="complete")
+    distance_threshold = models.FloatField(
+        validators=[validate_cluster_distance_threshold],
+        help_text="Distance threshold used in clustering"
+    )
+
+    class Meta:
+        db_table = 'cluster_validation_metrics'
+        ordering = ['-clustering_date']
+        verbose_name = 'Cluster Validation Metric'
+        verbose_name_plural = 'Cluster Validation Metrics'
+
+    def __str__(self):
+        return f"Validation Metrics - {self.clustering_date.strftime('%Y-%m-%d %H:%M')} ({self.num_clusters} clusters)"
+
+    def interpret_quality(self):
+        """Provide human-readable interpretation of cluster quality"""
+        if not self.silhouette_score or not self.davies_bouldin_index:
+            return "Unknown"
+
+        # Excellent: High silhouette (>0.7) AND low Davies-Bouldin (<0.5)
+        if self.silhouette_score > 0.7 and self.davies_bouldin_index < 0.5:
+            return "Excellent"
+        # Good: Good silhouette (>0.5) AND reasonable Davies-Bouldin (<1.0)
+        elif self.silhouette_score > 0.5 and self.davies_bouldin_index < 1.0:
+            return "Good"
+        # Fair: Moderate silhouette (>0.25)
+        elif self.silhouette_score > 0.25:
+            return "Fair"
+        # Poor: Low silhouette or high Davies-Bouldin
+        else:
+            return "Poor"
+
+    def save(self, *args, **kwargs):
+        """Auto-calculate cluster quality on save"""
+        if not self.cluster_quality:
+            self.cluster_quality = self.interpret_quality()
+        super().save(*args, **kwargs)
+
+
 class UserProfile(models.Model):
     """Extended user profile for PNP personnel with roles and permissions"""
 

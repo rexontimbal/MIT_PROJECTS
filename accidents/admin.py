@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Count
 from django.contrib import messages
-from .models import Accident, AccidentCluster, AccidentReport, ClusteringJob, UserProfile, AuditLog
+from .models import Accident, AccidentCluster, AccidentReport, ClusteringJob, ClusterValidationMetrics, UserProfile, AuditLog
 
 
 # ============================================================================
@@ -369,6 +369,135 @@ class ClusteringJobAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         """Don't allow manual creation - use clustering command"""
+        return False
+
+
+# ============================================================================
+# CLUSTER VALIDATION METRICS ADMIN
+# ============================================================================
+
+@admin.register(ClusterValidationMetrics)
+class ClusterValidationMetricsAdmin(admin.ModelAdmin):
+    list_display = ['id', 'clustering_date_formatted', 'num_clusters', 'total_accidents', 'quality_badge', 'silhouette_display', 'davies_bouldin_display', 'calinski_harabasz_display']
+    list_filter = ['clustering_date', 'cluster_quality', 'linkage_method']
+    readonly_fields = ['clustering_date', 'cluster_quality']
+    date_hierarchy = 'clustering_date'
+    list_per_page = 25
+
+    fieldsets = (
+        ('Clustering Information', {
+            'fields': ('clustering_date', 'num_clusters', 'total_accidents', 'linkage_method', 'distance_threshold')
+        }),
+        ('Validation Metrics', {
+            'fields': ('silhouette_score', 'davies_bouldin_index', 'calinski_harabasz_score'),
+            'description': 'Internal validation indices for cluster quality assessment'
+        }),
+        ('Quality Assessment', {
+            'fields': ('cluster_quality',),
+            'description': 'Automatically calculated based on validation metrics'
+        }),
+    )
+
+    def clustering_date_formatted(self, obj):
+        """Format clustering date"""
+        return obj.clustering_date.strftime('%Y-%m-%d %H:%M')
+    clustering_date_formatted.short_description = 'Clustering Date'
+    clustering_date_formatted.admin_order_field = 'clustering_date'
+
+    def quality_badge(self, obj):
+        """Display cluster quality as badge"""
+        quality = obj.interpret_quality()
+        colors = {
+            'Excellent': '#28a745',  # Green
+            'Good': '#17a2b8',       # Cyan
+            'Fair': '#ffc107',       # Yellow
+            'Poor': '#dc3545',       # Red
+            'Unknown': '#6c757d'     # Gray
+        }
+        icons = {
+            'Excellent': '⭐⭐⭐',
+            'Good': '⭐⭐',
+            'Fair': '⭐',
+            'Poor': '⚠️',
+            'Unknown': '❓'
+        }
+        color = colors.get(quality, '#6c757d')
+        icon = icons.get(quality, '•')
+        return format_html(
+            '<span style="background: {}; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 11px;">{} {}</span>',
+            color, icon, quality.upper()
+        )
+    quality_badge.short_description = 'Quality'
+    quality_badge.admin_order_field = 'cluster_quality'
+
+    def silhouette_display(self, obj):
+        """Display Silhouette Score with interpretation"""
+        if obj.silhouette_score is None:
+            return '-'
+
+        # Color-code based on score quality
+        if obj.silhouette_score > 0.7:
+            color = '#28a745'  # Excellent: Green
+        elif obj.silhouette_score > 0.5:
+            color = '#17a2b8'  # Good: Cyan
+        elif obj.silhouette_score > 0.25:
+            color = '#ffc107'  # Fair: Yellow
+        else:
+            color = '#dc3545'  # Poor: Red
+
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{:.3f}</span> <span style="color: #6c757d; font-size: 10px;">(-1 to 1, higher better)</span>',
+            color, obj.silhouette_score
+        )
+    silhouette_display.short_description = 'Silhouette Score'
+    silhouette_display.admin_order_field = 'silhouette_score'
+
+    def davies_bouldin_display(self, obj):
+        """Display Davies-Bouldin Index with interpretation"""
+        if obj.davies_bouldin_index is None:
+            return '-'
+
+        # Color-code based on index quality (lower is better)
+        if obj.davies_bouldin_index < 0.5:
+            color = '#28a745'  # Excellent: Green
+        elif obj.davies_bouldin_index < 1.0:
+            color = '#17a2b8'  # Good: Cyan
+        elif obj.davies_bouldin_index < 2.0:
+            color = '#ffc107'  # Fair: Yellow
+        else:
+            color = '#dc3545'  # Poor: Red
+
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{:.3f}</span> <span style="color: #6c757d; font-size: 10px;">(0 to ∞, lower better)</span>',
+            color, obj.davies_bouldin_index
+        )
+    davies_bouldin_display.short_description = 'Davies-Bouldin Index'
+    davies_bouldin_display.admin_order_field = 'davies_bouldin_index'
+
+    def calinski_harabasz_display(self, obj):
+        """Display Calinski-Harabasz Score with interpretation"""
+        if obj.calinski_harabasz_score is None:
+            return '-'
+
+        # Color-code based on score quality (higher is better)
+        if obj.calinski_harabasz_score > 1000:
+            color = '#28a745'  # Excellent: Green
+        elif obj.calinski_harabasz_score > 500:
+            color = '#17a2b8'  # Good: Cyan
+        elif obj.calinski_harabasz_score > 100:
+            color = '#ffc107'  # Fair: Yellow
+        else:
+            color = '#dc3545'  # Poor: Red
+
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{:.2f}</span> <span style="color: #6c757d; font-size: 10px;">(0 to ∞, higher better)</span>',
+            color, obj.calinski_harabasz_score
+        )
+    calinski_harabasz_display.short_description = 'Calinski-Harabasz Score'
+    calinski_harabasz_display.admin_order_field = 'calinski_harabasz_score'
+
+    def has_add_permission(self, request):
+        """Don't allow manual creation - metrics are auto-generated during clustering"""
         return False
 
 

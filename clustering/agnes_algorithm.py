@@ -7,6 +7,7 @@ import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
 import logging
 
 logger = logging.getLogger(__name__)
@@ -93,21 +94,30 @@ class AGNESClusterer:
             
             # Build cluster information
             clusters = self._build_clusters(accidents_data, coordinates)
-            
+
             # Filter out small clusters
             valid_clusters = [
-                c for c in clusters 
+                c for c in clusters
                 if c['accident_count'] >= self.min_cluster_size
             ]
-            
+
             logger.info(f"After filtering: {len(valid_clusters)} valid hotspots")
-            
-            return {
+
+            # Calculate validation metrics
+            validation_metrics = self.calculate_validation_metrics(coordinates, self.labels_)
+
+            result = {
                 'success': True,
                 'total_accidents': len(accidents_data),
                 'clusters_found': len(valid_clusters),
                 'clusters': valid_clusters
             }
+
+            # Add validation metrics if calculated successfully
+            if validation_metrics:
+                result['validation_metrics'] = validation_metrics
+
+            return result
             
         except Exception as e:
             logger.error(f"Clustering failed: {str(e)}")
@@ -245,9 +255,66 @@ class AGNESClusterer:
         
         # Total severity (0-100 scale)
         total_score = frequency_score + casualty_score
-        
+
         return min(total_score, 100.0)
-    
+
+    def calculate_validation_metrics(self, coordinates, labels):
+        """
+        Calculate clustering validation metrics
+
+        Args:
+            coordinates (np.array): Array of accident coordinates
+            labels (np.array): Cluster labels for each accident
+
+        Returns:
+            dict: Validation metrics or None if calculation fails
+        """
+        try:
+            # Need at least 2 clusters for validation metrics
+            unique_labels = np.unique(labels)
+            if len(unique_labels) < 2:
+                logger.warning("Cannot calculate validation metrics: less than 2 clusters")
+                return None
+
+            # Need at least 2 points per cluster minimum
+            if len(coordinates) < len(unique_labels) * 2:
+                logger.warning("Cannot calculate validation metrics: insufficient data points")
+                return None
+
+            metrics = {}
+
+            # Silhouette Score (-1 to 1, higher is better)
+            try:
+                metrics['silhouette_score'] = float(silhouette_score(coordinates, labels))
+            except Exception as e:
+                logger.warning(f"Failed to calculate silhouette score: {e}")
+                metrics['silhouette_score'] = None
+
+            # Davies-Bouldin Index (0 to ∞, lower is better)
+            try:
+                metrics['davies_bouldin_index'] = float(davies_bouldin_score(coordinates, labels))
+            except Exception as e:
+                logger.warning(f"Failed to calculate Davies-Bouldin index: {e}")
+                metrics['davies_bouldin_index'] = None
+
+            # Calinski-Harabasz Score (0 to ∞, higher is better)
+            try:
+                metrics['calinski_harabasz_score'] = float(calinski_harabasz_score(coordinates, labels))
+            except Exception as e:
+                logger.warning(f"Failed to calculate Calinski-Harabasz score: {e}")
+                metrics['calinski_harabasz_score'] = None
+
+            # Only return if at least one metric was calculated
+            if any(v is not None for v in metrics.values()):
+                logger.info(f"Validation metrics calculated: {metrics}")
+                return metrics
+            else:
+                return None
+
+        except Exception as e:
+            logger.error(f"Error calculating validation metrics: {str(e)}")
+            return None
+
     def predict(self, new_coordinates):
         """
         Predict cluster assignment for new coordinates

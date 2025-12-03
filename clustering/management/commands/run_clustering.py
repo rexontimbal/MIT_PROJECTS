@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from accidents.models import Accident, AccidentCluster, ClusteringJob
+from accidents.models import Accident, AccidentCluster, ClusteringJob, ClusterValidationMetrics
 from clustering.agnes_algorithm import AGNESClusterer
 from datetime import datetime, timedelta
 
@@ -146,7 +146,34 @@ class Command(BaseCommand):
                     f'{cluster_data["primary_location"]} '
                     f'(severity: {cluster_data["severity_score"]:.1f})'
                 )
-            
+
+            # Save validation metrics if calculated
+            if 'validation_metrics' in result and result['validation_metrics']:
+                self.stdout.write('\n📊 Saving clustering validation metrics...')
+                metrics = result['validation_metrics']
+
+                validation_record = ClusterValidationMetrics.objects.create(
+                    clustering_job=job,
+                    num_clusters=result['clusters_found'],
+                    total_accidents=len(accidents),
+                    silhouette_score=metrics.get('silhouette_score'),
+                    davies_bouldin_index=metrics.get('davies_bouldin_index'),
+                    calinski_harabasz_score=metrics.get('calinski_harabasz_score'),
+                    linkage_method=linkage_method,
+                    distance_threshold=distance_threshold
+                )
+
+                self.stdout.write(self.style.SUCCESS(
+                    f'   ✓ Validation metrics saved (Quality: {validation_record.interpret_quality()})'
+                ))
+
+                if metrics.get('silhouette_score') is not None:
+                    self.stdout.write(f'     - Silhouette Score: {metrics["silhouette_score"]:.3f}')
+                if metrics.get('davies_bouldin_index') is not None:
+                    self.stdout.write(f'     - Davies-Bouldin Index: {metrics["davies_bouldin_index"]:.3f}')
+                if metrics.get('calinski_harabasz_score') is not None:
+                    self.stdout.write(f'     - Calinski-Harabasz Score: {metrics["calinski_harabasz_score"]:.2f}')
+
             # Update job status
             job.status = 'completed'
             job.completed_at = timezone.now()
