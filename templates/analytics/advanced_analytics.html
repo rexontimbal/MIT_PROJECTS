@@ -399,6 +399,119 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Clustering Validation Metrics Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="analytics-card" style="border-top: 4px solid #003087;">
+                        <div class="section-title" style="color: #003087;">
+                            <span class="section-icon">📊</span>
+                            Clustering Validation Metrics
+                        </div>
+                        <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                            <i class="fas fa-info-circle"></i>
+                            Internal validation indices assess the quality of AGNES clustering algorithm performance.
+                        </p>
+
+                        <div id="validation-metrics-container">
+                            <div class="row" id="metrics-display" style="display: none;">
+                                <!-- Silhouette Score -->
+                                <div class="col-md-4 mb-3">
+                                    <div style="background: #f8f9fa; border: 2px solid #e3f2fd; border-radius: 8px; padding: 20px; height: 100%;">
+                                        <div style="color: #003087; font-weight: 600; font-size: 14px; margin-bottom: 8px;">
+                                            <i class="fas fa-chart-pie"></i> Silhouette Score
+                                        </div>
+                                        <div style="font-size: 36px; font-weight: bold; margin-bottom: 8px;" id="silhouette-value">
+                                            -
+                                        </div>
+                                        <div style="color: #666; font-size: 12px; margin-bottom: 10px;">
+                                            Range: -1 to 1 (higher is better)
+                                        </div>
+                                        <div style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;" id="silhouette-badge">
+                                            -
+                                        </div>
+                                        <div style="margin-top: 10px; color: #666; font-size: 12px;">
+                                            Measures how similar an accident is to its own cluster vs other clusters
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Davies-Bouldin Index -->
+                                <div class="col-md-4 mb-3">
+                                    <div style="background: #f8f9fa; border: 2px solid #e3f2fd; border-radius: 8px; padding: 20px; height: 100%;">
+                                        <div style="color: #003087; font-weight: 600; font-size: 14px; margin-bottom: 8px;">
+                                            <i class="fas fa-compress-arrows-alt"></i> Davies-Bouldin Index
+                                        </div>
+                                        <div style="font-size: 36px; font-weight: bold; margin-bottom: 8px;" id="davies-bouldin-value">
+                                            -
+                                        </div>
+                                        <div style="color: #666; font-size: 12px; margin-bottom: 10px;">
+                                            Range: 0 to ∞ (lower is better)
+                                        </div>
+                                        <div style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;" id="davies-bouldin-badge">
+                                            -
+                                        </div>
+                                        <div style="margin-top: 10px; color: #666; font-size: 12px;">
+                                            Evaluates cluster separation by comparing within-cluster to between-cluster distance
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Calinski-Harabasz Score -->
+                                <div class="col-md-4 mb-3">
+                                    <div style="background: #f8f9fa; border: 2px solid #e3f2fd; border-radius: 8px; padding: 20px; height: 100%;">
+                                        <div style="color: #003087; font-weight: 600; font-size: 14px; margin-bottom: 8px;">
+                                            <i class="fas fa-expand-arrows-alt"></i> Calinski-Harabasz Score
+                                        </div>
+                                        <div style="font-size: 36px; font-weight: bold; margin-bottom: 8px;" id="calinski-harabasz-value">
+                                            -
+                                        </div>
+                                        <div style="color: #666; font-size: 12px; margin-bottom: 10px;">
+                                            Range: 0 to ∞ (higher is better)
+                                        </div>
+                                        <div style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;" id="calinski-harabasz-badge">
+                                            -
+                                        </div>
+                                        <div style="margin-top: 10px; color: #666; font-size: 12px;">
+                                            Ratio of between-cluster variance to within-cluster variance
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Overall Quality Assessment -->
+                            <div class="row" id="quality-display" style="display: none;">
+                                <div class="col-12">
+                                    <div style="background: linear-gradient(135deg, #003087 0%, #0056b3 100%); color: white; border-radius: 8px; padding: 20px; text-align: center;">
+                                        <div style="font-size: 16px; opacity: 0.9; margin-bottom: 8px;">
+                                            Overall Cluster Quality
+                                        </div>
+                                        <div style="font-size: 42px; font-weight: bold; margin-bottom: 8px;" id="overall-quality">
+                                            -
+                                        </div>
+                                        <div style="font-size: 14px; opacity: 0.9;">
+                                            <span id="metrics-meta-info">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Loading State -->
+                            <div id="metrics-loading" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #003087;"></i>
+                                <p style="color: #666; margin-top: 15px;">Loading validation metrics...</p>
+                            </div>
+
+                            <!-- Error State -->
+                            <div id="metrics-error" style="display: none; text-align: center; padding: 40px;">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 32px; color: #ffc107;"></i>
+                                <p style="color: #666; margin-top: 15px; font-weight: 600;">No validation metrics available</p>
+                                <p style="color: #999; font-size: 14px;">Please run clustering to generate validation metrics.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1065,5 +1178,125 @@ function switchToFastMode() {
     url.searchParams.set('simple', 'true');
     window.location.href = url.toString();
 }
+
+// Load Clustering Validation Metrics
+async function loadValidationMetrics() {
+    try {
+        const response = await fetch('/clustering/validation-metrics/');
+        const data = await response.json();
+
+        if (!data.success) {
+            // Show error state
+            document.getElementById('metrics-loading').style.display = 'none';
+            document.getElementById('metrics-error').style.display = 'block';
+            return;
+        }
+
+        const metrics = data.metrics;
+        const quality = data.quality;
+        const metadata = data.metadata;
+
+        // Hide loading, show content
+        document.getElementById('metrics-loading').style.display = 'none';
+        document.getElementById('metrics-display').style.display = 'flex';
+        document.getElementById('quality-display').style.display = 'block';
+
+        // Populate Silhouette Score
+        if (metrics.silhouette_score !== null) {
+            document.getElementById('silhouette-value').textContent = metrics.silhouette_score.toFixed(3);
+            const silBadge = document.getElementById('silhouette-badge');
+            if (metrics.silhouette_score > 0.7) {
+                silBadge.textContent = 'Excellent';
+                silBadge.style.backgroundColor = '#28a745';
+                silBadge.style.color = 'white';
+                document.getElementById('silhouette-value').style.color = '#28a745';
+            } else if (metrics.silhouette_score > 0.5) {
+                silBadge.textContent = 'Good';
+                silBadge.style.backgroundColor = '#17a2b8';
+                silBadge.style.color = 'white';
+                document.getElementById('silhouette-value').style.color = '#17a2b8';
+            } else if (metrics.silhouette_score > 0.25) {
+                silBadge.textContent = 'Fair';
+                silBadge.style.backgroundColor = '#ffc107';
+                silBadge.style.color = 'white';
+                document.getElementById('silhouette-value').style.color = '#ffc107';
+            } else {
+                silBadge.textContent = 'Poor';
+                silBadge.style.backgroundColor = '#dc3545';
+                silBadge.style.color = 'white';
+                document.getElementById('silhouette-value').style.color = '#dc3545';
+            }
+        }
+
+        // Populate Davies-Bouldin Index
+        if (metrics.davies_bouldin_index !== null) {
+            document.getElementById('davies-bouldin-value').textContent = metrics.davies_bouldin_index.toFixed(3);
+            const dbBadge = document.getElementById('davies-bouldin-badge');
+            if (metrics.davies_bouldin_index < 0.5) {
+                dbBadge.textContent = 'Excellent';
+                dbBadge.style.backgroundColor = '#28a745';
+                dbBadge.style.color = 'white';
+                document.getElementById('davies-bouldin-value').style.color = '#28a745';
+            } else if (metrics.davies_bouldin_index < 1.0) {
+                dbBadge.textContent = 'Good';
+                dbBadge.style.backgroundColor = '#17a2b8';
+                dbBadge.style.color = 'white';
+                document.getElementById('davies-bouldin-value').style.color = '#17a2b8';
+            } else if (metrics.davies_bouldin_index < 2.0) {
+                dbBadge.textContent = 'Fair';
+                dbBadge.style.backgroundColor = '#ffc107';
+                dbBadge.style.color = 'white';
+                document.getElementById('davies-bouldin-value').style.color = '#ffc107';
+            } else {
+                dbBadge.textContent = 'Poor';
+                dbBadge.style.backgroundColor = '#dc3545';
+                dbBadge.style.color = 'white';
+                document.getElementById('davies-bouldin-value').style.color = '#dc3545';
+            }
+        }
+
+        // Populate Calinski-Harabasz Score
+        if (metrics.calinski_harabasz_score !== null) {
+            document.getElementById('calinski-harabasz-value').textContent = metrics.calinski_harabasz_score.toFixed(2);
+            const chBadge = document.getElementById('calinski-harabasz-badge');
+            if (metrics.calinski_harabasz_score > 1000) {
+                chBadge.textContent = 'Excellent';
+                chBadge.style.backgroundColor = '#28a745';
+                chBadge.style.color = 'white';
+                document.getElementById('calinski-harabasz-value').style.color = '#28a745';
+            } else if (metrics.calinski_harabasz_score > 500) {
+                chBadge.textContent = 'Good';
+                chBadge.style.backgroundColor = '#17a2b8';
+                chBadge.style.color = 'white';
+                document.getElementById('calinski-harabasz-value').style.color = '#17a2b8';
+            } else if (metrics.calinski_harabasz_score > 100) {
+                chBadge.textContent = 'Fair';
+                chBadge.style.backgroundColor = '#ffc107';
+                chBadge.style.color = 'white';
+                document.getElementById('calinski-harabasz-value').style.color = '#ffc107';
+            } else {
+                chBadge.textContent = 'Poor';
+                chBadge.style.backgroundColor = '#dc3545';
+                chBadge.style.color = 'white';
+                document.getElementById('calinski-harabasz-value').style.color = '#dc3545';
+            }
+        }
+
+        // Populate Overall Quality
+        document.getElementById('overall-quality').textContent = quality.overall.toUpperCase();
+        document.getElementById('metrics-meta-info').textContent =
+            `${metadata.num_clusters} clusters from ${metadata.total_accidents} accidents • ${metadata.clustering_date} • ${metadata.linkage_method} linkage`;
+
+    } catch (error) {
+        console.error('Error loading validation metrics:', error);
+        document.getElementById('metrics-loading').style.display = 'none';
+        document.getElementById('metrics-error').style.display = 'block';
+    }
+}
+
+// Load metrics when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadValidationMetrics();
+});
 </script>
 {% endblock %}
