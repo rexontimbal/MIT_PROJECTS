@@ -132,28 +132,15 @@
         pointer-events: none;
         width: 340px;
         max-height: calc(100vh - 100px);
-        overflow-y: auto;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     .map-stats.show {
         transform: translateX(0);
         opacity: 1;
         pointer-events: auto;
-    }
-
-    /* Custom Scrollbar for Stats Panel */
-    .map-stats::-webkit-scrollbar {
-        width: 5px;
-    }
-
-    .map-stats::-webkit-scrollbar-track {
-        background: var(--bg-light);
-        border-radius: 10px;
-    }
-
-    .map-stats::-webkit-scrollbar-thumb {
-        background: var(--primary-blue);
-        border-radius: 10px;
     }
 
     /* Stats Header */
@@ -167,9 +154,7 @@
         border-radius: 12px 12px 0 0;
         font-weight: 700;
         font-size: 0.9rem;
-        position: sticky;
-        top: 0;
-        z-index: 10;
+        flex-shrink: 0;
     }
 
     .stats-header span {
@@ -203,6 +188,23 @@
     /* Stats Content */
     .stats-content {
         padding: 12px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    /* Custom Scrollbar for Stats Content */
+    .stats-content::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .stats-content::-webkit-scrollbar-track {
+        background: var(--bg-light);
+        border-radius: 10px;
+    }
+
+    .stats-content::-webkit-scrollbar-thumb {
+        background: var(--primary-blue);
+        border-radius: 10px;
     }
 
     /* Stats Sections */
@@ -936,37 +938,6 @@
 }
 
     /* Search Results Dropdown */
-    .search-results {
-        position: absolute;
-        top: 60px;
-        left: 0;
-        right: 0;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        max-height: 500px;
-        overflow-y: auto;
-        z-index: 1001;
-        animation: slideDown 0.3s ease;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .search-result-item {
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
-        cursor: pointer;
-        transition: all 0.2s;
-    }
 .search-suggestions {
     position: absolute;
     top: 100%;
@@ -1455,24 +1426,6 @@ body.fullscreen-mode .search-info-panel {
         padding: 0.5rem 1rem;
     }
 }
-
-    /* Scrollbar for search results */
-    .search-results::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .search-results::-webkit-scrollbar-track {
-        background: var(--bg-light);
-    }
-
-    .search-results::-webkit-scrollbar-thumb {
-        background: var(--primary-blue);
-        border-radius: 3px;
-    }
-
-    .search-results::-webkit-scrollbar-thumb:hover {
-        background: var(--secondary-blue);
-    }
 
     .back-to-list-btn {
         position: absolute;
