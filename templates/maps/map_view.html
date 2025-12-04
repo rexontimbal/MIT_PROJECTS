@@ -141,6 +141,21 @@
         pointer-events: auto;
     }
 
+    /* Custom Scrollbar for Stats Panel */
+    .map-stats::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .map-stats::-webkit-scrollbar-track {
+        background: var(--bg-light);
+        border-radius: 10px;
+    }
+
+    .map-stats::-webkit-scrollbar-thumb {
+        background: var(--primary-blue);
+        border-radius: 10px;
+    }
+
     /* Stats Header */
     .stats-header {
         display: flex;
@@ -428,8 +443,8 @@
         background: white;
         border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        width: 260px;
-        max-width: 260px;
+        width: 340px;
+        max-width: 340px;
         transition: all 0.3s ease;
         transform: translateX(-100%);
         opacity: 0;
@@ -586,7 +601,7 @@
         transform: translateX(-120%);
         opacity: 0;
         pointer-events: none;
-        width: 260px; 
+        width: 340px;
         max-height: calc(100vh - 300px); /* Don't overlap with stats */
         overflow: hidden;
     }
@@ -1794,6 +1809,76 @@ body.fullscreen-mode .search-info-panel {
 .search-history::-webkit-scrollbar-thumb:hover {
     background: var(--secondary-blue);
 }
+
+/* Loading Animation - PNP Theme */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 48, 135, 0.5) 0%, rgba(0, 32, 96, 0.6) 100%);
+    backdrop-filter: blur(5px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.spinner-container {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner-logo {
+    position: absolute;
+    width: 45px;
+    height: 45px;
+    z-index: 1;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.spinner-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 48, 135, 0.3));
+}
+
+.spinner {
+    border: 5px solid rgba(0, 48, 135, 0.1);
+    border-top: 5px solid #003087;
+    border-right: 5px solid #DC143C;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    animation: spin 1s linear infinite;
+}
+
+.spinner-inner {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    border: 3px solid rgba(255, 215, 0, 0.3);
+    border-top: 3px solid #FFD700;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    animation: spin 1.5s linear infinite reverse;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.9; }
+}
 </style>
 {% endblock %}
 
@@ -1931,10 +2016,6 @@ body.fullscreen-mode .search-info-panel {
                             <div class="stat-item">
                                 <span class="stat-label">🎯 Visible Accidents:</span>
                                 <span class="stat-value stat-highlight" id="statsVisibleMarkers">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">💀 Fatal Accidents:</span>
-                                <span class="stat-value" style="color: #DC143C;" id="statsFatalAccidents">0</span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label">🔴 Active Hotspots:</span>
@@ -2252,11 +2333,14 @@ body.fullscreen-mode .search-info-panel {
     </div>
 </div>
 
-<!-- Loading Overlay -->
-<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center;">
-    <div style="background: white; padding: 2.5rem 3rem; border-radius: 16px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
-        <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #003087; margin-bottom: 1rem;"></i>
-        <p style="color: #333; font-size: 1.1rem; font-weight: 500; margin: 0;">Loading map data...</p>
+<!-- Loading Overlay (PNP Theme) -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner-container">
+        <div class="spinner-logo">
+            <img src="{% static 'images/pnp-logo.png' %}" alt="PNP Logo">
+        </div>
+        <div class="spinner"></div>
+        <div class="spinner-inner"></div>
     </div>
 </div>
 {% endblock %}
@@ -3390,17 +3474,9 @@ let severityChartInstance = null;
 let timeDistributionChartInstance = null;
 
 function updateStatisticsDisplay(stats) {
-    // Update Critical Overview stats
+    // Update Critical Overview - only visible accidents count
     const totalEl = document.getElementById('statsVisibleMarkers');
-    const fatalEl = document.getElementById('statsFatalAccidents');
-    const injuryEl = document.getElementById('statsInjuryAccidents');
-    const propertyEl = document.getElementById('statsPropertyAccidents');
-    const timeRangeEl = document.getElementById('statsTimeRange');
-
     if (totalEl) totalEl.textContent = stats.total;
-    if (fatalEl) fatalEl.textContent = stats.fatal;
-    if (injuryEl) injuryEl.textContent = stats.injury;
-    if (propertyEl) propertyEl.textContent = stats.property;
 
     // Update Severity Breakdown section
     const severityFatalEl = document.getElementById('statsSeverityFatal');
@@ -4418,14 +4494,14 @@ function bringToFront(panelId) {
 function showLoading() {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) {
-        overlay.style.display = 'flex';
+        overlay.classList.add('active');
     }
 }
 
 function hideLoading() {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) {
-        overlay.style.display = 'none';
+        overlay.classList.remove('active');
     }
 }
 
