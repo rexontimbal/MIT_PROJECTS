@@ -3502,14 +3502,6 @@ function updateStatisticsDisplay(stats) {
         if (propertyPctEl) propertyPctEl.textContent = `(${propertyPct}%)`;
     }
 
-    if (timeRangeEl) {
-        const timeRange = document.getElementById('timeRange');
-        if (timeRange) {
-            const selectedOption = timeRange.options[timeRange.selectedIndex];
-            timeRangeEl.textContent = selectedOption ? selectedOption.text : 'All';
-        }
-    }
-
     // Update time distribution
     updateTimeDistribution();
 
