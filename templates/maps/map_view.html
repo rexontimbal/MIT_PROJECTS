@@ -235,14 +235,15 @@
     }
 
     .stats-section-body {
-        padding: 10px 12px;
         max-height: 0;
         overflow: hidden;
-        transition: max-height 0.3s ease;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+        padding: 0 12px;
     }
 
     .stats-section-body.expanded {
         max-height: 1000px;
+        padding: 10px 12px;
     }
 
     /* Stat Items */
@@ -1923,25 +1924,21 @@ body.fullscreen-mode .search-info-panel {
                     <!-- Summary Section -->
                     <div class="stats-section">
                         <div class="stats-section-header" onclick="toggleStatsSection('summary')">
-                            <span>📈 Summary</span>
+                            <span>📈 Critical Overview</span>
                             <i class="fas fa-chevron-down stats-section-icon" id="summary-icon"></i>
                         </div>
                         <div class="stats-section-body" id="summary-section">
                             <div class="stat-item">
-                                <span class="stat-label">Total Accidents:</span>
-                                <span class="stat-value" id="statsTotalAccidents">{{ total_accidents }}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Visible Now:</span>
+                                <span class="stat-label">🎯 Visible Accidents:</span>
                                 <span class="stat-value stat-highlight" id="statsVisibleMarkers">0</span>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-label">Hotspots:</span>
-                                <span class="stat-value" id="statsTotalHotspots">{{ total_hotspots }}</span>
+                                <span class="stat-label">💀 Fatal Accidents:</span>
+                                <span class="stat-value" style="color: #DC143C;" id="statsFatalAccidents">0</span>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-label">Time Range:</span>
-                                <span class="stat-value" id="statsTimeRange">All Time</span>
+                                <span class="stat-label">🔴 Active Hotspots:</span>
+                                <span class="stat-value" style="color: #FFA500;" id="statsTotalHotspots">{{ total_hotspots }}</span>
                             </div>
                         </div>
                     </div>
