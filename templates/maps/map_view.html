@@ -1952,18 +1952,18 @@ body.fullscreen-mode .search-info-panel {
                         <div class="stats-section-body" id="severity-section">
                             <div class="stat-item">
                                 <span class="stat-label">💀 Fatal:</span>
-                                <span class="stat-value" style="color: #DC143C;" id="statsFatalAccidents">0</span>
-                                <span class="stat-percentage" id="statsFatalPercentage">(0%)</span>
+                                <span class="stat-value" style="color: #DC143C;" id="statsSeverityFatal">0</span>
+                                <span class="stat-percentage" id="statsSeverityFatalPercentage">(0%)</span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label">🚑 Injury:</span>
-                                <span class="stat-value" style="color: #FFA500;" id="statsInjuryAccidents">0</span>
-                                <span class="stat-percentage" id="statsInjuryPercentage">(0%)</span>
+                                <span class="stat-value" style="color: #FFA500;" id="statsSeverityInjury">0</span>
+                                <span class="stat-percentage" id="statsSeverityInjuryPercentage">(0%)</span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label">🚗 Property Only:</span>
-                                <span class="stat-value" style="color: #28A745;" id="statsPropertyAccidents">0</span>
-                                <span class="stat-percentage" id="statsPropertyPercentage">(0%)</span>
+                                <span class="stat-value" style="color: #28A745;" id="statsSeverityProperty">0</span>
+                                <span class="stat-percentage" id="statsSeverityPropertyPercentage">(0%)</span>
                             </div>
 
                             <!-- Severity Chart -->
@@ -1981,6 +1981,19 @@ body.fullscreen-mode .search-info-panel {
                         </div>
                         <div class="stats-section-body" id="location-section">
                             <div id="statsTopLocations" class="stats-list">
+                                <div class="stats-empty">No data available</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Province Breakdown Section -->
+                    <div class="stats-section">
+                        <div class="stats-section-header" onclick="toggleStatsSection('province')">
+                            <span>🏛️ Province Breakdown</span>
+                            <i class="fas fa-chevron-down stats-section-icon" id="province-icon"></i>
+                        </div>
+                        <div class="stats-section-body" id="province-section">
+                            <div id="statsTopProvinces" class="stats-list">
                                 <div class="stats-empty">No data available</div>
                             </div>
                         </div>
@@ -3377,7 +3390,7 @@ let severityChartInstance = null;
 let timeDistributionChartInstance = null;
 
 function updateStatisticsDisplay(stats) {
-    // Update basic stats
+    // Update Critical Overview stats
     const totalEl = document.getElementById('statsVisibleMarkers');
     const fatalEl = document.getElementById('statsFatalAccidents');
     const injuryEl = document.getElementById('statsInjuryAccidents');
@@ -3389,15 +3402,24 @@ function updateStatisticsDisplay(stats) {
     if (injuryEl) injuryEl.textContent = stats.injury;
     if (propertyEl) propertyEl.textContent = stats.property;
 
+    // Update Severity Breakdown section
+    const severityFatalEl = document.getElementById('statsSeverityFatal');
+    const severityInjuryEl = document.getElementById('statsSeverityInjury');
+    const severityPropertyEl = document.getElementById('statsSeverityProperty');
+
+    if (severityFatalEl) severityFatalEl.textContent = stats.fatal;
+    if (severityInjuryEl) severityInjuryEl.textContent = stats.injury;
+    if (severityPropertyEl) severityPropertyEl.textContent = stats.property;
+
     // Calculate and display percentages
     if (stats.total > 0) {
         const fatalPct = ((stats.fatal / stats.total) * 100).toFixed(1);
         const injuryPct = ((stats.injury / stats.total) * 100).toFixed(1);
         const propertyPct = ((stats.property / stats.total) * 100).toFixed(1);
 
-        const fatalPctEl = document.getElementById('statsFatalPercentage');
-        const injuryPctEl = document.getElementById('statsInjuryPercentage');
-        const propertyPctEl = document.getElementById('statsPropertyPercentage');
+        const fatalPctEl = document.getElementById('statsSeverityFatalPercentage');
+        const injuryPctEl = document.getElementById('statsSeverityInjuryPercentage');
+        const propertyPctEl = document.getElementById('statsSeverityPropertyPercentage');
 
         if (fatalPctEl) fatalPctEl.textContent = `(${fatalPct}%)`;
         if (injuryPctEl) injuryPctEl.textContent = `(${injuryPct}%)`;
@@ -3417,6 +3439,9 @@ function updateStatisticsDisplay(stats) {
 
     // Update top locations
     updateTopLocations();
+
+    // Update top provinces
+    updateTopProvinces();
 
     // Update vehicle types
     updateTopVehicleTypes();
@@ -3492,6 +3517,47 @@ function updateTopLocations() {
                 <div style="flex: 1;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                         <span class="stats-list-label">${location}</span>
+                        <span class="stats-list-value">${count}</span>
+                    </div>
+                    <div class="stats-list-bar">
+                        <div class="stats-list-bar-fill" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateTopProvinces() {
+    const provinceCounts = {};
+
+    activeMarkers.forEach(marker => {
+        if (!marker.accidentData) return;
+        const province = marker.accidentData.province || 'Unknown';
+        provinceCounts[province] = (provinceCounts[province] || 0) + 1;
+    });
+
+    const sortedProvinces = Object.entries(provinceCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5);
+
+    const container = document.getElementById('statsTopProvinces');
+    if (!container) return;
+
+    if (sortedProvinces.length === 0) {
+        container.innerHTML = '<div class="stats-empty">No data available</div>';
+        return;
+    }
+
+    const maxCount = sortedProvinces[0][1];
+
+    container.innerHTML = sortedProvinces.map(([province, count]) => {
+        const percentage = ((count / maxCount) * 100).toFixed(0);
+        return `
+            <div class="stats-list-item">
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span class="stats-list-label">${province}</span>
                         <span class="stats-list-value">${count}</span>
                     </div>
                     <div class="stats-list-bar">
