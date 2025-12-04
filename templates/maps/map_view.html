@@ -130,7 +130,9 @@
         transform: translateX(-120%);
         opacity: 0;
         pointer-events: none;
-        width: 260px; 
+        width: 340px;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
     }
 
     .map-stats.show {
@@ -139,54 +141,281 @@
         pointer-events: auto;
     }
 
-    /* Stats Header (match legend header) */
-.stats-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.9rem 1.1rem;
-    background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
-    color: white;
-    border-radius: 12px 12px 0 0;
-    font-weight: 700;
-    font-size: 0.9rem;
-}
+    /* Stats Header */
+    .stats-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.9rem 1.1rem;
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        color: white;
+        border-radius: 12px 12px 0 0;
+        font-weight: 700;
+        font-size: 0.9rem;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
 
-.stats-header span {
-    margin: 0;
-    font-size: 0.95rem;
-    font-weight: 600;
-}
+    .stats-header span {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .stats-header-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .stats-export-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+
+    .stats-export-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
 
     /* Stats Content */
     .stats-content {
-        padding: 10px;
+        padding: 12px;
     }
 
+    /* Stats Sections */
+    .stats-section {
+        margin-bottom: 12px;
+        border: 1px solid #E9ECEF;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .stats-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .stats-section-header {
+        background: #F8F9FA;
+        padding: 10px 12px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
+        transition: all 0.2s ease;
+    }
+
+    .stats-section-header:hover {
+        background: #E9ECEF;
+    }
+
+    .stats-section-header span {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #003087;
+    }
+
+    .stats-section-icon {
+        font-size: 0.75rem;
+        color: #666;
+        transition: transform 0.3s ease;
+    }
+
+    .stats-section-icon.rotated {
+        transform: rotate(-180deg);
+    }
+
+    .stats-section-body {
+        padding: 10px 12px;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .stats-section-body.expanded {
+        max-height: 1000px;
+    }
+
+    /* Stat Items */
     .stat-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 10px;
-        font-size: 0.85rem;
-        padding: 3px 0;
-        border-bottom: 1px solid #E9ECEF;
+        margin-bottom: 8px;
+        font-size: 0.8rem;
+        padding: 6px 8px;
+        background: #F8F9FA;
+        border-radius: 6px;
     }
 
     .stat-item:last-child {
         margin-bottom: 0;
-        border-bottom: none;
     }
 
     .stat-label {
         color: #666;
         font-weight: 500;
+        flex: 1;
     }
 
     .stat-value {
         font-weight: 700;
         color: #003087;
+        font-size: 0.9rem;
+        margin-left: 8px;
+    }
+
+    .stat-highlight {
+        background: linear-gradient(135deg, #003087, #0056b3);
+        color: white !important;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+
+    .stat-percentage {
+        font-size: 0.75rem;
+        color: #999;
+        margin-left: 6px;
+    }
+
+    /* Stats Chart Container */
+    .stats-chart-container {
+        margin-top: 12px;
+        padding: 10px;
+        background: white;
+        border-radius: 6px;
+        height: 180px;
+    }
+
+    .stats-chart-container canvas {
+        max-height: 160px;
+    }
+
+    /* Stats List */
+    .stats-list {
+        margin-top: 8px;
+    }
+
+    .stats-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        margin-bottom: 6px;
+        background: #F8F9FA;
+        border-radius: 6px;
         font-size: 0.8rem;
+    }
+
+    .stats-list-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .stats-list-label {
+        color: #666;
+        font-weight: 500;
+        flex: 1;
+    }
+
+    .stats-list-value {
+        font-weight: 700;
+        color: #003087;
+        font-size: 0.85rem;
+        margin-left: 8px;
+    }
+
+    .stats-list-bar {
+        height: 4px;
+        background: #E9ECEF;
+        border-radius: 2px;
+        margin-top: 4px;
+        overflow: hidden;
+    }
+
+    .stats-list-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #003087, #0056b3);
+        transition: width 0.5s ease;
+    }
+
+    .stats-empty {
+        text-align: center;
+        color: #999;
+        font-size: 0.8rem;
+        padding: 12px;
+        font-style: italic;
+    }
+
+    /* Export Menu */
+    .stats-export-menu {
+        position: absolute;
+        top: 55px;
+        right: 12px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        padding: 8px;
+        min-width: 180px;
+        z-index: 1000;
+    }
+
+    .export-menu-header {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #003087;
+        padding: 8px 10px;
+        border-bottom: 1px solid #E9ECEF;
+        margin-bottom: 6px;
+    }
+
+    .export-btn {
+        width: 100%;
+        padding: 10px 12px;
+        margin-bottom: 4px;
+        background: #F8F9FA;
+        border: 1px solid #E9ECEF;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        text-align: left;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #333;
+    }
+
+    .export-btn:hover {
+        background: #003087;
+        color: white;
+        border-color: #003087;
+        transform: translateX(4px);
+    }
+
+    .export-btn i {
+        font-size: 0.9rem;
+    }
+
+    .export-btn-cancel {
+        margin-top: 6px;
+        border-top: 1px solid #E9ECEF;
+        background: white;
+        color: #DC143C;
+    }
+
+    .export-btn-cancel:hover {
+        background: #DC143C;
+        color: white;
+        border-color: #DC143C;
     }
 
     /* Enhanced Map Controls Panel */
@@ -1678,35 +1907,150 @@ body.fullscreen-mode .search-info-panel {
             <span>Back to Hotspot</span>
         </div>
 
-        <!-- Stats Box -->
+        <!-- Enhanced Stats Box -->
             <div class="map-stats" id="statsBox">
                 <div class="stats-header" id="statsHeader">
-                    <span>📊 Statistics</span>
-                    <button class="stats-close-btn" onclick="toggleStats()">×</button>
+                    <span>📊 Advanced Statistics</span>
+                    <div class="stats-header-actions">
+                        <button class="stats-export-btn" onclick="showExportMenu()" title="Export Statistics">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="stats-close-btn" onclick="toggleStats()">×</button>
+                    </div>
                 </div>
+
                 <div class="stats-content">
-                <div class="stat-item">
-                    <span class="stat-label">Total Accidents:</span>
-                    <span class="stat-value" id="statsTotalAccidents">{{ total_accidents }}</span>
+                    <!-- Summary Section -->
+                    <div class="stats-section">
+                        <div class="stats-section-header" onclick="toggleStatsSection('summary')">
+                            <span>📈 Summary</span>
+                            <i class="fas fa-chevron-down stats-section-icon" id="summary-icon"></i>
+                        </div>
+                        <div class="stats-section-body" id="summary-section">
+                            <div class="stat-item">
+                                <span class="stat-label">Total Accidents:</span>
+                                <span class="stat-value" id="statsTotalAccidents">{{ total_accidents }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Visible Now:</span>
+                                <span class="stat-value stat-highlight" id="statsVisibleMarkers">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Hotspots:</span>
+                                <span class="stat-value" id="statsTotalHotspots">{{ total_hotspots }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Time Range:</span>
+                                <span class="stat-value" id="statsTimeRange">All Time</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Severity Breakdown Section -->
+                    <div class="stats-section">
+                        <div class="stats-section-header" onclick="toggleStatsSection('severity')">
+                            <span>⚠️ Severity Breakdown</span>
+                            <i class="fas fa-chevron-down stats-section-icon" id="severity-icon"></i>
+                        </div>
+                        <div class="stats-section-body" id="severity-section">
+                            <div class="stat-item">
+                                <span class="stat-label">💀 Fatal:</span>
+                                <span class="stat-value" style="color: #DC143C;" id="statsFatalAccidents">0</span>
+                                <span class="stat-percentage" id="statsFatalPercentage">(0%)</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">🚑 Injury:</span>
+                                <span class="stat-value" style="color: #FFA500;" id="statsInjuryAccidents">0</span>
+                                <span class="stat-percentage" id="statsInjuryPercentage">(0%)</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">🚗 Property Only:</span>
+                                <span class="stat-value" style="color: #28A745;" id="statsPropertyAccidents">0</span>
+                                <span class="stat-percentage" id="statsPropertyPercentage">(0%)</span>
+                            </div>
+
+                            <!-- Severity Chart -->
+                            <div class="stats-chart-container">
+                                <canvas id="severityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Breakdown Section -->
+                    <div class="stats-section">
+                        <div class="stats-section-header" onclick="toggleStatsSection('location')">
+                            <span>📍 Top Locations</span>
+                            <i class="fas fa-chevron-down stats-section-icon" id="location-icon"></i>
+                        </div>
+                        <div class="stats-section-body" id="location-section">
+                            <div id="statsTopLocations" class="stats-list">
+                                <div class="stats-empty">No data available</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Time Distribution Section -->
+                    <div class="stats-section">
+                        <div class="stats-section-header" onclick="toggleStatsSection('time')">
+                            <span>🕐 Time Distribution</span>
+                            <i class="fas fa-chevron-down stats-section-icon" id="time-icon"></i>
+                        </div>
+                        <div class="stats-section-body" id="time-section">
+                            <div class="stat-item">
+                                <span class="stat-label">🌅 Morning (6-12):</span>
+                                <span class="stat-value" id="statsMorning">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">☀️ Afternoon (12-18):</span>
+                                <span class="stat-value" id="statsAfternoon">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">🌆 Evening (18-24):</span>
+                                <span class="stat-value" id="statsEvening">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">🌙 Night (0-6):</span>
+                                <span class="stat-value" id="statsNight">0</span>
+                            </div>
+
+                            <!-- Time Distribution Chart -->
+                            <div class="stats-chart-container">
+                                <canvas id="timeDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vehicle Types Section -->
+                    <div class="stats-section">
+                        <div class="stats-section-header" onclick="toggleStatsSection('vehicles')">
+                            <span>🚗 Vehicle Types</span>
+                            <i class="fas fa-chevron-down stats-section-icon" id="vehicles-icon"></i>
+                        </div>
+                        <div class="stats-section-body" id="vehicles-section">
+                            <div id="statsTopVehicles" class="stats-list">
+                                <div class="stats-empty">No data available</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">Hotspots:</span>
-                    <span class="stat-value" id="statsTotalHotspots">{{ total_hotspots }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Visible:</span>
-                    <span class="stat-value" id="statsVisibleMarkers">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Time Range:</span>
-                    <span class="stat-value" id="statsTimeRange">All Time</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Fatal Accidents:</span>
-                    <span class="stat-value" style="color: #DC143C;" id="statsFatalAccidents">0</span>
+
+                <!-- Export Menu (Hidden by default) -->
+                <div class="stats-export-menu" id="statsExportMenu" style="display: none;">
+                    <div class="export-menu-header">Export Options</div>
+                    <button class="export-btn" onclick="exportStatistics('csv')">
+                        <i class="fas fa-file-csv"></i> Export as CSV
+                    </button>
+                    <button class="export-btn" onclick="exportStatistics('excel')">
+                        <i class="fas fa-file-excel"></i> Export as Excel
+                    </button>
+                    <button class="export-btn" onclick="exportStatistics('json')">
+                        <i class="fas fa-file-code"></i> Export as JSON
+                    </button>
+                    <button class="export-btn export-btn-cancel" onclick="hideExportMenu()">
+                        Cancel
+                    </button>
                 </div>
             </div>
-        </div>
 
         <!-- Enhanced Map Controls Panel -->
         <div class="map-controls" id="mapControls">
@@ -1916,6 +2260,8 @@ body.fullscreen-mode .search-info-panel {
 <!-- Leaflet Heatmap Plugin -->
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 
+<!-- Chart.js for Statistics Charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
 // ============================================================================
@@ -3026,14 +3372,41 @@ function updateAllStatistics() {
     updateStatisticsDisplay(stats);
 }
 
+// ============================================================================
+// ENHANCED STATISTICS SYSTEM
+// ============================================================================
+
+let severityChartInstance = null;
+let timeDistributionChartInstance = null;
+
 function updateStatisticsDisplay(stats) {
+    // Update basic stats
     const totalEl = document.getElementById('statsVisibleMarkers');
     const fatalEl = document.getElementById('statsFatalAccidents');
+    const injuryEl = document.getElementById('statsInjuryAccidents');
+    const propertyEl = document.getElementById('statsPropertyAccidents');
     const timeRangeEl = document.getElementById('statsTimeRange');
-    
+
     if (totalEl) totalEl.textContent = stats.total;
     if (fatalEl) fatalEl.textContent = stats.fatal;
-    
+    if (injuryEl) injuryEl.textContent = stats.injury;
+    if (propertyEl) propertyEl.textContent = stats.property;
+
+    // Calculate and display percentages
+    if (stats.total > 0) {
+        const fatalPct = ((stats.fatal / stats.total) * 100).toFixed(1);
+        const injuryPct = ((stats.injury / stats.total) * 100).toFixed(1);
+        const propertyPct = ((stats.property / stats.total) * 100).toFixed(1);
+
+        const fatalPctEl = document.getElementById('statsFatalPercentage');
+        const injuryPctEl = document.getElementById('statsInjuryPercentage');
+        const propertyPctEl = document.getElementById('statsPropertyPercentage');
+
+        if (fatalPctEl) fatalPctEl.textContent = `(${fatalPct}%)`;
+        if (injuryPctEl) injuryPctEl.textContent = `(${injuryPct}%)`;
+        if (propertyPctEl) propertyPctEl.textContent = `(${propertyPct}%)`;
+    }
+
     if (timeRangeEl) {
         const timeRange = document.getElementById('timeRange');
         if (timeRange) {
@@ -3041,8 +3414,20 @@ function updateStatisticsDisplay(stats) {
             timeRangeEl.textContent = selectedOption ? selectedOption.text : 'All';
         }
     }
-    
-    console.log('📊 Statistics updated:', stats);
+
+    // Update time distribution
+    updateTimeDistribution();
+
+    // Update top locations
+    updateTopLocations();
+
+    // Update vehicle types
+    updateTopVehicleTypes();
+
+    // Update charts
+    updateStatisticsCharts(stats);
+
+    console.log('📊 Enhanced Statistics updated:', stats);
 }
 
 function updateHotspotStatistics(hotspotCount) {
@@ -3050,6 +3435,408 @@ function updateHotspotStatistics(hotspotCount) {
     if (statsElement) {
         statsElement.textContent = hotspotCount;
     }
+}
+
+function updateTimeDistribution() {
+    const timeStats = { morning: 0, afternoon: 0, evening: 0, night: 0 };
+
+    activeMarkers.forEach(marker => {
+        if (!marker.accidentData || !marker.accidentData.time_committed) return;
+
+        const timeParts = marker.accidentData.time_committed.toString().split(':');
+        const hour = timeParts.length > 0 ? parseInt(timeParts[0]) : 12;
+
+        if (hour >= 6 && hour < 12) timeStats.morning++;
+        else if (hour >= 12 && hour < 18) timeStats.afternoon++;
+        else if (hour >= 18 && hour < 24) timeStats.evening++;
+        else timeStats.night++;
+    });
+
+    const morningEl = document.getElementById('statsMorning');
+    const afternoonEl = document.getElementById('statsAfternoon');
+    const eveningEl = document.getElementById('statsEvening');
+    const nightEl = document.getElementById('statsNight');
+
+    if (morningEl) morningEl.textContent = timeStats.morning;
+    if (afternoonEl) afternoonEl.textContent = timeStats.afternoon;
+    if (eveningEl) eveningEl.textContent = timeStats.evening;
+    if (nightEl) nightEl.textContent = timeStats.night;
+
+    return timeStats;
+}
+
+function updateTopLocations() {
+    const locationCounts = {};
+
+    activeMarkers.forEach(marker => {
+        if (!marker.accidentData) return;
+        const location = marker.accidentData.municipal || 'Unknown';
+        locationCounts[location] = (locationCounts[location] || 0) + 1;
+    });
+
+    const sortedLocations = Object.entries(locationCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5);
+
+    const container = document.getElementById('statsTopLocations');
+    if (!container) return;
+
+    if (sortedLocations.length === 0) {
+        container.innerHTML = '<div class="stats-empty">No data available</div>';
+        return;
+    }
+
+    const maxCount = sortedLocations[0][1];
+
+    container.innerHTML = sortedLocations.map(([location, count]) => {
+        const percentage = ((count / maxCount) * 100).toFixed(0);
+        return `
+            <div class="stats-list-item">
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span class="stats-list-label">${location}</span>
+                        <span class="stats-list-value">${count}</span>
+                    </div>
+                    <div class="stats-list-bar">
+                        <div class="stats-list-bar-fill" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateTopVehicleTypes() {
+    const vehicleCounts = {};
+
+    activeMarkers.forEach(marker => {
+        if (!marker.accidentData || !marker.accidentData.vehicle_kind) return;
+
+        const vehicles = marker.accidentData.vehicle_kind.split(',');
+        vehicles.forEach(vehicle => {
+            const trimmed = vehicle.trim();
+            if (trimmed) {
+                vehicleCounts[trimmed] = (vehicleCounts[trimmed] || 0) + 1;
+            }
+        });
+    });
+
+    const sortedVehicles = Object.entries(vehicleCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5);
+
+    const container = document.getElementById('statsTopVehicles');
+    if (!container) return;
+
+    if (sortedVehicles.length === 0) {
+        container.innerHTML = '<div class="stats-empty">No data available</div>';
+        return;
+    }
+
+    const maxCount = sortedVehicles[0][1];
+
+    container.innerHTML = sortedVehicles.map(([vehicle, count]) => {
+        const percentage = ((count / maxCount) * 100).toFixed(0);
+        return `
+            <div class="stats-list-item">
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span class="stats-list-label">${vehicle}</span>
+                        <span class="stats-list-value">${count}</span>
+                    </div>
+                    <div class="stats-list-bar">
+                        <div class="stats-list-bar-fill" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateStatisticsCharts(stats) {
+    // Severity Chart (Doughnut)
+    const severityCtx = document.getElementById('severityChart');
+    if (severityCtx) {
+        if (severityChartInstance) {
+            severityChartInstance.destroy();
+        }
+
+        severityChartInstance = new Chart(severityCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Fatal', 'Injury', 'Property'],
+                datasets: [{
+                    data: [stats.fatal, stats.injury, stats.property],
+                    backgroundColor: ['#DC143C', '#FFA500', '#28A745'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 8,
+                            font: { size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Time Distribution Chart (Bar)
+    const timeCtx = document.getElementById('timeDistributionChart');
+    if (timeCtx) {
+        if (timeDistributionChartInstance) {
+            timeDistributionChartInstance.destroy();
+        }
+
+        const timeStats = updateTimeDistribution();
+
+        timeDistributionChartInstance = new Chart(timeCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Morning', 'Afternoon', 'Evening', 'Night'],
+                datasets: [{
+                    label: 'Accidents',
+                    data: [timeStats.morning, timeStats.afternoon, timeStats.evening, timeStats.night],
+                    backgroundColor: ['#FFD700', '#FFA500', '#FF6347', '#4169E1'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: { size: 10 },
+                            stepSize: 1
+                        }
+                    },
+                    x: {
+                        ticks: { font: { size: 10 } }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// ============================================================================
+// STATISTICS SECTION TOGGLE
+// ============================================================================
+
+function toggleStatsSection(sectionName) {
+    const section = document.getElementById(`${sectionName}-section`);
+    const icon = document.getElementById(`${sectionName}-icon`);
+
+    if (!section || !icon) return;
+
+    const isExpanded = section.classList.contains('expanded');
+
+    if (isExpanded) {
+        section.classList.remove('expanded');
+        icon.classList.remove('rotated');
+    } else {
+        section.classList.add('expanded');
+        icon.classList.add('rotated');
+    }
+}
+
+// Initialize sections - expand Summary and Severity by default
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        toggleStatsSection('summary');
+        toggleStatsSection('severity');
+    }, 500);
+});
+
+// ============================================================================
+// EXPORT FUNCTIONALITY
+// ============================================================================
+
+function showExportMenu() {
+    const menu = document.getElementById('statsExportMenu');
+    if (menu) {
+        menu.style.display = 'block';
+    }
+}
+
+function hideExportMenu() {
+    const menu = document.getElementById('statsExportMenu');
+    if (menu) {
+        menu.style.display = 'none';
+    }
+}
+
+function exportStatistics(format) {
+    hideExportMenu();
+    showLoading();
+
+    setTimeout(() => {
+        try {
+            const stats = gatherStatisticsData();
+
+            switch(format) {
+                case 'csv':
+                    exportAsCSV(stats);
+                    break;
+                case 'excel':
+                    exportAsExcel(stats);
+                    break;
+                case 'json':
+                    exportAsJSON(stats);
+                    break;
+            }
+
+            hideLoading();
+            showNotification(`Statistics exported as ${format.toUpperCase()}`, 'success');
+        } catch (error) {
+            console.error('Export error:', error);
+            hideLoading();
+            showNotification('Export failed. Please try again.', 'error');
+        }
+    }, 500);
+}
+
+function gatherStatisticsData() {
+    const stats = {
+        total: activeMarkers.length,
+        fatal: 0,
+        injury: 0,
+        property: 0
+    };
+
+    const locations = {};
+    const vehicles = {};
+    const timeDistribution = { morning: 0, afternoon: 0, evening: 0, night: 0 };
+    const accidents = [];
+
+    activeMarkers.forEach(marker => {
+        if (!marker.accidentData) return;
+
+        const accident = marker.accidentData;
+
+        // Count severity
+        if (accident.victim_killed) stats.fatal++;
+        else if (accident.victim_injured) stats.injury++;
+        else stats.property++;
+
+        // Count locations
+        const location = accident.municipal || 'Unknown';
+        locations[location] = (locations[location] || 0) + 1;
+
+        // Count vehicles
+        if (accident.vehicle_kind) {
+            const vehicleList = accident.vehicle_kind.split(',');
+            vehicleList.forEach(v => {
+                const trimmed = v.trim();
+                if (trimmed) vehicles[trimmed] = (vehicles[trimmed] || 0) + 1;
+            });
+        }
+
+        // Time distribution
+        if (accident.time_committed) {
+            const timeParts = accident.time_committed.toString().split(':');
+            const hour = timeParts.length > 0 ? parseInt(timeParts[0]) : 12;
+
+            if (hour >= 6 && hour < 12) timeDistribution.morning++;
+            else if (hour >= 12 && hour < 18) timeDistribution.afternoon++;
+            else if (hour >= 18 && hour < 24) timeDistribution.evening++;
+            else timeDistribution.night++;
+        }
+
+        // Store accident details
+        accidents.push({
+            id: accident.id,
+            date: accident.date_committed,
+            time: accident.time_committed,
+            location: `${accident.barangay || ''}, ${accident.municipal || ''}`,
+            province: accident.province || '',
+            incident_type: accident.incident_type || '',
+            vehicle: accident.vehicle_kind || '',
+            casualties: accident.victim_count || 0,
+            fatal: accident.victim_killed ? 'Yes' : 'No',
+            injured: accident.victim_injured ? 'Yes' : 'No',
+            cluster_id: accident.cluster_id || 'None'
+        });
+    });
+
+    return {
+        summary: stats,
+        locations: locations,
+        vehicles: vehicles,
+        timeDistribution: timeDistribution,
+        accidents: accidents,
+        exportDate: new Date().toISOString(),
+        filterInfo: {
+            timeRange: document.getElementById('timeRange')?.value || 'all',
+            province: document.getElementById('provinceFilter')?.value || 'all',
+            severity: document.getElementById('severityFilter')?.value || '0'
+        }
+    };
+}
+
+function exportAsCSV(data) {
+    let csv = 'Accident Hotspot Detection System - Statistics Export\n';
+    csv += `Export Date: ${new Date().toLocaleString()}\n`;
+    csv += `Total Accidents: ${data.summary.total}\n`;
+    csv += `Fatal: ${data.summary.fatal}, Injury: ${data.summary.injury}, Property: ${data.summary.property}\n\n`;
+
+    csv += 'ID,Date,Time,Location,Province,Incident Type,Vehicle,Casualties,Fatal,Injured,Cluster\n';
+
+    data.accidents.forEach(acc => {
+        csv += `${acc.id},"${acc.date}","${acc.time}","${acc.location}","${acc.province}","${acc.incident_type}","${acc.vehicle}",${acc.casualties},${acc.fatal},${acc.injured},${acc.cluster_id}\n`;
+    });
+
+    downloadFile(csv, 'accident-statistics.csv', 'text/csv');
+}
+
+function exportAsExcel(data) {
+    // Create Excel-compatible CSV with UTF-8 BOM
+    const BOM = '\uFEFF';
+    let excel = BOM;
+
+    excel += 'Accident Statistics\n';
+    excel += `Export Date,${new Date().toLocaleString()}\n`;
+    excel += `Total Accidents,${data.summary.total}\n`;
+    excel += `Fatal,${data.summary.fatal}\n`;
+    excel += `Injury,${data.summary.injury}\n`;
+    excel += `Property,${data.summary.property}\n\n`;
+
+    excel += 'ID,Date,Time,Location,Province,Incident Type,Vehicle,Casualties,Fatal,Injured,Cluster\n';
+
+    data.accidents.forEach(acc => {
+        excel += `${acc.id},"${acc.date}","${acc.time}","${acc.location}","${acc.province}","${acc.incident_type}","${acc.vehicle}",${acc.casualties},${acc.fatal},${acc.injured},${acc.cluster_id}\n`;
+    });
+
+    downloadFile(excel, 'accident-statistics.csv', 'text/csv;charset=utf-8');
+}
+
+function exportAsJSON(data) {
+    const json = JSON.stringify(data, null, 2);
+    downloadFile(json, 'accident-statistics.json', 'application/json');
+}
+
+function downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
 
 // ============================================================================
