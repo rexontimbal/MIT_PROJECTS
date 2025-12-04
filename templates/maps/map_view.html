@@ -1208,124 +1208,6 @@ body.fullscreen-mode .search-history {
 }
 
     /* Search Info Panel */
-.search-info-panel {
-    position: absolute;
-    top: 40px;
-    right: 80px;
-    width: 260px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    z-index: 900;
-    max-height: calc(100vh - 100px); /* Dynamic height */
-    overflow: hidden;
-    animation: slideInRight 0.3s ease;
-}
-body.fullscreen-mode .search-info-panel {
-    max-height: calc(100vh - 50px); /* More space in fullscreen */
-}
-
-    @keyframes slideInRight {
-        from {
-            opacity: 0;
-            transform: translateX(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    .search-info-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
-        color: white;
-    }
-
-    .search-info-header h4 {
-        margin: 0;
-        font-size: 0.95rem;
-    }
-
-    .search-info-header button {
-        background: rgba(255,255,255,0.2);
-        border: none;
-        color: white;
-        width: 24px;
-        height: 24px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.2s;
-    }
-
-    .search-info-header button:hover {
-        background: rgba(255,255,255,0.3);
-        transform: rotate(90deg);
-    }
-
-    .search-info-body {
-        padding: 1rem;
-        overflow-y: auto;
-        max-height: 600px;
-    }
-
-    .search-stat-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.75rem;
-        background: var(--bg-light);
-        border-radius: 8px;
-        margin-bottom: 0.75rem;
-    }
-
-    .search-stat-label {
-        font-size: 0.85rem;
-        color: var(--text-medium);
-    }
-
-    .search-stat-value {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--primary-blue);
-    }
-
-    /* No Results State */
-    .no-results {
-        padding: 2rem;
-        text-align: center;
-        color: var(--text-medium);
-    }
-
-    .no-results-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-
-    .no-results-text {
-        font-size: 0.9rem;
-    }
-
-    /* Loading State */
-    .search-loading {
-        padding: 2rem;
-        text-align: center;
-    }
-
-    .search-loading-spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid var(--light-blue);
-        border-top-color: var(--primary-blue);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 1rem;
-    }
-
     /* Fullscreen Button */
     .fullscreen-btn {
         position: absolute;
@@ -1611,6 +1493,9 @@ body.fullscreen-mode .search-info-panel {
 .map-legend.dragging {
     box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     opacity: 0.95;
+    transition: none;
+    will-change: transform;
+    transform: translateZ(0);
 }
 .stats-content,
 .legend-content {
@@ -1636,13 +1521,6 @@ body.fullscreen-mode .search-info-panel {
     .search-suggestions,
     .search-history {
         max-height: calc(100vh - 120px); /* Less space on mobile */
-    }
-    
-    .search-info-panel {
-        width: 90%;
-        right: 5%;
-        left: 5%;
-        max-height: calc(100vh - 80px);
     }
 }
 /* Responsive adjustments for mobile */
@@ -1922,17 +1800,6 @@ body.fullscreen-mode .search-info-panel {
         <div class="search-active-banner" id="searchActiveBanner">
             <span>🔍 Search Active: <strong id="searchBannerText">""</strong></span>
             <button class="close-banner" onclick="clearSearchFromBanner()">×</button>
-        </div>
-
-        
-
-        <!-- Search Info Panel (Results Summary) -->
-        <div class="search-info-panel" id="searchInfoPanel" style="display: none;">
-            <div class="search-info-header">
-                <h4>🔍 Search Results</h4>
-                <button onclick="closeSearchInfo()">✕</button>
-            </div>
-            <div class="search-info-body" id="searchInfoBody"></div>
         </div>
 
         <!-- Fullscreen/Maximize Button -->
@@ -5088,97 +4955,13 @@ function clearSearchHistory() {
 // ============================================================================
 
 function showSearchResultsSummary(query) {
-    const panel = document.getElementById('searchInfoPanel');
-    const body = document.getElementById('searchInfoBody');
-    
-    if (!panel || !body) return;
-
-    adjustSearchResultsHeight();
-
-    const stats = {
-        total: activeMarkers.length,
-        fatal: activeMarkers.filter(m => m.accidentData && m.accidentData.victim_killed).length,
-        injury: activeMarkers.filter(m => m.accidentData && m.accidentData.victim_injured && !m.accidentData.victim_killed).length,
-        property: activeMarkers.filter(m => m.accidentData && !m.accidentData.victim_killed && !m.accidentData.victim_injured).length
-    };
-    
-    // Check if this is a cluster search
-    const isClusterSearch = query.toLowerCase().includes('cluster') || /^#?\d+$/.test(query.toLowerCase());
-    const clusterMatch = query.match(/(?:cluster\s+)?#?(\d+)/);
-    const clusterId = clusterMatch ? parseInt(clusterMatch[1]) : null;
-    
-    let clusterInfo = '';
-    if (isClusterSearch && clusterId) {
-        const hotspot = allHotspots.find(h => h.cluster_id === clusterId);
-        if (hotspot) {
-            clusterInfo = `
-                <div style="margin-bottom: 1rem; padding: 0.75rem; background: linear-gradient(135deg, #FFA500, #FF8C00); border-radius: 8px; color: white;">
-                    <strong>🎯 Hotspot Cluster #${hotspot.cluster_id}</strong><br>
-                    <span style="font-size: 0.9rem;">📍 ${hotspot.primary_location}</span><br>
-                    <span style="font-size: 0.8rem;">📊 ${hotspot.accident_count} accidents • ⚡ Severity: ${hotspot.severity_score.toFixed(1)}</span>
-                </div>
-            `;
-        }
-    }
-    
-    body.innerHTML = `
-        ${clusterInfo}
-        <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--light-blue); border-radius: 8px;">
-            <strong style="color: var(--primary-blue);">Search Query:</strong><br>
-            <span style="font-size: 0.9rem;">"${query}"</span>
-        </div>
-        
-        <div class="search-stat-item">
-            <span class="search-stat-label">📊 Total Results:</span>
-            <span class="search-stat-value">${stats.total}</span>
-        </div>
-        
-        <div class="search-stat-item">
-            <span class="search-stat-label">💀 Fatal:</span>
-            <span class="search-stat-value" style="color: #DC143C;">${stats.fatal}</span>
-        </div>
-        
-        <div class="search-stat-item">
-            <span class="search-stat-label">🚑 Injury:</span>
-            <span class="search-stat-value" style="color: #FFA500;">${stats.injury}</span>
-        </div>
-        
-        <div class="search-stat-item">
-            <span class="search-stat-label">🚗 Property Only:</span>
-            <span class="search-stat-value" style="color: #28A745;">${stats.property}</span>
-        </div>
-        
-        ${isClusterSearch ? `
-        <div class="search-stat-item">
-            <span class="search-stat-label">🎯 Cluster ID:</span>
-            <span class="search-stat-value" style="color: #FFA500;">${clusterId}</span>
-        </div>
-        ` : ''}
-        
-        <button onclick="clearSearchFilter()" style="
-            width: 100%;
-            padding: 0.7rem;
-            margin-top: 1rem;
-            background: #DC143C;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        " onmouseover="this.style.background='#8B0000'" onmouseout="this.style.background='#DC143C'">
-            Clear Search
-        </button>
-    `;
-    
-    panel.style.display = 'block';
+    // Removed - redundant with statistics panel
+    return;
 }
 
 function closeSearchInfo() {
-    const panel = document.getElementById('searchInfoPanel');
-    if (panel) {
-        panel.style.display = 'none';
-    }
+    // Removed - redundant with statistics panel
+    return;
 }
 
 function clearTimeFilterBadge() {
@@ -5431,92 +5214,118 @@ function updateBadgePositions() {
 }
 
 // ============================================================================
-// DRAGGABLE PANELS
+// DRAGGABLE PANELS - Optimized with requestAnimationFrame
 // ============================================================================
 
 let draggedPanel = null;
 let dragOffset = { x: 0, y: 0 };
+let rafId = null;
+let currentMousePos = { x: 0, y: 0 };
 
 function makePanelDraggable(panelId, handleId) {
     const panel = document.getElementById(panelId);
     const handle = document.getElementById(handleId);
-    
+
     if (!panel || !handle) return;
-    
+
     handle.addEventListener('mousedown', startDrag);
     handle.addEventListener('touchstart', startDragTouch);
-    
+
     function startDrag(e) {
         e.preventDefault();
         draggedPanel = panel;
-        
+
         const rect = panel.getBoundingClientRect();
         dragOffset.x = e.clientX - rect.left;
         dragOffset.y = e.clientY - rect.top;
-        
+
         document.addEventListener('mousemove', onDrag);
         document.addEventListener('mouseup', stopDrag);
         panel.classList.add('dragging');
+        panel.style.willChange = 'transform';
+
+        // Start animation loop
+        if (!rafId) {
+            rafId = requestAnimationFrame(updatePanelPosition);
+        }
     }
-    
+
     function startDragTouch(e) {
         e.preventDefault();
         if (e.touches.length === 1) {
             draggedPanel = panel;
-            
+
             const rect = panel.getBoundingClientRect();
             dragOffset.x = e.touches[0].clientX - rect.left;
             dragOffset.y = e.touches[0].clientY - rect.top;
-            
+
             document.addEventListener('touchmove', onDragTouch);
             document.addEventListener('touchend', stopDrag);
             panel.classList.add('dragging');
+            panel.style.willChange = 'transform';
+
+            // Start animation loop
+            if (!rafId) {
+                rafId = requestAnimationFrame(updatePanelPosition);
+            }
         }
     }
-    
+
     function onDrag(e) {
         if (!draggedPanel) return;
-        
-        const x = e.clientX - dragOffset.x;
-        const y = e.clientY - dragOffset.y;
-        
-        const maxX = window.innerWidth - panel.offsetWidth;
-        const maxY = window.innerHeight - panel.offsetHeight;
-        
-        const boundedX = Math.max(10, Math.min(x, maxX - 10));
-        const boundedY = Math.max(10, Math.min(y, maxY - 10));
-        
-        panel.style.left = boundedX + 'px';
-        panel.style.top = boundedY + 'px';
-        panel.style.transform = 'none';
+        e.preventDefault();
+
+        // Store mouse position, actual update happens in RAF
+        currentMousePos.x = e.clientX;
+        currentMousePos.y = e.clientY;
     }
-    
+
     function onDragTouch(e) {
         if (!draggedPanel || e.touches.length !== 1) return;
-        
-        const x = e.touches[0].clientX - dragOffset.x;
-        const y = e.touches[0].clientY - dragOffset.y;
-        
+        e.preventDefault();
+
+        // Store touch position, actual update happens in RAF
+        currentMousePos.x = e.touches[0].clientX;
+        currentMousePos.y = e.touches[0].clientY;
+    }
+
+    function updatePanelPosition() {
+        if (!draggedPanel) return;
+
+        const x = currentMousePos.x - dragOffset.x;
+        const y = currentMousePos.y - dragOffset.y;
+
+        // Cache dimensions
         const maxX = window.innerWidth - panel.offsetWidth;
         const maxY = window.innerHeight - panel.offsetHeight;
-        
+
         const boundedX = Math.max(10, Math.min(x, maxX - 10));
         const boundedY = Math.max(10, Math.min(y, maxY - 10));
-        
+
         panel.style.left = boundedX + 'px';
         panel.style.top = boundedY + 'px';
         panel.style.transform = 'none';
+
+        // Continue animation loop
+        rafId = requestAnimationFrame(updatePanelPosition);
     }
-    
+
     function stopDrag() {
         if (draggedPanel) {
             draggedPanel.classList.remove('dragging');
+            draggedPanel.style.willChange = 'auto';
             draggedPanel = null;
-            
+
             document.removeEventListener('mousemove', onDrag);
             document.removeEventListener('touchmove', onDragTouch);
             document.removeEventListener('mouseup', stopDrag);
             document.removeEventListener('touchend', stopDrag);
+
+            // Stop animation loop
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
         }
     }
 }
