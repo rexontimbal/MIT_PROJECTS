@@ -5221,6 +5221,7 @@ let draggedPanel = null;
 let dragOffset = { x: 0, y: 0 };
 let rafId = null;
 let currentMousePos = { x: 0, y: 0 };
+let isDragging = false;
 
 function makePanelDraggable(panelId, handleId) {
     const panel = document.getElementById(panelId);
@@ -5234,40 +5235,36 @@ function makePanelDraggable(panelId, handleId) {
     function startDrag(e) {
         e.preventDefault();
         draggedPanel = panel;
+        isDragging = false;
 
         const rect = panel.getBoundingClientRect();
         dragOffset.x = e.clientX - rect.left;
         dragOffset.y = e.clientY - rect.top;
 
+        // Initialize current position to avoid jumps
+        currentMousePos.x = e.clientX;
+        currentMousePos.y = e.clientY;
+
         document.addEventListener('mousemove', onDrag);
         document.addEventListener('mouseup', stopDrag);
-        panel.classList.add('dragging');
-        panel.style.willChange = 'transform';
-
-        // Start animation loop
-        if (!rafId) {
-            rafId = requestAnimationFrame(updatePanelPosition);
-        }
     }
 
     function startDragTouch(e) {
         e.preventDefault();
         if (e.touches.length === 1) {
             draggedPanel = panel;
+            isDragging = false;
 
             const rect = panel.getBoundingClientRect();
             dragOffset.x = e.touches[0].clientX - rect.left;
             dragOffset.y = e.touches[0].clientY - rect.top;
 
+            // Initialize current position to avoid jumps
+            currentMousePos.x = e.touches[0].clientX;
+            currentMousePos.y = e.touches[0].clientY;
+
             document.addEventListener('touchmove', onDragTouch);
             document.addEventListener('touchend', stopDrag);
-            panel.classList.add('dragging');
-            panel.style.willChange = 'transform';
-
-            // Start animation loop
-            if (!rafId) {
-                rafId = requestAnimationFrame(updatePanelPosition);
-            }
         }
     }
 
@@ -5275,22 +5272,46 @@ function makePanelDraggable(panelId, handleId) {
         if (!draggedPanel) return;
         e.preventDefault();
 
-        // Store mouse position, actual update happens in RAF
+        // Store mouse position
         currentMousePos.x = e.clientX;
         currentMousePos.y = e.clientY;
+
+        // Start dragging only when mouse actually moves
+        if (!isDragging) {
+            isDragging = true;
+            panel.classList.add('dragging');
+            panel.style.willChange = 'transform';
+
+            // Start animation loop only when actual movement begins
+            if (!rafId) {
+                rafId = requestAnimationFrame(updatePanelPosition);
+            }
+        }
     }
 
     function onDragTouch(e) {
         if (!draggedPanel || e.touches.length !== 1) return;
         e.preventDefault();
 
-        // Store touch position, actual update happens in RAF
+        // Store touch position
         currentMousePos.x = e.touches[0].clientX;
         currentMousePos.y = e.touches[0].clientY;
+
+        // Start dragging only when touch actually moves
+        if (!isDragging) {
+            isDragging = true;
+            panel.classList.add('dragging');
+            panel.style.willChange = 'transform';
+
+            // Start animation loop only when actual movement begins
+            if (!rafId) {
+                rafId = requestAnimationFrame(updatePanelPosition);
+            }
+        }
     }
 
     function updatePanelPosition() {
-        if (!draggedPanel) return;
+        if (!draggedPanel || !isDragging) return;
 
         const x = currentMousePos.x - dragOffset.x;
         const y = currentMousePos.y - dragOffset.y;
@@ -5315,6 +5336,7 @@ function makePanelDraggable(panelId, handleId) {
             draggedPanel.classList.remove('dragging');
             draggedPanel.style.willChange = 'auto';
             draggedPanel = null;
+            isDragging = false;
 
             document.removeEventListener('mousemove', onDrag);
             document.removeEventListener('touchmove', onDragTouch);
