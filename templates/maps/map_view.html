@@ -604,6 +604,9 @@
         opacity: 0;
         pointer-events: none;
         width: 340px;
+        height: auto;
+        display: flex;
+        flex-direction: column;
     }
 
     .map-legend.show {
@@ -1358,6 +1361,7 @@ body.fullscreen-mode .search-history {
     font-weight: 700;
     font-size: 0.9rem;
     border-bottom: 2px solid var(--light-blue);
+    flex-shrink: 0;
 }
 
 .legend-header h4 {
@@ -1510,7 +1514,6 @@ body.fullscreen-mode .search-history {
         
         .map-legend {
             bottom: 10px;
-            max-height: 50vh;
         }
     }
 @media (max-width: 768px) {
