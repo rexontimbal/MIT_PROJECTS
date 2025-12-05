@@ -3253,18 +3253,44 @@ function fuzzyMatch(search, target, threshold = 0.75) {
  * Enhanced fuzzy matching for location and text fields
  * More lenient for common typos and variations
  */
-function fuzzyMatchField(search, field) {
+function fuzzyMatchField(search, field, isLocation = false) {
     if (!field) return false;
 
     const fieldStr = field.toString().toLowerCase().trim();
     const searchStr = search.toLowerCase().trim();
 
-    // Direct substring match (fastest)
+    // Direct substring match (fastest and most accurate)
     if (fieldStr.includes(searchStr)) {
         return true;
     }
 
-    // Fuzzy match with slightly lower threshold for better UX
+    // For location searches, be much more strict with fuzzy matching
+    // to avoid false positives like "Dinagat Islands" matching other provinces
+    if (isLocation) {
+        // For multi-word location searches (e.g., "Dinagat Islands")
+        const searchWords = searchStr.split(/\s+/);
+        const fieldWords = fieldStr.split(/\s+/);
+
+        // If search has multiple words, ALL words must match or fuzzy match
+        if (searchWords.length > 1) {
+            const allWordsMatch = searchWords.every(searchWord => {
+                return fieldWords.some(fieldWord => {
+                    // Exact substring match
+                    if (fieldWord.includes(searchWord) || searchWord.includes(fieldWord)) {
+                        return true;
+                    }
+                    // Very strict fuzzy match for locations (90% similarity)
+                    return fuzzyMatch(searchWord, fieldWord, 0.9);
+                });
+            });
+            return allWordsMatch;
+        }
+
+        // For single-word location searches, use stricter threshold (85%)
+        return fuzzyMatch(searchStr, fieldStr, 0.85);
+    }
+
+    // For non-location fields, use more lenient threshold (70%)
     return fuzzyMatch(searchStr, fieldStr, 0.7);
 }
 
@@ -3343,15 +3369,15 @@ function passesSearchFilter(accident, query) {
         
         const hotspot = allHotspots.find(h => h.cluster_id === accident.cluster_id);
         if (hotspot) {
-            // Fuzzy match hotspot location
-            if (hotspot.primary_location && fuzzyMatchField(searchLower, hotspot.primary_location)) {
+            // Fuzzy match hotspot location with strict location matching
+            if (hotspot.primary_location && fuzzyMatchField(searchLower, hotspot.primary_location, true)) {
                 return true;
             }
 
-            // Fuzzy match municipalities
+            // Fuzzy match municipalities with strict location matching
             if (hotspot.municipalities && Array.isArray(hotspot.municipalities)) {
                 for (let municipality of hotspot.municipalities) {
-                    if (municipality && fuzzyMatchField(searchLower, municipality)) {
+                    if (municipality && fuzzyMatchField(searchLower, municipality, true)) {
                         return true;
                     }
                 }
@@ -3359,20 +3385,32 @@ function passesSearchFilter(accident, query) {
         }
     }
 
-    // Fuzzy matching for all searchable fields
-    const searchFields = [
+    // Location-based search with strict matching
+    // Separate location fields for stricter fuzzy matching
+    const locationFields = [
         accident.barangay,
         accident.municipal,
         accident.province,
+        accident.street
+    ].filter(field => field && field.toString().trim() !== '');
+
+    // Check location fields with strict fuzzy matching (isLocation = true)
+    for (const field of locationFields) {
+        if (fuzzyMatchField(searchLower, field.toString(), true)) {
+            return true;
+        }
+    }
+
+    // Other non-location fields with more lenient fuzzy matching
+    const otherFields = [
         accident.date_committed,
         accident.vehicle_kind,
         accident.incident_type,
-        accident.street,
         accident.type_of_place
     ].filter(field => field && field.toString().trim() !== '');
 
-    // Use fuzzy matching for better typo tolerance
-    return searchFields.some(field => fuzzyMatchField(searchLower, field.toString()));
+    // Check other fields with standard fuzzy matching
+    return otherFields.some(field => fuzzyMatchField(searchLower, field.toString(), false));
 }
 
 // ============================================================================
@@ -4730,18 +4768,18 @@ function generateLocationSuggestions(query) {
     const suggestions = [];
     const locations = new Set();
 
-    // Use fuzzy matching for location suggestions
+    // Use strict fuzzy matching for location suggestions (isLocation = true)
     allAccidents.forEach(accident => {
-        if (accident.barangay && fuzzyMatchField(query, accident.barangay)) {
+        if (accident.barangay && fuzzyMatchField(query, accident.barangay, true)) {
             locations.add(accident.barangay);
         }
-        if (accident.municipal && fuzzyMatchField(query, accident.municipal)) {
+        if (accident.municipal && fuzzyMatchField(query, accident.municipal, true)) {
             locations.add(accident.municipal);
         }
-        if (accident.province && fuzzyMatchField(query, accident.province)) {
+        if (accident.province && fuzzyMatchField(query, accident.province, true)) {
             locations.add(accident.province);
         }
-        if (accident.street && fuzzyMatchField(query, accident.street)) {
+        if (accident.street && fuzzyMatchField(query, accident.street, true)) {
             locations.add(accident.street);
         }
     });
@@ -4860,9 +4898,9 @@ function generateSeveritySuggestions(query) {
 }
 
 function generateHistorySuggestions(query) {
-    // Use fuzzy matching for history suggestions
+    // Use strict fuzzy matching for history suggestions since they often contain location names
     return searchHistory
-        .filter(item => fuzzyMatchField(query, item.query))
+        .filter(item => fuzzyMatchField(query, item.query, true))
         .slice(0, 3)
         .map(item => ({
             text: item.query,
@@ -5684,10 +5722,10 @@ function generateClusterSuggestions(query) {
             }
         });
 
-        // Fuzzy search in cluster location descriptions
+        // Fuzzy search in cluster location descriptions with strict matching
         allHotspots.forEach(hotspot => {
             if (hotspot.primary_location &&
-                fuzzyMatchField(queryLower, hotspot.primary_location) &&
+                fuzzyMatchField(queryLower, hotspot.primary_location, true) &&
                 !suggestions.some(s => s.clusterId === hotspot.cluster_id)) {
 
                 suggestions.push({
