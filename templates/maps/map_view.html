@@ -3251,7 +3251,7 @@ function fuzzyMatch(search, target, threshold = 0.75) {
 
 /**
  * Enhanced fuzzy matching for location and text fields
- * More lenient for common typos and variations
+ * EXTREMELY strict for locations - substring match only with minimal typo tolerance
  */
 function fuzzyMatchField(search, field, isLocation = false) {
     if (!field) return false;
@@ -3264,30 +3264,68 @@ function fuzzyMatchField(search, field, isLocation = false) {
         return true;
     }
 
-    // For location searches, be much more strict with fuzzy matching
-    // to avoid false positives like "Dinagat Islands" matching other provinces
+    // For location searches, require substring matches or 1-character typos ONLY
+    // This prevents false positives like "Dinagat" matching "Bislig"
     if (isLocation) {
-        // For multi-word location searches (e.g., "Dinagat Islands")
         const searchWords = searchStr.split(/\s+/);
         const fieldWords = fieldStr.split(/\s+/);
 
-        // If search has multiple words, ALL words must match or fuzzy match
+        // For multi-word location searches (e.g., "Dinagat Islands", "Surigao City")
+        // ALL words must appear as substrings or have max 1-2 character difference
         if (searchWords.length > 1) {
             const allWordsMatch = searchWords.every(searchWord => {
+                // Skip very short words (articles, etc.)
+                if (searchWord.length < 2) return true;
+
                 return fieldWords.some(fieldWord => {
                     // Exact substring match
                     if (fieldWord.includes(searchWord) || searchWord.includes(fieldWord)) {
                         return true;
                     }
-                    // Very strict fuzzy match for locations (90% similarity)
-                    return fuzzyMatch(searchWord, fieldWord, 0.9);
+                    // Only allow 1-2 character typos for words 4+ chars
+                    // Use Levenshtein distance directly for precision
+                    if (searchWord.length >= 4 && fieldWord.length >= 4) {
+                        const distance = levenshteinDistance(searchWord, fieldWord);
+                        // Allow max 1 character difference for 4-6 char words
+                        // Allow max 2 character difference for 7+ char words
+                        const maxDistance = searchWord.length <= 6 ? 1 : 2;
+                        return distance <= maxDistance;
+                    }
+                    return false;
                 });
             });
             return allWordsMatch;
         }
 
-        // For single-word location searches, use stricter threshold (85%)
-        return fuzzyMatch(searchStr, fieldStr, 0.85);
+        // For single-word location searches
+        // Require substring match in the full field OR in any individual word
+        const searchAppearsInField = fieldWords.some(word =>
+            word.includes(searchStr) || searchStr.includes(word)
+        );
+
+        if (searchAppearsInField) {
+            return true;
+        }
+
+        // Only allow 1-2 character typos for single-word location searches
+        if (searchStr.length >= 4) {
+            const distance = levenshteinDistance(searchStr, fieldStr);
+            const maxDistance = searchStr.length <= 6 ? 1 : 2;
+
+            // Also check against individual words in the field
+            for (const word of fieldWords) {
+                if (word.length >= 4) {
+                    const wordDistance = levenshteinDistance(searchStr, word);
+                    if (wordDistance <= maxDistance) {
+                        return true;
+                    }
+                }
+            }
+
+            return distance <= maxDistance;
+        }
+
+        return false;
     }
 
     // For non-location fields, use more lenient threshold (70%)
