@@ -5281,6 +5281,9 @@ function makePanelDraggable(panelId, handleId) {
             panel.classList.add('dragging');
             panel.style.willChange = 'transform';
 
+            // Clear bottom positioning to prevent stretching
+            panel.style.bottom = 'auto';
+
             // Start animation loop only when actual movement begins
             if (!rafId) {
                 rafId = requestAnimationFrame(updatePanelPosition);
@@ -5301,6 +5304,9 @@ function makePanelDraggable(panelId, handleId) {
             isDragging = true;
             panel.classList.add('dragging');
             panel.style.willChange = 'transform';
+
+            // Clear bottom positioning to prevent stretching
+            panel.style.bottom = 'auto';
 
             // Start animation loop only when actual movement begins
             if (!rafId) {
