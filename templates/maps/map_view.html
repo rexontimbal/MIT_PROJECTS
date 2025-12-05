@@ -3336,7 +3336,7 @@ function passesSearchFilter(accident, query) {
     if (!query || query.trim() === '') return true;
 
     const searchLower = query.toLowerCase().trim();
-    
+
     // Check for cluster ID search patterns
     if (searchLower.startsWith('cluster ') || /^#?\d+$/.test(searchLower)) {
         const clusterMatch = searchLower.match(/(?:cluster\s+)?#?(\d+)/);
@@ -3345,77 +3345,71 @@ function passesSearchFilter(accident, query) {
             return accident.cluster_id === searchClusterId;
         }
     }
-    
-    // Fuzzy keyword matching for accident severity
-    const fatalKeywords = ['fatal', 'death', 'killed', 'deadly', 'fatality'];
-    const injuryKeywords = ['injury', 'injured', 'hurt', 'wounded', 'injure'];
-    const propertyKeywords = ['property', 'damage', 'damaged'];
 
-    if (fatalKeywords.some(keyword => fuzzyMatch(searchLower, keyword, 0.75))) {
+    // Existing search logic (keep all your current search functionality)
+    if (searchLower === 'fatal' || searchLower === 'fatal accident' || searchLower === 'death' || searchLower === 'killed') {
         return accident.victim_killed === true;
     }
 
-    if (injuryKeywords.some(keyword => fuzzyMatch(searchLower, keyword, 0.75))) {
+    if (searchLower === 'injury' || searchLower === 'injured' || searchLower === 'injury accident' || searchLower === 'hurt') {
         return accident.victim_injured === true && !accident.victim_killed;
     }
 
-    if (propertyKeywords.some(keyword => fuzzyMatch(searchLower, keyword, 0.75))) {
+    if (searchLower === 'property' || searchLower === 'property only' || searchLower === 'property damage' || searchLower === 'damage only') {
         return accident.victim_killed === false && accident.victim_injured === false;
     }
-    
-    // Fuzzy vehicle type matching with typo tolerance
-    const motorcycleKeywords = ['motorcycle', 'motorcyle', 'motorbike', 'motor', 'bike', 'mc', 'moto'];
-    const tricycleKeywords = ['tricycle', 'trike', 'trikes'];
-    const carKeywords = ['car', 'automobile', 'sedan', 'cars', 'auto'];
-    const truckKeywords = ['pickup', 'pick-up', 'pick up', 'truck', 'lorry'];
 
-    if (accident.vehicle_kind) {
-        const vehicleLower = accident.vehicle_kind.toLowerCase();
-
-        // Check motorcycle with fuzzy matching
-        if (motorcycleKeywords.some(keyword => fuzzyMatch(searchLower, keyword, 0.7))) {
+    if (searchLower === 'motorcycle' || searchLower === 'motorcyle' ||
+        searchLower === 'motorbike' || searchLower === 'motor' ||
+        searchLower === 'bike' || searchLower === 'mc' || searchLower === 'moto') {
+        if (accident.vehicle_kind) {
+            const vehicleLower = accident.vehicle_kind.toLowerCase();
             return vehicleLower.includes('motorcycle') || vehicleLower.includes('moto') || vehicleLower.includes('bike');
         }
+        return false;
+    }
 
-        // Check tricycle with fuzzy matching
-        if (tricycleKeywords.some(keyword => fuzzyMatch(searchLower, keyword, 0.7))) {
+    if (searchLower === 'tricycle' || searchLower === 'trike' || searchLower === 'trikes') {
+        if (accident.vehicle_kind) {
+            const vehicleLower = accident.vehicle_kind.toLowerCase();
             return vehicleLower.includes('tricycle') || vehicleLower.includes('trike');
         }
+        return false;
+    }
 
-        // Check car with fuzzy matching
-        if (carKeywords.some(keyword => fuzzyMatch(searchLower, keyword, 0.7))) {
+    if (searchLower === 'car' || searchLower === 'automobile' || searchLower === 'sedan' || searchLower === 'cars') {
+        if (accident.vehicle_kind) {
+            const vehicleLower = accident.vehicle_kind.toLowerCase();
             return vehicleLower.includes('car') || vehicleLower.includes('sedan') || vehicleLower.includes('auto');
         }
+        return false;
+    }
 
-        // Check truck/pickup with fuzzy matching
-        if (truckKeywords.some(keyword => fuzzyMatch(searchLower, keyword, 0.7))) {
+    if (searchLower === 'pickup' || searchLower === 'pick-up' ||
+        searchLower === 'truck' || searchLower === 'lorry' || searchLower === 'pick up') {
+        if (accident.vehicle_kind) {
+            const vehicleLower = accident.vehicle_kind.toLowerCase();
             return vehicleLower.includes('pick-up') || vehicleLower.includes('truck') || vehicleLower.includes('lorry');
         }
-
-        // Fuzzy match against vehicle kind directly
-        if (fuzzyMatchField(searchLower, vehicleLower)) {
-            return true;
-        }
+        return false;
     }
-    
+
     // Enhanced cluster search - also search by cluster ID directly
     if (accident.cluster_id) {
         const clusterIdStr = accident.cluster_id.toString();
         if (clusterIdStr.includes(searchLower)) {
             return true;
         }
-        
+
         const hotspot = allHotspots.find(h => h.cluster_id === accident.cluster_id);
         if (hotspot) {
-            // Fuzzy match hotspot location with strict location matching
-            if (hotspot.primary_location && fuzzyMatchField(searchLower, hotspot.primary_location, true)) {
+            if (hotspot.primary_location && hotspot.primary_location.toLowerCase().includes(searchLower)) {
                 return true;
             }
 
-            // Fuzzy match municipalities with strict location matching
             if (hotspot.municipalities && Array.isArray(hotspot.municipalities)) {
                 for (let municipality of hotspot.municipalities) {
-                    if (municipality && fuzzyMatchField(searchLower, municipality, true)) {
+                    if (municipality && municipality.toLowerCase().includes(searchLower)) {
                         return true;
                     }
                 }
@@ -3423,32 +3417,20 @@ function passesSearchFilter(accident, query) {
         }
     }
 
-    // Location-based search with strict matching
-    // Separate location fields for stricter fuzzy matching
-    const locationFields = [
+    const searchFields = [
         accident.barangay,
         accident.municipal,
         accident.province,
-        accident.street
-    ].filter(field => field && field.toString().trim() !== '');
-
-    // Check location fields with strict fuzzy matching (isLocation = true)
-    for (const field of locationFields) {
-        if (fuzzyMatchField(searchLower, field.toString(), true)) {
-            return true;
-        }
-    }
-
-    // Other non-location fields with more lenient fuzzy matching
-    const otherFields = [
         accident.date_committed,
         accident.vehicle_kind,
         accident.incident_type,
+        accident.street,
         accident.type_of_place
     ].filter(field => field && field.toString().trim() !== '');
 
-    // Check other fields with standard fuzzy matching
-    return otherFields.some(field => fuzzyMatchField(searchLower, field.toString(), false));
+    return searchFields.some(field =>
+        field.toString().toLowerCase().includes(searchLower)
+    );
 }
 
 // ============================================================================
@@ -4806,18 +4788,17 @@ function generateLocationSuggestions(query) {
     const suggestions = [];
     const locations = new Set();
 
-    // Use strict fuzzy matching for location suggestions (isLocation = true)
     allAccidents.forEach(accident => {
-        if (accident.barangay && fuzzyMatchField(query, accident.barangay, true)) {
+        if (accident.barangay && accident.barangay.toLowerCase().includes(query)) {
             locations.add(accident.barangay);
         }
-        if (accident.municipal && fuzzyMatchField(query, accident.municipal, true)) {
+        if (accident.municipal && accident.municipal.toLowerCase().includes(query)) {
             locations.add(accident.municipal);
         }
-        if (accident.province && fuzzyMatchField(query, accident.province, true)) {
+        if (accident.province && accident.province.toLowerCase().includes(query)) {
             locations.add(accident.province);
         }
-        if (accident.street && fuzzyMatchField(query, accident.street, true)) {
+        if (accident.street && accident.street.toLowerCase().includes(query)) {
             locations.add(accident.street);
         }
     });
@@ -4847,9 +4828,8 @@ function generateIncidentSuggestions(query) {
     const suggestions = [];
     const incidents = new Set();
 
-    // Use fuzzy matching for incident suggestions
     allAccidents.forEach(accident => {
-        if (accident.incident_type && fuzzyMatchField(query, accident.incident_type)) {
+        if (accident.incident_type && accident.incident_type.toLowerCase().includes(query)) {
             incidents.add(accident.incident_type);
         }
     });
@@ -4889,9 +4869,8 @@ function generateVehicleSuggestions(query) {
     
     const suggestions = [];
 
-    // Use fuzzy matching for vehicle suggestions
     Object.entries(vehicleKeywords).forEach(([vehicle, keywords]) => {
-        if (keywords.some(keyword => fuzzyMatch(query, keyword, 0.7))) {
+        if (keywords.some(keyword => keyword.includes(query))) {
             suggestions.push({
                 text: vehicleMap[vehicle].display,
                 type: 'vehicle',
@@ -4920,9 +4899,8 @@ function generateSeveritySuggestions(query) {
     
     const suggestions = [];
 
-    // Use fuzzy matching for severity suggestions
     Object.entries(severityKeywords).forEach(([severity, keywords]) => {
-        if (keywords.some(keyword => fuzzyMatch(query, keyword, 0.75))) {
+        if (keywords.some(keyword => keyword.includes(query))) {
             suggestions.push({
                 text: severityMap[severity].display,
                 type: 'severity',
@@ -4936,9 +4914,8 @@ function generateSeveritySuggestions(query) {
 }
 
 function generateHistorySuggestions(query) {
-    // Use strict fuzzy matching for history suggestions since they often contain location names
     return searchHistory
-        .filter(item => fuzzyMatchField(query, item.query, true))
+        .filter(item => item.query.toLowerCase().includes(query))
         .slice(0, 3)
         .map(item => ({
             text: item.query,
@@ -5731,14 +5708,9 @@ function generateClusterSuggestions(query) {
     const suggestions = [];
     const queryLower = query.toLowerCase();
 
-    // Fuzzy match for cluster/hotspot keywords
-    const isClusterSearch = fuzzyMatch(queryLower, 'cluster', 0.7) ||
-                           fuzzyMatch(queryLower, 'hotspot', 0.7) ||
-                           queryLower.includes('#') ||
-                           /^\d+$/.test(queryLower.trim());
-
     // Check if query is specifically looking for clusters
-    if (isClusterSearch) {
+    if (queryLower.includes('cluster') || queryLower.includes('hotspot') ||
+        queryLower.includes('#') || /^\d+$/.test(queryLower.trim())) {
 
         // Search for exact cluster IDs
         const numericQuery = queryLower.replace(/[^\d]/g, '');
@@ -5760,10 +5732,11 @@ function generateClusterSuggestions(query) {
             }
         });
 
-        // Fuzzy search in cluster location descriptions with strict matching
+        // Also search in cluster descriptions
         allHotspots.forEach(hotspot => {
-            if (hotspot.primary_location &&
-                fuzzyMatchField(queryLower, hotspot.primary_location, true) &&
+            const locationLower = (hotspot.primary_location || '').toLowerCase();
+
+            if (locationLower.includes(queryLower) &&
                 !suggestions.some(s => s.clusterId === hotspot.cluster_id)) {
 
                 suggestions.push({
