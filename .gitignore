@@ -8,3 +8,29 @@ db.sqlite3
 *.log
 media/
 .DS_Store
+# Large data files (not needed in repo)
+*.csv
+*.xlsx
+*.xls
+
+# Personal/thesis folders (large files)
+Multimedia/
+MyManuscripts/
+
+# Large binary/document files
+*.mp4
+*.avi
+*.mov
+*.pdf
+*.pptx
+*.docx
+*.doc
+
+# Static files collected by Django
+staticfiles/
+
+# Cache folder
+cache/
+
+# IDE
+.vscode/

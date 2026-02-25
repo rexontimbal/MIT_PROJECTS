@@ -1,160 +1,2138 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Report New Accident{% endblock %}
+{% block title %}{% if is_resubmit %}Resubmit - {% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %}{% elif is_edit %}Edit - {% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %}{% else %}Report New Accident{% endif %}{% endblock %}
 
 {% block breadcrumb_items %}
-<span> / Report Accident</span>
+<span> / {% if is_resubmit %}Resubmit Report{% elif is_edit %}Edit Report{% else %}Report Accident{% endif %}</span>
 {% endblock %}
 
 {% block extra_css %}
 <style>
     .report-form-container {
-        max-width: 900px;
+        max-width: 1400px;
         margin: 0 auto;
+        position: relative;
     }
 
+    /* ===== SECTION PROGRESS STEPS ===== */
+    .form-progress {
+        display: flex;
+        justify-content: center;
+        gap: 0;
+        padding: 0.4rem 1rem;
+        overflow-x: auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border: 1px solid #F1F5F9;
+        margin-bottom: 0.85rem;
+    }
+
+    /* JS-toggled: when scrolled past its original position */
+    .form-progress.is-pinned {
+        position: fixed;
+        top: var(--navbar-height, 72px);
+        left: 0;
+        right: 0;
+        z-index: 10000;
+        margin: 0;
+        width: 100%;
+        max-width: none;
+        border-radius: 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: top 0.3s ease;
+    }
+
+    .form-progress.is-pinned.nav-hidden {
+        top: 0px;
+    }
+
+    /* Placeholder to prevent layout jump when pinned */
+    .form-progress-placeholder {
+        display: none;
+        margin-bottom: 0.85rem;
+    }
+
+    .form-progress-placeholder.show {
+        display: block;
+    }
+
+    [data-theme="dark"] .form-progress {
+        background: #1A2332;
+        border-color: #2D3A4F;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+
+    .form-progress-step {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.75rem;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: #94A3B8;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: color 0.2s;
+        border-bottom: 2px solid transparent;
+    }
+
+    .form-progress-step:hover { color: #64748B; }
+    .form-progress-step.active { color: var(--primary-blue); border-bottom-color: var(--primary-blue); }
+    .form-progress-step.completed { color: #10B981; }
+    .form-progress-step i { font-size: 0.75rem; }
+
+    /* ===== FORM SECTIONS ===== */
     .form-section {
         background: white;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-        margin-bottom: 2rem;
+        padding: 1.35rem 1.6rem;
+        border-radius: 14px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03);
+        margin-bottom: 0.85rem;
+        border: 1px solid #F1F5F9;
+        transition: box-shadow 0.2s;
+    }
+
+    .form-section:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
     }
 
     .form-section h3 {
-        color: var(--primary-blue);
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid var(--light-blue);
+        color: white;
+        margin: -1.35rem -1.6rem 1rem -1.6rem;
+        padding: 0.7rem 1.25rem;
+        background: linear-gradient(135deg, #003087 0%, #0047AB 100%);
+        border-radius: 14px 14px 0 0;
+        border-bottom: none;
+        font-size: 0.88rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-section h3 i {
+        color: white;
+        font-size: 0.85rem;
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 6px;
+    }
+
+    /* Officer Info Section — full blue block */
+    .officer-info-section {
+        background: linear-gradient(135deg, #003087 0%, #0047AB 100%) !important;
+        border: none !important;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .officer-info-section::before {
+        content: '';
+        position: absolute;
+        top: -40%;
+        right: -5%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .officer-info-section h3 {
+        background: rgba(255, 255, 255, 0.1) !important;
+        margin: -1.35rem -1.6rem 1rem -1.6rem;
+    }
+
+    .officer-info-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        position: relative;
+    }
+
+    .officer-info-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .officer-info-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .officer-info-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.3rem;
+    }
+
+    .officer-info-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.2rem 0.85rem;
+        font-size: 0.78rem;
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .officer-info-meta i {
+        color: rgba(255, 255, 255, 0.6);
+        margin-right: 0.2rem;
+        font-size: 0.72rem;
+    }
+
+    @media (max-width: 576px) {
+        .officer-info-card {
+            flex-direction: column;
+            text-align: center;
+        }
+        .officer-info-meta {
+            justify-content: center;
+        }
+        .officer-info-section h3 {
+            margin: -1rem -1rem 0.85rem -1rem;
+        }
+    }
+
+    [data-theme="dark"] .officer-info-section {
+        background: linear-gradient(135deg, #1E3A5F 0%, #0D47A1 100%) !important;
+    }
+
+    [data-theme="dark"] .officer-info-section h3 {
+        background: rgba(255, 255, 255, 0.08) !important;
     }
 
     .form-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 0.85rem;
+        margin-bottom: 0.5rem;
     }
 
     .form-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.65rem;
     }
 
     .form-group label {
         display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: var(--text-dark);
+        margin-bottom: 0.35rem;
+        font-weight: 600;
+        font-size: 0.78rem;
+        color: #374151;
+        letter-spacing: 0.01em;
     }
 
     .form-group label.required::after {
         content: ' *';
-        color: var(--danger-red);
+        color: #EF4444;
+        font-weight: 700;
     }
 
     .form-control {
         width: 100%;
-        padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        font-size: 1rem;
-        transition: var(--transition);
+        padding: 0.55rem 0.75rem;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        background: #FAFBFC;
+        color: #1E293B;
+    }
+
+    .form-control:hover {
+        border-color: #CBD5E1;
     }
 
     .form-control:focus {
         outline: none;
         border-color: var(--primary-blue);
-        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.1);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        background: white;
     }
 
     .form-control.error {
-        border-color: var(--danger-red);
+        border-color: #EF4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+    }
+
+    .form-errors-banner {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        padding: 0.75rem 1rem;
+        background: #FEF2F2;
+        border: 1px solid #FECACA;
+        border-left: 4px solid #EF4444;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        color: #991B1B;
+        font-size: 0.8rem;
+    }
+
+    .form-errors-banner i {
+        color: #EF4444;
+        font-size: 1.1rem;
+        margin-top: 0.1rem;
+    }
+
+    .form-errors-banner strong {
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .form-errors-banner ul {
+        margin: 0;
+        padding-left: 1.2rem;
+        line-height: 1.6;
+    }
+
+    [data-theme="dark"] .form-errors-banner {
+        background: #1C1917;
+        border-color: #7F1D1D;
+        color: #FCA5A5;
+    }
+
+    select.form-control {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 14px 14px;
+        padding-right: 2rem;
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+        line-height: 1.5;
+    }
+
+    textarea.form-control.auto-resize {
+        overflow: hidden;
+        resize: none;
+    }
+
+    /* ===== MODERN DATE/TIME PICKER ===== */
+    .datetime-picker-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .datetime-picker-wrapper .form-control {
+        padding-left: 2.4rem;
+        padding-right: 4.5rem;
+        font-weight: 600;
+        font-size: 0.88rem;
+        letter-spacing: 0.3px;
+        cursor: pointer;
+    }
+
+    .datetime-picker-icon {
+        position: absolute;
+        left: 0.8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--primary-blue);
+        font-size: 0.9rem;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .datetime-today-btn {
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: linear-gradient(135deg, var(--primary-blue), #1D4ED8);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.25rem 0.55rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        transition: all 0.2s;
+        z-index: 2;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .datetime-today-btn:hover {
+        background: linear-gradient(135deg, #1D4ED8, #1E40AF);
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    }
+
+    .time-quick-picks {
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        gap: 0.2rem;
+        z-index: 2;
+    }
+
+    .time-quick-btn {
+        background: #F1F5F9;
+        color: #475569;
+        border: 1px solid #E2E8F0;
+        border-radius: 5px;
+        padding: 0.2rem 0.4rem;
+        font-size: 0.6rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        letter-spacing: 0.3px;
+    }
+
+    .time-quick-btn:hover {
+        background: var(--primary-blue);
+        color: white;
+        border-color: var(--primary-blue);
+        transform: scale(1.08);
+    }
+
+    .datetime-picker-wrapper .form-control::-webkit-calendar-picker-indicator {
+        opacity: 0;
+        position: absolute;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    /* Dark mode */
+    [data-theme="dark"] .datetime-picker-icon {
+        color: #60A5FA;
+    }
+
+    [data-theme="dark"] .datetime-today-btn {
+        background: linear-gradient(135deg, #2563EB, #3B82F6);
+    }
+
+    [data-theme="dark"] .datetime-today-btn:hover {
+        background: linear-gradient(135deg, #3B82F6, #60A5FA);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+
+    [data-theme="dark"] .time-quick-btn {
+        background: #1E293B;
+        color: #94A3B8;
+        border-color: #334155;
+    }
+
+    [data-theme="dark"] .time-quick-btn:hover {
+        background: #3B82F6;
+        color: white;
+        border-color: #3B82F6;
     }
 
     .location-picker {
-        height: 400px;
+        height: 300px;
         border-radius: 12px;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
+        border: 2px solid #E2E8F0;
+        overflow: hidden;
+    }
+
+    .barangay-label {
+        background: rgba(37, 99, 235, 0.9);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 3px 10px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
     .help-text {
-        font-size: 0.85rem;
-        color: var(--text-light);
-        margin-top: 0.25rem;
+        font-size: 0.72rem;
+        color: #94A3B8;
+        margin-top: 0.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
     }
 
-    .photo-upload {
+    /* ===== NARRATIVE AUTO-GENERATE ===== */
+    .narrative-actions {
         display: flex;
-        gap: 1rem;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-generate-narrative {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 1rem;
+        background: linear-gradient(135deg, #7C3AED, #6D28D9);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        letter-spacing: 0.3px;
+    }
+
+    .btn-generate-narrative:hover {
+        background: linear-gradient(135deg, #6D28D9, #5B21B6);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    .btn-generate-narrative:active {
+        transform: translateY(0);
+    }
+
+    .btn-generate-narrative i {
+        font-size: 0.82rem;
+    }
+
+    .btn-clear-narrative {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.45rem 0.85rem;
+        background: #F3F4F6;
+        color: #6B7280;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-clear-narrative:hover {
+        background: #FEE2E2;
+        color: #DC2626;
+        border-color: #FECACA;
+    }
+
+    .btn-clear-narrative i {
+        font-size: 0.75rem;
+    }
+
+    [data-theme="dark"] .btn-clear-narrative {
+        background: #1E293B;
+        color: #9CA3AF;
+        border-color: #334155;
+    }
+
+    [data-theme="dark"] .btn-clear-narrative:hover {
+        background: #3B1111;
+        color: #F87171;
+        border-color: #7F1D1D;
+    }
+
+    .narrative-hint {
+        font-size: 0.7rem;
+        color: #9CA3AF;
+        font-style: italic;
+    }
+
+    [data-theme="dark"] .btn-generate-narrative {
+        background: linear-gradient(135deg, #7C3AED, #8B5CF6);
+    }
+
+    [data-theme="dark"] .btn-generate-narrative:hover {
+        background: linear-gradient(135deg, #8B5CF6, #A78BFA);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+    }
+
+    [data-theme="dark"] .narrative-hint {
+        color: #6B7280;
+    }
+
+    /* ===== NARRATIVE PLACEHOLDER CHIPS ===== */
+    .narrative-placeholders {
+        margin-top: 0.5rem;
+    }
+
+    .placeholder-bar {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.5rem 0.65rem;
+        background: linear-gradient(135deg, #FFF7ED, #FFFBEB);
+        border: 1px solid #FDE68A;
+        border-radius: 10px;
+    }
+
+    .placeholder-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #D97706;
+        white-space: nowrap;
+        padding-top: 0.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .placeholder-chips {
+        display: flex;
         flex-wrap: wrap;
+        gap: 0.3rem;
+    }
+
+    .placeholder-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.55rem;
+        background: white;
+        border: 1px solid #FCD34D;
+        border-radius: 6px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: #92400E;
+        cursor: pointer;
+        transition: all 0.2s;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .placeholder-chip:hover {
+        background: #FEF3C7;
+        border-color: #F59E0B;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+    }
+
+    .placeholder-chip.filled {
+        background: #ECFDF5;
+        border-color: #6EE7B7;
+        color: #065F46;
+        text-decoration: line-through;
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .placeholder-chip i {
+        font-size: 0.6rem;
+    }
+
+    [data-theme="dark"] .placeholder-bar {
+        background: linear-gradient(135deg, #1C1917, #1A1A2E);
+        border-color: #92400E;
+    }
+
+    [data-theme="dark"] .placeholder-label {
+        color: #FBBF24;
+    }
+
+    [data-theme="dark"] .placeholder-chip {
+        background: #292524;
+        border-color: #78350F;
+        color: #FCD34D;
+    }
+
+    [data-theme="dark"] .placeholder-chip:hover {
+        background: #44403C;
+        border-color: #F59E0B;
+    }
+
+    [data-theme="dark"] .placeholder-chip.filled {
+        background: #064E3B;
+        border-color: #065F46;
+        color: #6EE7B7;
+    }
+
+    /* ===== PHOTO UPLOAD ===== */
+    .photo-upload {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
     }
 
     .photo-upload-item {
-        flex: 1;
-        min-width: 200px;
+        min-width: 0;
     }
 
+    .photo-upload-item .form-group {
+        margin-bottom: 0;
+    }
+
+    .photo-upload-item input[type="file"] {
+        display: none;
+    }
+
+    .photo-drop-zone {
+        position: relative;
+        width: 100%;
+        min-height: 150px;
+        border: 2px dashed #D1D5DB;
+        border-radius: 12px;
+        background: #FAFBFC;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .photo-drop-zone:hover {
+        border-color: #93C5FD;
+        background: #EFF6FF;
+    }
+
+    .photo-drop-zone.dragover {
+        border-color: #3B82F6;
+        background: #DBEAFE;
+        transform: scale(1.02);
+    }
+
+    .photo-drop-zone.has-photo {
+        border-style: solid;
+        border-color: #10B981;
+        padding: 0;
+    }
+
+    .photo-drop-placeholder {
+        text-align: center;
+        padding: 1rem;
+        color: #9CA3AF;
+    }
+
+    .photo-drop-placeholder i {
+        font-size: 1.8rem;
+        margin-bottom: 0.4rem;
+        color: #CBD5E1;
+        display: block;
+    }
+
+    .photo-drop-placeholder .drop-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6B7280;
+    }
+
+    .photo-drop-placeholder .drop-hint {
+        font-size: 0.65rem;
+        color: #9CA3AF;
+        margin-top: 0.15rem;
+    }
+
+    .photo-preview-img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 10px;
+        display: block;
+    }
+
+    .photo-remove-btn {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+        border: 2px solid white;
+        font-size: 0.65rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        z-index: 2;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .photo-remove-btn:hover {
+        background: #DC2626;
+        transform: scale(1.15);
+    }
+
+    .photo-existing-label {
+        position: absolute;
+        bottom: 6px;
+        left: 6px;
+        background: rgba(16, 185, 129, 0.9);
+        color: white;
+        font-size: 0.6rem;
+        font-weight: 700;
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        z-index: 2;
+    }
+
+    /* ===== FORM ACTIONS ===== */
     .form-actions {
         display: flex;
-        gap: 1rem;
+        gap: 0.75rem;
         justify-content: flex-end;
-        margin-top: 2rem;
+        margin-top: 0.5rem;
+        padding: 1.25rem 1.6rem;
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03);
+        border: 1px solid #F1F5F9;
     }
 
+    .form-actions .btn {
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .form-actions .btn-primary {
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+
+    .form-actions .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+    }
+
+    /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
         .form-row {
             grid-template-columns: 1fr;
         }
 
         .photo-upload {
+            grid-template-columns: 1fr;
+        }
+
+        .report-form-container {
+            padding: 0 0.25rem;
+        }
+
+        .form-section {
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .form-section h3 {
+            margin: -1rem -1rem 0.85rem -1rem;
+            padding: 0.6rem 1rem;
+            font-size: 0.82rem;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .form-section h3 i {
+            width: 22px;
+            height: 22px;
+            font-size: 0.75rem;
+        }
+
+        .form-actions {
             flex-direction: column;
+            padding: 1rem;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .location-picker {
+            height: 220px;
+        }
+
+        .person-rows-header {
+            display: none !important;
+        }
+
+        .person-row {
+            display: flex !important;
+            flex-direction: column !important;
+            grid-template-columns: none !important;
+            gap: 0.6rem;
+            padding: 1rem;
+            padding-top: 2.2rem;
+            position: relative;
+            border-radius: 12px;
+            margin-bottom: 0.6rem;
+            border: 1.5px solid #E2E8F0 !important;
+            background: #FAFBFE;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .person-field {
+            display: flex !important;
+            flex-direction: column;
+            gap: 0.25rem;
+            width: 100%;
+        }
+
+        .person-field-row {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+            width: 100%;
+        }
+
+        .person-field-label {
+            display: block !important;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #3B82F6;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.1rem;
+        }
+
+        .person-row input,
+        .person-row select {
+            width: 100% !important;
+            font-size: 0.88rem !important;
+            padding: 0.55rem 0.7rem !important;
+            border-radius: 8px !important;
+            border: 1.5px solid #D1D5DB !important;
+            min-height: 42px;
+            -webkit-appearance: none;
+        }
+
+        .person-row select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 0.6rem center !important;
+            background-size: 14px 14px !important;
+            padding-right: 2rem !important;
+        }
+
+        .person-row input:focus,
+        .person-row select:focus {
+            border-color: #3B82F6 !important;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
+        }
+
+        .person-row input[type="text"].p-name {
+            font-size: 0.95rem !important;
+            font-weight: 600;
+        }
+
+        .person-row .btn-remove-row {
+            position: absolute;
+            top: 0.55rem;
+            right: 0.55rem;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #FEE2E2;
+            color: #EF4444;
+            font-size: 0.7rem;
+        }
+
+        .person-row .occupation-cell {
+            width: 100%;
+        }
+
+        .person-row .p-occupation-other {
+            margin-top: 0.3rem;
+        }
+
+        .person-row-count {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.7rem;
+        }
+
+        .section-header-row {
+            margin: -1rem -1rem 0.85rem -1rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 12px 12px 0 0;
+            flex-wrap: nowrap;
+            gap: 0.4rem;
+        }
+
+        .section-header-row h3 {
+            font-size: 0.75rem !important;
+            white-space: nowrap;
+        }
+
+        .section-header-row .btn-add-person {
+            padding: 0.3rem 0.55rem;
+            font-size: 0.62rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .casualties-auto-summary {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .narrative-actions {
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .btn-generate-narrative {
+            padding: 0.35rem 0.7rem;
+            font-size: 0.7rem;
+            white-space: nowrap;
+        }
+
+        .btn-generate-narrative i {
+            font-size: 0.7rem;
+        }
+
+        .btn-clear-narrative {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.7rem;
+            white-space: nowrap;
+        }
+
+        .narrative-actions .narrative-hint {
+            width: 100%;
+        }
+
+        .narrative-hint {
+            font-size: 0.62rem;
+        }
+
+        .form-progress {
+            gap: 0;
+            margin-bottom: 0.75rem;
+            justify-content: space-around;
+            padding: 0.35rem 0.25rem;
+            overflow-x: visible;
+        }
+
+        .form-progress-step {
+            padding: 0.4rem;
+            gap: 0;
+            border-bottom: none;
+            border-radius: 8px;
+        }
+
+        .form-progress-step .step-label {
+            display: none;
+        }
+
+        .form-progress-step i {
+            font-size: 0.9rem;
+        }
+
+        .form-progress-step.active {
+            background: rgba(37, 99, 235, 0.12);
+            border-bottom: none;
+            color: var(--primary-blue);
+        }
+
+        .form-progress-step.completed {
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .form-progress.is-pinned {
+            width: 100%;
+            border-radius: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
     }
+
+    /* Draft saved indicator */
+    /* Small toast — for "Draft saved" (bottom-right) */
+    .draft-indicator {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        z-index: 1000;
+        transition: opacity 0.3s, transform 0.3s;
+        opacity: 0;
+        transform: translateY(10px);
+        pointer-events: none;
+        background: #D1FAE5;
+        color: #065F46;
+        border: 1px solid #A7F3D0;
+    }
+
+    .draft-indicator.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    [data-theme="dark"] .draft-indicator {
+        background: rgba(5, 150, 105, 0.2);
+        color: #6EE7B7;
+        border-color: rgba(5, 150, 105, 0.3);
+    }
+
+    /* "Draft restored" toast — top center, compact */
+    .draft-restored-toast {
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1100;
+        background: #DBEAFE;
+        color: #1E40AF;
+        border: 1px solid #93C5FD;
+        padding: 0.45rem 0.9rem;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 3px 12px rgba(37, 99, 235, 0.15);
+        animation: restoredPop 0.3s ease;
+    }
+
+    @keyframes restoredPop {
+        from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    [data-theme="dark"] .draft-restored-toast {
+        background: rgba(37, 99, 235, 0.2);
+        color: #93C5FD;
+        border-color: rgba(37, 99, 235, 0.3);
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .draft-restored-toast.discarded {
+        background: #FEE2E2;
+        color: #991B1B;
+        border-color: #FECACA;
+        box-shadow: 0 3px 12px rgba(220, 38, 38, 0.15);
+    }
+
+    [data-theme="dark"] .draft-restored-toast.discarded {
+        background: rgba(220, 38, 38, 0.2);
+        color: #FCA5A5;
+        border-color: rgba(220, 38, 38, 0.3);
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    /* ===== Floating Draft Button & Panel ===== */
+    .draft-fab {
+        position: fixed;
+        bottom: 24px;
+        left: 24px;
+        z-index: 10001;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+        transition: all 0.2s;
+    }
+
+    .draft-fab:hover {
+        transform: scale(1.08);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+    }
+
+    .draft-fab-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        min-width: 20px;
+        height: 20px;
+        background: #DC2626;
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 700;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+        border: 2px solid white;
+    }
+
+    .draft-panel {
+        position: fixed;
+        bottom: 80px;
+        left: 24px;
+        z-index: 10001;
+        width: 280px;
+        max-height: 400px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        border: 1px solid #E5E7EB;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        animation: draftSlideUp 0.2s ease;
+    }
+
+    .draft-panel.open {
+        display: flex;
+    }
+
+    @keyframes draftSlideUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .draft-panel-header {
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        padding: 0.7rem 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .draft-panel-header i { color: white; font-size: 0.9rem; }
+
+    .draft-panel-header .draft-count {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+        font-size: 0.65rem;
+        padding: 0.1rem 0.45rem;
+        border-radius: 10px;
+    }
+
+    .draft-panel-header .draft-close {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 0.15rem;
+        transition: color 0.15s;
+    }
+
+    .draft-panel-header .draft-close:hover { color: white; }
+
+    .draft-panel-body {
+        overflow-y: auto;
+        padding: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .draft-item {
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 8px;
+        padding: 0.55rem 0.65rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        transition: all 0.15s;
+    }
+
+    .draft-item:hover {
+        border-color: #93C5FD;
+        background: #EFF6FF;
+    }
+
+    .draft-item-info {
+        flex: 1;
+        color: #374151;
+        line-height: 1.3;
+    }
+
+    .draft-item-info .draft-label {
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .draft-item-info .draft-time {
+        color: #9CA3AF;
+        font-size: 0.65rem;
+        display: block;
+        margin-top: 1px;
+    }
+
+    .draft-item-preview {
+        display: none;
+    }
+
+    .draft-item-actions {
+        display: flex;
+        gap: 0.25rem;
+        flex-shrink: 0;
+    }
+
+    .draft-item .btn-restore {
+        padding: 0.3rem 0.55rem;
+        background: #2563EB;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.66rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .draft-item .btn-restore:hover { background: #1D4ED8; }
+
+    .draft-item .btn-discard {
+        padding: 0.3rem 0.4rem;
+        background: white;
+        color: #9CA3AF;
+        border: 1px solid #D1D5DB;
+        border-radius: 5px;
+        font-size: 0.66rem;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .draft-item .btn-discard:hover { background: #FEE2E2; color: #DC2626; border-color: #FECACA; }
+
+    .draft-clear-all {
+        text-align: center;
+        font-size: 0.7rem;
+        color: #9CA3AF;
+        cursor: pointer;
+        padding: 0.4rem 0;
+        border-top: 1px solid #F3F4F6;
+        margin: 0 0.5rem;
+        transition: color 0.15s;
+    }
+
+    .draft-clear-all:hover { color: #DC2626; }
+
+    /* Dark theme */
+    [data-theme="dark"] .draft-fab {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+    [data-theme="dark"] .draft-fab-badge { border-color: #1A2332; }
+
+    [data-theme="dark"] .draft-panel {
+        background: #1A2332;
+        border-color: #2D3A4F;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+    [data-theme="dark"] .draft-panel-header {
+        background: linear-gradient(135deg, #1E3A5F 0%, #1D4ED8 100%);
+    }
+    [data-theme="dark"] .draft-item {
+        background: #0F172A;
+        border-color: #2D3A4F;
+    }
+    [data-theme="dark"] .draft-item:hover { border-color: #3D5A80; background: #1E293B; }
+    [data-theme="dark"] .draft-item-info { color: #D1D5DB; }
+    [data-theme="dark"] .draft-item-info .draft-time { color: #6B7280; }
+    [data-theme="dark"] .draft-item .btn-discard { background: #0F172A; color: #6B7280; border-color: #3D4A5F; }
+    [data-theme="dark"] .draft-clear-all { color: #6B7280; border-top-color: #2D3A4F; }
+
+    @media (max-width: 768px) {
+        .draft-fab { bottom: 75px; left: 16px; width: 44px; height: 44px; font-size: 1rem; }
+        .draft-panel { bottom: 127px; left: 16px; width: calc(100vw - 32px); }
+    }
+    /* Custom confirm dialog */
+    .confirm-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.35);
+        z-index: 99999;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 5px;
+        animation: confirmFadeIn 0.15s ease;
+    }
+    @keyframes confirmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes confirmSlideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .confirm-dialog {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+        width: 340px;
+        max-width: 92vw;
+        overflow: hidden;
+        animation: confirmSlideDown 0.2s ease;
+    }
+
+    .confirm-dialog-body {
+        padding: 1.1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .confirm-dialog-icon {
+        font-size: 1.35rem;
+        color: #F59E0B;
+        flex-shrink: 0;
+    }
+
+    .confirm-dialog-msg {
+        font-size: 0.85rem;
+        color: #1F2937;
+        line-height: 1.4;
+    }
+
+    .confirm-dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        padding: 0.65rem 1.25rem;
+        background: #F9FAFB;
+        border-top: 1px solid #E5E7EB;
+    }
+
+    .confirm-dialog .btn-cancel {
+        padding: 0.4rem 1rem;
+        background: white;
+        color: #6B7280;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .confirm-dialog .btn-cancel:hover { background: #F3F4F6; }
+
+    .confirm-dialog .btn-confirm {
+        padding: 0.4rem 1rem;
+        background: #DC2626;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .confirm-dialog .btn-confirm:hover { background: #B91C1C; }
+
+    [data-theme="dark"] .confirm-dialog { background: #1E293B; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+    [data-theme="dark"] .confirm-dialog-msg { color: #E5E7EB; }
+    [data-theme="dark"] .confirm-dialog-actions { background: #0F172A; border-color: #334155; }
+    [data-theme="dark"] .confirm-dialog .btn-cancel { background: #1E293B; color: #9CA3AF; border-color: #475569; }
+    [data-theme="dark"] .confirm-dialog .btn-cancel:hover { background: #334155; }
+
+    /* Duplicate Warning */
+    .duplicate-warning {
+        background: #FEF3C7;
+        border: 1px solid #FCD34D;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .duplicate-warning.show { display: block; }
+
+    .duplicate-warning-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #92400E;
+        margin-bottom: 0.5rem;
+    }
+
+    .duplicate-warning-header i { font-size: 1rem; }
+
+    .duplicate-item {
+        background: white;
+        border: 1px solid #E5E7EB;
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 0.35rem;
+        font-size: 0.78rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .duplicate-item-info { color: #374151; }
+    .duplicate-item-info strong { color: #1F2937; }
+    .duplicate-item-badge {
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 0.15rem 0.45rem;
+        border-radius: 10px;
+        white-space: nowrap;
+    }
+
+    .duplicate-item-badge.pending { background: #FEF3C7; color: #D97706; }
+    .duplicate-item-badge.verified { background: #D1FAE5; color: #059669; }
+    .duplicate-item-badge.official { background: #DBEAFE; color: #1D4ED8; }
+
+    .duplicate-dismiss {
+        font-size: 0.75rem;
+        color: #92400E;
+        text-decoration: underline;
+        cursor: pointer;
+        border: none;
+        background: none;
+        margin-top: 0.35rem;
+    }
+
+    [data-theme="dark"] .duplicate-warning {
+        background: rgba(245, 158, 11, 0.1);
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+    [data-theme="dark"] .duplicate-warning-header { color: #FCD34D; }
+    [data-theme="dark"] .duplicate-item {
+        background: #1A2332;
+        border-color: #2D3A4F;
+    }
+    [data-theme="dark"] .duplicate-item-info { color: #E8E8E8; }
+    [data-theme="dark"] .duplicate-item-info strong { color: #FFFFFF; }
+    [data-theme="dark"] .duplicate-dismiss { color: #FCD34D; }
+
+    /* ===== DYNAMIC PERSON ROWS (Victim/Suspect) ===== */
+    .section-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: -1.35rem -1.6rem 1rem -1.6rem;
+        padding: 0.7rem 1.25rem;
+        background: linear-gradient(135deg, #003087 0%, #0047AB 100%);
+        border-radius: 14px 14px 0 0;
+    }
+
+    .section-header-row h3 {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+    }
+
+    .section-header-row .btn-add-person {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: white;
+        backdrop-filter: blur(4px);
+        box-shadow: none;
+    }
+
+    .section-header-row .btn-add-person:hover {
+        background: rgba(255,255,255,0.3);
+        box-shadow: none;
+        transform: none;
+    }
+
+    .btn-add-person {
+        background: #10B981;
+        color: white;
+        border: none;
+        padding: 0.35rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.2s;
+        box-shadow: 0 1px 4px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-add-person:hover {
+        background: #059669;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .person-rows-header {
+        display: grid;
+        grid-template-columns: 2fr 0.6fr 1fr 1fr 1fr 1fr 32px;
+        gap: 0.35rem;
+        padding: 0.35rem 0.6rem;
+        background: linear-gradient(135deg, #EFF6FF, #F0F9FF);
+        border-radius: 10px 10px 0 0;
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        border: 1px solid #E2E8F0;
+        border-bottom: none;
+    }
+
+    /* Desktop: wrapper divs use display:contents so grid still works */
+    .person-field {
+        display: contents;
+    }
+    .person-field-row {
+        display: contents;
+    }
+    .person-field-label {
+        display: none;
+    }
+
+    .person-row {
+        display: grid;
+        grid-template-columns: 2fr 0.6fr 1fr 1fr 1fr 1fr 32px;
+        gap: 0.35rem;
+        padding: 0.4rem 0.6rem;
+        background: white;
+        border: 1px solid #E2E8F0;
+        border-top: none;
+        align-items: center;
+        transition: background 0.15s;
+    }
+
+    .person-row:hover {
+        background: #FAFBFE;
+    }
+
+    .person-row:last-child {
+        border-radius: 0 0 10px 10px;
+    }
+
+    .person-row:only-child {
+        border-radius: 0 0 10px 10px;
+    }
+
+    .person-row input,
+    .person-row select {
+        width: 100%;
+        padding: 0.35rem 0.45rem;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        background: #FAFBFC;
+        color: #1E293B;
+        transition: all 0.15s;
+    }
+
+    .person-row input:focus,
+    .person-row select:focus {
+        outline: none;
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+        background: white;
+    }
+
+    .occupation-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .occupation-cell select,
+    .occupation-cell input {
+        width: 100%;
+    }
+
+    .p-occupation-other {
+        border: 1.5px solid #F59E0B !important;
+        background: #FFFBEB !important;
+        font-size: 0.75rem;
+    }
+
+    [data-theme="dark"] .p-occupation-other {
+        background: #422006 !important;
+        border-color: #D97706 !important;
+        color: #FDE68A !important;
+    }
+
+    .btn-remove-row {
+        background: none;
+        border: none;
+        color: #CBD5E1;
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 0.25rem;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .btn-remove-row:hover {
+        background: #FEE2E2;
+        color: #EF4444;
+    }
+
+    .person-row-count {
+        font-size: 0.7rem;
+        color: #94A3B8;
+        margin-top: 0.4rem;
+        text-align: right;
+    }
+
+    /* ===== AUTO CASUALTY SUMMARY ===== */
+    .casualties-auto-summary {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.6rem;
+        padding: 0.5rem 0.75rem;
+        background: linear-gradient(135deg, #F8FAFC, #F1F5F9);
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: 1px solid #E2E8F0;
+    }
+
+    .casualty-count-killed {
+        color: #DC2626;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .casualty-count-injured {
+        color: #D97706;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .casualty-count-unharmed {
+        color: #059669;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .casualty-count-released {
+        color: #2563EB;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .casualty-count-arrested {
+        color: #7C3AED;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .casualty-count-atlarge {
+        color: #EA580C;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .casualty-count-hospitalized {
+        color: #0891B2;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    [data-theme="dark"] .casualties-auto-summary {
+        background: #0F172A;
+    }
+
+    /* ===== DARK THEME STYLES ===== */
+    [data-theme="dark"] .form-section {
+        background: #1A2332;
+        border-color: #2D3A4F;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+
+    [data-theme="dark"] .form-section:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    [data-theme="dark"] .form-section h3 {
+        background: linear-gradient(135deg, #1E3A5F 0%, #0D47A1 100%);
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .section-header-row {
+        background: linear-gradient(135deg, #1E3A5F 0%, #0D47A1 100%);
+    }
+
+    [data-theme="dark"] .form-section h3 i {
+        color: white;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    [data-theme="dark"] .form-group label {
+        color: #D1D5DB;
+    }
+
+    [data-theme="dark"] .form-control {
+        background: #0F172A;
+        border-color: #334155;
+        color: #E2E8F0;
+    }
+
+    [data-theme="dark"] .form-control:hover {
+        border-color: #475569;
+    }
+
+    [data-theme="dark"] .form-control:focus {
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        background: #1A2332;
+    }
+
+    [data-theme="dark"] .form-control::placeholder {
+        color: #64748B;
+    }
+
+    [data-theme="dark"] select.form-control {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 14px 14px;
+    }
+
+    [data-theme="dark"] .help-text {
+        color: #64748B;
+    }
+
+    [data-theme="dark"] .page-header h2 {
+        color: #F1F5F9;
+    }
+
+    [data-theme="dark"] .page-header p {
+        color: #94A3B8;
+    }
+
+    [data-theme="dark"] .btn-outline {
+        background: transparent;
+        border-color: #334155;
+        color: #D1D5DB;
+    }
+
+    [data-theme="dark"] .btn-outline:hover {
+        background: #334155;
+        border-color: #3B82F6;
+    }
+
+    [data-theme="dark"] select.form-control option {
+        background: #1A2332;
+        color: #E2E8F0;
+    }
+
+    [data-theme="dark"] .person-rows-header {
+        background: linear-gradient(135deg, #0F172A, #1A2332);
+        border-color: #2D3A4F;
+        color: #64748B;
+    }
+
+    [data-theme="dark"] .person-field-label {
+        color: #60A5FA;
+    }
+
+    /* Dark mode mobile person-row card and inputs */
+    @media (max-width: 768px) {
+        [data-theme="dark"] .person-row {
+            background: #0F172A;
+            border-color: #334155 !important;
+        }
+
+        [data-theme="dark"] .person-row input {
+            background-color: #1E293B !important;
+            border-color: #334155 !important;
+            color: #E2E8F0 !important;
+        }
+
+        [data-theme="dark"] .person-row input:focus {
+            background-color: #263548 !important;
+            border-color: #3B82F6 !important;
+        }
+
+        [data-theme="dark"] .person-row select {
+            background-color: #1E293B !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 0.6rem center !important;
+            background-size: 14px 14px !important;
+            border-color: #334155 !important;
+            color: #E2E8F0 !important;
+        }
+
+        [data-theme="dark"] .person-row select:focus {
+            background-color: #263548 !important;
+            border-color: #3B82F6 !important;
+        }
+
+        [data-theme="dark"] .person-row .btn-remove-row {
+            background: #1E1E2E;
+            color: #F87171;
+        }
+    }
+
+    [data-theme="dark"] .person-row {
+        background: #0F172A;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .person-row:hover {
+        background: #1A2332;
+    }
+
+    [data-theme="dark"] .person-row input,
+    [data-theme="dark"] .person-row select {
+        background: #1A2332;
+        border-color: #334155;
+        color: #E2E8F0;
+    }
+
+    [data-theme="dark"] .person-row input:focus,
+    [data-theme="dark"] .person-row select:focus {
+        border-color: #3B82F6;
+        background: #1E293B;
+    }
+
+    [data-theme="dark"] .btn-remove-row {
+        color: #475569;
+    }
+
+    [data-theme="dark"] .btn-remove-row:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #EF4444;
+    }
+
+    [data-theme="dark"] .form-control[readonly] {
+        background: #0F172A !important;
+        color: #64748B !important;
+        border-color: #1E293B !important;
+    }
+
+    [data-theme="dark"] .casualties-auto-summary {
+        background: linear-gradient(135deg, #0F172A, #1A2332);
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .form-actions {
+        background: #1A2332;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .photo-drop-zone {
+        background: #0F172A;
+        border-color: #334155;
+    }
+
+    [data-theme="dark"] .photo-drop-zone:hover {
+        border-color: #3B82F6;
+        background: #1A2332;
+    }
+
+    [data-theme="dark"] .photo-drop-zone.dragover {
+        border-color: #60A5FA;
+        background: #1E3A5F;
+    }
+
+    [data-theme="dark"] .photo-drop-placeholder i {
+        color: #475569;
+    }
+
+    [data-theme="dark"] .photo-drop-placeholder .drop-label {
+        color: #94A3B8;
+    }
+
+    [data-theme="dark"] .photo-drop-placeholder .drop-hint {
+        color: #64748B;
+    }
+
+    [data-theme="dark"] .form-progress-step { color: #475569; }
+    [data-theme="dark"] .form-progress-step:hover { color: #64748B; }
+    [data-theme="dark"] .form-progress-step.active { color: #60A5FA; border-bottom-color: #60A5FA; }
+    [data-theme="dark"] .form-progress-step.completed { color: #34D399; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="report-form-container">
     <div class="page-header">
-        <h2>📝 Report New Accident</h2>
-        <p>Fill in the details below to report a traffic accident</p>
+        <h2>{% if is_resubmit %}🔄 Resubmit Report{% elif is_edit %}✏️ Edit Report{% else %}📝 Report New Accident{% endif %}</h2>
+        <p>{% if is_resubmit %}Update and resubmit your rejected report for review{% elif is_edit %}Update the details of your submitted report{% else %}Fill in the details below to report a traffic accident{% endif %}</p>
+    </div>
+
+    <!-- Section Progress Steps -->
+    <div id="formProgressAnchor"></div>
+    <div class="form-progress" id="formProgress">
+        <div class="form-progress-step active" data-section="0"><i class="fas fa-user-shield"></i><span class="step-label"> Officer</span></div>
+        <div class="form-progress-step" data-section="1"><i class="fas fa-clipboard-list"></i><span class="step-label"> Incident</span></div>
+        <div class="form-progress-step" data-section="2"><i class="fas fa-map-marker-alt"></i><span class="step-label"> Location</span></div>
+        <div class="form-progress-step" data-section="3"><i class="fas fa-user-injured"></i><span class="step-label"> Victims</span></div>
+        <div class="form-progress-step" data-section="4"><i class="fas fa-id-card"></i><span class="step-label"> Suspect</span></div>
+        <div class="form-progress-step" data-section="5"><i class="fas fa-car"></i><span class="step-label"> Vehicle</span></div>
+        <div class="form-progress-step" data-section="6"><i class="fas fa-file-alt"></i><span class="step-label"> Narrative</span></div>
+        <div class="form-progress-step" data-section="7"><i class="fas fa-camera"></i><span class="step-label"> Photos</span></div>
+    </div>
+
+    <!-- Duplicate Warning Box -->
+    <div class="duplicate-warning" id="duplicateWarning">
+        <div class="duplicate-warning-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Possible Duplicate Report Detected</span>
+        </div>
+        <div id="duplicateItems"></div>
+        <button type="button" class="duplicate-dismiss" onclick="document.getElementById('duplicateWarning').classList.remove('show')">
+            Dismiss — I'm sure this is a new incident
+        </button>
     </div>
 
     <form method="post" enctype="multipart/form-data" id="accidentReportForm">
         {% csrf_token %}
 
-        <!-- Reporter Information -->
-        <div class="form-section">
-            <h3>👤 Reporter Information</h3>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="id_reporter_name" class="required">Full Name</label>
-                    {{ form.reporter_name }}
-                    {% if form.reporter_name.errors %}
-                        <span class="help-text" style="color: var(--danger-red);">{{ form.reporter_name.errors.0 }}</span>
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    <label for="id_reporter_contact" class="required">Contact Number/Email</label>
-                    {{ form.reporter_contact }}
-                    {% if form.reporter_contact.errors %}
-                        <span class="help-text" style="color: var(--danger-red);">{{ form.reporter_contact.errors.0 }}</span>
-                    {% endif %}
-                </div>
+        {% if form.errors %}
+        <div class="form-errors-banner">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <strong>Please fix the following errors:</strong>
+                <ul>
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                    <li>{{ field|title }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                </ul>
             </div>
         </div>
+        {% endif %}
 
-        <!-- Incident Date & Time -->
+        <!-- Section 1: Reporting Officer (Auto-display from profile) -->
+        <div class="form-section officer-info-section">
+            <h3><i class="fas fa-user-shield"></i> Reporting Officer</h3>
+            <div class="officer-info-card">
+                <div class="officer-info-avatar">
+                    {% if user.profile and user.profile.profile_picture %}
+                    <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}">
+                    {% else %}
+                    {{ user.username|first|upper }}
+                    {% endif %}
+                </div>
+                <div class="officer-info-details">
+                    <div class="officer-info-name">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="officer-info-meta">
+                        {% if user.profile %}
+                        <span><i class="fas fa-star"></i> {{ user.profile.get_rank_display }}</span>
+                        <span><i class="fas fa-id-badge"></i> {{ user.profile.badge_number|default:"—" }}</span>
+                        {% endif %}
+                        <span><i class="fas fa-envelope"></i> {{ user.email|default:"—" }}</span>
+                        <span><i class="fas fa-phone"></i> {% if user.profile %}{{ user.profile.mobile_number|default:user.profile.phone_number|default:"—" }}{% else %}—{% endif %}</span>
+                        {% if user.profile and user.profile.station %}
+                        <span><i class="fas fa-building"></i> {{ user.profile.station }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- Hidden inputs for form submission & narrative JS -->
+            <input type="hidden" name="reporter_name" id="id_reporter_name" value="{{ user.get_full_name|default:user.username }}">
+            <input type="hidden" name="reporter_contact" id="id_reporter_contact" value="{% if user.profile %}{{ user.profile.mobile_number|default:user.profile.phone_number|default:user.email }}{% else %}{{ user.email }}{% endif %}">
+        </div>
+
+        <!-- Section 2: Incident Details -->
         <div class="form-section">
-            <h3>📅 When Did It Happen?</h3>
+            <h3><i class="fas fa-clipboard-list"></i> Incident Details</h3>
             <div class="form-row">
                 <div class="form-group">
                     <label for="id_incident_date" class="required">Date of Incident</label>
-                    {{ form.incident_date }}
+                    <div class="datetime-picker-wrapper">
+                        <i class="fas fa-calendar-alt datetime-picker-icon"></i>
+                        {{ form.incident_date }}
+                        <button type="button" class="datetime-today-btn" onclick="setToday()" title="Set to today">
+                            <i class="fas fa-clock"></i> Now
+                        </button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="id_incident_time" class="required">Time of Incident</label>
-                    {{ form.incident_time }}
+                    <div class="datetime-picker-wrapper">
+                        <i class="fas fa-clock datetime-picker-icon"></i>
+                        {{ form.incident_time }}
+                        <div class="time-quick-picks">
+                            <button type="button" class="time-quick-btn" onclick="setQuickTime('06:00')" title="Morning">AM</button>
+                            <button type="button" class="time-quick-btn" onclick="setQuickTime('12:00')" title="Noon">12P</button>
+                            <button type="button" class="time-quick-btn" onclick="setQuickTime('18:00')" title="Evening">PM</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_incident_type" class="required">Incident Type</label>
+                    {{ form.incident_type }}
+                    <div id="incident_type_other_wrapper" class="other-specify" style="display:none; margin-top:0.4rem;">
+                        {{ form.incident_type_other }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_type_of_place">Type of Place</label>
+                    {{ form.type_of_place }}
+                    <div id="type_of_place_other_wrapper" class="other-specify" style="display:none; margin-top:0.4rem;">
+                        {{ form.type_of_place_other }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Offense / Legal Classification -->
+            <div class="form-row" style="margin-top: 0.5rem;">
+                <div class="form-group" style="flex: 2;">
+                    <label for="id_offense">Offense</label>
+                    {{ form.offense }}
+                    <div id="offense_other_wrapper" style="display: none; margin-top: 0.4rem;">
+                        {{ form.offense_other }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_stage_of_felony">Stage of Felony</label>
+                    {{ form.stage_of_felony }}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_offense_type">Offense Type</label>
+                    {{ form.offense_type }}
+                    <div id="offense_type_other_wrapper" style="display: none; margin-top: 0.4rem;">
+                        {{ form.offense_type_other }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -162,176 +2140,636 @@
         <!-- Location Information -->
         <div class="form-section">
             <h3>📍 Where Did It Happen?</h3>
-            
-            <div class="form-group">
-                <label class="required">Click on the map to set location</label>
-                <div id="locationPicker" class="location-picker"></div>
-                <p class="help-text">Click on the map to pinpoint the exact location of the accident</p>
-            </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="id_latitude" class="required">Latitude</label>
-                    {{ form.latitude }}
-                </div>
-                <div class="form-group">
-                    <label for="id_longitude" class="required">Longitude</label>
-                    {{ form.longitude }}
-                </div>
-            </div>
-
+            <!-- Province/Municipal/Barangay Dropdowns FIRST -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="id_province" class="required">Province</label>
-                    {{ form.province }}
+                    <select name="province" id="id_province" class="form-control" required>
+                        <option value="">-- Select Province --</option>
+                        <option value="Agusan del Norte" {% if form.province.value == "Agusan del Norte" %}selected{% endif %}>Agusan del Norte</option>
+                        <option value="Agusan del Sur" {% if form.province.value == "Agusan del Sur" %}selected{% endif %}>Agusan del Sur</option>
+                        <option value="Dinagat Islands" {% if form.province.value == "Dinagat Islands" %}selected{% endif %}>Dinagat Islands</option>
+                        <option value="Surigao del Norte" {% if form.province.value == "Surigao del Norte" %}selected{% endif %}>Surigao del Norte</option>
+                        <option value="Surigao del Sur" {% if form.province.value == "Surigao del Sur" %}selected{% endif %}>Surigao del Sur</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="id_municipal" class="required">Municipality/City</label>
-                    {{ form.municipal }}
+                    <select name="municipal" id="id_municipal" class="form-control" required>
+                        <option value="">-- Select Province First --</option>
+                        {% if form.municipal.value %}
+                        <option value="{{ form.municipal.value }}" selected>{{ form.municipal.value }}</option>
+                        {% endif %}
+                    </select>
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label for="id_barangay" class="required">Barangay</label>
-                    {{ form.barangay }}
+                    <select name="barangay" id="id_barangay" class="form-control" required>
+                        <option value="">-- Select Municipality First --</option>
+                        {% if form.barangay.value %}
+                        <option value="{{ form.barangay.value }}" selected>{{ form.barangay.value }}</option>
+                        {% endif %}
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="id_street_address">Street/Landmark</label>
                     {{ form.street_address }}
                 </div>
             </div>
-        </div>
 
-        <!-- Incident Details -->
-        <div class="form-section">
-            <h3>📋 What Happened?</h3>
+            <!-- Map Picker -->
             <div class="form-group">
-                <label for="id_incident_description" class="required">Incident Description</label>
+                <label class="required">Click on the map to set exact location</label>
+                <div id="locationPicker" class="location-picker"></div>
+                <p class="help-text">The map will auto-focus on your selected province. Click to pinpoint exact location.</p>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_latitude" class="required">Latitude</label>
+                    {{ form.latitude }}
+                    <p class="help-text">Auto-filled when you click on map</p>
+                </div>
+                <div class="form-group">
+                    <label for="id_longitude" class="required">Longitude</label>
+                    {{ form.longitude }}
+                    <p class="help-text">Auto-filled when you click on map</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Victim Information -->
+        <div class="form-section">
+            <div class="section-header-row">
+                <h3><i class="fas fa-user-injured"></i> Victim Information</h3>
+                <button type="button" class="btn-add-person" onclick="addVictimRow()">
+                    <i class="fas fa-plus"></i> Add Victim
+                </button>
+            </div>
+            <div class="person-rows-header">
+                <span>Full Name</span>
+                <span>Age</span>
+                <span>Gender</span>
+                <span>Status</span>
+                <span>Nationality</span>
+                <span>Occupation</span>
+                <span></span>
+            </div>
+            <div id="victims-container"></div>
+            <input type="hidden" name="victims_json" id="victims_json">
+            <input type="hidden" name="casualties_killed" id="id_casualties_killed" value="0">
+            <input type="hidden" name="casualties_injured" id="id_casualties_injured" value="0">
+            <div class="casualties-auto-summary" id="victim-summary" style="display:none;">
+                <span class="casualty-count-killed"><i class="fas fa-skull"></i> <span id="count-killed">0</span> Killed</span>
+                <span class="casualty-count-injured"><i class="fas fa-user-injured"></i> <span id="count-injured">0</span> Injured</span>
+                <span class="casualty-count-unharmed"><i class="fas fa-shield-alt"></i> <span id="count-unharmed">0</span> Unharmed</span>
+            </div>
+        </div>
+
+        <!-- Section 5: Suspect/Driver Information -->
+        <div class="form-section">
+            <div class="section-header-row">
+                <h3><i class="fas fa-id-card"></i> Suspect / Driver Information</h3>
+                <button type="button" class="btn-add-person" onclick="addSuspectRow()">
+                    <i class="fas fa-plus"></i> Add Suspect
+                </button>
+            </div>
+            <div class="person-rows-header">
+                <span>Full Name</span>
+                <span>Age</span>
+                <span>Gender</span>
+                <span>Status</span>
+                <span>Nationality</span>
+                <span>Occupation</span>
+                <span></span>
+            </div>
+            <div id="suspects-container"></div>
+            <input type="hidden" name="suspects_json" id="suspects_json">
+            <div class="casualties-auto-summary" id="suspect-summary" style="display:none;">
+                <span class="casualty-count-killed"><i class="fas fa-skull"></i> <span id="suspect-count-killed">0</span> Killed</span>
+                <span class="casualty-count-injured"><i class="fas fa-user-injured"></i> <span id="suspect-count-injured">0</span> Injured</span>
+                <span class="casualty-count-unharmed"><i class="fas fa-shield-alt"></i> <span id="suspect-count-unharmed">0</span> Unharmed</span>
+                <span class="casualty-count-released"><i class="fas fa-door-open"></i> <span id="suspect-count-released">0</span> Released</span>
+                <span class="casualty-count-arrested"><i class="fas fa-gavel"></i> <span id="suspect-count-arrested">0</span> Arrested</span>
+                <span class="casualty-count-atlarge"><i class="fas fa-running"></i> <span id="suspect-count-atlarge">0</span> At Large</span>
+                <span class="casualty-count-hospitalized"><i class="fas fa-hospital"></i> <span id="suspect-count-hospitalized">0</span> Hospitalized</span>
+            </div>
+        </div>
+
+        <!-- Section 6: Vehicle Information -->
+        <div class="form-section">
+            <h3><i class="fas fa-car"></i> Vehicle Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_vehicle_kind">Vehicle Type</label>
+                    {{ form.vehicle_kind }}
+                    <div id="vehicle_kind_other_wrapper" class="other-specify" style="display:none; margin-top:0.4rem;">
+                        {{ form.vehicle_kind_other }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_vehicle_plate_no">Plate Number</label>
+                    {{ form.vehicle_plate_no }}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_vehicle_chassis_no">Chassis Number</label>
+                    {{ form.vehicle_chassis_no }}
+                </div>
+                <div class="form-group">
+                    <label style="margin-bottom: 0.5rem;">Vehicle Flags</label>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <label class="toggle-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 400; font-size: 0.875rem;">
+                            {{ form.vehicle_colorum }}
+                            <span>Colorum <small style="color: #9CA3AF;">(No franchise)</small></span>
+                        </label>
+                        <label class="toggle-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 400; font-size: 0.875rem;">
+                            {{ form.drug_involved }}
+                            <span>Drug / Alcohol Involved</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_vehicle_make">Vehicle Make / Brand</label>
+                    {{ form.vehicle_make }}
+                    <div id="vehicle_make_other_wrapper" class="other-specify" style="display:none; margin-top:0.4rem;">
+                        {{ form.vehicle_make_other }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_vehicle_model">Vehicle Model</label>
+                    {{ form.vehicle_model }}
+                    <div id="vehicle_model_other_wrapper" class="other-specify" style="display:none; margin-top:0.4rem;">
+                        {{ form.vehicle_model_other }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 7: Narrative -->
+        <div class="form-section">
+            <h3><i class="fas fa-file-alt"></i> Detailed Narrative</h3>
+            <div class="form-group">
+                <label for="id_incident_description" class="required">Incident Description / Narrative</label>
+                <div class="narrative-actions">
+                    <button type="button" class="btn-generate-narrative" onclick="generateNarrative()">
+                        <i class="fas fa-magic"></i> Auto-Generate Narrative
+                    </button>
+                    <button type="button" class="btn-clear-narrative" id="btnClearNarrative" onclick="clearNarrative()" style="display:none;">
+                        <i class="fas fa-eraser"></i> Clear
+                    </button>
+                    <span class="narrative-hint">Generate a draft from your filled fields, then edit as needed</span>
+                </div>
                 {{ form.incident_description }}
-                <p class="help-text">Describe the accident in detail (what vehicles were involved, how it happened, etc.)</p>
+                <div class="narrative-placeholders" id="narrative-placeholders" style="display:none;">
+                    <div class="placeholder-bar">
+                        <span class="placeholder-label"><i class="fas fa-edit"></i> <span id="placeholder-count">0</span> fields to fill:</span>
+                        <div class="placeholder-chips" id="placeholder-chips"></div>
+                    </div>
+                </div>
+                <p class="help-text">Provide a comprehensive narrative of the accident including sequence of events, circumstances, and relevant details</p>
             </div>
         </div>
 
-        <!-- Casualties -->
+        <!-- Section 8: Photos -->
         <div class="form-section">
-            <h3>⚕️ Casualties</h3>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="id_casualties_killed">Number Kille
-                        <label for="id_casualties_killed">Number Killed</label>
-                    {{ form.casualties_killed }}
-                </div>
-                <div class="form-group">
-                    <label for="id_casualties_injured">Number Injured</label>
-                    {{ form.casualties_injured }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Vehicle Information -->
-        <div class="form-section">
-            <h3>🚗 Vehicle Information</h3>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="id_vehicle_type_1">Vehicle 1 Type</label>
-                    {{ form.vehicle_type_1 }}
-                </div>
-                <div class="form-group">
-                    <label for="id_vehicle_plate_1">Vehicle 1 Plate Number</label>
-                    {{ form.vehicle_plate_1 }}
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="id_vehicle_type_2">Vehicle 2 Type (if any)</label>
-                    {{ form.vehicle_type_2 }}
-                </div>
-                <div class="form-group">
-                    <label for="id_vehicle_plate_2">Vehicle 2 Plate Number</label>
-                    {{ form.vehicle_plate_2 }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Photo Upload -->
-        <div class="form-section">
-            <h3>📷 Photos (Optional)</h3>
+            <h3><i class="fas fa-camera"></i> Photos (Optional)</h3>
             <div class="photo-upload">
                 <div class="photo-upload-item">
                     <div class="form-group">
                         <label for="id_photo_1">Photo 1</label>
                         {{ form.photo_1 }}
+                        <div class="photo-drop-zone" data-input="id_photo_1" onclick="document.getElementById('id_photo_1').click()">
+                            {% if report and report.photo_1 %}
+                            <img src="{{ report.photo_1.url }}" class="photo-preview-img" alt="Photo 1">
+                            <span class="photo-existing-label">Current</span>
+                            <button type="button" class="photo-remove-btn" onclick="event.stopPropagation(); removePhoto('id_photo_1', this)" title="Remove photo"><i class="fas fa-times"></i></button>
+                            {% else %}
+                            <div class="photo-drop-placeholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div class="drop-label">Click or drag photo here</div>
+                                <div class="drop-hint">JPG, PNG, GIF — Max 5MB</div>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 <div class="photo-upload-item">
                     <div class="form-group">
                         <label for="id_photo_2">Photo 2</label>
                         {{ form.photo_2 }}
+                        <div class="photo-drop-zone" data-input="id_photo_2" onclick="document.getElementById('id_photo_2').click()">
+                            {% if report and report.photo_2 %}
+                            <img src="{{ report.photo_2.url }}" class="photo-preview-img" alt="Photo 2">
+                            <span class="photo-existing-label">Current</span>
+                            <button type="button" class="photo-remove-btn" onclick="event.stopPropagation(); removePhoto('id_photo_2', this)" title="Remove photo"><i class="fas fa-times"></i></button>
+                            {% else %}
+                            <div class="photo-drop-placeholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div class="drop-label">Click or drag photo here</div>
+                                <div class="drop-hint">JPG, PNG, GIF — Max 5MB</div>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 <div class="photo-upload-item">
                     <div class="form-group">
                         <label for="id_photo_3">Photo 3</label>
                         {{ form.photo_3 }}
+                        <div class="photo-drop-zone" data-input="id_photo_3" onclick="document.getElementById('id_photo_3').click()">
+                            {% if report and report.photo_3 %}
+                            <img src="{{ report.photo_3.url }}" class="photo-preview-img" alt="Photo 3">
+                            <span class="photo-existing-label">Current</span>
+                            <button type="button" class="photo-remove-btn" onclick="event.stopPropagation(); removePhoto('id_photo_3', this)" title="Remove photo"><i class="fas fa-times"></i></button>
+                            {% else %}
+                            <div class="photo-drop-placeholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div class="drop-label">Click or drag photo here</div>
+                                <div class="drop-hint">JPG, PNG, GIF — Max 5MB</div>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
-            <p class="help-text">Upload up to 3 photos of the accident scene (optional)</p>
+            <p class="help-text">Upload up to 3 photos of the accident scene. Click or drag & drop.</p>
         </div>
 
         <!-- Form Actions -->
         <div class="form-actions">
-            <a href="{% url 'dashboard' %}" class="btn btn-outline">Cancel</a>
+            {% if not is_edit and not is_resubmit %}
+            <button type="button" class="btn btn-outline" onclick="clearFormDraft()" style="margin-right:auto;">
+                <i class="fas fa-eraser"></i> Clear Form
+            </button>
+            {% endif %}
+            <a href="{% if is_edit %}{% url 'report_detail' report.pk %}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-outline">Cancel</a>
             <button type="submit" class="btn btn-primary">
-                <span>📝</span> Submit Report
+                {% if is_resubmit %}<span>🔄</span> Resubmit Report{% elif is_edit %}<span>💾</span> Save Changes{% else %}<span>📝</span> Submit Report{% endif %}
             </button>
         </div>
     </form>
 </div>
+
+<!-- Draft saved indicator -->
+<div id="draftIndicator" class="draft-indicator saved"><i class="fas fa-save"></i> Draft saved</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     let locationMap;
     let locationMarker;
+    let barangayBoundaryLayer = null;
+
+    // ============================================
+    // CARAGA REGION LOCATION DATA
+    // ============================================
+    const caragaLocations = {
+        "Agusan del Norte": {
+            center: [8.9456, 125.5319],
+            zoom: 10,
+            municipalities: {
+                "Buenavista": { center: [8.9667, 125.4167], barangays: ["Alubijid", "Ambacon", "Basilisa", "Malpoc", "Poblacion 1", "Poblacion 2", "Poblacion 3", "Poblacion 4", "Poblacion 5", "Simbalan", "Talo-ao"] },
+                "Butuan City": { center: [8.9492, 125.5436], barangays: ["Agao", "Agusan Pequeño", "Ambago", "Amparo", "Ampayon", "Anticala", "Antongalon", "Baan KM 3", "Baan Riverside", "Babag", "Bading", "Bancasi", "Banza", "Baobaoan", "Basag", "Bayanihan", "Bilay", "Bit-os", "Bitan-agan", "Bobon", "Bonbon", "Bugsukan", "Buhangin", "Cabcabon", "Camayahan", "Dagohoy", "Dankias", "De Oro", "Diego Silang", "Don Francisco", "Dumalagan", "Florida", "Golden Ribbon", "Holy Redeemer", "Humabon", "Imadejas", "JP Rizal", "Kinamlutan", "Langihan", "Lemon", "Leon Kilat", "Libertad", "Limaha", "Los Angeles", "Lumbocan", "Maguinda", "Mahay", "Mahogany", "Maibu", "Mandamo", "Manila de Bugabus", "Maon", "Masao", "Maug", "MJ Santos", "New Society Village", "Nong-Nong", "Obrero", "Ong Yiu", "Pagatpatan", "Pangabugan", "Pianing", "Pinamanculan", "Port Poyohon", "Rajah Soliman", "Salvacion", "San Ignacio", "San Mateo", "San Vicente", "Sikatuna", "Silongan", "Sumile", "Sumilihon", "Tagabaca", "Taguibo", "Taligaman", "Tiniwisan", "Tungao", "Villa Kananga", "West Dagohoy"] },
+                "Cabadbaran City": { center: [9.1233, 125.5353], barangays: ["Antonio Luna", "Bay-ang", "Bayabas", "Caasinan", "Cabinet", "Calamba", "Calibunan", "Comagascas", "Concepcion", "Del Pilar", "Katugasan", "Kauswagan", "La Union", "Mabini", "Mahaba", "Poblacion 1", "Poblacion 2", "Poblacion 3", "Poblacion 4", "Poblacion 5", "Poblacion 6", "Poblacion 7", "Poblacion 8", "Poblacion 9", "Poblacion 10", "Poblacion 11", "Poblacion 12", "Puting Bato", "Sanghan", "Soriano", "Tolosa"] },
+                "Carmen": { center: [9.2167, 125.6833], barangays: ["Cahayagan", "Gosoon", "Manoligao", "Poblacion", "Rojales", "San Agustin", "Tagcatong", "Vinapor"] },
+                "Jabonga": { center: [9.3500, 125.5167], barangays: ["Baleguian", "Bangonay", "Bunga", "Colorado", "Cuyago", "Libas", "Magsaysay", "Maraiging", "Poblacion", "San Jose", "San Pablo", "San Vicente", "Santo Niño"] },
+                "Kitcharao": { center: [9.4500, 125.5667], barangays: ["Bangayan", "Canaway", "Crossing", "Hinimbangan", "Jaliobong", "Mahayahay", "Poblacion", "San Isidro", "San Roque", "Sangay", "Songkoy"] },
+                "Las Nieves": { center: [8.7167, 125.6000], barangays: ["Ambacon", "Bonifacio", "Casiklan", "Consorcia", "Katipunan", "Lingayao", "Malico", "Maningalao", "Marcos", "Mat-i", "Pinana-an", "Poblacion", "Sacol", "Sangay", "Tinucoran"] },
+                "Magallanes": { center: [9.0333, 125.5167], barangays: ["Buhang", "Caloc-an", "Guiasan", "Marcos", "Poblacion", "Remedios", "San Isidro", "Santo Rosario", "Taod-oy"] },
+                "Nasipit": { center: [8.9667, 125.3333], barangays: ["Acacia", "Amontay", "Ata-atahon", "Camagong", "Cubi-Cubi", "Culit", "Jagupit", "Kinabjangan", "Punta", "Poblacion", "Triangulo", "Talisay", "Santa Ana"] },
+                "Remedios T. Romualdez": { center: [9.1500, 125.7000], barangays: ["Agong-ong", "Basilisa", "Humuya", "Panaytayon", "Poblacion", "San Antonio", "Tagbongabong"] },
+                "Santiago": { center: [8.8333, 125.6167], barangays: ["Curva", "Estanislao Morgado", "Jagupit", "La Paz", "Pangaylan-IP", "Poblacion", "San Isidro", "Tagbuyacan"] },
+                "Tubay": { center: [9.1667, 125.5333], barangays: ["Binuangan", "Cabayawa", "Doña Rosario", "Doña Telesfora", "La Fraternidad", "Lawigan", "Poblacion 1", "Poblacion 2", "Santa Ana", "Tagmamarkay", "Tagbuyawan", "Victory"] }
+            }
+        },
+        "Agusan del Sur": {
+            center: [8.5000, 125.9167],
+            zoom: 9,
+            municipalities: {
+                "Bayugan City": { center: [8.7133, 125.7678], barangays: ["Bucac", "Cagbas", "Salvacion", "Taglatawan", "Zone 1", "Zone 2", "Zone 3", "Poblacion"] },
+                "Bunawan": { center: [8.1833, 125.9833], barangays: ["Bunawan Brook", "Consuelo", "Imelda", "Libertad", "Poblacion", "San Andres", "San Marcos", "San Teodoro"] },
+                "Esperanza": { center: [8.5500, 125.7333], barangays: ["Awa", "Dakutan", "Hawilian", "Labrador", "Poblacion", "San Toribio", "Santa Cruz", "Santa Fe"] },
+                "La Paz": { center: [8.3833, 125.8000], barangays: ["Langasian", "Mahagkot", "Poblacion", "San Teodoro", "Santa Irene", "Valentina"] },
+                "Loreto": { center: [8.3167, 125.8000], barangays: ["Kasapa", "Poblacion", "San Vicente", "Santa Teresa", "Waloe"] },
+                "Prosperidad": { center: [8.6000, 125.9167], barangays: ["Aurora", "Awa", "Azpitia", "Poblacion", "Salug", "San Jose", "San Martin", "San Rafael", "San Vicente", "Sta. Maria", "Sto. Tomas"] },
+                "Rosario": { center: [8.0500, 126.0167], barangays: ["Bayugan 3", "Cabawa", "Poblacion", "San Isidro", "Tagbayagan", "Wawa"] },
+                "San Francisco": { center: [8.5000, 125.9667], barangays: ["Bayugan 2", "Cawilan", "Datu Lipus", "Patin-ay", "Poblacion", "San Jose", "San Rafael", "Santa Ana", "Tagapua"] },
+                "San Luis": { center: [8.5500, 126.0167], barangays: ["Anislagan", "Bucac", "Poblacion", "Santa Cruz", "Santo Tomas"] },
+                "Santa Josefa": { center: [8.0333, 126.0833], barangays: ["Angas", "Awao", "Poblacion", "San Jose", "Santa Isabel", "Sayon"] },
+                "Sibagat": { center: [8.8167, 125.8667], barangays: ["Afga", "Kolambugan", "Padiay", "Poblacion", "Santa Cruz", "Santo Niño", "Sinai", "Tabon-tabon"] },
+                "Talacogon": { center: [8.4500, 125.7833], barangays: ["Batucan", "Buena Gracia", "Del Monte", "Poblacion", "San Nicolas", "Zamora"] },
+                "Trento": { center: [8.0500, 126.0500], barangays: ["Berseba", "Cebolin", "Guadalupe", "Poblacion", "San Isidro", "Santa Maria", "Tudela"] },
+                "Veruela": { center: [8.2333, 125.8667], barangays: ["Binongan", "Del Monte", "Don Mateo", "La Fortuna", "Masayan", "Poblacion", "Sampaguita", "Santa Emilia"] }
+            }
+        },
+        "Dinagat Islands": {
+            center: [10.1167, 125.6000],
+            zoom: 10,
+            municipalities: {
+                "Basilisa": { center: [10.0667, 125.6167], barangays: ["Benglen", "Catadman", "Columbus", "Coring", "Cortes", "Dahican", "Dieadman", "Dona Helene", "Melgar", "Navarro", "Poblacion", "Rizal", "San Juan", "Santa Cruz", "Santo Niño", "Sering", "Sombrado", "Tagbaobo", "Villa Ecleo", "Villa Pantinople"] },
+                "Cagdianao": { center: [10.0000, 125.5833], barangays: ["Boa", "Cabunga-an", "Del Carmen", "Gamuton", "Poblacion", "R. Ecleo Sr.", "San Jose", "Santa Rita", "Tigbao", "Valencia"] },
+                "Dinagat": { center: [10.1167, 125.6167], barangays: ["Cab-ilan", "Cabayawan", "Cayetano", "Cuarenta", "Cuartero", "Justiniana Edera", "Magsaysay", "Mabini", "Navarro", "Poblacion", "Sta. Cruz", "Sta. Rita"] },
+                "Libjo": { center: [10.2000, 125.5500], barangays: ["Albor", "Arellano", "Bayanihan", "Doña Helen", "General Aguinaldo", "Kanihaan", "Llamera", "Magsaysay", "Malinao", "Navarro", "Osmeña", "Poblacion", "Quezon", "Rosita", "San Antonio", "San Jose", "San Vicente", "Santo Niño", "Zaragosa"] },
+                "Loreto": { center: [10.3500, 125.5667], barangays: ["Anibongan", "Cabungaan", "Carmen", "Esperanza", "Ferdinand", "General Aguinaldo", "Helino", "Liberty", "Magsaysay", "Panamaon", "Paraiso", "Poblacion", "San Juan", "Santa Cruz", "Santo Niño"] },
+                "San Jose": { center: [10.0500, 125.7000], barangays: ["Aurelio", "Cuarenta", "Don Ruben Ecleo", "Jacquez", "Justiniana Edera", "Luna", "Mahayahay", "Matingbe", "Poblacion", "San Juan", "San Vicente", "Santa Cruz", "Wilson"] },
+                "Tubajon": { center: [10.1500, 125.4500], barangays: ["Diaz", "Imelda", "Mabini", "Magsaysay", "Navarro", "Poblacion", "Quezon", "Roxas", "San Roque", "San Vicente", "Santa Cruz", "Santo Niño"] }
+            }
+        },
+        "Surigao del Norte": {
+            center: [9.7500, 125.5000],
+            zoom: 9,
+            municipalities: {
+                "Surigao City": { center: [9.7833, 125.4833], barangays: ["Anomar", "Buenavista", "Cabongbongan", "Cagniog", "Canlanipa", "Capalayan", "Danao", "Day-asan", "Ipil", "Kinabutan", "Lipata", "Luna", "Mabini", "Mabua", "Mapawa", "Mat-i", "Nabago", "Orok", "Poctoy", "Poblacion", "Punta Bilar", "Quezon", "Rizal", "Sabang", "San Isidro", "San Jose", "San Juan", "San Pedro", "San Roque", "Serna", "Silop", "Sukailang", "Taft", "Tagbongabong", "Togbongon", "Trinidad", "Washington", "Zaragoza"] },
+                "Alegria": { center: [9.5333, 125.5667], barangays: ["Alipao", "Anahaw", "Budlingin", "Camp Eduard", "Ferlda", "Gamuton", "Julio Ouano", "Poblacion", "San Juan", "San Pedro", "Tagbayani"] },
+                "Bacuag": { center: [9.6000, 125.5000], barangays: ["Cabugao", "Campo", "Dugsangon", "Pautao", "Payapag", "Poblacion", "Pungtod", "Santo Rosario"] },
+                "Burgos": { center: [9.9167, 125.7167], barangays: ["Baybay", "Bitaugan", "Mabini", "Magsaysay", "Poblacion", "Rizal", "San Mateo", "San Vicente"] },
+                "Claver": { center: [9.6000, 125.7167], barangays: ["Bagakay", "Cabugo", "Cagdianao", "Daywan", "Ladgaron", "Lapinigan", "Magallanes", "Panatao", "Poblacion", "Sapa", "Taganito", "Urbiztondo", "Wangke"] },
+                "Dapa": { center: [9.7500, 126.0500], barangays: ["Bagakay", "Balibayon", "Bitaug", "Cabuntog", "Don Paulino", "General Island", "Montserrat", "Poblacion", "Santa Fe", "Union", "Villaflor"] },
+                "Del Carmen": { center: [9.8333, 126.0333], barangays: ["Antipolo", "Bagakay", "Caub", "Domoyog", "Esperanza", "Halian", "Jamoyaon", "Katipunan", "Poblacion", "Sayak", "Tuboran"] },
+                "General Luna": { center: [9.7833, 126.1667], barangays: ["Anajawan", "Cabitoonan", "Catangnan", "Consuelo", "Corazon", "La Januza", "Libertad", "Magsaysay", "Poblacion", "Santa Cruz", "Santa Fe", "Suyangan", "Tawin-Tawin"] },
+                "Gigaquit": { center: [9.5833, 125.6833], barangays: ["Alambique", "Anibongan", "Cam-boayon", "Camam-onan", "Ipil", "Lahi", "Mahanub", "Pongtud", "Poblacion", "Sico-sico", "Villaflor"] },
+                "Mainit": { center: [9.5333, 125.5333], barangays: ["Cantugas", "Dayano", "Magpayang", "Magsaysay", "Mansayao", "Matin-ao", "Paco", "Poblacion", "Quezon", "San Francisco", "San Isidro", "San Jose", "Siana", "Silop", "Tagbuyawan", "Tapian", "Tolingon"] },
+                "Malimono": { center: [9.3167, 125.5833], barangays: ["Cagtinae", "Hanagdong", "Karihatag", "Poblacion", "San Antonio", "San Isidro", "San Pablo", "Tinago"] },
+                "Pilar": { center: [9.9000, 126.0833], barangays: ["Caridad", "Ombong", "Poblacion", "Salvacion", "San Isidro", "Santa Cruz", "Union"] },
+                "Placer": { center: [9.6500, 125.5500], barangays: ["Amoslog", "Bad-as", "Ipil", "Lakandula", "Mabini", "Magupange", "Pananay-an", "Poblacion", "Simbalan", "Santa Cruz"] },
+                "San Benito": { center: [9.9167, 126.0000], barangays: ["Bogak", "Magsaysay", "Maribojoc", "Poblacion", "San Juan", "Santa Cruz", "Santa Paz"] },
+                "San Francisco": { center: [9.7333, 126.0167], barangays: ["Amontay", "Bangko", "Poblacion", "San Isidro"] },
+                "San Isidro": { center: [9.9333, 125.9167], barangays: ["Bitaugan", "Del Carmen", "Del Pilar", "Pacifico", "Poblacion", "San Fernando", "San Miguel", "San Roque", "Tina"] },
+                "Santa Monica": { center: [9.8000, 125.5333], barangays: ["Abad Santos", "Alegria", "Bailan", "Garcia", "Libertad", "Mabini", "Magsaysay", "Poblacion", "Rizal", "Tangbo"] },
+                "Sison": { center: [9.6667, 125.6000], barangays: ["Biyabid", "Gacepan", "Ima", "Lower Patag", "Mabuhay", "Mayag", "Poblacion", "San Isidro", "Tagbayani", "Tinogpahan", "Upper Patag"] },
+                "Socorro": { center: [9.6167, 125.9500], barangays: ["Albino Tarle", "Honrado", "Navarro", "Poblacion", "Rizal", "Santa Cruz", "Santo Niño", "Sering", "Songkoy", "Sudlon"] },
+                "Tagana-an": { center: [9.6833, 125.5333], barangays: ["Cayawan", "Handamayan", "Mabini", "Poblacion", "San Pedro", "Sampaguita", "Tabon-Tabon"] },
+                "Tubod": { center: [9.9667, 125.5500], barangays: ["Capayahan", "Cawilan", "Marga", "Poblacion", "San Isidro", "San Pablo", "Timamana"] }
+            }
+        },
+        "Surigao del Sur": {
+            center: [8.5833, 126.1167],
+            zoom: 9,
+            municipalities: {
+                "Tandag City": { center: [9.0833, 126.2000], barangays: ["Awasian", "Bagong Lungsod", "Bioto", "Bongtod", "Buenavista", "Dapdap", "Mabua", "Mabuhay", "Maitum", "Maticdum", "Pangi", "Poblacion", "Rosario", "Salvacion", "San Agustin Norte", "San Agustin Sur", "San Antonio", "San Isidro", "San Jose", "Telaje"] },
+                "Bislig City": { center: [8.2167, 126.3167], barangays: ["Bucto", "Burboanan", "Caguyao", "Coleto", "Labisma", "Lawigan", "Mahagkot", "Mangagoy", "Pamaypayan", "Poblacion", "San Antonio", "San Fernando", "San Isidro", "San Jose", "San Roque", "San Vicente", "Santa Cruz", "Sibaroy", "Tabon"] },
+                "Barobo": { center: [8.5833, 126.1667], barangays: ["Amaga", "Bagsac", "Bangbangar", "Bourns", "Diatagon", "Habagatan", "Kinabutan", "Poblacion", "San Jose", "Santa Cruz", "Tawagan", "Waling-waling"] },
+                "Bayabas": { center: [8.3500, 126.2833], barangays: ["Amag", "Balete", "Caraitan", "Poblacion", "San Juan", "San Roque", "Santa Cruz", "Tagasaka", "Tambulilid", "Tinago"] },
+                "Cagwait": { center: [8.9000, 126.2833], barangays: ["Alag-asan", "Anahawan", "Bitu-on", "Lactudan", "Makat", "Mat-e", "Poblacion", "Tawagan", "Tuburan", "Unaban"] },
+                "Cantilan": { center: [9.3500, 125.9833], barangays: ["Bugsukan", "Buntalid", "Cabugao", "Calagdaan", "Consuelo", "General Island", "Lininti-an", "Magasang", "Magsaysay", "Malixi", "Pag-antayan", "Palasao", "Parang", "Poblacion", "San Isidro", "San Pedro", "San Vicente", "Tapi-an", "Tigabong"] },
+                "Carmen": { center: [8.8000, 126.1333], barangays: ["Antao", "Cancavan", "Esperanza", "Hinapoyan", "Poblacion", "San Vicente", "Santa Cruz", "Tubod Sur"] },
+                "Carrascal": { center: [9.4000, 125.9333], barangays: ["Adlay", "Bon-ot", "Cabugao", "Caglayag", "Dahican", "Embarcadero", "Panikian", "Poblacion", "San Pedro", "Santa Cruz", "Suli"] },
+                "Cortes": { center: [9.2833, 125.9833], barangays: ["Burgos", "Capandan", "Magsaysay", "Matalid", "Poblacion", "San Roque", "Tuboran", "Uba"] },
+                "Hinatuan": { center: [8.3667, 126.3333], barangays: ["Benigno Aquino Jr.", "Cambatong", "Dugmanon", "Harip", "Loyola", "Pagbabago", "Poblacion", "San Juan", "San Roque", "Tagasaka", "Talisay", "Tarusan", "Tidman"] },
+                "Lanuza": { center: [9.2333, 126.0500], barangays: ["Agsam", "Bocawe", "Bunga", "Gamuton", "Habag", "Mamis", "Nurcia", "Pakwan", "Poblacion", "San Isidro", "San Ramon", "Sibahay"] },
+                "Lianga": { center: [8.6333, 126.1000], barangays: ["Anibongan", "Ban-as", "Diatagon", "Ganayon", "Liatimco", "Manyayay", "Payasan", "Poblacion", "Saint Christine", "San Isidro", "San Pedro"] },
+                "Lingig": { center: [8.0500, 126.4000], barangays: ["Anibongan", "Barcelona", "Bogak", "Handamayan", "Malixi", "Mandus", "Pagtila-an", "Pob. Lingig", "Salvacion", "San Roque", "Tagpoporan"] },
+                "Madrid": { center: [9.2667, 126.0500], barangays: ["Bayan", "Cagbaoto", "Magsaysay", "Pagtila-an", "Poblacion", "San Isidro", "San Juan", "San Roque", "Sangay", "Tagbobolo"] },
+                "Marihatag": { center: [8.8167, 126.3000], barangays: ["Agsao", "Amontay", "Antipolo", "Bayan", "Poblacion", "San Antonio", "San Isidro", "San Juan", "San Pedro", "Santa Cruz"] },
+                "San Agustin": { center: [8.8333, 126.2167], barangays: ["Brgy. 1", "Brgy. 2", "Brgy. 3", "Brgy. 4", "Brgy. 5", "Janipaan", "Pong-on", "San Antonio", "San Isidro", "Santa Cruz", "Tawagan"] },
+                "San Miguel": { center: [8.5167, 126.1500], barangays: ["Bagyang", "Bolhoon", "Cayawan", "Magsaysay", "Poblacion", "San Isidro", "San Roque", "Tinago", "Tina-an"] },
+                "Tagbina": { center: [8.4500, 126.1500], barangays: ["Banahao", "Hinagdanan", "Maglambing", "Mahayag", "Poblacion", "San Vicente", "Santa Cruz", "Santo Niño", "Tagongon"] },
+                "Tago": { center: [9.0167, 126.2333], barangays: ["Anahao", "Buklad", "Cagdapao", "Kinayan", "Poblacion", "Puyo", "San Vicente", "Sumo-sumo", "Umbay"] }
+            }
+        }
+    };
 
     document.addEventListener('DOMContentLoaded', function() {
+        initializeCascadingDropdowns();
         initializeLocationPicker();
         setupFormValidation();
     });
 
-    function initializeLocationPicker() {
-        // Initialize map centered on Caraga Region
-        locationMap = L.map('locationPicker').setView([9.0, 125.5], 9);
+    // ============================================
+    // CASCADING DROPDOWN FUNCTIONS
+    // ============================================
+    function initializeCascadingDropdowns() {
+        const provinceSelect = document.getElementById('id_province');
+        const municipalSelect = document.getElementById('id_municipal');
+        const barangaySelect = document.getElementById('id_barangay');
 
-        // Add tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // Province change handler
+        provinceSelect.addEventListener('change', function() {
+            const province = this.value;
+            updateMunicipalDropdown(province);
+            updateBarangayDropdown(''); // Clear barangay
+
+            // Auto-focus map on province
+            if (province && caragaLocations[province]) {
+                const loc = caragaLocations[province];
+                locationMap.setView(loc.center, loc.zoom);
+            }
+        });
+
+        // Municipal change handler
+        municipalSelect.addEventListener('change', function() {
+            const province = provinceSelect.value;
+            const municipal = this.value;
+            updateBarangayDropdown(municipal, province);
+
+            // Auto-focus map on municipality
+            if (province && municipal && caragaLocations[province]?.municipalities[municipal]) {
+                const loc = caragaLocations[province].municipalities[municipal];
+                locationMap.setView(loc.center, 13);
+            }
+        });
+
+        // Barangay change handler - zoom & show boundary
+        barangaySelect.addEventListener('change', function() {
+            const province = provinceSelect.value;
+            const municipal = municipalSelect.value;
+            const barangay = this.value;
+
+            if (barangay && municipal && province) {
+                focusOnBarangay(barangay, municipal, province);
+            }
+        });
+
+        // If editing, populate dropdowns with existing values
+        const existingProvince = provinceSelect.value;
+        const existingMunicipal = municipalSelect.options[municipalSelect.selectedIndex]?.value;
+        const existingBarangay = barangaySelect.options[barangaySelect.selectedIndex]?.value;
+
+        if (existingProvince) {
+            updateMunicipalDropdown(existingProvince, existingMunicipal);
+            if (existingMunicipal) {
+                updateBarangayDropdown(existingMunicipal, existingProvince, existingBarangay);
+            }
+        }
+    }
+
+    function updateMunicipalDropdown(province, selectedValue = '') {
+        const municipalSelect = document.getElementById('id_municipal');
+        municipalSelect.innerHTML = '<option value="">-- Select Municipality/City --</option>';
+
+        if (province && caragaLocations[province]) {
+            const municipalities = Object.keys(caragaLocations[province].municipalities).sort();
+            municipalities.forEach(muni => {
+                const option = document.createElement('option');
+                option.value = muni;
+                option.textContent = muni;
+                if (muni === selectedValue) option.selected = true;
+                municipalSelect.appendChild(option);
+            });
+        }
+    }
+
+    function updateBarangayDropdown(municipal, province, selectedValue = '') {
+        const barangaySelect = document.getElementById('id_barangay');
+        barangaySelect.innerHTML = '<option value="">-- Select Barangay --</option>';
+
+        if (province && municipal && caragaLocations[province]?.municipalities[municipal]) {
+            const barangays = caragaLocations[province].municipalities[municipal].barangays.sort();
+            barangays.forEach(brgy => {
+                const option = document.createElement('option');
+                option.value = brgy;
+                option.textContent = brgy;
+                if (brgy === selectedValue) option.selected = true;
+                barangaySelect.appendChild(option);
+            });
+        }
+    }
+
+    // ============================================
+    // BARANGAY FOCUS & AREA GUIDE
+    // ============================================
+    function focusOnBarangay(barangay, municipal, province) {
+        // Remove previous area indicator
+        if (barangayBoundaryLayer) {
+            locationMap.removeLayer(barangayBoundaryLayer);
+            barangayBoundaryLayer = null;
+        }
+
+        // First zoom to municipality center as fallback
+        if (caragaLocations[province]?.municipalities[municipal]) {
+            const loc = caragaLocations[province].municipalities[municipal];
+            locationMap.setView(loc.center, 14);
+        }
+
+        // Geocode barangay to get approximate center point
+        const query = `${barangay}, ${municipal}, ${province}, Philippines`;
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const result = data[0];
+                    const lat = parseFloat(result.lat);
+                    const lon = parseFloat(result.lon);
+
+                    // Zoom to barangay center
+                    locationMap.setView([lat, lon], 16);
+
+                    // Draw a subtle circle as approximate area guide
+                    barangayBoundaryLayer = L.layerGroup();
+
+                    // Circle radius ~500m as visual guide
+                    L.circle([lat, lon], {
+                        radius: 500,
+                        color: '#2563EB',
+                        weight: 1.5,
+                        dashArray: '6, 4',
+                        fillColor: '#3B82F6',
+                        fillOpacity: 0.06
+                    }).addTo(barangayBoundaryLayer);
+
+                    // Small center marker with barangay label
+                    L.circleMarker([lat, lon], {
+                        radius: 5,
+                        color: '#2563EB',
+                        fillColor: '#3B82F6',
+                        fillOpacity: 0.7,
+                        weight: 1.5
+                    }).bindTooltip(`Brgy. ${barangay}`, {
+                        permanent: true,
+                        direction: 'top',
+                        offset: [0, -8],
+                        className: 'barangay-label'
+                    }).addTo(barangayBoundaryLayer);
+
+                    barangayBoundaryLayer.addTo(locationMap);
+                }
+            })
+            .catch(() => {
+                // Silently fail - map stays on municipality center
+            });
+    }
+
+    // ============================================
+    // MAP FUNCTIONS
+    // ============================================
+    function initializeLocationPicker() {
+        // Initialize map centered on Caraga Region with fullscreen control
+        locationMap = L.map('locationPicker', {
+            fullscreenControl: true,
+            fullscreenControlOptions: {
+                position: 'topright',
+                title: 'View Fullscreen',
+                titleCancel: 'Exit Fullscreen'
+            }
+        }).setView([9.0, 125.5], 8);
+
+        // Tile layers with street labels
+        const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 18
-        }).addTo(locationMap);
+            maxZoom: 19
+        });
+
+        const detailedStreet = L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        });
+
+        const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; Esri &mdash; Sources: Esri, Maxar, Earthstar Geographics',
+            maxZoom: 19
+        });
+
+        const satelliteLabels = L.layerGroup([
+            satellite,
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19
+            }),
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19
+            })
+        ]);
+
+        // Default to detailed street map
+        detailedStreet.addTo(locationMap);
+
+        // Layer control for switching map types
+        L.control.layers({
+            'Street Map': detailedStreet,
+            'Standard': streetMap,
+            'Satellite': satellite,
+            'Satellite + Labels': satelliteLabels
+        }, null, { position: 'topright' }).addTo(locationMap);
 
         // Add click handler to map
         locationMap.on('click', function(e) {
             setLocation(e.latlng.lat, e.latlng.lng);
         });
 
-        // Check if there's already a location set
+        // Check if there's already a location set (for edit mode)
         const lat = document.getElementById('id_latitude').value;
         const lng = document.getElementById('id_longitude').value;
-        
+
         if (lat && lng) {
-            setLocation(parseFloat(lat), parseFloat(lng));
+            setLocation(parseFloat(lat), parseFloat(lng), false);
         }
     }
 
-    function setLocation(lat, lng) {
+    function setLocation(lat, lng, doReverseGeocode = true) {
         // Validate coordinates are within Caraga Region
-        const validation = AGNESSystem.validateCoordinates(lat, lng);
-        if (!validation.valid) {
-            AGNESSystem.showNotification(validation.message, 'error');
-            return;
+        if (typeof AGNESSystem !== 'undefined' && AGNESSystem.validateCoordinates) {
+            const validation = AGNESSystem.validateCoordinates(lat, lng);
+            if (!validation.valid) {
+                AGNESSystem.showNotification(validation.message, 'error');
+                return;
+            }
         }
 
         // Update form fields
@@ -355,31 +2793,22 @@
         });
 
         // Center map on marker
-        locationMap.setView([lat, lng], 13);
+        locationMap.setView([lat, lng], 15);
 
-        // Try to get address from coordinates (reverse geocoding)
-        reverseGeocode(lat, lng);
+        // Try to auto-fill street address from coordinates
+        if (doReverseGeocode) {
+            reverseGeocode(lat, lng);
+        }
     }
 
     function reverseGeocode(lat, lng) {
-        // Use Nominatim API for reverse geocoding
+        // Use Nominatim API for reverse geocoding - only for street/landmark
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
             .then(response => response.json())
             .then(data => {
                 if (data.address) {
-                    // Auto-fill address fields if empty
-                    const municipal = document.getElementById('id_municipal');
-                    const barangay = document.getElementById('id_barangay');
                     const street = document.getElementById('id_street_address');
-
-                    if (!municipal.value && data.address.city) {
-                        municipal.value = data.address.city || data.address.municipality || '';
-                    }
-
-                    if (!barangay.value && data.address.suburb) {
-                        barangay.value = data.address.suburb || '';
-                    }
-
+                    // Only auto-fill street if empty
                     if (!street.value && data.address.road) {
                         street.value = data.address.road || '';
                     }
@@ -392,22 +2821,1819 @@
 
     function setupFormValidation() {
         const form = document.getElementById('accidentReportForm');
-        
+
         form.addEventListener('submit', function(e) {
             // Check if location is set
             const lat = document.getElementById('id_latitude').value;
             const lng = document.getElementById('id_longitude').value;
+            const province = document.getElementById('id_province').value;
+            const municipal = document.getElementById('id_municipal').value;
+            const barangay = document.getElementById('id_barangay').value;
+
+            if (!province || !municipal || !barangay) {
+                e.preventDefault();
+                if (typeof AGNESSystem !== 'undefined') {
+                    AGNESSystem.showNotification('Please select Province, Municipality, and Barangay', 'error');
+                } else {
+                    alert('Please select Province, Municipality, and Barangay');
+                }
+                document.getElementById('id_province').scrollIntoView({ behavior: 'smooth' });
+                return false;
+            }
 
             if (!lat || !lng) {
                 e.preventDefault();
-                AGNESSystem.showNotification('Please click on the map to set the accident location', 'error');
+                if (typeof AGNESSystem !== 'undefined') {
+                    AGNESSystem.showNotification('Please click on the map to set the accident location', 'error');
+                } else {
+                    alert('Please click on the map to set the accident location');
+                }
                 document.getElementById('locationPicker').scrollIntoView({ behavior: 'smooth' });
                 return false;
             }
 
+            // Clear drafts since form is being submitted
+            window._formSubmitting = true;
+            if (typeof getActiveDraftId === 'function' && getActiveDraftId()) {
+                removeDraftById(getActiveDraftId(), true);
+            }
+
             // Show loading
-            AGNESSystem.showNotification('Submitting report...', 'info');
+            if (typeof AGNESSystem !== 'undefined') {
+                AGNESSystem.showNotification('Submitting report...', 'info');
+            }
         });
+    }
+
+    // ============================================
+    // "OTHER" FIELD TOGGLE
+    // ============================================
+    function setupOtherToggle(selectId, wrapperId) {
+        const select = document.getElementById(selectId);
+        const wrapper = document.getElementById(wrapperId);
+        if (!select || !wrapper) return;
+
+        function toggle() {
+            wrapper.style.display = select.value === 'OTHER' ? 'block' : 'none';
+            if (select.value !== 'OTHER') {
+                const input = wrapper.querySelector('input');
+                if (input) input.value = '';
+            }
+        }
+
+        select.addEventListener('change', toggle);
+        toggle(); // check on page load (for edit mode)
+    }
+
+    setupOtherToggle('id_incident_type', 'incident_type_other_wrapper');
+    setupOtherToggle('id_type_of_place', 'type_of_place_other_wrapper');
+    setupOtherToggle('id_vehicle_kind', 'vehicle_kind_other_wrapper');
+    setupOtherToggle('id_offense', 'offense_other_wrapper');
+    setupOtherToggle('id_offense_type', 'offense_type_other_wrapper');
+
+    // ============================================
+    // VEHICLE MODEL DYNAMIC DROPDOWN
+    // ============================================
+    const vehicleModels = {
+        'MOTORCYCLE': {
+            'YAMAHA': ['Mio', 'NMAX', 'Aerox', 'Sniper', 'YTX', 'XTZ', 'MT-15', 'R15', 'FZ-i', 'Sight'],
+            'HONDA': ['Click', 'Beat', 'PCX', 'ADV', 'Wave', 'XRM', 'TMX', 'CRF', 'CBR', 'Rebel'],
+            'SUZUKI': ['Raider', 'Skydrive', 'Smash', 'Gixxer', 'Burgman', 'GSX'],
+            'KAWASAKI': ['Barako', 'CT100', 'Rouser', 'Ninja', 'Z400', 'Dominar', 'KLX'],
+            'RUSI': ['Classic', 'Sigma', 'Rapid', 'Flash', 'DL150'],
+        },
+        'TRICYCLE': {
+            'YAMAHA': ['Mio', 'NMAX', 'Sniper', 'YTX'],
+            'HONDA': ['TMX', 'Wave', 'XRM', 'Click'],
+            'SUZUKI': ['Raider', 'Smash'],
+            'KAWASAKI': ['Barako', 'CT100', 'Rouser'],
+            'RUSI': ['Classic', 'Sigma', 'Rapid'],
+        },
+        'CAR': {
+            'TOYOTA': ['Vios', 'Wigo', 'Raize', 'Camry', 'Corolla Altis', 'GR Yaris', 'Corolla Cross'],
+            'MITSUBISHI': ['Mirage', 'Mirage G4', 'Lancer', 'Attrage'],
+            'HONDA': ['City', 'Civic', 'Accord', 'Brio'],
+            'HYUNDAI': ['Accent', 'Elantra', 'Reina', 'Ioniq'],
+            'NISSAN': ['Almera', 'Sylphy', 'GT-R'],
+            'KIA': ['Sonet', 'Stonic', 'Forte', 'K3'],
+            'SUZUKI': ['Ciaz', 'Dzire', 'Swift', 'Celerio', 'S-Presso', 'Alto'],
+            'MAZDA': ['3', '6', 'MX-5'],
+            'BMW': ['3 Series', '5 Series', 'X1'],
+            'MERCEDES': ['A-Class', 'C-Class', 'E-Class'],
+            'SUBARU': ['Impreza', 'WRX', 'BRZ'],
+            'VOLKSWAGEN': ['Lavida', 'Lamando'],
+            'BYD': ['Dolphin', 'Seal', 'Han'],
+            'GEELY': ['Emgrand', 'Coolray Sedan'],
+            'CHERY': ['Arrizo 5', 'Arrizo 8'],
+            'MG': ['5', 'GT'],
+            'CHEVROLET': ['Sail', 'Malibu'],
+        },
+        'SUV': {
+            'TOYOTA': ['Fortuner', 'Hilux', 'Innova', 'Rush', 'Land Cruiser', 'RAV4', 'Avanza'],
+            'MITSUBISHI': ['Xpander', 'Xpander Cross', 'Montero Sport', 'Strada', 'Outlander'],
+            'FORD': ['Ranger', 'Everest', 'Territory', 'Explorer', 'Raptor'],
+            'NISSAN': ['Navara', 'Terra', 'X-Trail', 'Patrol'],
+            'HONDA': ['CR-V', 'HR-V', 'BR-V', 'ZR-V'],
+            'HYUNDAI': ['Tucson', 'Creta', 'Santa Fe', 'Stargazer', 'Palisade'],
+            'KIA': ['Seltos', 'Sportage', 'Sorento', 'Carnival'],
+            'ISUZU': ['D-Max', 'mu-X'],
+            'SUZUKI': ['Ertiga', 'XL7', 'Vitara', 'Jimny', 'Grand Vitara'],
+            'MAZDA': ['CX-5', 'CX-30', 'CX-3', 'CX-9', 'BT-50'],
+            'SUBARU': ['Forester', 'XV', 'Outback', 'Evoltis'],
+            'BMW': ['X1', 'X3', 'X5'],
+            'MERCEDES': ['GLA', 'GLC', 'GLE'],
+            'BYD': ['Atto 3', 'Tang', 'Song Plus'],
+            'GEELY': ['Coolray', 'Azkarra', 'Okavango', 'Monjaro'],
+            'CHERY': ['Tiggo 4 Pro', 'Tiggo 7 Pro', 'Tiggo 8 Pro'],
+            'MG': ['ZS', 'HS', 'RX5', 'Extender'],
+            'GAC': ['GS3', 'GS4', 'GS8', 'Emkoo'],
+            'CHANGAN': ['CS35 Plus', 'CS55 Plus', 'CS75 Plus', 'UNI-T'],
+            'VOLKSWAGEN': ['T-Cross', 'Tiguan'],
+            'CHEVROLET': ['Tracker', 'Trailblazer', 'Colorado'],
+        },
+        'VAN': {
+            'TOYOTA': ['HiAce', 'Lite Ace', 'Grandia', 'Super Grandia'],
+            'NISSAN': ['NV350 Urvan'],
+            'HYUNDAI': ['Staria', 'Grand Starex', 'Stargazer X'],
+            'KIA': ['Carnival'],
+            'FOTON': ['Transvan', 'View Traveller', 'Toano'],
+            'GAC': ['GN8'],
+        },
+        'TRUCK': {
+            'ISUZU': ['NLR', 'NMR', 'NPR', 'FRR', 'FVR', 'CYZ', 'EXZ'],
+            'HINO': ['300 Series', '500 Series', '700 Series'],
+            'FOTON': ['Tornado', 'Hurricane', 'EST-M'],
+            'HYUNDAI': ['HD36', 'HD65', 'Mighty'],
+            'MITSUBISHI': ['Canter', 'Fighter'],
+        },
+        'BUS': {
+            'HINO': ['RK Series', 'RM Series'],
+            'ISUZU': ['LT Series'],
+            'HYUNDAI': ['County', 'Universe'],
+        },
+    };
+
+    const vehicleMakeSelect = document.getElementById('id_vehicle_make');
+    const vehicleModelSelect = document.getElementById('id_vehicle_model');
+    const vehicleKindSelect = document.getElementById('id_vehicle_kind');
+    const makeOtherWrapper = document.getElementById('vehicle_make_other_wrapper');
+    const modelOtherWrapper = document.getElementById('vehicle_model_other_wrapper');
+
+    // Save initial values for edit mode restoration
+    const savedMake = '{{ form.vehicle_make.value|default:"" }}';
+    const savedModel = '{{ form.vehicle_model.value|default:"" }}';
+
+    // Step 1: Vehicle Type changes → populate Vehicle Make dropdown
+    function updateVehicleMakes() {
+        if (!vehicleMakeSelect) return;
+
+        const kind = vehicleKindSelect ? vehicleKindSelect.value : '';
+
+        // Clear make options
+        vehicleMakeSelect.innerHTML = '<option value="">Select Brand</option>';
+
+        if (kind && vehicleModels[kind]) {
+            // Get all makes available for this vehicle type
+            const makes = Object.keys(vehicleModels[kind]);
+            makes.sort();
+            makes.forEach(make => {
+                const option = document.createElement('option');
+                option.value = make;
+                // Display name mapping
+                const displayNames = {
+                    'TOYOTA': 'Toyota', 'MITSUBISHI': 'Mitsubishi', 'HONDA': 'Honda',
+                    'SUZUKI': 'Suzuki', 'FORD': 'Ford', 'NISSAN': 'Nissan',
+                    'HYUNDAI': 'Hyundai', 'KIA': 'Kia', 'ISUZU': 'Isuzu',
+                    'CHEVROLET': 'Chevrolet', 'YAMAHA': 'Yamaha', 'KAWASAKI': 'Kawasaki',
+                    'RUSI': 'Rusi', 'BMW': 'BMW', 'MERCEDES': 'Mercedes-Benz',
+                    'SUBARU': 'Subaru', 'MAZDA': 'Mazda', 'VOLKSWAGEN': 'Volkswagen',
+                    'BYD': 'BYD', 'GEELY': 'Geely', 'CHERY': 'Chery',
+                    'MG': 'MG', 'GAC': 'GAC', 'CHANGAN': 'Changan',
+                    'FOTON': 'Foton', 'HINO': 'Hino',
+                };
+                option.textContent = displayNames[make] || make;
+                if (make === savedMake) option.selected = true;
+                vehicleMakeSelect.appendChild(option);
+            });
+        }
+
+        // Always add "Other" option
+        const otherOpt = document.createElement('option');
+        otherOpt.value = 'OTHER';
+        otherOpt.textContent = 'Other';
+        if (savedMake === 'OTHER') otherOpt.selected = true;
+        vehicleMakeSelect.appendChild(otherOpt);
+
+        // Toggle make "Other" input
+        toggleMakeOther();
+
+        // Cascade: update models too
+        updateVehicleModels();
+    }
+
+    // Step 2: Vehicle Make changes → populate Vehicle Model dropdown
+    function updateVehicleModels() {
+        if (!vehicleModelSelect) return;
+
+        const kind = vehicleKindSelect ? vehicleKindSelect.value : '';
+        const make = vehicleMakeSelect ? vehicleMakeSelect.value : '';
+
+        // Clear model options
+        vehicleModelSelect.innerHTML = '<option value="">Select Model</option>';
+
+        if (kind && make && make !== 'OTHER') {
+            const models = vehicleModels[kind]?.[make] || [];
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                if (model === savedModel) option.selected = true;
+                vehicleModelSelect.appendChild(option);
+            });
+        }
+
+        // Always add "Other" option
+        const otherOpt = document.createElement('option');
+        otherOpt.value = 'OTHER';
+        otherOpt.textContent = 'Other';
+        if (savedModel === 'OTHER') otherOpt.selected = true;
+        vehicleModelSelect.appendChild(otherOpt);
+
+        // Toggle model "Other" input
+        toggleModelOther();
+    }
+
+    function toggleMakeOther() {
+        if (!makeOtherWrapper || !vehicleMakeSelect) return;
+        makeOtherWrapper.style.display = vehicleMakeSelect.value === 'OTHER' ? 'block' : 'none';
+        if (vehicleMakeSelect.value !== 'OTHER') {
+            const input = makeOtherWrapper.querySelector('input');
+            if (input) input.value = '';
+        }
+    }
+
+    function toggleModelOther() {
+        if (!modelOtherWrapper || !vehicleModelSelect) return;
+        modelOtherWrapper.style.display = vehicleModelSelect.value === 'OTHER' ? 'block' : 'none';
+        if (vehicleModelSelect.value !== 'OTHER') {
+            const input = modelOtherWrapper.querySelector('input');
+            if (input) input.value = '';
+        }
+    }
+
+    // Event listeners: Type → Make → Model cascading chain
+    if (vehicleKindSelect) vehicleKindSelect.addEventListener('change', function() {
+        updateVehicleMakes();
+    });
+    if (vehicleMakeSelect) vehicleMakeSelect.addEventListener('change', function() {
+        toggleMakeOther();
+        updateVehicleModels();
+    });
+    if (vehicleModelSelect) vehicleModelSelect.addEventListener('change', toggleModelOther);
+
+    // Initialize on page load
+    updateVehicleMakes();
+
+    // ============================================
+    // DATE/TIME QUICK SET FUNCTIONS
+    // ============================================
+    function setToday() {
+        var dateInput = document.getElementById('id_incident_date');
+        var timeInput = document.getElementById('id_incident_time');
+        var now = new Date();
+        var y = now.getFullYear();
+        var m = String(now.getMonth() + 1).padStart(2, '0');
+        var d = String(now.getDate()).padStart(2, '0');
+        var h = String(now.getHours()).padStart(2, '0');
+        var min = String(now.getMinutes()).padStart(2, '0');
+        dateInput.value = y + '-' + m + '-' + d;
+        timeInput.value = h + ':' + min;
+        dateInput.dispatchEvent(new Event('change'));
+        timeInput.dispatchEvent(new Event('change'));
+    }
+    window.setToday = setToday;
+
+    function setQuickTime(time) {
+        var timeInput = document.getElementById('id_incident_time');
+        timeInput.value = time;
+        timeInput.dispatchEvent(new Event('change'));
+    }
+    window.setQuickTime = setQuickTime;
+
+    // ============================================
+    // AUTO-GENERATE NARRATIVE
+    // ============================================
+    // Auto-resize textarea to fit content
+    function autoResizeTextarea(textarea) {
+        textarea.style.overflow = 'hidden';
+        textarea.style.height = 'auto';
+        var newHeight = Math.max(textarea.scrollHeight, 100);
+        textarea.style.height = newHeight + 'px';
+    }
+
+    // Setup auto-resize on the narrative textarea
+    var narrativeTextarea = document.getElementById('id_incident_description');
+    if (narrativeTextarea) {
+        narrativeTextarea.classList.add('auto-resize');
+        narrativeTextarea.addEventListener('input', function() { autoResizeTextarea(this); });
+        narrativeTextarea.addEventListener('change', function() { autoResizeTextarea(this); });
+        // Initial resize
+        setTimeout(function() { autoResizeTextarea(narrativeTextarea); }, 200);
+    }
+
+    function generateNarrative() {
+        var desc = document.getElementById('id_incident_description');
+        if (desc.value.trim() && !confirm('This will replace the current narrative. Continue?')) return;
+
+        // Helper to get field values
+        function getVal(id) {
+            var el = document.getElementById(id);
+            if (!el) return '';
+            if (el.tagName === 'SELECT') {
+                var opt = el.options[el.selectedIndex];
+                return (opt && opt.value) ? opt.text : '';
+            }
+            return el.value ? el.value.trim() : '';
+        }
+
+        // Gather all field values
+        var date = getVal('id_incident_date');
+        var time = getVal('id_incident_time');
+        var incidentType = getVal('id_incident_type');
+        var incidentTypeOther = getVal('id_incident_type_other');
+        var typeOfPlace = getVal('id_type_of_place');
+        var typeOfPlaceOther = getVal('id_type_of_place_other');
+        var offense = getVal('id_offense');
+        var offenseOther = getVal('id_offense_other');
+        var stageOfFelony = getVal('id_stage_of_felony');
+        var province = getVal('id_province');
+        var municipal = getVal('id_municipal');
+        var barangay = getVal('id_barangay');
+        var street = getVal('id_street_address');
+        var vehicleKind = getVal('id_vehicle_kind');
+        var vehicleKindOther = getVal('id_vehicle_kind_other');
+        var vehiclePlate = getVal('id_vehicle_plate_no');
+        var vehicleChassis = getVal('id_vehicle_chassis_no');
+        var vehicleColorum = document.getElementById('id_vehicle_colorum')?.checked || false;
+        var drugInvolved = document.getElementById('id_drug_involved')?.checked || false;
+        var vehicleMake = getVal('id_vehicle_make');
+        var vehicleMakeOther = getVal('id_vehicle_make_other');
+        var vehicleModel = getVal('id_vehicle_model');
+        var vehicleModelOther = getVal('id_vehicle_model_other');
+        var reporterName = getVal('id_reporter_name');
+        var reporterContact = getVal('id_reporter_contact');
+
+        // Use "other" values when applicable
+        if (incidentType === 'Other' && incidentTypeOther) incidentType = incidentTypeOther;
+        if (typeOfPlace === 'Other' && typeOfPlaceOther) typeOfPlace = typeOfPlaceOther;
+        if (offense === 'Other' && offenseOther) offense = offenseOther;
+        if (vehicleKind === 'Other' && vehicleKindOther) vehicleKind = vehicleKindOther;
+        if (vehicleMake === 'Other' && vehicleMakeOther) vehicleMake = vehicleMakeOther;
+        if (vehicleModel === 'Other' && vehicleModelOther) vehicleModel = vehicleModelOther;
+
+        // Format date: "January 1, 2024"
+        var dateStr = '';
+        if (date) {
+            var parts = date.split('-');
+            var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            dateStr = months[parseInt(parts[1]) - 1] + ' ' + parseInt(parts[2]) + ', ' + parts[0];
+        }
+
+        // Format time PNP style: "8:00 o'clock in the evening" / "6:55PM"
+        var timeShort = '';
+        var timeFormal = '';
+        if (time) {
+            var tp = time.split(':');
+            var hr = parseInt(tp[0]);
+            var mn = tp[1];
+            var hr12 = hr % 12 || 12;
+            var ampm = hr >= 12 ? 'PM' : 'AM';
+            timeShort = hr12 + ':' + mn + ampm;
+            var period = (hr >= 5 && hr < 12) ? 'in the morning' : (hr >= 12 && hr < 18) ? 'in the afternoon' : 'in the evening';
+            timeFormal = hr12 + ':' + mn + " o'clock " + period;
+        }
+
+        // Build location: "Brgy. Name, Municipal, Province"
+        var locParts = [];
+        if (street) locParts.push(street);
+        if (barangay) locParts.push('Brgy. ' + barangay);
+        if (municipal) locParts.push(municipal);
+        if (province) locParts.push(province);
+        var locationFull = locParts.join(', ');
+
+        // Collect victims
+        var victimRows = document.querySelectorAll('#victims-container .person-row');
+        var victims = [];
+        victimRows.forEach(function(row) {
+            var name = (row.querySelector('.p-name')?.value || '').trim();
+            var age = (row.querySelector('.p-age')?.value || '').trim();
+            var gender = (row.querySelector('.p-gender')?.value || '').trim();
+            var status = (row.querySelector('.p-status')?.value || '').trim();
+            var nationality = (row.querySelector('.p-nationality')?.value || '').trim();
+            var occupation = getOccupationValue(row);
+            if (name) victims.push({ name: name, age: age, gender: gender, status: status, nationality: nationality, occupation: occupation });
+        });
+
+        // Collect suspects/drivers
+        var suspectRows = document.querySelectorAll('#suspects-container .person-row');
+        var suspects = [];
+        suspectRows.forEach(function(row) {
+            var name = (row.querySelector('.p-name')?.value || '').trim();
+            var age = (row.querySelector('.p-age')?.value || '').trim();
+            var gender = (row.querySelector('.p-gender')?.value || '').trim();
+            var status = (row.querySelector('.p-status')?.value || '').trim();
+            var nationality = (row.querySelector('.p-nationality')?.value || '').trim();
+            var occupation = getOccupationValue(row);
+            if (name) suspects.push({ name: name, age: age, gender: gender, status: status, nationality: nationality, occupation: occupation });
+        });
+
+        // Helper: format person PNP style
+        // "Juan Dela Cruz, 29 years old, male, single, Filipino, resident of [address], Driver"
+        function fmtPerson(p) {
+            var s = p.name;
+            if (p.age) s += ', ' + p.age + ' years old';
+            if (p.gender) s += ', ' + p.gender.toLowerCase();
+            if (p.nationality) s += ', ' + p.nationality;
+            if (p.occupation) s += ', ' + p.occupation;
+            return s;
+        }
+
+        // Vehicle description
+        var vParts = [];
+        if (vehicleMake) vParts.push(vehicleMake);
+        if (vehicleModel) vParts.push(vehicleModel);
+        var vehicleName = vParts.join(' ');
+        var vehicleKindStr = vehicleKind || '';
+        var vehicleFull = '';
+        if (vehicleName && vehicleKindStr) {
+            vehicleFull = vehicleName + ' ' + vehicleKindStr.toLowerCase();
+        } else {
+            vehicleFull = vehicleName || vehicleKindStr || '';
+        }
+        var plateStr = vehiclePlate ? 'bearing plate no. ' + vehiclePlate : 'with no plate number';
+        if (vehicleChassis) plateStr += ', chassis no. ' + vehicleChassis;
+        if (vehicleColorum) plateStr += ' (colorum/unfranchised)';
+
+        // ===================================================================
+        // BUILD NARRATIVE — PNP CARAGA Region prose format
+        // Based on actual CY2019-2024 CARAGA traffic accident narratives
+        // using 5Ws and 1H continuous prose style
+        // ===================================================================
+        var n = '';
+
+        // OFFENSE HEADER (uppercase, same as dataset)
+        if (offense) {
+            n += offense.toUpperCase() + '\n\n';
+        }
+
+        // OPENING: "On [date] at about [time] a traffic accident transpired along [location]..."
+        n += 'On ' + (dateStr || '[date]') + ', at about ' + (timeFormal || timeShort || '[time]');
+        n += ', a traffic accident transpired along ';
+        if (typeOfPlace) n += typeOfPlace.toLowerCase() + ' of ';
+        n += (locationFull || '[place of incident]');
+
+        // PARTIES INVOLVED
+        n += ', involving the following: ';
+
+        // Vehicle + Driver
+        if (vehicleFull || suspects.length > 0) {
+            n += '(a) One (1) unit ';
+            if (vehicleFull) {
+                n += vehicleFull + ', ' + plateStr;
+            } else {
+                n += '[vehicle description]';
+            }
+            if (suspects.length > 0) {
+                n += ', owned and driven by ' + fmtPerson(suspects[0]);
+            }
+        }
+
+        // Additional suspects/drivers
+        for (var si = 1; si < suspects.length; si++) {
+            n += '; and (' + String.fromCharCode(97 + si) + ') another vehicle driven by ' + fmtPerson(suspects[si]);
+        }
+
+        // Victims
+        if (victims.length > 0) {
+            n += '; and ';
+            if (victims.length === 1) {
+                n += '(b) ' + fmtPerson(victims[0]);
+            } else {
+                var vLabels = victims.map(function(v, i) {
+                    return fmtPerson(v);
+                });
+                n += '(b) ' + vLabels.join(', and ');
+            }
+        }
+
+        n += '. ';
+
+        // FACTS / INVESTIGATION
+        n += 'Initial investigation conducted by this office revealed that ';
+
+        // Vehicle was traversing...
+        if (vehicleFull && suspects.length > 0) {
+            n += 'the above-described ' + (vehicleKindStr.toLowerCase() || 'vehicle');
+            n += ' was traversing along ' + (locationFull || '[road/location]');
+            n += ' heading towards [destination]';
+        } else if (suspects.length > 0) {
+            n += 'a vehicle driven by the above-named suspect/driver was traversing along ' + (locationFull || '[road/location]');
+        } else {
+            n += 'a vehicular accident transpired at the above-mentioned place';
+        }
+
+        // What happened — placeholder for officer to fill in
+        n += '. Upon reaching the aforementioned place, [describe what happened — e.g., the driver lost control of the vehicle / failed to notice the victim / encroached the opposite lane / accidentally bumped another vehicle]. ';
+
+        // RESULT — injuries based on victim status
+        var killed = victims.filter(function(v) { return v.status === 'Killed'; });
+        var injured = victims.filter(function(v) { return v.status === 'Injured'; });
+        var unharmed = victims.filter(function(v) { return v.status === 'Unharmed'; });
+
+        if (killed.length > 0 || injured.length > 0 || unharmed.length > 0) {
+            n += 'As a result, ';
+            var resParts = [];
+
+            if (killed.length > 0) {
+                var kNames = killed.map(function(v) { return v.name; }).join(' and ');
+                resParts.push(kNames + ' was pronounced dead at the scene');
+            }
+            if (injured.length > 0) {
+                var iNames = injured.map(function(v) { return v.name; }).join(' and ');
+                resParts.push(iNames + ' sustained physical injuries in different parts of ' + (injured.length === 1 ? 'the body' : 'their bodies') + ' and ' + (injured.length === 1 ? 'was' : 'were') + ' immediately brought to [hospital name] for medical treatment');
+            }
+            if (unharmed.length > 0) {
+                var uNames = unharmed.map(function(v) { return v.name; }).join(' and ');
+                resParts.push(uNames + ' ' + (unharmed.length === 1 ? 'was' : 'were') + ' unharmed');
+            }
+            n += resParts.join(', while ') + '. ';
+        }
+
+        // Vehicle damage
+        if (vehicleFull) {
+            n += 'Said vehicle incurred damages on [specify damaged portion — e.g., front portion, rear portion, left side]. ';
+        }
+
+        // Suspect/driver disposition
+        if (suspects.length > 0 && suspects[0].status) {
+            var st = suspects[0].status;
+            if (st === 'Arrested') {
+                n += 'The driver/suspect was placed under the custody of this office for proper disposition. ';
+            } else if (st === 'Released') {
+                n += 'The driver/suspect was released after proper identification and coordination. ';
+            } else if (st === 'At Large') {
+                n += 'The driver/suspect fled the scene and is currently at large. ';
+            } else if (st === 'Hospitalized') {
+                n += 'The driver/suspect also sustained injuries in different parts of the body and was brought to [hospital name] for medical treatment. ';
+            }
+        }
+
+        // Vehicle disposition
+        if (vehicleFull) {
+            n += 'The involved vehicle was brought to this station for proper disposition. ';
+        }
+
+        // Drug/alcohol involvement
+        if (drugInvolved) {
+            n += 'The driver/suspect is believed to be under the influence of intoxicating liquor/prohibited drugs at the time of the incident. ';
+        }
+
+        // IOC (Investigating Officer on Case) — standard PNP closing
+        if (reporterName) {
+            n += '\n\nIOC: ' + reporterName + (reporterContact ? ', ' + reporterContact : '');
+        }
+
+        desc.value = n;
+        desc.dispatchEvent(new Event('change'));
+        autoResizeTextarea(desc);
+        desc.focus();
+        toggleClearButton();
+
+        if (typeof showTopToast === 'function') {
+            showTopToast('Narrative generated! Review and edit the highlighted fields below.', 'restored');
+        }
+        scanPlaceholders();
+    }
+    window.generateNarrative = generateNarrative;
+
+    // Clear narrative and reset textarea height
+    function clearNarrative() {
+        var desc = document.getElementById('id_incident_description');
+        if (!desc) return;
+        desc.value = '';
+        desc.style.height = '';
+        autoResizeTextarea(desc);
+        desc.dispatchEvent(new Event('change'));
+        scanPlaceholders();
+        toggleClearButton();
+        if (typeof showTopToast === 'function') {
+            showTopToast('Narrative cleared.', 'restored');
+        }
+    }
+    window.clearNarrative = clearNarrative;
+
+    // Show/hide clear button based on textarea content
+    function toggleClearButton() {
+        var desc = document.getElementById('id_incident_description');
+        var btn = document.getElementById('btnClearNarrative');
+        if (!desc || !btn) return;
+        btn.style.display = desc.value.trim() ? '' : 'none';
+    }
+
+    // Watch for changes to show/hide clear button
+    if (narrativeTextarea) {
+        narrativeTextarea.addEventListener('input', toggleClearButton);
+        narrativeTextarea.addEventListener('change', toggleClearButton);
+        // Initial check
+        setTimeout(toggleClearButton, 300);
+    }
+
+    // ============================================
+    // NARRATIVE PLACEHOLDER SCANNER & NAVIGATOR
+    // ============================================
+    function scanPlaceholders() {
+        var desc = document.getElementById('id_incident_description');
+        var container = document.getElementById('narrative-placeholders');
+        var chipsDiv = document.getElementById('placeholder-chips');
+        var countEl = document.getElementById('placeholder-count');
+        if (!desc || !container || !chipsDiv) return;
+
+        var text = desc.value;
+        var regex = /\[[^\]]+\]/g;
+        var matches = [];
+        var match;
+        while ((match = regex.exec(text)) !== null) {
+            matches.push({ text: match[0], index: match.index });
+        }
+
+        if (matches.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+        countEl.textContent = matches.length;
+        chipsDiv.innerHTML = '';
+
+        matches.forEach(function(m, i) {
+            var chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'placeholder-chip';
+            // Clean display text: remove brackets, truncate
+            var label = m.text.replace(/^\[|\]$/g, '');
+            if (label.length > 30) label = label.substring(0, 28) + '...';
+            chip.innerHTML = '<i class="fas fa-arrow-right"></i> ' + label;
+            chip.title = 'Click to jump to: ' + m.text;
+            chip.onclick = function() {
+                jumpToPlaceholder(m.index, m.text.length);
+            };
+            chipsDiv.appendChild(chip);
+        });
+    }
+
+    function jumpToPlaceholder(startIndex, length) {
+        var desc = document.getElementById('id_incident_description');
+        desc.focus();
+        desc.setSelectionRange(startIndex, startIndex + length);
+        // Scroll textarea to show the selection
+        var lineHeight = parseInt(window.getComputedStyle(desc).lineHeight) || 20;
+        var textBefore = desc.value.substring(0, startIndex);
+        var linesBefore = textBefore.split('\n').length;
+        desc.scrollTop = (linesBefore - 2) * lineHeight;
+    }
+
+    // Rescan when narrative text changes
+    if (narrativeTextarea) {
+        narrativeTextarea.addEventListener('input', function() {
+            autoResizeTextarea(this);
+            scanPlaceholders();
+        });
+        narrativeTextarea.addEventListener('change', function() {
+            scanPlaceholders();
+        });
+    }
+
+    // ============================================
+    // PHOTO UPLOAD — DRAG & DROP + PREVIEW
+    // ============================================
+    document.querySelectorAll('.photo-drop-zone').forEach(function(zone) {
+        var inputId = zone.getAttribute('data-input');
+        var fileInput = document.getElementById(inputId);
+
+        // Preview when file selected via click
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                showPhotoPreview(zone, this.files[0], inputId);
+            }
+        });
+
+        // Drag events
+        zone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            zone.classList.add('dragover');
+        });
+        zone.addEventListener('dragleave', function() {
+            zone.classList.remove('dragover');
+        });
+        zone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            zone.classList.remove('dragover');
+            var file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                // Set the file to the hidden input via DataTransfer
+                var dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                showPhotoPreview(zone, file, inputId);
+            }
+        });
+    });
+
+    function showPhotoPreview(zone, file, inputId) {
+        // Validate size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File is too large. Maximum size is 5MB.');
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            zone.classList.add('has-photo');
+            zone.innerHTML = '<img src="' + e.target.result + '" class="photo-preview-img" alt="Preview">' +
+                '<button type="button" class="photo-remove-btn" onclick="event.stopPropagation(); removePhoto(\'' + inputId + '\', this)" title="Remove photo"><i class="fas fa-times"></i></button>';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removePhoto(inputId, btn) {
+        var fileInput = document.getElementById(inputId);
+        var zone = btn.closest('.photo-drop-zone');
+        // Clear the file input
+        fileInput.value = '';
+        // Add a hidden input to tell Django to clear this photo (for edit mode)
+        var clearInput = document.getElementById('clear_' + inputId);
+        if (!clearInput) {
+            clearInput = document.createElement('input');
+            clearInput.type = 'hidden';
+            clearInput.id = 'clear_' + inputId;
+            clearInput.name = inputId.replace('id_', '') + '-clear';
+            clearInput.value = 'on';
+            zone.parentNode.appendChild(clearInput);
+        }
+        // Reset zone to placeholder
+        zone.classList.remove('has-photo');
+        zone.innerHTML = '<div class="photo-drop-placeholder">' +
+            '<i class="fas fa-cloud-upload-alt"></i>' +
+            '<div class="drop-label">Click or drag photo here</div>' +
+            '<div class="drop-hint">JPG, PNG, GIF — Max 5MB</div></div>';
+    }
+    window.removePhoto = removePhoto;
+
+    // ============================================
+    // DYNAMIC VICTIM/SUSPECT ROWS
+    // ============================================
+
+    // Occupation dropdown helpers
+    function handleOccupationChange(select) {
+        var cell = select.closest('.occupation-cell');
+        var otherInput = cell.querySelector('.p-occupation-other');
+        if (select.value === 'OTHER') {
+            otherInput.style.display = '';
+            otherInput.focus();
+        } else {
+            otherInput.style.display = 'none';
+            otherInput.value = '';
+        }
+    }
+
+    function getOccupationValue(row) {
+        var select = row.querySelector('.p-occupation');
+        var val = (select?.value || '').trim();
+        if (val === 'OTHER') {
+            return (row.querySelector('.p-occupation-other')?.value || '').trim();
+        }
+        return val;
+    }
+
+    function setOccupationValue(row, value) {
+        var select = row.querySelector('.p-occupation');
+        var otherInput = row.querySelector('.p-occupation-other');
+        if (!select || !otherInput) return;
+        if (!value) { select.value = ''; otherInput.style.display = 'none'; return; }
+
+        // Check if value matches any dropdown option
+        var upperVal = value.toUpperCase();
+        var found = false;
+        for (var i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === upperVal || select.options[i].value === value) {
+                select.value = select.options[i].value;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            select.value = 'OTHER';
+            otherInput.value = value;
+            otherInput.style.display = '';
+        } else {
+            otherInput.style.display = 'none';
+        }
+    }
+
+    function createPersonRow(type) {
+        const row = document.createElement('div');
+        row.className = 'person-row';
+
+        const statusOptions = type === 'victim'
+            ? '<option value="">--</option><option value="Killed">Killed</option><option value="Injured">Injured</option><option value="Unharmed">Unharmed</option>'
+            : '<option value="">--</option><option value="Killed">Killed</option><option value="Injured">Injured</option><option value="Unharmed">Unharmed</option><option value="Released">Released</option><option value="Arrested">Arrested</option><option value="At Large">At Large</option><option value="Hospitalized">Hospitalized</option>';
+
+        const nameRequired = type === 'victim' ? 'required' : '';
+        row.innerHTML = `
+            <div class="person-field">
+                <label class="person-field-label">Full Name</label>
+                <input type="text" class="p-name" placeholder="Full name..." ${nameRequired}>
+            </div>
+            <div class="person-field-row">
+                <div class="person-field">
+                    <label class="person-field-label">Age</label>
+                    <input type="number" class="p-age" placeholder="Age" min="0" max="150">
+                </div>
+                <div class="person-field">
+                    <label class="person-field-label">Gender</label>
+                    <select class="p-gender">
+                        <option value="">--</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div class="person-field">
+                    <label class="person-field-label">Status</label>
+                    <select class="p-status" onchange="updateCasualtyCounts()">${statusOptions}</select>
+                </div>
+            </div>
+            <div class="person-field-row">
+                <div class="person-field">
+                    <label class="person-field-label">Nationality</label>
+                    <input type="text" class="p-nationality" value="FILIPINO">
+                </div>
+                <div class="person-field">
+                    <label class="person-field-label">Occupation</label>
+                    <div class="occupation-cell">
+                <select class="p-occupation" onchange="handleOccupationChange(this)">
+                    <option value="">-- Select --</option>
+                    <option value="DRIVER">Driver</option>
+                    <option value="STUDENT">Student</option>
+                    <option value="JOBLESS">Jobless/Unemployed</option>
+                    <option value="SELF-EMPLOYED">Self-Employed</option>
+                    <option value="FARMER">Farmer</option>
+                    <option value="GOVERNMENT EMPLOYEE">Government Employee</option>
+                    <option value="BUSINESSMAN MERCHANT">Businessman/Merchant</option>
+                    <option value="FREELANCE LABORER">Freelance Laborer</option>
+                    <option value="TRICYCLE DRIVER">Tricycle Driver</option>
+                    <option value="PRIVATE EMPLOYEE">Private Employee</option>
+                    <option value="HOUSEKEEPER">Housekeeper</option>
+                    <option value="POLICE OFFICER">Police Officer</option>
+                    <option value="CONSTRUCTION WORKER">Construction Worker</option>
+                    <option value="TRUCK DRIVER">Truck Driver</option>
+                    <option value="TEACHER">Teacher</option>
+                    <option value="RETIRED EMPLOYEE">Retired</option>
+                    <option value="SECURITY GUARD">Security Guard</option>
+                    <option value="BUS DRIVER">Bus Driver</option>
+                    <option value="HELPER">Helper</option>
+                    <option value="VENDOR">Vendor</option>
+                    <option value="CARPENTER">Carpenter</option>
+                    <option value="FISHERMAN">Fisherman</option>
+                    <option value="MECHANIC">Mechanic</option>
+                    <option value="NURSE">Nurse</option>
+                    <option value="SEAMAN">Seaman/OFW</option>
+                    <option value="ELECTED GOVERNMENT OFFICIAL">Elected Gov. Official</option>
+                    <option value="MILITARY PERSONNEL">Military Personnel</option>
+                    <option value="MOTORCYCLE TAXI DRIVER">Motorcycle Taxi Driver</option>
+                    <option value="DELIVERY RIDER">Delivery Rider</option>
+                    <option value="MINOR">Minor (Below 18)</option>
+                    <option value="NONE">None</option>
+                    <option value="OTHER">Other (specify)</option>
+                </select>
+                <input type="text" class="p-occupation-other" placeholder="Specify..." style="display:none;">
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-remove-row" onclick="removePersonRow(this)" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        return row;
+    }
+
+    function addVictimRow() {
+        document.getElementById('victims-container').appendChild(createPersonRow('victim'));
+        updateRowCounts();
+    }
+
+    function addSuspectRow() {
+        document.getElementById('suspects-container').appendChild(createPersonRow('suspect'));
+        updateRowCounts();
+    }
+
+    function removePersonRow(btn) {
+        const row = btn.closest('.person-row');
+        const container = row.parentNode;
+        const isSuspect = container.id === 'suspects-container';
+        const rows = container.querySelectorAll('.person-row');
+
+        // Victims: must keep at least 1 row. Suspects: can remove all.
+        if (!isSuspect && rows.length <= 1) return;
+
+        row.remove();
+        updateRowCounts();
+        updateCasualtyCounts();
+    }
+
+    function updateRowCounts() {
+        const vc = document.getElementById('victims-container');
+        const sc = document.getElementById('suspects-container');
+        if (vc) {
+            const count = vc.querySelectorAll('.person-row').length;
+            let counter = vc.parentNode.querySelector('.person-row-count');
+            if (!counter) {
+                counter = document.createElement('div');
+                counter.className = 'person-row-count';
+                vc.after(counter);
+            }
+            counter.textContent = count + ' victim' + (count !== 1 ? 's' : '');
+        }
+        if (sc) {
+            const count = sc.querySelectorAll('.person-row').length;
+            let counter = sc.parentNode.querySelector('.person-row-count');
+            if (!counter) {
+                counter = document.createElement('div');
+                counter.className = 'person-row-count';
+                sc.after(counter);
+            }
+            counter.textContent = count === 0 ? 'No suspects added' : count + ' suspect' + (count !== 1 ? 's' : '');
+        }
+    }
+
+    function collectPersonData(containerId) {
+        const rows = document.querySelectorAll('#' + containerId + ' .person-row');
+        const data = [];
+        rows.forEach(row => {
+            const name = row.querySelector('.p-name')?.value?.trim() || '';
+            if (name) {
+                data.push({
+                    name: name,
+                    age: row.querySelector('.p-age')?.value || '',
+                    gender: row.querySelector('.p-gender')?.value || '',
+                    status: row.querySelector('.p-status')?.value || '',
+                    nationality: row.querySelector('.p-nationality')?.value?.trim() || 'FILIPINO',
+                    occupation: getOccupationValue(row),
+                });
+            }
+        });
+        return data;
+    }
+
+    // Auto-count killed/injured/unharmed from victim row statuses
+    function updateCasualtyCounts() {
+        // Victim counts
+        const victimRows = document.querySelectorAll('#victims-container .person-row');
+        let killed = 0, injured = 0, unharmed = 0;
+        victimRows.forEach(row => {
+            const status = row.querySelector('.p-status')?.value || '';
+            if (status === 'Killed') killed++;
+            else if (status === 'Injured') injured++;
+            else if (status === 'Unharmed') unharmed++;
+        });
+        document.getElementById('count-killed').textContent = killed;
+        document.getElementById('count-injured').textContent = injured;
+        document.getElementById('count-unharmed').textContent = unharmed;
+        document.getElementById('id_casualties_killed').value = killed;
+        document.getElementById('id_casualties_injured').value = injured;
+
+        // Show/hide victim summary - only show badges with count > 0
+        const victimSummary = document.getElementById('victim-summary');
+        const hasAnyVictimStatus = (killed + injured + unharmed) > 0;
+        victimSummary.style.display = hasAnyVictimStatus ? 'flex' : 'none';
+        victimSummary.querySelector('.casualty-count-killed').style.display = killed > 0 ? 'flex' : 'none';
+        victimSummary.querySelector('.casualty-count-injured').style.display = injured > 0 ? 'flex' : 'none';
+        victimSummary.querySelector('.casualty-count-unharmed').style.display = unharmed > 0 ? 'flex' : 'none';
+
+        // Suspect counts
+        const suspectRows = document.querySelectorAll('#suspects-container .person-row');
+        let sKilled = 0, sInjured = 0, sUnharmed = 0, sReleased = 0, sArrested = 0, sAtLarge = 0, sHospitalized = 0;
+        suspectRows.forEach(row => {
+            const status = row.querySelector('.p-status')?.value || '';
+            if (status === 'Killed') sKilled++;
+            else if (status === 'Injured') sInjured++;
+            else if (status === 'Unharmed') sUnharmed++;
+            else if (status === 'Released') sReleased++;
+            else if (status === 'Arrested') sArrested++;
+            else if (status === 'At Large') sAtLarge++;
+            else if (status === 'Hospitalized') sHospitalized++;
+        });
+        document.getElementById('suspect-count-killed').textContent = sKilled;
+        document.getElementById('suspect-count-injured').textContent = sInjured;
+        document.getElementById('suspect-count-unharmed').textContent = sUnharmed;
+        document.getElementById('suspect-count-released').textContent = sReleased;
+        document.getElementById('suspect-count-arrested').textContent = sArrested;
+        document.getElementById('suspect-count-atlarge').textContent = sAtLarge;
+        document.getElementById('suspect-count-hospitalized').textContent = sHospitalized;
+
+        // Show/hide suspect summary - only show badges that have count > 0
+        const suspectSummary = document.getElementById('suspect-summary');
+        const hasAnySuspectStatus = (sKilled + sInjured + sUnharmed + sReleased + sArrested + sAtLarge + sHospitalized) > 0;
+        suspectSummary.style.display = hasAnySuspectStatus ? 'flex' : 'none';
+
+        // Hide individual badges with 0 count for cleaner look
+        suspectSummary.querySelector('.casualty-count-killed').style.display = sKilled > 0 ? 'flex' : 'none';
+        suspectSummary.querySelector('.casualty-count-injured').style.display = sInjured > 0 ? 'flex' : 'none';
+        suspectSummary.querySelector('.casualty-count-unharmed').style.display = sUnharmed > 0 ? 'flex' : 'none';
+        suspectSummary.querySelector('.casualty-count-released').style.display = sReleased > 0 ? 'flex' : 'none';
+        suspectSummary.querySelector('.casualty-count-arrested').style.display = sArrested > 0 ? 'flex' : 'none';
+        suspectSummary.querySelector('.casualty-count-atlarge').style.display = sAtLarge > 0 ? 'flex' : 'none';
+        suspectSummary.querySelector('.casualty-count-hospitalized').style.display = sHospitalized > 0 ? 'flex' : 'none';
+    }
+
+    // Pre-populate rows from saved data (edit mode) or add 1 empty row (new report)
+    function loadPersonRows(containerId, type, dataArray) {
+        const container = document.getElementById(containerId);
+        if (dataArray && dataArray.length > 0) {
+            dataArray.forEach(person => {
+                const row = createPersonRow(type);
+                row.querySelector('.p-name').value = person.name || '';
+                row.querySelector('.p-age').value = person.age || '';
+                row.querySelector('.p-gender').value = person.gender || '';
+                row.querySelector('.p-status').value = person.status || '';
+                row.querySelector('.p-nationality').value = person.nationality || 'FILIPINO';
+                setOccupationValue(row, person.occupation || '');
+                container.appendChild(row);
+            });
+        } else {
+            container.appendChild(createPersonRow(type));
+        }
+        updateRowCounts();
+        updateCasualtyCounts();
+    }
+
+    {% if is_edit and victims_data_json %}
+    loadPersonRows('victims-container', 'victim', {{ victims_data_json|safe }});
+    loadPersonRows('suspects-container', 'suspect', {{ suspects_data_json|safe }});
+    {% else %}
+    addVictimRow();
+    {% endif %}
+
+    // Serialize JSON before form submit
+    const reportForm = document.querySelector('form');
+    if (reportForm) {
+        reportForm.addEventListener('submit', function() {
+            updateCasualtyCounts();
+            document.getElementById('victims_json').value = JSON.stringify(collectPersonData('victims-container'));
+            document.getElementById('suspects_json').value = JSON.stringify(collectPersonData('suspects-container'));
+            // Clear active draft on successful submit
+            try {
+                if (typeof removeAllDrafts === 'function') removeAllDrafts();
+            } catch(e) {}
+        });
+    }
+
+    // ============================================
+    // DUPLICATE DETECTION
+    // ============================================
+    (function() {
+        var dupCheckTimer = null;
+        var lastDupQuery = '';
+
+        function checkForDuplicates() {
+            var dateEl = document.getElementById('id_incident_date');
+            var latEl = document.getElementById('id_latitude');
+            var lngEl = document.getElementById('id_longitude');
+            var barangayEl = document.getElementById('id_barangay');
+            var municipalEl = document.getElementById('id_municipal');
+
+            var dateVal = dateEl ? dateEl.value : '';
+            var latVal = latEl ? latEl.value : '';
+            var lngVal = lngEl ? lngEl.value : '';
+            var barangayVal = barangayEl ? barangayEl.value : '';
+            var municipalVal = municipalEl ? municipalEl.value : '';
+
+            // Need at least a date and some location
+            if (!dateVal || (!barangayVal && !latVal)) return;
+
+            var queryKey = dateVal + '|' + barangayVal + '|' + municipalVal + '|' + latVal + '|' + lngVal;
+            if (queryKey === lastDupQuery) return;
+            lastDupQuery = queryKey;
+
+            var params = new URLSearchParams({
+                date: dateVal,
+                lat: latVal,
+                lng: lngVal,
+                barangay: barangayVal,
+                municipal: municipalVal
+            });
+
+            fetch('{% url "check_duplicate_report" %}?' + params.toString(), {
+                credentials: 'same-origin'
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var warningEl = document.getElementById('duplicateWarning');
+                var itemsEl = document.getElementById('duplicateItems');
+                if (!warningEl || !itemsEl) return;
+
+                if (data.duplicates && data.duplicates.length > 0) {
+                    var html = '';
+                    data.duplicates.forEach(function(dup) {
+                        var badgeClass = dup.type === 'accident' ? 'official' : (dup.status === 'Verified' ? 'verified' : 'pending');
+                        var badgeText = dup.type === 'accident' ? 'Official Record' : dup.status;
+                        html += '<div class="duplicate-item">'
+                            + '<div class="duplicate-item-info">'
+                            + '<strong>' + dup.incident_type + '</strong> — '
+                            + dup.date + (dup.time ? ' at ' + dup.time : '')
+                            + ' &bull; ' + dup.location
+                            + (dup.reporter ? ' <span style="color:#9CA3AF">(by ' + dup.reporter + ')</span>' : '')
+                            + '</div>'
+                            + '<span class="duplicate-item-badge ' + badgeClass + '">' + badgeText + '</span>'
+                            + '</div>';
+                    });
+                    itemsEl.innerHTML = html;
+                    warningEl.classList.add('show');
+                } else {
+                    warningEl.classList.remove('show');
+                }
+            })
+            .catch(function() {});
+        }
+
+        function scheduleDupCheck() {
+            if (dupCheckTimer) clearTimeout(dupCheckTimer);
+            dupCheckTimer = setTimeout(checkForDuplicates, 800);
+        }
+
+        // Trigger on date change
+        var dateInput = document.getElementById('id_incident_date');
+        if (dateInput) dateInput.addEventListener('change', scheduleDupCheck);
+
+        // Trigger on barangay change
+        var barangayInput = document.getElementById('id_barangay');
+        if (barangayInput) barangayInput.addEventListener('change', scheduleDupCheck);
+
+        // Trigger when lat/lng change (map click sets these)
+        var latInput = document.getElementById('id_latitude');
+        var lngInput = document.getElementById('id_longitude');
+        if (latInput) {
+            // Watch for value changes via MutationObserver on the input
+            var observer = new MutationObserver(scheduleDupCheck);
+            observer.observe(latInput, { attributes: true, attributeFilter: ['value'] });
+            latInput.addEventListener('change', scheduleDupCheck);
+        }
+        if (lngInput) lngInput.addEventListener('change', scheduleDupCheck);
+
+        // Also poll for lat/lng changes (in case set programmatically)
+        var lastLat = '';
+        setInterval(function() {
+            var curLat = (document.getElementById('id_latitude') || {}).value || '';
+            if (curLat && curLat !== lastLat) {
+                lastLat = curLat;
+                scheduleDupCheck();
+            }
+        }, 2000);
+    })();
+
+    // ============================================
+    // AUTO-SAVE DRAFT — Multiple drafts (localStorage)
+    // ============================================
+    (function() {
+        var DRAFTS_KEY = 'agnes_report_drafts';
+        // Draft saves only when leaving the page
+        var MAX_DRAFTS = 5;
+        var MAX_AGE_HOURS = 48;
+        var isEditMode = {% if is_edit or is_resubmit %}true{% else %}false{% endif %};
+
+        // Only auto-save for new reports (not edit/resubmit)
+        if (isEditMode) return;
+
+        var formFields = [
+            'id_incident_date', 'id_incident_time', 'id_incident_type',
+            'id_incident_type_other', 'id_type_of_place', 'id_type_of_place_other',
+            'id_offense', 'id_offense_other', 'id_stage_of_felony',
+            'id_offense_type', 'id_offense_type_other',
+            'id_province', 'id_municipal', 'id_barangay', 'id_street_address',
+            'id_latitude', 'id_longitude',
+            'id_vehicle_kind', 'id_vehicle_kind_other', 'id_vehicle_plate_no',
+            'id_vehicle_make', 'id_vehicle_make_other',
+            'id_vehicle_model', 'id_vehicle_model_other',
+            'id_incident_description'
+        ];
+
+        // Track whether user has actually touched the form
+        var userHasEdited = false;
+        // Current active draft ID — persisted in sessionStorage so it survives page reload
+        var ACTIVE_DRAFT_KEY = 'agnes_active_draft_id';
+        var activeDraftId = null;
+        try { activeDraftId = sessionStorage.getItem(ACTIVE_DRAFT_KEY) || null; } catch(e) {}
+
+        function setActiveDraftId(id) {
+            activeDraftId = id;
+            try {
+                if (id) sessionStorage.setItem(ACTIVE_DRAFT_KEY, id);
+                else sessionStorage.removeItem(ACTIVE_DRAFT_KEY);
+            } catch(e) {}
+        }
+
+        // Snapshot initial values on load to compare later
+        var initialValues = {};
+        setTimeout(function() {
+            formFields.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) initialValues[id] = el.value;
+            });
+        }, 500);
+
+        // Detect real user interaction
+        var formEl = document.getElementById('accidentReportForm');
+        if (formEl) {
+            formEl.addEventListener('input', function() { userHasEdited = true; }, { once: true });
+            formEl.addEventListener('change', function(e) {
+                if (e.isTrusted) userHasEdited = true;
+            });
+        }
+
+        // ---- Draft storage helpers ----
+        function getDrafts() {
+            try {
+                var raw = localStorage.getItem(DRAFTS_KEY);
+                if (!raw) return [];
+                var drafts = JSON.parse(raw);
+                if (!Array.isArray(drafts)) return [];
+                // Purge expired drafts
+                var now = Date.now();
+                return drafts.filter(function(d) {
+                    return d._savedAt && (now - new Date(d._savedAt).getTime()) / 3600000 < MAX_AGE_HOURS;
+                });
+            } catch(e) { return []; }
+        }
+
+        function saveDrafts(drafts) {
+            try {
+                // Keep only most recent MAX_DRAFTS
+                if (drafts.length > MAX_DRAFTS) drafts = drafts.slice(0, MAX_DRAFTS);
+                localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+            } catch(e) {}
+        }
+
+        // Clear all form fields and reset state (used when active draft is deleted)
+        function clearFormFields() {
+            var form = document.getElementById('accidentReportForm');
+            if (form) {
+                var fields = form.querySelectorAll('input:not([readonly]):not([type="hidden"]):not([type="file"]), select, textarea');
+                fields.forEach(function(el) {
+                    if (el.tagName === 'SELECT') { el.selectedIndex = 0; }
+                    else if (el.type === 'checkbox' || el.type === 'radio') { el.checked = false; }
+                    else { el.value = ''; }
+                });
+            }
+            var vc = document.getElementById('victims-container');
+            if (vc) { vc.innerHTML = ''; vc.appendChild(createPersonRow('victim')); updateRowCounts(); updateCasualtyCounts(); }
+            var sc = document.getElementById('suspects-container');
+            if (sc) { sc.innerHTML = ''; updateRowCounts(); }
+            if (typeof locationMarker !== 'undefined' && locationMarker && typeof locationMap !== 'undefined') {
+                locationMap.removeLayer(locationMarker); locationMarker = null;
+            }
+            // Stop auto-save from re-creating draft
+            userHasEdited = false;
+            setActiveDraftId(null);
+        }
+
+        function showTopToast(message, icon, extraClass) {
+            var old = document.getElementById('draftRestoredToast');
+            if (old) old.remove();
+            var toast = document.createElement('div');
+            toast.className = 'draft-restored-toast' + (extraClass ? ' ' + extraClass : '');
+            toast.id = 'draftRestoredToast';
+            toast.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + message;
+            document.body.appendChild(toast);
+            setTimeout(function() { if (toast.parentElement) toast.remove(); }, 3000);
+        }
+
+        function removeDraftById(draftId, silent) {
+            var wasActive = (draftId === activeDraftId);
+            var drafts = getDrafts().filter(function(d) { return d._id !== draftId; });
+            saveDrafts(drafts);
+            if (wasActive && !silent) clearFormFields();
+            else if (wasActive) setActiveDraftId(null);
+            if (!silent) {
+                renderDraftPanel();
+                showTopToast('Draft discarded', 'trash-alt', 'discarded');
+            }
+        }
+
+        function removeAllDrafts() {
+            try { localStorage.removeItem(DRAFTS_KEY); } catch(e) {}
+            var panel = document.getElementById('draftPanel');
+            if (panel) panel.remove();
+            setActiveDraftId(null);
+        }
+
+        // Generate simple unique ID
+        function genId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 4);
+        }
+
+        function collectDraft() {
+            var data = {};
+            formFields.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) data[id] = el.value;
+            });
+            data._victims = collectPersonData('victims-container');
+            data._suspects = collectPersonData('suspects-container');
+            data._savedAt = new Date().toISOString();
+            return data;
+        }
+
+        function getDraftPreview(draft) {
+            var parts = [];
+            var type = draft['id_incident_type'];
+            if (type && type !== '') parts.push(type.replace(/_/g, ' '));
+            var brgy = draft['id_barangay'];
+            if (brgy && brgy !== '') parts.push('Brgy. ' + brgy);
+            var date = draft['id_incident_date'];
+            if (date && date !== '') parts.push(date);
+            return parts.length > 0 ? parts.join(' • ') : 'Empty draft';
+        }
+
+        function getTimeAgo(isoDate) {
+            var ageHours = (Date.now() - new Date(isoDate).getTime()) / 3600000;
+            if (ageHours < 1) {
+                var mins = Math.round(ageHours * 60);
+                return mins <= 0 ? 'Just now' : mins + ' min ago';
+            }
+            return Math.round(ageHours) + 'h ago';
+        }
+
+        function hasFormChanged() {
+            if (!userHasEdited) return false;
+            for (var i = 0; i < formFields.length; i++) {
+                var id = formFields[i];
+                var el = document.getElementById(id);
+                if (el && el.value !== (initialValues[id] || '')) return true;
+            }
+            var victims = collectPersonData('victims-container');
+            if (victims && victims.some(function(v) { return v.name && v.name.trim() !== ''; })) return true;
+            return false;
+        }
+
+        // ---- Save current form as draft ----
+        function saveDraft() {
+            try {
+                if (window._formSubmitting) return;
+                if (!hasFormChanged()) return;
+
+                var draft = collectDraft();
+                var drafts = getDrafts();
+
+                if (activeDraftId) {
+                    // Update existing active draft
+                    draft._id = activeDraftId;
+                    var found = false;
+                    for (var i = 0; i < drafts.length; i++) {
+                        if (drafts[i]._id === activeDraftId) {
+                            drafts[i] = draft;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        drafts.unshift(draft);
+                    }
+                } else {
+                    // New draft
+                    draft._id = genId();
+                    setActiveDraftId(draft._id);
+                    drafts.unshift(draft);
+                }
+
+                saveDrafts(drafts);
+            } catch(e) {}
+        }
+
+        // ---- Restore a draft into form ----
+        function restoreDraft(draft) {
+            formFields.forEach(function(id) {
+                if (draft[id] !== undefined && draft[id] !== '') {
+                    var el = document.getElementById(id);
+                    // Allow lat/lng even though they're readonly (set by map click)
+                    var isLatLng = (id === 'id_latitude' || id === 'id_longitude');
+                    if (el && (!el.readOnly || isLatLng)) {
+                        el.value = draft[id];
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            });
+
+            // Restore victims
+            if (draft._victims && draft._victims.length > 0) {
+                var vc = document.getElementById('victims-container');
+                if (vc) {
+                    vc.innerHTML = '';
+                    draft._victims.forEach(function(person) {
+                        var row = createPersonRow('victim');
+                        row.querySelector('.p-name').value = person.name || '';
+                        row.querySelector('.p-age').value = person.age || '';
+                        row.querySelector('.p-gender').value = person.gender || '';
+                        row.querySelector('.p-status').value = person.status || '';
+                        row.querySelector('.p-nationality').value = person.nationality || 'FILIPINO';
+                        setOccupationValue(row, person.occupation || '');
+                        vc.appendChild(row);
+                    });
+                    updateRowCounts();
+                    updateCasualtyCounts();
+                }
+            }
+
+            // Restore suspects
+            if (draft._suspects && draft._suspects.length > 0) {
+                var sc = document.getElementById('suspects-container');
+                if (sc) {
+                    sc.innerHTML = '';
+                    draft._suspects.forEach(function(person) {
+                        var row = createPersonRow('suspect');
+                        row.querySelector('.p-name').value = person.name || '';
+                        row.querySelector('.p-age').value = person.age || '';
+                        row.querySelector('.p-gender').value = person.gender || '';
+                        row.querySelector('.p-status').value = person.status || '';
+                        row.querySelector('.p-nationality').value = person.nationality || 'FILIPINO';
+                        setOccupationValue(row, person.occupation || '');
+                        sc.appendChild(row);
+                    });
+                    updateRowCounts();
+                }
+            }
+
+            // Restore map marker if lat/lng exist
+            var rLat = parseFloat(draft['id_latitude']);
+            var rLng = parseFloat(draft['id_longitude']);
+            if (!isNaN(rLat) && !isNaN(rLng) && typeof locationMap !== 'undefined') {
+                if (typeof locationMarker !== 'undefined' && locationMarker) {
+                    locationMap.removeLayer(locationMarker);
+                }
+                locationMarker = L.marker([rLat, rLng], { draggable: true }).addTo(locationMap);
+                locationMap.setView([rLat, rLng], 15);
+            }
+
+            // Set this as the active draft so future saves update it
+            setActiveDraftId(draft._id);
+            userHasEdited = true;
+
+            showDraftIndicator('restored');
+
+            // Immediately persist so it survives page reload
+            try {
+                var freshDraft = collectDraft();
+                freshDraft._id = activeDraftId;
+                var drafts = getDrafts();
+                for (var i = 0; i < drafts.length; i++) {
+                    if (drafts[i]._id === activeDraftId) {
+                        drafts[i] = freshDraft;
+                        break;
+                    }
+                }
+                saveDrafts(drafts);
+            } catch(e) {}
+
+            renderDraftPanel();
+        }
+
+        function showDraftIndicator(type) {
+            if (type === 'restored') {
+                showTopToast('Draft restored', 'check-circle', '');
+            } else {
+                // Small toast for "saved"
+                var indicator = document.getElementById('draftIndicator');
+                if (!indicator) return;
+                indicator.className = 'draft-indicator';
+                indicator.innerHTML = '<i class="fas fa-save"></i> Draft saved';
+                indicator.classList.add('show');
+                setTimeout(function() { indicator.classList.remove('show'); }, 2000);
+            }
+        }
+
+        // ---- Render floating draft button & panel ----
+        function renderDraftPanel() {
+            var drafts = getDrafts();
+
+            // Remove existing elements
+            var existingFab = document.getElementById('draftFab');
+            var existingPanel = document.getElementById('draftPanel');
+            if (existingFab) existingFab.remove();
+            if (existingPanel) existingPanel.remove();
+
+            if (drafts.length === 0) return;
+
+            // Floating action button
+            var fab = document.createElement('button');
+            fab.type = 'button';
+            fab.className = 'draft-fab';
+            fab.id = 'draftFab';
+            fab.innerHTML = '<i class="fas fa-file-alt"></i>';
+            fab.title = drafts.length + ' saved draft(s)';
+            fab.onclick = function() { toggleDraftPanel(); };
+
+            var badge = document.createElement('span');
+            badge.className = 'draft-fab-badge';
+            badge.textContent = drafts.length;
+            fab.appendChild(badge);
+
+            // Panel
+            var panel = document.createElement('div');
+            panel.className = 'draft-panel';
+            panel.id = 'draftPanel';
+
+            // Header
+            var header = document.createElement('div');
+            header.className = 'draft-panel-header';
+            header.innerHTML = '<i class="fas fa-file-alt"></i> Saved Drafts <span class="draft-count">' + drafts.length + '</span>';
+            var closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'draft-close';
+            closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            closeBtn.onclick = function() { toggleDraftPanel(false); };
+            header.appendChild(closeBtn);
+            panel.appendChild(header);
+
+            // Body (scrollable)
+            var body = document.createElement('div');
+            body.className = 'draft-panel-body';
+
+            // Draft items
+            drafts.forEach(function(draft, idx) {
+                var item = document.createElement('div');
+                item.className = 'draft-item';
+                if (draft._id === activeDraftId) {
+                    item.style.borderColor = '#2563EB';
+                    item.style.borderWidth = '2px';
+                }
+
+                var info = document.createElement('div');
+                info.className = 'draft-item-info';
+                var activeLabel = draft._id === activeDraftId ? '<span style="color:#2563EB;font-weight:700;font-size:0.6rem;">ACTIVE — </span>' : '';
+                info.innerHTML = '<span class="draft-label">' + activeLabel + 'Draft ' + (idx + 1) + '</span><span class="draft-time">' + getTimeAgo(draft._savedAt) + '</span>';
+
+                var actions = document.createElement('div');
+                actions.className = 'draft-item-actions';
+
+                var restoreBtn = document.createElement('button');
+                restoreBtn.type = 'button';
+                restoreBtn.className = 'btn-restore';
+                restoreBtn.innerHTML = '<i class="fas fa-redo"></i> Restore';
+                restoreBtn.setAttribute('data-draft-id', draft._id);
+                restoreBtn.onclick = (function(d) {
+                    return function() { restoreDraft(d); toggleDraftPanel(false); };
+                })(draft);
+
+                var discardBtn = document.createElement('button');
+                discardBtn.type = 'button';
+                discardBtn.className = 'btn-discard';
+                discardBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                discardBtn.title = 'Discard this draft';
+                discardBtn.setAttribute('data-draft-id', draft._id);
+                discardBtn.onclick = (function(dId) {
+                    return function() { removeDraftById(dId); };
+                })(draft._id);
+
+                actions.appendChild(restoreBtn);
+                actions.appendChild(discardBtn);
+
+                item.appendChild(info);
+                item.appendChild(actions);
+                body.appendChild(item);
+            });
+
+            panel.appendChild(body);
+
+            // Clear all link
+            if (drafts.length > 1) {
+                var clearAll = document.createElement('div');
+                clearAll.className = 'draft-clear-all';
+                clearAll.innerHTML = '<i class="fas fa-trash-alt"></i> Clear all drafts';
+                clearAll.onclick = function() {
+                    showConfirm('Discard all saved drafts?', removeAllDrafts);
+                };
+                panel.appendChild(clearAll);
+            }
+
+            document.body.appendChild(fab);
+            document.body.appendChild(panel);
+        }
+
+        function toggleDraftPanel(forceState) {
+            var panel = document.getElementById('draftPanel');
+            if (!panel) return;
+            if (typeof forceState === 'boolean') {
+                panel.classList.toggle('open', forceState);
+            } else {
+                panel.classList.toggle('open');
+            }
+        }
+
+        // ---- Expose global functions ----
+        window.removeAllDrafts = removeAllDrafts;
+        window.removeDraftById = removeDraftById;
+        window.getActiveDraftId = function() { return activeDraftId; };
+        window.resetActiveDraft = function() { setActiveDraftId(null); userHasEdited = false; };
+
+        // Migrate old single-draft format if exists
+        try {
+            var oldDraft = localStorage.getItem('agnes_report_draft');
+            if (oldDraft) {
+                var parsed = JSON.parse(oldDraft);
+                parsed._id = genId();
+                var existing = getDrafts();
+                existing.unshift(parsed);
+                saveDrafts(existing);
+                localStorage.removeItem('agnes_report_draft');
+            }
+        } catch(e) { localStorage.removeItem('agnes_report_draft'); }
+
+        // Check for existing drafts on page load
+        renderDraftPanel();
+
+        // Save draft only when leaving the page (not while still on it)
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') saveDraft();
+        });
+        window.addEventListener('beforeunload', function() { saveDraft(); });
+        // Save when clicking any navigation link
+        document.addEventListener('click', function(e) {
+            var link = e.target.closest('a[href]');
+            if (link && !link.href.startsWith('javascript')) saveDraft();
+        });
+    })();
+
+    // Custom confirm dialog (slides from top)
+    function showConfirm(message, onConfirm) {
+        var overlay = document.createElement('div');
+        overlay.className = 'confirm-overlay';
+        overlay.innerHTML = '<div class="confirm-dialog">'
+            + '<div class="confirm-dialog-body">'
+            + '<div class="confirm-dialog-icon"><i class="fas fa-exclamation-triangle"></i></div>'
+            + '<div class="confirm-dialog-msg">' + message + '</div>'
+            + '</div>'
+            + '<div class="confirm-dialog-actions">'
+            + '<button type="button" class="btn-cancel">Cancel</button>'
+            + '<button type="button" class="btn-confirm">Confirm</button>'
+            + '</div></div>';
+
+        function close() { overlay.remove(); }
+        overlay.querySelector('.btn-cancel').onclick = close;
+        overlay.querySelector('.btn-confirm').onclick = function() { close(); onConfirm(); };
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+        document.body.appendChild(overlay);
+        overlay.querySelector('.btn-confirm').focus();
+    }
+
+    // ============================================
+    // SECTION PROGRESS STEPS
+    // ============================================
+    (function() {
+        var sections = document.querySelectorAll('.form-section');
+        var steps = document.querySelectorAll('.form-progress-step');
+        var progressBar = document.getElementById('formProgress');
+        var anchor = document.getElementById('formProgressAnchor');
+        if (!sections.length || !steps.length || !progressBar || !anchor) return;
+
+        // Create placeholder to prevent layout jump
+        var placeholder = document.createElement('div');
+        placeholder.className = 'form-progress-placeholder';
+        placeholder.style.height = progressBar.offsetHeight + 'px';
+        progressBar.parentNode.insertBefore(placeholder, progressBar.nextSibling);
+
+        // Click to scroll
+        steps.forEach(function(step) {
+            step.addEventListener('click', function() {
+                var idx = parseInt(this.getAttribute('data-section'));
+                if (sections[idx]) {
+                    sections[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        });
+
+        // Highlight active on scroll
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    var idx = Array.prototype.indexOf.call(sections, entry.target);
+                    steps.forEach(function(s, i) {
+                        s.classList.remove('active');
+                        if (i < idx) s.classList.add('completed');
+                        else s.classList.remove('completed');
+                    });
+                    if (steps[idx]) steps[idx].classList.add('active');
+                }
+            });
+        }, { threshold: 0.3, rootMargin: '-80px 0px -50% 0px' });
+
+        sections.forEach(function(s) { observer.observe(s); });
+
+        // Pin/unpin logic
+        var navbar = document.querySelector('.navbar');
+
+        function getNavbarHeight() {
+            return navbar ? navbar.offsetHeight : 72;
+        }
+
+        // Set CSS variable for navbar height
+        function syncNavbarHeight() {
+            var h = getNavbarHeight();
+            document.documentElement.style.setProperty('--navbar-height', h + 'px');
+        }
+        syncNavbarHeight();
+        window.addEventListener('resize', syncNavbarHeight);
+
+        function updatePin() {
+            var anchorTop = anchor.getBoundingClientRect().top;
+            var navHidden = navbar && navbar.classList.contains('navbar-hidden');
+            var navHeight = getNavbarHeight();
+            var threshold = navHidden ? 0 : navHeight;
+
+            if (anchorTop < threshold) {
+                progressBar.classList.add('is-pinned');
+                placeholder.classList.add('show');
+                if (navHidden) progressBar.classList.add('nav-hidden');
+                else progressBar.classList.remove('nav-hidden');
+            } else {
+                progressBar.classList.remove('is-pinned', 'nav-hidden');
+                placeholder.classList.remove('show');
+            }
+        }
+
+        // On scroll
+        window.addEventListener('scroll', updatePin, { passive: true });
+
+        // Instantly react when navbar hides/shows — smooth with no scroll needed
+        if (navbar) {
+            new MutationObserver(updatePin).observe(navbar, { attributes: true, attributeFilter: ['class'] });
+        }
+    })();
+
+    // Clear form fields only — drafts stay in the panel
+    function clearFormDraft() {
+        showConfirm('Clear all form fields? Your saved drafts will be kept.', doClearFormDraft);
+        return;
+    }
+    function doClearFormDraft() {
+
+        // Detach from active draft (keep it saved) so new input becomes a new draft
+        if (typeof resetActiveDraft === 'function') resetActiveDraft();
+
+        // Reset all form fields (except read-only reporter fields)
+        var form = document.getElementById('accidentReportForm');
+        if (form) {
+            var fields = form.querySelectorAll('input:not([readonly]):not([type="hidden"]):not([type="file"]), select, textarea');
+            fields.forEach(function(el) {
+                if (el.tagName === 'SELECT') {
+                    el.selectedIndex = 0;
+                } else if (el.type === 'checkbox' || el.type === 'radio') {
+                    el.checked = false;
+                } else {
+                    el.value = '';
+                }
+            });
+
+            // Reset file inputs
+            form.querySelectorAll('input[type="file"]').forEach(function(el) {
+                el.value = '';
+            });
+        }
+
+        // Reset victim rows to 1 empty row
+        var vc = document.getElementById('victims-container');
+        if (vc) {
+            vc.innerHTML = '';
+            vc.appendChild(createPersonRow('victim'));
+            updateRowCounts();
+            updateCasualtyCounts();
+        }
+
+        // Clear all suspect rows
+        var sc = document.getElementById('suspects-container');
+        if (sc) {
+            sc.innerHTML = '';
+            updateRowCounts();
+        }
+
+        // Clear map marker
+        if (typeof locationMarker !== 'undefined' && locationMarker && typeof locationMap !== 'undefined') {
+            locationMap.removeLayer(locationMarker);
+            locationMarker = null;
+        }
+
+        // Hide duplicate warning if showing
+        var dupWarning = document.getElementById('duplicateWarning');
+        if (dupWarning) dupWarning.classList.remove('show');
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 </script>
 {% endblock %}

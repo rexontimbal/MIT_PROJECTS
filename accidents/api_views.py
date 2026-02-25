@@ -34,7 +34,7 @@ class AccidentViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = AccidentSerializer
     pagination_class = StandardResultsSetPagination
-    filterset_fields = ['province', 'municipal', 'year', 'is_hotspot']
+    filterset_fields = ['province', 'municipal', 'year', 'is_hotspot', 'driver_gender', 'victim_gender']
     search_fields = ['barangay', 'municipal', 'incident_type']
     ordering_fields = ['date_committed', 'victim_count']
     ordering = ['-date_committed']

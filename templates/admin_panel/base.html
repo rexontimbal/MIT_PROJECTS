@@ -6,6 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Admin Panel{% endblock %} - AGNES System</title>
 
+    <!-- CRITICAL: Apply sidebar state BEFORE any rendering to prevent flash -->
+    <script>
+        (function() {
+            try {
+                if (localStorage.getItem('agnes_admin_sidebar_collapsed') === 'true') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            } catch(e) {}
+        })();
+    </script>
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{% static 'images/pnp-logo.png' %}">
 
@@ -99,19 +110,44 @@
         }
 
         /* ============================================
-           TOP NAVBAR - Modern Flat Design
+           TOP NAVBAR - Modern Flat Design (Fixed Position)
         ============================================ */
         .admin-navbar {
             background: linear-gradient(135deg, var(--pnp-blue) 0%, var(--pnp-blue-dark) 100%);
             padding: 0 var(--space-6);
             box-shadow: var(--shadow-sm);
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             z-index: 1000;
-            border-bottom: 2px solid var(--pnp-red);
             height: 72px;
             display: flex;
             align-items: center;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Auto-hide header when scrolling down */
+        .admin-navbar.navbar-hidden {
+            transform: translateY(-100%);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Show header on hover trigger zone */
+        .navbar-hover-trigger {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 15px;
+            z-index: 1001;
+            pointer-events: auto;
+        }
+
+        /* Compensate for fixed navbar */
+        body {
+            padding-top: 72px;
         }
 
         .admin-navbar-container {
@@ -178,6 +214,37 @@
 
         .sidebar-toggle-btn:active {
             transform: scale(0.95);
+        }
+
+        .admin-navbar-back-btn {
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 100%;
+            background: none;
+            border: none;
+            outline: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: color 0.2s, transform 0.2s;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-appearance: none;
+        }
+
+        .admin-navbar-back-btn:hover {
+            color: white;
+            transform: translateX(-3px);
+        }
+
+        .admin-navbar-back-btn:focus,
+        .admin-navbar-back-btn:active {
+            outline: none;
+            background: none;
+            box-shadow: none;
         }
 
         .admin-navbar-back {
@@ -359,25 +426,50 @@
         }
 
         /* ============================================
-           SIDEBAR - Modern Flat Design
+           SIDEBAR - Modern Flat Design (Fixed Position)
         ============================================ */
         .admin-sidebar {
             width: 260px;
             background: var(--white);
             border-right: 1px solid var(--gray-200);
             padding: var(--space-6) 0;
-            position: sticky;
+            position: fixed;
             top: 72px;
+            left: 0;
+            bottom: 0;
             height: calc(100vh - 72px);
             z-index: 999;
             overflow-y: auto;
             overflow-x: hidden;
-            transition: width var(--transition-base), padding var(--transition-base);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: width;
         }
 
         .admin-sidebar.collapsed {
             width: 70px;
             padding: var(--space-4) 0;
+        }
+
+        /* Instant collapsed state on page load (no transition flash) */
+        html.sidebar-collapsed .admin-sidebar {
+            width: 70px;
+            padding: var(--space-4) 0;
+        }
+
+        /* Collapsed sidebar: adjust main content margin */
+        .admin-sidebar.collapsed + .sidebar-overlay + .admin-main,
+        .admin-sidebar.collapsed ~ .admin-main {
+            margin-left: 70px;
+        }
+
+        /* Instant collapsed state on page load (no transition flash) */
+        html.sidebar-collapsed .admin-main {
+            margin-left: 70px;
+            transition: none !important;
+        }
+
+        html.sidebar-collapsed .admin-sidebar {
+            transition: none !important;
         }
 
         .admin-sidebar::-webkit-scrollbar {
@@ -389,38 +481,68 @@
         }
 
         .admin-sidebar::-webkit-scrollbar-thumb {
-            background: var(--gray-300);
+            background: var(--scrollbar-thumb, var(--gray-300));
             border-radius: 3px;
         }
 
         .admin-sidebar::-webkit-scrollbar-thumb:hover {
-            background: var(--gray-400);
+            background: var(--scrollbar-thumb-hover, var(--gray-400));
         }
 
         .admin-sidebar-header {
-            padding: var(--space-3) var(--space-6) var(--space-6);
+            padding: var(--space-3) var(--space-6);
             border-bottom: 1px solid var(--gray-200);
             margin-bottom: var(--space-6);
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: var(--space-3);
+            height: 64px;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            transition: padding 0.3s ease, margin-bottom 0.3s ease;
         }
 
         .admin-sidebar.collapsed .admin-sidebar-header {
             padding: var(--space-3);
             margin-bottom: var(--space-4);
+            height: 64px;
+            justify-content: center;
+        }
+
+        html.sidebar-collapsed .admin-sidebar-header {
+            padding: var(--space-3);
+            margin-bottom: var(--space-4);
+            height: 64px;
+            justify-content: center;
+            transition: none !important;
         }
 
         .admin-sidebar-header-content {
             flex: 1;
             min-width: 0;
-            transition: opacity var(--transition-fast);
+            opacity: 1;
+            overflow: hidden;
+            white-space: nowrap;
+            max-width: 200px;
+            transition: opacity 0.2s ease, max-width 0.3s ease;
         }
 
         .admin-sidebar.collapsed .admin-sidebar-header-content {
-            display: none;
             opacity: 0;
+            max-width: 0;
+            flex: 0;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        html.sidebar-collapsed .admin-sidebar-header-content {
+            opacity: 0;
+            max-width: 0;
+            flex: 0;
+            min-width: 0;
+            overflow: hidden;
+            transition: none !important;
         }
 
         .admin-sidebar-header h2 {
@@ -429,16 +551,18 @@
             color: var(--gray-900);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin: 0 0 var(--space-2) 0;
+            margin: 0;
             display: flex;
             align-items: center;
             gap: var(--space-2);
+            line-height: 1.2;
         }
 
         .admin-sidebar-header p {
             font-size: 0.75rem;
             color: var(--gray-500);
-            margin: 0;
+            margin: 0.125rem 0 0 0;
+            line-height: 1.2;
         }
 
         .admin-nav {
@@ -458,7 +582,7 @@
             padding: var(--space-3) var(--space-6);
             color: var(--gray-700);
             text-decoration: none;
-            transition: background-color var(--transition-fast), color var(--transition-fast), border-left-color var(--transition-fast);
+            transition: background-color var(--transition-fast), color var(--transition-fast), border-left-color var(--transition-fast), padding var(--transition-base), margin var(--transition-base);
             border-left: 3px solid transparent;
             font-size: 0.875rem;
             font-weight: 500;
@@ -485,27 +609,46 @@
         }
 
         .admin-nav-link span {
-            transition: opacity var(--transition-fast);
+            opacity: 1;
+            max-width: 200px;
+            overflow: hidden;
+            white-space: nowrap;
+            transition: opacity 0.2s ease, max-width 0.3s ease;
+            display: inline-block;
         }
 
         /* Collapsed Sidebar Styles */
         .admin-sidebar.collapsed .admin-nav-link {
             padding: var(--space-3);
             justify-content: center;
-            border-left: 3px solid transparent;
+            border-left: none;
             border-radius: var(--radius-md);
             margin: 0 var(--space-2) var(--space-2) var(--space-2);
             position: relative;
-            transition: background-color var(--transition-fast), color var(--transition-fast);
+            transition: background-color var(--transition-fast), color var(--transition-fast), padding var(--transition-base);
         }
 
         .admin-sidebar.collapsed .admin-nav-link span {
-            display: none;
+            opacity: 0;
+            max-width: 0;
+            overflow: hidden;
         }
 
-        .admin-sidebar.collapsed .admin-nav-link {
+        /* Instant hide on page load (no transition) */
+        html.sidebar-collapsed .admin-nav-link span {
+            opacity: 0;
+            max-width: 0;
+            overflow: hidden;
+            transition: none !important;
+        }
+
+        html.sidebar-collapsed .admin-nav-link {
+            padding: var(--space-3);
+            justify-content: center;
             border-left: none;
             border-radius: var(--radius-md);
+            margin: 0 var(--space-2) var(--space-2) var(--space-2);
+            transition: none !important;
         }
 
         .admin-sidebar.collapsed .admin-nav-link:hover {
@@ -556,9 +699,10 @@
             flex: 1;
             padding: var(--space-8);
             max-width: 1400px;
-            margin: 0 auto;
             width: 100%;
             min-width: 0;
+            margin-left: 260px;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* ============================================
@@ -1220,7 +1364,14 @@
             }
 
             .admin-main {
+                margin-left: 220px;
                 padding: var(--space-6);
+            }
+
+            .admin-sidebar.collapsed + .sidebar-overlay + .admin-main,
+            .admin-sidebar.collapsed ~ .admin-main,
+            html.sidebar-collapsed .admin-main {
+                margin-left: 70px;
             }
 
             .admin-page-title {
@@ -1254,8 +1405,15 @@
             }
 
             .admin-main {
+                margin-left: 0;
                 width: 100%;
                 padding: var(--space-4);
+            }
+
+            .admin-sidebar.collapsed + .sidebar-overlay + .admin-main,
+            .admin-sidebar.collapsed ~ .admin-main,
+            html.sidebar-collapsed .admin-main {
+                margin-left: 0;
             }
 
             .stats-grid {
@@ -1331,10 +1489,18 @@
                 <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                     <i class="fas fa-bars"></i>
                 </button>
+                <button onclick="history.back()" class="admin-navbar-back-btn" title="Go Back">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
                 <img src="{% static 'images/pnp-logo.png' %}" alt="PNP Logo" class="admin-navbar-logo">
                 <div class="admin-navbar-title">
+                    {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
                     <h1>AGNES Admin Panel</h1>
                     <p>Philippine National Police - CARAGA Region</p>
+                    {% else %}
+                    <h1>AGNES Report Management</h1>
+                    <p>Philippine National Police - CARAGA Region</p>
+                    {% endif %}
                 </div>
             </div>
             <div class="admin-navbar-user">
@@ -1342,6 +1508,22 @@
                     <i class="fas fa-arrow-left"></i>
                     <span>Main Site</span>
                 </a>
+                <!-- Notification Bell -->
+                <div class="admin-notif-bell" id="adminNotifBell" style="position: relative;">
+                    <button onclick="toggleAdminNotifications()" type="button" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 40px; height: 40px; border-radius: var(--radius-md); cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: background 0.2s;">
+                        <i class="fas fa-bell"></i>
+                        <span id="adminNotifBadge" style="display: none; position: absolute; top: 2px; right: 2px; background: var(--danger); color: white; font-size: 0.65rem; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px;">0</span>
+                    </button>
+                    <div id="adminNotifMenu" style="display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; background: white; border-radius: var(--radius-md); box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 300px; max-width: 340px; z-index: 1001; border: 1px solid rgba(0,0,0,0.1); max-height: 360px; overflow: hidden;">
+                        <div style="padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 700; color: var(--gray-800); font-size: 0.8rem;"><i class="fas fa-bell"></i> Notifications</span>
+                            <button onclick="markAllAdminNotifRead()" style="background: none; border: none; color: var(--pnp-blue); cursor: pointer; font-size: 0.75rem; font-weight: 600;" title="Mark all as read"><i class="fas fa-check-double"></i></button>
+                        </div>
+                        <div id="adminNotifBody" style="max-height: 310px; overflow-y: auto;">
+                            <div style="padding: 1.5rem; text-align: center; color: var(--gray-400);"><i class="fas fa-bell-slash" style="font-size: 1.2rem;"></i><p style="margin-top: 0.3rem; font-size: 0.8rem;">No notifications</p></div>
+                        </div>
+                    </div>
+                </div>
                 <div class="admin-navbar-profile" id="adminProfileDropdown" onclick="toggleAdminDropdown()">
                     {% if user.profile and user.profile.profile_picture %}
                     <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="admin-navbar-avatar">
@@ -1403,8 +1585,13 @@
         <aside class="admin-sidebar">
             <div class="admin-sidebar-header">
                 <div class="admin-sidebar-header-content">
+                    {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
                     <h2><i class="fas fa-cog"></i> Management</h2>
                     <p>System Controls</p>
+                    {% else %}
+                    <h2><i class="fas fa-clipboard-check"></i> Reports</h2>
+                    <p>Report Management</p>
+                    {% endif %}
                 </div>
                 <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle sidebar" title="Collapse/Expand sidebar">
                     <i class="fas fa-chevron-left"></i>
@@ -1412,21 +1599,38 @@
             </div>
 
             <ul class="admin-nav">
+                {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
                 <li class="admin-nav-item">
                     <a href="{% url 'admin_panel:dashboard' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" data-tooltip="Dashboard">
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
+                {% endif %}
 
-                {% if user.is_superuser or user.profile.role in 'super_admin,regional_director,provincial_chief,station_commander' %}
+                {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' or user.profile.role == 'provincial_chief' or user.profile.role == 'station_commander' %}
+                <li class="admin-nav-item">
+                    <a href="{% url 'pending_reports' %}" class="admin-nav-link {% if 'pending-reports' in request.path %}active{% endif %}" data-tooltip="Manage Reports">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span>Manage Reports</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
                 <li class="admin-nav-item">
                     <a href="{% url 'admin_panel:users' %}" class="admin-nav-link {% if 'users' in request.path %}active{% endif %}" data-tooltip="User Management">
                         <i class="fas fa-users"></i>
                         <span>User Management</span>
                     </a>
                 </li>
-                {% endif %}
+
+                <li class="admin-nav-item">
+                    <a href="{% url 'admin_panel:report_activity_logs' %}" class="admin-nav-link {% if 'report-activity' in request.path %}active{% endif %}" data-tooltip="Report Activity">
+                        <i class="fas fa-history"></i>
+                        <span>Report Activity</span>
+                    </a>
+                </li>
 
                 <li class="admin-nav-item">
                     <a href="{% url 'admin_panel:audit_logs' %}" class="admin-nav-link {% if 'audit' in request.path %}active{% endif %}" data-tooltip="Audit Logs">
@@ -1436,38 +1640,34 @@
                 </li>
 
                 <li class="admin-nav-item">
-                    <a href="{% url 'admin_panel:system_monitoring' %}" class="admin-nav-link {% if 'system-monitoring' in request.path %}active{% endif %}" data-tooltip="System Monitoring">
+                    <a href="{% url 'admin_panel:system_monitoring' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'system_monitoring' %}active{% endif %}" data-tooltip="System Monitoring">
                         <i class="fas fa-server"></i>
                         <span>System Monitoring</span>
                     </a>
                 </li>
-
+                {% endif %}
 
             </ul>
         </aside>
 
-        <!-- CRITICAL: Apply collapsed state IMMEDIATELY to prevent any flash -->
+        <!-- Apply collapsed class to sidebar element (html class already set in head) -->
         <script>
             (function() {
-                // This script runs synchronously right after sidebar renders
-                // Check localStorage and apply collapsed state before any CSS transitions
                 const SIDEBAR_KEY = 'agnes_admin_sidebar_collapsed';
                 const isCollapsed = localStorage.getItem(SIDEBAR_KEY) === 'true';
 
                 if (isCollapsed) {
                     const sidebar = document.querySelector('.admin-sidebar');
                     if (sidebar) {
-                        // Add collapsed class immediately, before any rendering/transitions
                         sidebar.classList.add('collapsed');
-
-                        // Also update the toggle button icon immediately
-                        const toggleBtn = document.getElementById('sidebarToggleBtn');
-                        if (toggleBtn) {
-                            const icon = toggleBtn.querySelector('i');
-                            if (icon) {
-                                icon.classList.remove('fa-chevron-left');
-                                icon.classList.add('fa-chevron-right');
-                            }
+                    }
+                    // Update toggle button icon
+                    const toggleBtn = document.getElementById('sidebarToggleBtn');
+                    if (toggleBtn) {
+                        const icon = toggleBtn.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('fa-chevron-left');
+                            icon.classList.add('fa-chevron-right');
                         }
                     }
                 }
@@ -1478,9 +1678,17 @@
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <!-- Main Content -->
-        <main class="admin-main">
+        <main class="admin-main" id="adminMain">
+            {% block page_header %}{% endblock %}
             {% block content %}{% endblock %}
         </main>
+        <script>
+            // Re-enable transitions after initial render is complete
+            // Use a small delay to ensure browser has painted the collapsed state
+            setTimeout(function() {
+                document.documentElement.classList.remove('sidebar-collapsed');
+            }, 50);
+        </script>
     </div>
 
     <!-- Password Confirmation Modal -->
@@ -1686,6 +1894,18 @@
             }
         }
 
+        // Update main content margin based on sidebar state
+        function updateMainMargin(isCollapsed) {
+            const adminMain = document.querySelector('.admin-main');
+            if (adminMain && window.innerWidth > 768) {
+                if (window.innerWidth <= 1024) {
+                    adminMain.style.marginLeft = isCollapsed ? '70px' : '220px';
+                } else {
+                    adminMain.style.marginLeft = isCollapsed ? '70px' : '260px';
+                }
+            }
+        }
+
         // Toggle sidebar collapse/expand
         if (sidebarToggleBtn) {
             sidebarToggleBtn.addEventListener('click', function(e) {
@@ -1693,10 +1913,25 @@
                 if (sidebar) {
                     const isCollapsed = sidebar.classList.toggle('collapsed');
                     updateToggleButton(isCollapsed);
+                    updateMainMargin(isCollapsed);
                     localStorage.setItem(SIDEBAR_STORAGE_KEY, isCollapsed ? 'true' : 'false');
                 }
             });
         }
+
+        // Apply initial margin on page load
+        if (sidebar) {
+            const isInitiallyCollapsed = sidebar.classList.contains('collapsed');
+            updateMainMargin(isInitiallyCollapsed);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (sidebar) {
+                const isCollapsed = sidebar.classList.contains('collapsed');
+                updateMainMargin(isCollapsed);
+            }
+        });
 
         // =========================================
         // ADMIN PROFILE DROPDOWN
@@ -2355,6 +2590,237 @@
                 console.log('DEBUG: No Django messages to display');
             {% endif %}
         });
+    </script>
+
+    <!-- Admin Notification System -->
+    <script>
+        (function() {
+            let adminNotifications = [];
+            let adminUnreadCount = 0;
+            let notifMenuOpen = false;
+
+            function getCSRFToken() {
+                const cookies = document.cookie.split(';');
+                for (let c of cookies) {
+                    c = c.trim();
+                    if (c.startsWith('csrftoken=')) return c.substring('csrftoken='.length);
+                }
+                return '';
+            }
+
+            function getNotifIcon(type) {
+                const icons = { 'report_submitted': 'fa-file-alt', 'report_approved': 'fa-check-circle', 'report_rejected': 'fa-times-circle', 'info': 'fa-info-circle' };
+                return icons[type] || 'fa-bell';
+            }
+
+            function getNotifColor(type) {
+                const colors = { 'report_submitted': '#3B82F6', 'report_approved': '#10B981', 'report_rejected': '#EF4444', 'info': '#6366F1' };
+                return colors[type] || '#6B7280';
+            }
+
+            window.toggleAdminNotifications = function() {
+                const menu = document.getElementById('adminNotifMenu');
+                notifMenuOpen = !notifMenuOpen;
+                menu.style.display = notifMenuOpen ? 'block' : 'none';
+                if (notifMenuOpen) fetchAdminNotifications();
+            };
+
+            document.addEventListener('click', function(e) {
+                const bell = document.getElementById('adminNotifBell');
+                if (bell && !bell.contains(e.target)) {
+                    document.getElementById('adminNotifMenu').style.display = 'none';
+                    notifMenuOpen = false;
+                }
+            });
+
+            function updateAdminBadge() {
+                const badge = document.getElementById('adminNotifBadge');
+                if (badge) {
+                    if (adminUnreadCount > 0) {
+                        badge.style.display = 'flex';
+                        badge.textContent = adminUnreadCount > 99 ? '99+' : adminUnreadCount;
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+
+            function renderAdminNotifications() {
+                const body = document.getElementById('adminNotifBody');
+                if (!body) return;
+
+                if (adminNotifications.length === 0) {
+                    body.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--gray-400);"><i class="fas fa-bell-slash" style="font-size: 1.2rem;"></i><p style="margin-top: 0.3rem; font-size: 0.8rem;">No notifications</p></div>';
+                    return;
+                }
+
+                body.innerHTML = adminNotifications.map(n => `
+                    <div onclick="handleAdminNotifClick(${n.id}, '${n.url}')" style="padding: 0.45rem 0.75rem; border-bottom: 1px solid var(--gray-100); cursor: pointer; display: flex; gap: 0.5rem; align-items: flex-start; background: ${n.is_read ? 'white' : '#F0F7FF'}; transition: background 0.15s;">
+                        <div style="width: 26px; height: 26px; border-radius: 50%; background: ${getNotifColor(n.type)}15; color: ${getNotifColor(n.type)}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.7rem; margin-top: 2px;">
+                            <i class="fas ${getNotifIcon(n.type)}"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: ${n.is_read ? '500' : '700'}; font-size: 0.75rem; color: var(--gray-800); line-height: 1.3;">${n.title}</div>
+                            <div style="font-size: 0.7rem; color: var(--gray-600); line-height: 1.3;">${n.message}</div>
+                            <div style="font-size: 0.65rem; color: var(--gray-400); margin-top: 2px;">${n.time_ago}</div>
+                        </div>
+                        ${n.is_read ? '' : '<div style="width: 6px; height: 6px; border-radius: 50%; background: var(--pnp-blue); flex-shrink: 0; margin-top: 6px;"></div>'}
+                    </div>
+                `).join('');
+            }
+
+            function fetchAdminNotifications() {
+                fetch('{% url "get_notifications" %}')
+                    .then(r => r.json())
+                    .then(data => {
+                        adminNotifications = data.notifications || [];
+                        adminUnreadCount = data.unread_count || 0;
+                        updateAdminBadge();
+                        renderAdminNotifications();
+                    })
+                    .catch(err => console.log('[Admin Notifications] Error:', err));
+            }
+
+            window.handleAdminNotifClick = function(id, url) {
+                fetch(`/api/notifications/${id}/read/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCSRFToken() }
+                }).then(() => {
+                    adminNotifications = adminNotifications.map(n => {
+                        if (n.id === id) n.is_read = true;
+                        return n;
+                    });
+                    adminUnreadCount = Math.max(0, adminUnreadCount - 1);
+                    updateAdminBadge();
+                    renderAdminNotifications();
+                });
+                if (url) window.location.href = url;
+            };
+
+            window.markAllAdminNotifRead = function() {
+                fetch('{% url "mark_all_notifications_read" %}', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCSRFToken() }
+                }).then(() => {
+                    adminNotifications = adminNotifications.map(n => ({ ...n, is_read: true }));
+                    adminUnreadCount = 0;
+                    updateAdminBadge();
+                    renderAdminNotifications();
+                });
+            };
+
+            // Initialize
+            document.addEventListener('DOMContentLoaded', function() {
+                fetchAdminNotifications();
+                setInterval(fetchAdminNotifications, 3000);
+            });
+        })();
+    </script>
+
+    <!-- Auto-Hide Header Script -->
+    <script>
+        (function() {
+            const navbar = document.querySelector('.admin-navbar');
+            if (!navbar) return;
+
+            // Create hover trigger zone at the top
+            const hoverTrigger = document.createElement('div');
+            hoverTrigger.className = 'navbar-hover-trigger';
+            document.body.appendChild(hoverTrigger);
+
+            let lastScrollY = window.scrollY;
+            let scrollTimeout = null;
+            let isHidden = false;
+            let isHovering = false;
+
+            // Show header function
+            function showHeader() {
+                navbar.classList.remove('navbar-hidden');
+                isHidden = false;
+            }
+
+            // Hide header function
+            function hideHeader() {
+                if (!isHovering && window.scrollY > 100) {
+                    navbar.classList.add('navbar-hidden');
+                    isHidden = true;
+                }
+            }
+
+            // Handle scroll
+            function handleScroll() {
+                const currentScrollY = window.scrollY;
+
+                // Always show header at the top of page
+                if (currentScrollY < 100) {
+                    showHeader();
+                    return;
+                }
+
+                // Scrolling up - show header immediately
+                if (currentScrollY < lastScrollY) {
+                    showHeader();
+                    // Clear any pending hide timeout
+                    if (scrollTimeout) {
+                        clearTimeout(scrollTimeout);
+                        scrollTimeout = null;
+                    }
+                }
+                // Scrolling down - hide after delay
+                else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                    // Clear existing timeout
+                    if (scrollTimeout) {
+                        clearTimeout(scrollTimeout);
+                    }
+                    // Set new timeout to hide header
+                    scrollTimeout = setTimeout(hideHeader, 1500);
+                }
+
+                lastScrollY = currentScrollY;
+            }
+
+            // Hover trigger - show header when mouse near top
+            hoverTrigger.addEventListener('mouseenter', function() {
+                isHovering = true;
+                showHeader();
+            });
+
+            // Keep header visible while hovering on navbar
+            navbar.addEventListener('mouseenter', function() {
+                isHovering = true;
+                showHeader();
+            });
+
+            navbar.addEventListener('mouseleave', function() {
+                isHovering = false;
+                // Hide after delay if scrolled down
+                if (window.scrollY > 100) {
+                    scrollTimeout = setTimeout(hideHeader, 2000);
+                }
+            });
+
+            hoverTrigger.addEventListener('mouseleave', function() {
+                // Only set isHovering false if not on navbar
+                if (!navbar.matches(':hover')) {
+                    isHovering = false;
+                }
+            });
+
+            // Throttled scroll listener for performance
+            let ticking = false;
+            window.addEventListener('scroll', function() {
+                if (!ticking) {
+                    window.requestAnimationFrame(function() {
+                        handleScroll();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+
+            // Show header on page load
+            showHeader();
+        })();
     </script>
 
     {% block extra_js %}{% endblock %}

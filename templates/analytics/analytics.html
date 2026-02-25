@@ -24,7 +24,8 @@
     }
 
     .analytics-container {
-        max-width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
     /* Compact Modern Header */
@@ -286,10 +287,7 @@
         padding: 1.25rem 1rem;
         border-radius: 12px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-        border-left: 4px solid var(--analytics-primary);
-        border-top: 1px solid var(--border-light);
-        border-right: 1px solid var(--border-light);
-        border-bottom: 1px solid var(--border-light);
+        border: 1px solid var(--border-light);
         text-align: center;
         transition: all 0.2s ease;
     }
@@ -837,7 +835,6 @@
     /* Date Modal Alert - Beautiful & Clean */
     .date-modal-alert {
         background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
-        border-left: 4px solid #FF9800;
         border-radius: 8px;
         padding: 0.75rem 1rem;
         margin-bottom: 0.75rem;
@@ -1246,16 +1243,14 @@
     /* Active Filters Display */
     .active-filters-banner {
         background: var(--analytics-light);
-        border-left: 4px solid var(--analytics-primary);
         padding: 0.875rem 1.25rem;
         border-radius: 8px;
         margin-top: 1rem;
         padding-top: 1rem;
-        border-top: 1px solid var(--border-light);
+        border: 1px solid var(--border-light);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-right: 1px solid var(--border-light);
         border-bottom: 1px solid var(--border-light);
     }
 
@@ -1518,6 +1513,878 @@
             opacity: 1;
             transform: scale(1) translateY(0);
         }
+    }
+
+    /* ============================================================================
+       COMPREHENSIVE MOBILE RESPONSIVE STYLES
+       ============================================================================ */
+
+    /* Tablet */
+    @media (max-width: 1024px) {
+        .analytics-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .comparison-section {
+            grid-template-columns: 1fr;
+        }
+
+        .insight-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+        .analytics-header {
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .analytics-header h2 {
+            font-size: 1.2rem;
+        }
+
+        .analytics-header p {
+            font-size: 0.8rem;
+        }
+
+        .date-range-selector {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .date-inputs {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .date-inputs input,
+        .date-inputs select,
+        .date-inputs button {
+            width: 100%;
+            min-height: 44px;
+        }
+
+        .analytics-controls {
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .control-row {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .control-row select,
+        .control-row input {
+            min-height: 44px;
+            font-size: 0.85rem;
+        }
+
+        .analytics-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .chart-card {
+            padding: 1rem;
+        }
+
+        .chart-card h3 {
+            font-size: 0.9rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .chart-card canvas {
+            max-height: 220px !important;
+            height: 220px !important;
+        }
+
+        .chart-body {
+            height: 220px;
+            padding: 0.75rem;
+        }
+
+        .chart-actions {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .chart-btn {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
+        }
+
+        /* Insights section */
+        .predictive-insights {
+            padding: 1rem;
+        }
+
+        .predictive-insights h3 {
+            font-size: 1rem;
+        }
+
+        .insight-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .insight-card {
+            padding: 0.75rem;
+        }
+
+        .insight-value {
+            font-size: 1.5rem;
+        }
+
+        .insight-label {
+            font-size: 0.75rem;
+        }
+
+        /* Stats overview */
+        .stats-overview {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-box {
+            padding: 0.75rem;
+        }
+
+        .stat-box .stat-value {
+            font-size: 1.3rem;
+        }
+
+        .stat-box .stat-label {
+            font-size: 0.75rem;
+        }
+
+        .comparison-section {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        /* Modals */
+        .chart-modal-content {
+            width: 95% !important;
+            max-width: none !important;
+            max-height: 90vh;
+            margin: 5vh auto;
+        }
+    }
+
+    /* Small mobile */
+    @media (max-width: 480px) {
+        .analytics-header {
+            padding: 0.75rem 1rem;
+        }
+
+        .analytics-header h2 {
+            font-size: 1.05rem;
+        }
+
+        .control-row {
+            grid-template-columns: 1fr;
+        }
+
+        .insight-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-overview {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-card canvas {
+            max-height: 180px !important;
+            height: 180px !important;
+        }
+
+        .chart-body {
+            height: 180px;
+        }
+
+        .insight-value {
+            font-size: 1.25rem;
+        }
+    }
+
+    /* ===== DARK MODE STYLES ===== */
+    [data-theme="dark"] .analytics-container {
+        background: transparent;
+    }
+
+    [data-theme="dark"] .analytics-header {
+        background: linear-gradient(135deg, #1E3A5F 0%, #0D1B2A 100%);
+    }
+
+    [data-theme="dark"] .chart-card,
+    [data-theme="dark"] .stats-card,
+    [data-theme="dark"] .insight-card,
+    [data-theme="dark"] .filter-card,
+    [data-theme="dark"] .control-panel {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .chart-header,
+    [data-theme="dark"] .card-header {
+        border-bottom-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .chart-title,
+    [data-theme="dark"] .card-title,
+    [data-theme="dark"] .section-title {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .chart-subtitle,
+    [data-theme="dark"] .card-subtitle {
+        color: #B0B0B0;
+    }
+
+    [data-theme="dark"] .stat-value,
+    [data-theme="dark"] .insight-value {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .stat-label,
+    [data-theme="dark"] .insight-label {
+        color: #B0B0B0;
+    }
+
+    [data-theme="dark"] select,
+    [data-theme="dark"] input[type="date"],
+    [data-theme="dark"] .filter-select {
+        background: #1A2332;
+        border-color: #2D3A4F;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] select:focus,
+    [data-theme="dark"] input:focus {
+        border-color: #4A90D9;
+        background: #1E2A3A;
+    }
+
+    [data-theme="dark"] .btn-outline {
+        border-color: #3D4A5F;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .btn-outline:hover {
+        background: rgba(74, 144, 217, 0.15);
+        border-color: #4A90D9;
+    }
+
+    [data-theme="dark"] table {
+        background: #1E2A3A;
+    }
+
+    [data-theme="dark"] th {
+        background: #1E3A5F;
+        color: white;
+    }
+
+    [data-theme="dark"] td {
+        color: #E8E8E8;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] tr:nth-child(even) {
+        background: #1A2332;
+    }
+
+    [data-theme="dark"] tr:hover {
+        background: #243447;
+    }
+
+    [data-theme="dark"] .stats-overview .stat-item {
+        background: #1A2332;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .loading-overlay {
+        background: rgba(13, 27, 42, 0.95);
+    }
+
+    [data-theme="dark"] .empty-state {
+        color: #B0B0B0;
+    }
+
+    [data-theme="dark"] .insight-card.positive {
+        border-left-color: #10B981;
+    }
+
+    [data-theme="dark"] .insight-card.negative {
+        border-left-color: #EF4444;
+    }
+
+    [data-theme="dark"] .insight-card.neutral {
+        border-left-color: #6B7280;
+    }
+
+    /* Force override inline styles with dark colors */
+    [data-theme="dark"] [style*="color: #2"],
+    [data-theme="dark"] [style*="color:#2"],
+    [data-theme="dark"] [style*="color: #3"],
+    [data-theme="dark"] [style*="color:#3"],
+    [data-theme="dark"] [style*="color: #4"],
+    [data-theme="dark"] [style*="color:#4"],
+    [data-theme="dark"] [style*="color: #5"],
+    [data-theme="dark"] [style*="color:#5"] {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .analytics-header h1,
+    [data-theme="dark"] .analytics-header h2 {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .analytics-header p {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .chart-card h3,
+    [data-theme="dark"] .chart-header h3 {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .chart-card p,
+    [data-theme="dark"] .chart-subtitle {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .stats-card .stat-value,
+    [data-theme="dark"] .stats-card .number,
+    [data-theme="dark"] .metric-value {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .stats-card .stat-label,
+    [data-theme="dark"] .metric-label {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .filter-card label,
+    [data-theme="dark"] .control-panel label {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .insight-card h4,
+    [data-theme="dark"] .insight-title {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .insight-card p,
+    [data-theme="dark"] .insight-text {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .insight-value {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .gender-stat,
+    [data-theme="dark"] .demographic-stat {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .gender-stat .number,
+    [data-theme="dark"] .demographic-stat .value {
+        color: #FFFFFF !important;
+    }
+
+    /* ===== ADDITIONAL DARK MODE FIXES ===== */
+
+    /* Analytics Controls (Filter Bar) */
+    [data-theme="dark"] .analytics-controls {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .analytics-controls h3 {
+        color: #E8E8E8 !important;
+    }
+
+    /* Stat Boxes */
+    [data-theme="dark"] .stat-box {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+        border-left-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .stat-box h3 {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .stat-box p {
+        color: #B0B0B0 !important;
+    }
+
+    /* Severity Table */
+    [data-theme="dark"] .severity-table {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .severity-table h3 {
+        color: #E8E8E8 !important;
+    }
+
+    /* Data Table */
+    [data-theme="dark"] .data-table {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] .data-table thead {
+        background: #1A2332 !important;
+    }
+
+    [data-theme="dark"] .data-table th {
+        background: #1A2332 !important;
+        color: #E8E8E8 !important;
+        border-bottom-color: #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .data-table td {
+        color: #E8E8E8 !important;
+        border-bottom-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .data-table tbody tr:hover {
+        background: #243447 !important;
+    }
+
+    /* Form Controls */
+    [data-theme="dark"] .form-group label {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .form-control {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .form-control:focus {
+        border-color: #4A90D9 !important;
+        background: #1E2A3A !important;
+    }
+
+    /* Chart Buttons */
+    [data-theme="dark"] .chart-btn {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .chart-btn:hover {
+        background: #4A90D9 !important;
+        border-color: #4A90D9 !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Expand Button */
+    [data-theme="dark"] .expand-btn {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .expand-btn:hover {
+        background: #4A90D9 !important;
+        border-color: #4A90D9 !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Chart Modal */
+    [data-theme="dark"] .chart-modal-content {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] .chart-modal-header {
+        background: #1A2332 !important;
+        border-bottom-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .chart-modal-header h3 {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .chart-modal-date-range {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .chart-modal-close {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .chart-modal-close:hover {
+        background: #DC143C !important;
+        border-color: #DC143C !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .chart-modal-body {
+        background: #1E2A3A !important;
+    }
+
+    /* Help Modal */
+    [data-theme="dark"] .help-modal-body {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] .help-intro {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .help-card {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .help-card:hover {
+        background: #243447 !important;
+        border-color: #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .help-card-header {
+        border-bottom-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .help-card-header h4 {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .help-icon {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .help-card-desc {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .help-option-item {
+        background: #2D3A4F !important;
+        border-left-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .help-option-item p {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .help-badge {
+        background: rgba(74, 144, 217, 0.25) !important;
+        color: #8FC8FF !important;
+        border-color: rgba(74, 144, 217, 0.4) !important;
+    }
+
+    [data-theme="dark"] .help-pro-tip {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .tip-icon {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .tip-content {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .tip-content strong {
+        color: #FFFFFF !important;
+    }
+
+    /* Date Modal */
+    [data-theme="dark"] .date-modal-body {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] .date-tab {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .date-tab:hover {
+        border-color: #4A90D9 !important;
+        background: #243447 !important;
+    }
+
+    [data-theme="dark"] .date-tab.active {
+        background: #4A90D9 !important;
+        border-color: #4A90D9 !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .tab-label {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .date-tab.active .tab-label {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    [data-theme="dark"] .tab-value {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .date-tab.active .tab-value {
+        color: white !important;
+    }
+
+    [data-theme="dark"] .date-modal-alert {
+        background: rgba(255, 152, 0, 0.15) !important;
+        border-left-color: #FF9800 !important;
+    }
+
+    [data-theme="dark"] .date-modal-alert .alert-message {
+        color: #FFB74D !important;
+    }
+
+    /* Calendar */
+    [data-theme="dark"] .calendar-container {
+        background: #1A2332 !important;
+    }
+
+    [data-theme="dark"] .calendar-nav {
+        background: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .calendar-nav:hover {
+        background: #4A90D9 !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .calendar-select {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .calendar-select:hover,
+    [data-theme="dark"] .calendar-select:focus {
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .weekday {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .calendar-day {
+        background: #1E2A3A !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .calendar-day:hover {
+        background: #2D3A4F !important;
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .calendar-day.other-month {
+        color: #6B7280 !important;
+    }
+
+    [data-theme="dark"] .calendar-day.selected {
+        background: #4A90D9 !important;
+        border-color: #4A90D9 !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .calendar-day.today {
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .calendar-day.disabled {
+        background: #1A2332 !important;
+        color: #4B5563 !important;
+    }
+
+    [data-theme="dark"] .calendar-day.disabled:hover {
+        background: #1A2332 !important;
+        border-color: transparent !important;
+    }
+
+    /* Date Modal Actions */
+    [data-theme="dark"] .date-modal-actions {
+        border-top-color: #2D3A4F !important;
+    }
+
+    /* Active Filters Banner */
+    [data-theme="dark"] .active-filters-banner {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+        border-left-color: #4A90D9 !important;
+    }
+
+    /* Filter Tags */
+    [data-theme="dark"] .filter-tag {
+        background: rgba(74, 144, 217, 0.2) !important;
+        color: #8FC8FF !important;
+        border-color: rgba(74, 144, 217, 0.4) !important;
+    }
+
+    [data-theme="dark"] .filter-tag:hover {
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .filter-content strong {
+        color: #8FC8FF !important;
+    }
+
+    [data-theme="dark"] .filter-tag button {
+        color: #8FC8FF !important;
+    }
+
+    [data-theme="dark"] .filter-tag button:hover {
+        background: #4A90D9 !important;
+        color: white !important;
+    }
+
+    /* Chart Header */
+    [data-theme="dark"] .chart-header {
+        background: #1A2332 !important;
+        border-bottom-color: #2D3A4F !important;
+    }
+
+    /* Chart Body */
+    [data-theme="dark"] .chart-body {
+        background: #1E2A3A !important;
+    }
+
+    /* Resize Handle */
+    [data-theme="dark"] .modal-resize-handle:hover {
+        background: rgba(74, 144, 217, 0.3) !important;
+    }
+
+    [data-theme="dark"] .modal-resize-handle:hover.left {
+        border-left-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .modal-resize-handle:hover.right {
+        border-right-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .chart-modal-content:hover .modal-resize-handle::after {
+        background: #4A90D9 !important;
+    }
+
+    /* Date Selector Inputs */
+    [data-theme="dark"] .date-selector,
+    [data-theme="dark"] input.date-selector,
+    [data-theme="dark"] .form-control.date-selector {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    /* Stat Box Small Text */
+    [data-theme="dark"] .stat-box small {
+        color: #B0B0B0 !important;
+    }
+
+    /* Gender Stats Card */
+    [data-theme="dark"] .chart-card > div[style*="background: linear-gradient"] {
+        background: linear-gradient(135deg, #2D3A4F 0%, #1A2332 100%) !important;
+    }
+
+    [data-theme="dark"] .chart-card div[style*="#6B7280"] {
+        color: #B0B0B0 !important;
+    }
+
+    /* Filter Help Modal Header */
+    [data-theme="dark"] #filterHelpModal .chart-modal-header {
+        background: #1A2332 !important;
+    }
+
+    /* Inline styles override for analytics-controls header */
+    [data-theme="dark"] .analytics-controls h3[style] {
+        color: #E8E8E8 !important;
+    }
+
+    /* Active Filters List border */
+    [data-theme="dark"] #activeFiltersList {
+        border-top-color: #2D3A4F !important;
+    }
+
+    /* Predictive Insights Cards for Dark Mode */
+    [data-theme="dark"] .predictive-insights {
+        background: linear-gradient(135deg, #1E3A5F 0%, #0D1B2A 100%) !important;
+    }
+
+    /* Analytics Section Header */
+    [data-theme="dark"] .analytics-section-header {
+        background: linear-gradient(135deg, #1E3A5F 0%, #1A2332 100%) !important;
+    }
+
+    /* Gender Analytics Cards inline backgrounds */
+    [data-theme="dark"] .chart-card > div[style*="FFF5F7"],
+    [data-theme="dark"] .chart-card > div[style*="F3E8FF"] {
+        background: linear-gradient(135deg, #2D3A4F 0%, #1A2332 100%) !important;
+    }
+
+    [data-theme="dark"] .chart-card div[style*="color: #2563EB"],
+    [data-theme="dark"] .chart-card div[style*="color: #EC4899"] {
+        color: inherit;
+    }
+
+    /* Table cells with inline color styles */
+    [data-theme="dark"] .data-table td[style*="color"] {
+        filter: brightness(1.3);
+    }
+
+    /* Reset Button in filter controls */
+    [data-theme="dark"] .btn.btn-outline.btn-sm {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .btn.btn-outline.btn-sm:hover {
+        background: rgba(74, 144, 217, 0.2) !important;
+        border-color: #4A90D9 !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Chart Modal Canvas Container */
+    [data-theme="dark"] .chart-modal-canvas-container {
+        background: #1E2A3A !important;
+    }
+
+    /* Override inline style for form-control date-selector */
+    [data-theme="dark"] input[style*="background: white"].form-control {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    /* Clear All button in filter */
+    [data-theme="dark"] .btn-outline[onclick*="clear"],
+    [data-theme="dark"] .btn-outline[onclick*="reset"] {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .btn-outline[onclick*="clear"]:hover,
+    [data-theme="dark"] .btn-outline[onclick*="reset"]:hover {
+        background: rgba(74, 144, 217, 0.2) !important;
+        border-color: #4A90D9 !important;
+        color: #FFFFFF !important;
     }
 </style>
 {% endblock %}
@@ -1928,6 +2795,80 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Gender Analytics Section -->
+    <div class="analytics-section-header" style="background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin: 2rem 0 1.5rem 0; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);">
+        <h3 style="margin: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-venus-mars"></i> Gender Analytics
+        </h3>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.95; font-size: 0.9rem;">
+            Demographic insights - Driver and victim gender distribution analysis
+        </p>
+    </div>
+
+    <div class="analytics-grid">
+        <!-- Gender Distribution Pie Chart -->
+        <div class="chart-card">
+            <h3>
+                <span class="chart-title">Driver Gender Distribution</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('genderPieChart', 'Gender Distribution')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('genderPieChart', 'gender-distribution')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
+            <div style="background: linear-gradient(135deg, #FFF5F7 0%, #F3E8FF 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div style="font-size: 2rem; font-weight: 700; color: #2563EB;">{{ male_driver_pct }}%</div>
+                        <div style="color: #6B7280; font-size: 0.9rem;">♂️ Male ({{ male_drivers|default:0 }})</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 2rem; font-weight: 700; color: #EC4899;">{{ female_driver_pct }}%</div>
+                        <div style="color: #6B7280; font-size: 0.9rem;">♀️ Female ({{ female_drivers|default:0 }})</div>
+                    </div>
+                </div>
+            </div>
+            <canvas id="genderPieChart"></canvas>
+        </div>
+
+        <!-- Gender Over Time Line Chart -->
+        <div class="chart-card">
+            <h3>
+                <span class="chart-title">Gender Trends Over Time</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('genderTrendChart', 'Gender Trends')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('genderTrendChart', 'gender-trends')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
+            <canvas id="genderTrendChart"></canvas>
+        </div>
+    </div>
+
+    <div class="analytics-grid">
+        <!-- Gender by Hour of Day -->
+        <div class="chart-card" style="grid-column: span 2;">
+            <h3>
+                <span class="chart-title">Gender Distribution by Hour of Day</span>
+                <div class="chart-actions">
+                    <button class="chart-btn" onclick="expandChart('genderHourlyChart', 'Gender by Hour')" title="Expand chart">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="chart-btn" onclick="exportChart('genderHourlyChart', 'gender-hourly')" title="Export as image">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </h3>
+            <canvas id="genderHourlyChart"></canvas>
+        </div>
+    </div>
 
     <!-- Severity by Location Table (Spatial & Overview) -->
     {% if current_analysis_type == 'overview' or current_analysis_type == 'spatial' %}
@@ -2587,6 +3528,9 @@ function updatePageContent(url, forcedScrollPosition = null) {
     document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Initializing analytics...');
 
+    // Configure Chart.js for dark mode
+    configureChartDarkMode();
+
     // Populate date inputs from URL parameters ONLY
     populateDateInputsFromURL();
 
@@ -2597,7 +3541,112 @@ function updatePageContent(url, forcedScrollPosition = null) {
     initializeCharts();
     loadPredictiveInsights();
     displayActiveFilters();
+
+    // Listen for theme changes
+    observeThemeChanges();
 });
+
+    // Configure Chart.js colors based on current theme
+    function configureChartDarkMode() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#E8E8E8' : '#666666';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+        // Set Chart.js global defaults
+        Chart.defaults.color = textColor;
+        Chart.defaults.borderColor = gridColor;
+
+        // Scale defaults
+        Chart.defaults.scale.grid.color = gridColor;
+        Chart.defaults.scale.ticks.color = textColor;
+
+        // Legend defaults
+        Chart.defaults.plugins.legend.labels.color = textColor;
+
+        // Title defaults
+        Chart.defaults.plugins.title.color = textColor;
+
+        console.log('🎨 Chart.js configured for', isDark ? 'dark' : 'light', 'mode');
+    }
+
+    // Update all charts when theme changes
+    function updateChartsTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#E8E8E8' : '#666666';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+        // Update Chart.js defaults
+        Chart.defaults.color = textColor;
+        Chart.defaults.borderColor = gridColor;
+        Chart.defaults.scale.grid.color = gridColor;
+        Chart.defaults.scale.ticks.color = textColor;
+        Chart.defaults.plugins.legend.labels.color = textColor;
+        Chart.defaults.plugins.title.color = textColor;
+
+        // Update all existing charts
+        if (window.charts) {
+            Object.keys(window.charts).forEach(chartName => {
+                const chart = window.charts[chartName];
+                if (chart && chart.options) {
+                    // Update scales
+                    if (chart.options.scales) {
+                        Object.keys(chart.options.scales).forEach(scaleKey => {
+                            const scale = chart.options.scales[scaleKey];
+                            if (scale.grid) scale.grid.color = gridColor;
+                            if (scale.ticks) scale.ticks.color = textColor;
+                            if (scale.title) scale.title.color = textColor;
+                        });
+                    }
+                    // Update legend
+                    if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+                        chart.options.plugins.legend.labels.color = textColor;
+                    }
+                    // Update title
+                    if (chart.options.plugins && chart.options.plugins.title) {
+                        chart.options.plugins.title.color = textColor;
+                    }
+                    chart.update();
+                }
+            });
+        }
+
+        // Update modal chart if exists
+        if (window.modalChartInstance) {
+            const modalChart = window.modalChartInstance;
+            if (modalChart.options) {
+                if (modalChart.options.scales) {
+                    Object.keys(modalChart.options.scales).forEach(scaleKey => {
+                        const scale = modalChart.options.scales[scaleKey];
+                        if (scale.grid) scale.grid.color = gridColor;
+                        if (scale.ticks) scale.ticks.color = textColor;
+                        if (scale.title) scale.title.color = textColor;
+                    });
+                }
+                if (modalChart.options.plugins && modalChart.options.plugins.legend && modalChart.options.plugins.legend.labels) {
+                    modalChart.options.plugins.legend.labels.color = textColor;
+                }
+                modalChart.update();
+            }
+        }
+
+        console.log('🎨 Charts updated for', isDark ? 'dark' : 'light', 'mode');
+    }
+
+    // Observe theme changes using MutationObserver
+    function observeThemeChanges() {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                    updateChartsTheme();
+                }
+            });
+        });
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
+    }
 
     function populateDateInputsFromURL() {
         const params = new URLSearchParams(window.location.search);
@@ -2627,7 +3676,25 @@ function updatePageContent(url, forcedScrollPosition = null) {
 
     function initializeCharts() {
     console.log('📊 Starting chart initialization...');
-    
+
+    // ============================================================================
+    // DARK MODE COLOR CONFIGURATION
+    // ============================================================================
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const textColor = isDark ? '#E8E8E8' : '#666666';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+    // Common scale options for dark mode
+    const getScaleOptions = () => ({
+        grid: { color: gridColor },
+        ticks: { color: textColor }
+    });
+
+    // Common legend options for dark mode
+    const getLegendOptions = () => ({
+        labels: { color: textColor }
+    });
+
     // ============================================================================
     // GET DATA FROM DJANGO WITH FALLBACKS FOR EMPTY DATA
     // ============================================================================
@@ -2711,13 +3778,17 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         legend: {
                             display: true,
                             labels: {
+                                color: textColor,
                                 generateLabels: function(chart) {
+                                    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                                    const labelColor = isDarkMode ? '#E8E8E8' : '#666666';
                                     const datasets = chart.data.datasets;
                                     return datasets.map((dataset, i) => {
                                         const total = dataset.data.reduce((a, b) => a + b, 0);
                                         return {
                                             text: `${dataset.label}: ${total} total`,
                                             fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            fontColor: labelColor,
                                             hidden: false,
                                             index: i
                                         };
@@ -2727,8 +3798,14 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         }
                     },
                     scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
                         }
                     }
                 }
@@ -2770,8 +3847,11 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         legend: {
                             position: 'bottom',
                             labels: {
+                                color: textColor,
                                 generateLabels: function(chart) {
                                     const data = chart.data;
+                                    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                                    const labelColor = isDarkMode ? '#E8E8E8' : '#666666';
                                     if (data.labels.length && data.datasets.length) {
                                         return data.labels.map((label, i) => {
                                             const value = data.datasets[0].data[i];
@@ -2780,6 +3860,7 @@ function updatePageContent(url, forcedScrollPosition = null) {
                                             return {
                                                 text: `${label}: ${value} (${percentage}%)`,
                                                 fillStyle: data.datasets[0].backgroundColor[i],
+                                                fontColor: labelColor,
                                                 hidden: false,
                                                 index: i
                                             };
@@ -2834,13 +3915,17 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         legend: {
                             display: true,
                             labels: {
+                                color: textColor,
                                 generateLabels: function(chart) {
+                                    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                                    const labelColor = isDarkMode ? '#E8E8E8' : '#666666';
                                     const datasets = chart.data.datasets;
                                     return datasets.map((dataset, i) => {
                                         const total = dataset.data.reduce((a, b) => a + b, 0);
                                         return {
                                             text: `${dataset.label}: ${total} total`,
                                             fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            fontColor: labelColor,
                                             hidden: false,
                                             index: i
                                         };
@@ -2850,8 +3935,14 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         }
                     },
                     scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
                         }
                     }
                 }
@@ -2887,13 +3978,17 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         legend: {
                             display: true,
                             labels: {
+                                color: textColor,
                                 generateLabels: function(chart) {
+                                    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                                    const labelColor = isDarkMode ? '#E8E8E8' : '#666666';
                                     const datasets = chart.data.datasets;
                                     return datasets.map((dataset, i) => {
                                         const total = dataset.data.reduce((a, b) => a + b, 0);
                                         return {
                                             text: `${dataset.label}: ${total} total`,
                                             fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            fontColor: labelColor,
                                             hidden: false,
                                             index: i
                                         };
@@ -2903,8 +3998,14 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         }
                     },
                     scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
                         }
                     }
                 }
@@ -2940,13 +4041,17 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         legend: {
                             display: true,
                             labels: {
+                                color: textColor,
                                 generateLabels: function(chart) {
+                                    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                                    const labelColor = isDarkMode ? '#E8E8E8' : '#666666';
                                     const datasets = chart.data.datasets;
                                     return datasets.map((dataset, i) => {
                                         const total = dataset.data.reduce((a, b) => a + b, 0);
                                         return {
                                             text: `${dataset.label}: ${total} total`,
                                             fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            fontColor: labelColor,
                                             hidden: false,
                                             index: i
                                         };
@@ -2956,8 +4061,14 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         }
                     },
                     scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
                         }
                     }
                 }
@@ -2999,13 +4110,17 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         legend: {
                             display: true,
                             labels: {
+                                color: textColor,
                                 generateLabels: function(chart) {
+                                    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                                    const labelColor = isDarkMode ? '#E8E8E8' : '#666666';
                                     const datasets = chart.data.datasets;
                                     return datasets.map((dataset, i) => {
                                         const total = dataset.data.reduce((a, b) => a + b, 0);
                                         return {
                                             text: `${dataset.label}: ${total} total`,
                                             fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            fontColor: labelColor,
                                             hidden: false,
                                             index: i
                                         };
@@ -3015,8 +4130,14 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         }
                     },
                     scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
                         }
                     }
                 }
@@ -3065,13 +4186,17 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         legend: {
                             display: true,
                             labels: {
+                                color: textColor,
                                 generateLabels: function(chart) {
+                                    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                                    const labelColor = isDarkMode ? '#E8E8E8' : '#666666';
                                     const datasets = chart.data.datasets;
                                     return datasets.map((dataset, i) => {
                                         const total = dataset.data.filter(v => v !== null).reduce((a, b) => a + b, 0);
                                         return {
                                             text: `${dataset.label}: ${Math.round(total)} total`,
                                             fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            fontColor: labelColor,
                                             hidden: false,
                                             index: i
                                         };
@@ -3081,8 +4206,14 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         }
                     },
                     scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
                         }
                     }
                 }
@@ -3135,23 +4266,31 @@ function updatePageContent(url, forcedScrollPosition = null) {
                     scales: {
                         x: {
                             stacked: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
                         },
                         y: {
                             stacked: true,
-                            beginAtZero: true
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
                         }
                     },
                     plugins: {
                         legend: {
                             position: 'top',
                             labels: {
+                                color: textColor,
                                 generateLabels: function(chart) {
+                                    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                                    const labelColor = isDarkMode ? '#E8E8E8' : '#666666';
                                     const datasets = chart.data.datasets;
                                     return datasets.map((dataset, i) => {
                                         const total = dataset.data.reduce((a, b) => a + b, 0);
                                         return {
                                             text: `${dataset.label}: ${total} total`,
                                             fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            fontColor: labelColor,
                                             hidden: false,
                                             index: i
                                         };
@@ -3201,13 +4340,17 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         legend: {
                             display: true,
                             labels: {
+                                color: textColor,
                                 generateLabels: function(chart) {
+                                    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                                    const labelColor = isDarkMode ? '#E8E8E8' : '#666666';
                                     const datasets = chart.data.datasets;
                                     return datasets.map((dataset, i) => {
                                         const total = dataset.data.reduce((a, b) => a + b, 0);
                                         return {
                                             text: `${dataset.label}: ${total} total`,
                                             fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            fontColor: labelColor,
                                             hidden: false,
                                             index: i
                                         };
@@ -3218,7 +4361,13 @@ function updatePageContent(url, forcedScrollPosition = null) {
                     },
                     scales: {
                         x: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
+                        y: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
                         }
                     }
                 }
@@ -3284,13 +4433,17 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         legend: {
                             position: 'top',
                             labels: {
+                                color: textColor,
                                 generateLabels: function(chart) {
+                                    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                                    const labelColor = isDarkMode ? '#E8E8E8' : '#666666';
                                     const datasets = chart.data.datasets;
                                     return datasets.map((dataset, i) => {
                                         const total = dataset.data.reduce((a, b) => a + b, 0);
                                         return {
                                             text: `${dataset.label}: ${total} total`,
                                             fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                            fontColor: labelColor,
                                             hidden: false,
                                             index: i
                                         };
@@ -3300,8 +4453,14 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         }
                     },
                     scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
                         }
                     }
                 }
@@ -3310,6 +4469,198 @@ function updatePageContent(url, forcedScrollPosition = null) {
             console.log('✅ Trend Comparison Chart created successfully');
         } catch (error) {
             console.error('❌ Trend Comparison Chart error:', error);
+        }
+    }
+
+    // ========================================================================
+    // GENDER ANALYTICS CHARTS
+    // ========================================================================
+
+    // Gender Distribution Pie Chart
+    const genderPieCanvas = document.getElementById('genderPieChart');
+    if (genderPieCanvas) {
+        try {
+            const genderPieCtx = genderPieCanvas.getContext('2d');
+            const genderPieChart = new Chart(genderPieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ gender_labels|safe }},
+                    datasets: [{
+                        data: {{ gender_data|safe }},
+                        backgroundColor: ['#2563EB', '#EC4899'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: textColor,
+                                padding: 15,
+                                font: { size: 13 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            window.charts.genderPieChart = genderPieChart;
+            console.log('✅ Gender Pie Chart created successfully');
+        } catch (error) {
+            console.error('❌ Gender Pie Chart error:', error);
+        }
+    }
+
+    // Gender Trends Over Time
+    const genderTrendCanvas = document.getElementById('genderTrendChart');
+    if (genderTrendCanvas) {
+        try {
+            const genderTrendCtx = genderTrendCanvas.getContext('2d');
+            const genderTrendChart = new Chart(genderTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ gender_trend_labels|safe }},
+                    datasets: [
+                        {
+                            label: 'Male Drivers',
+                            data: {{ gender_trend_male|safe }},
+                            borderColor: '#2563EB',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Female Drivers',
+                            data: {{ gender_trend_female|safe }},
+                            borderColor: '#EC4899',
+                            backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { color: textColor }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor },
+                            title: {
+                                display: true,
+                                text: 'Number of Accidents',
+                                color: textColor
+                            }
+                        }
+                    }
+                }
+            });
+            window.charts.genderTrendChart = genderTrendChart;
+            console.log('✅ Gender Trend Chart created successfully');
+        } catch (error) {
+            console.error('❌ Gender Trend Chart error:', error);
+        }
+    }
+
+    // Gender by Hour of Day
+    const genderHourlyCanvas = document.getElementById('genderHourlyChart');
+    if (genderHourlyCanvas) {
+        try {
+            const genderHourlyCtx = genderHourlyCanvas.getContext('2d');
+            const genderHourlyChart = new Chart(genderHourlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: {{ hourly_labels|safe }},
+                    datasets: [
+                        {
+                            label: 'Male Drivers',
+                            data: {{ gender_hourly_male|safe }},
+                            backgroundColor: 'rgba(37, 99, 235, 0.7)',
+                            borderColor: '#2563EB',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Female Drivers',
+                            data: {{ gender_hourly_female|safe }},
+                            backgroundColor: 'rgba(236, 72, 153, 0.7)',
+                            borderColor: '#EC4899',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { color: textColor }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor },
+                            title: {
+                                display: true,
+                                text: 'Hour of Day',
+                                color: textColor
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor },
+                            title: {
+                                display: true,
+                                text: 'Number of Accidents',
+                                color: textColor
+                            }
+                        }
+                    }
+                }
+            });
+            window.charts.genderHourlyChart = genderHourlyChart;
+            console.log('✅ Gender Hourly Chart created successfully');
+        } catch (error) {
+            console.error('❌ Gender Hourly Chart error:', error);
         }
     }
 

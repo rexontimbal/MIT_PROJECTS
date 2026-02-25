@@ -21,6 +21,9 @@ urlpatterns = [
     # Audit Logs
     path('audit-logs/', admin_views.audit_logs, name='audit_logs'),
 
+    # Report Activity Logs
+    path('report-activity/', admin_views.report_activity_logs, name='report_activity_logs'),
+
     # System Monitoring
     path('system/', admin_views.system_monitoring, name='system_monitoring'),
 

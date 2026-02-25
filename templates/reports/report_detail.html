@@ -1,0 +1,1703 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %} - AGNES{% endblock %}
+
+{% block breadcrumb_items %}
+<span> / <a href="{% url 'my_reports' %}">My Reports</a> / {% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %}</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-detail-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Two-column body grid */
+    .detail-body-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .detail-main,
+    .detail-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .sidebar-actions-card .action-buttons {
+        margin-top: 0;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .sidebar-actions-card .btn-back,
+    .sidebar-actions-card .btn-approve,
+    .sidebar-actions-card .btn-reject,
+    .sidebar-actions-card .btn-cancel-own {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .sidebar-actions-card .btn-approve,
+    .sidebar-actions-card .btn-reject,
+    .sidebar-actions-card .btn-cancel-own {
+        height: 38px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        border: none;
+        outline: none;
+        gap: 0.4rem;
+        color: white;
+        transition: all 0.2s;
+    }
+
+    .sidebar-actions-card .btn-approve { background: #10B981; }
+    .sidebar-actions-card .btn-approve:hover { background: #059669; }
+    .sidebar-actions-card .btn-reject { background: #EF4444; }
+    .sidebar-actions-card .btn-reject:hover { background: #DC2626; color: white; }
+    .sidebar-actions-card .btn-cancel-own { background: #6B7280; }
+    .sidebar-actions-card .btn-cancel-own:hover { background: #4B5563; color: white; }
+
+    @media (max-width: 1024px) {
+        .detail-body-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Report Header Card - Modern Hero Style */
+    .report-header-card {
+        background: linear-gradient(135deg, #003087 0%, #0052CC 50%, #1a6bff 100%);
+        border-radius: 16px;
+        padding: 1.5rem 1.75rem;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 30px rgba(0, 48, 135, 0.25);
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .report-header-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .report-header-card::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .report-header-card.status-verified {
+        background: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+        box-shadow: 0 8px 30px rgba(5, 150, 105, 0.25);
+    }
+
+    .report-header-card.status-rejected {
+        background: linear-gradient(135deg, #B91C1C 0%, #DC2626 50%, #EF4444 100%);
+        box-shadow: 0 8px 30px rgba(220, 38, 38, 0.25);
+    }
+
+    .report-header-card.status-pending {
+        background: linear-gradient(135deg, #003087 0%, #0052CC 50%, #1a6bff 100%);
+    }
+
+    .report-header-card.status-cancelled {
+        background: linear-gradient(135deg, #4B5563 0%, #6B7280 50%, #9CA3AF 100%);
+        box-shadow: 0 8px 30px rgba(75, 85, 99, 0.25);
+    }
+
+    .status-badge.status-cancelled {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+
+    .report-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .report-title {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 800;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .status-pending {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+
+    .status-verified {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+
+    .status-rejected {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+
+    .status-investigating {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+
+    .report-meta {
+        display: flex;
+        gap: 1.25rem;
+        color: rgba(255,255,255,0.85);
+        font-size: 0.88rem;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
+    }
+
+    .report-meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.1);
+        padding: 4px 12px;
+        border-radius: 8px;
+    }
+
+    /* Info Section - Modern Card Design */
+    .detail-section {
+        background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+        padding: 24px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 48, 135, 0.06), 0 1px 3px rgba(0,0,0,0.04);
+        margin-bottom: 20px;
+        border: 1px solid #e8f0fe;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .detail-section:hover {
+        box-shadow: 0 8px 30px rgba(0, 48, 135, 0.1), 0 2px 6px rgba(0,0,0,0.06);
+        transform: translateY(-2px);
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid #e8f0fe;
+        color: #1a365d;
+        font-size: 1.15rem;
+        font-weight: 700;
+    }
+
+    .section-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #003087 0%, #0052CC 100%);
+        color: white;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 12px rgba(0, 48, 135, 0.25);
+        flex-shrink: 0;
+    }
+
+    .section-title i:not(.section-icon i) {
+        font-size: 1.2rem;
+        color: #003087;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 14px 16px;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .info-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #003087, #0052CC);
+        border-radius: 12px 12px 0 0;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .info-item:hover {
+        border-color: #c7d8f5;
+        box-shadow: 0 4px 12px rgba(0, 48, 135, 0.08);
+        transform: translateY(-1px);
+    }
+
+    .info-item:hover::before {
+        opacity: 1;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #8b9cc0;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
+
+    .info-value {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #1a365d;
+    }
+
+    .info-value.highlight {
+        color: #003087;
+        font-weight: 700;
+    }
+
+    /* Narrative Box - Modern */
+    .description-box {
+        background: linear-gradient(135deg, #f8f9fb 0%, #eef2f7 100%);
+        padding: 24px;
+        border-radius: 12px;
+        border-left: 4px solid #003087;
+        line-height: 1.8;
+        font-size: 0.95rem;
+        color: #374151;
+        white-space: pre-wrap;
+        position: relative;
+    }
+
+    .description-box::before {
+        content: '\201C';
+        position: absolute;
+        top: 8px;
+        left: 16px;
+        font-size: 3rem;
+        color: rgba(0, 48, 135, 0.1);
+        font-family: Georgia, serif;
+        line-height: 1;
+    }
+
+    .casualties-row {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .casualty-box {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        transition: all 0.2s ease;
+    }
+
+    .casualty-killed {
+        background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+        color: #DC2626;
+        border: 1px solid #FECACA;
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
+    }
+
+    .casualty-injured {
+        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+        color: #D97706;
+        border: 1px solid #FDE68A;
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.1);
+    }
+
+    .casualty-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .casualty-box i {
+        font-size: 1rem;
+    }
+
+    .location-map {
+        height: 300px;
+        border-radius: 8px;
+        margin-top: 12px;
+        background: #E5E7EB;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .verification-info {
+        background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+        border: 1px solid #6EE7B7;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+    }
+
+    .verification-info.rejected {
+        background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+        border-color: #FCA5A5;
+    }
+
+    .verification-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #059669;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .verification-info.rejected .verification-title {
+        color: #DC2626;
+    }
+
+    .verification-details {
+        font-size: 0.85rem;
+        color: #374151;
+    }
+
+    .verification-details strong {
+        color: #1F2937;
+    }
+
+    /* Processor role badges */
+    .processor-role {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        margin-left: 0.25rem;
+        vertical-align: middle;
+    }
+
+    .processor-role.processor-super_admin {
+        background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+        color: white;
+    }
+
+    .processor-role.processor-regional_director {
+        background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+        color: white;
+    }
+
+    .processor-role.processor-provincial_chief {
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        color: white;
+    }
+
+    .processor-role.processor-station_commander {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        color: white;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .btn-back {
+        background: #f8f9fa;
+        color: var(--text-dark);
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+        border: 1px solid #e9ecef;
+    }
+
+    .btn-back:hover {
+        background: #e9ecef;
+        color: var(--text-dark);
+        transform: translateY(-1px);
+    }
+
+    .admin-actions {
+        margin-left: auto;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-approve,
+    .btn-reject {
+        color: white;
+        border: none;
+        outline: none;
+        padding: 0 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+        font-family: inherit;
+        line-height: 1;
+        height: 36px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s;
+        box-sizing: border-box;
+        min-width: 90px;
+    }
+
+    .btn-approve { background: #10B981; }
+    .btn-approve:hover { background: #059669; color: white; transform: translateY(-1px); }
+    .btn-reject { background: #EF4444; }
+    .btn-reject:hover { background: #DC2626; color: white; transform: translateY(-1px); }
+
+    /* Custom Confirm Popup */
+    .confirm-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 10010;
+        backdrop-filter: blur(2px);
+    }
+
+    .confirm-overlay.active {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 5px;
+        animation: fadeIn 0.15s ease;
+    }
+
+    .confirm-box {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+        padding: 1.5rem 1.8rem;
+        max-width: 420px;
+        width: 90%;
+        animation: slideDown 0.2s ease;
+    }
+
+    .confirm-box-header {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .confirm-box-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.9rem;
+    }
+
+    .confirm-box-icon.approve {
+        background: #D1FAE5;
+        color: #059669;
+    }
+
+    .confirm-box-title {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #1F2937;
+        margin: 0;
+    }
+
+    .confirm-box-msg {
+        font-size: 0.82rem;
+        color: #6B7280;
+        line-height: 1.5;
+        margin-bottom: 1.2rem;
+    }
+
+    .confirm-box-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    .confirm-btn-cancel {
+        padding: 0.4rem 1rem;
+        border-radius: 6px;
+        border: 1px solid #D1D5DB;
+        background: white;
+        color: #374151;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .confirm-btn-cancel:hover {
+        background: #F3F4F6;
+    }
+
+    .confirm-btn-ok {
+        padding: 0.4rem 1rem;
+        border-radius: 6px;
+        border: none;
+        background: #10B981;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.15s;
+    }
+
+    .confirm-btn-ok:hover {
+        background: #059669;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    [data-theme="dark"] .confirm-box {
+        background: #1A2332;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+
+    [data-theme="dark"] .confirm-box-title {
+        color: #F3F4F6;
+    }
+
+    [data-theme="dark"] .confirm-box-msg {
+        color: #9CA3AF;
+    }
+
+    [data-theme="dark"] .confirm-btn-cancel {
+        background: #2D3A4F;
+        border-color: #3D4F6B;
+        color: #D1D5DB;
+    }
+
+    [data-theme="dark"] .confirm-btn-cancel:hover {
+        background: #374963;
+    }
+
+    .photo-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    .photo-item {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        aspect-ratio: 4/3;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+        background: #f1f3f5;
+    }
+
+    .photo-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(0, 48, 135, 0.2);
+        border-color: #003087;
+    }
+
+    .photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .photo-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 20px 10px 8px;
+    }
+
+    .no-photos {
+        text-align: center;
+        padding: 20px;
+        color: #6C757D;
+        font-size: 0.9rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 2px dashed #dee2e6;
+    }
+
+    .photo-lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.85);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .photo-lightbox.active { display: flex; }
+
+    .photo-lightbox img {
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: 8px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    /* Person table (victims/suspects) */
+    .person-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+        margin-top: 8px;
+    }
+
+    .person-table th {
+        background: #F3F4F6;
+        padding: 10px 12px;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #E5E7EB;
+    }
+
+    .person-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #E5E7EB;
+        color: #333;
+    }
+
+    .person-table tr:hover td {
+        background: #f8fafc;
+    }
+
+    .person-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .person-count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        background: #EEF2FF;
+        color: #4338CA;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    [data-theme="dark"] .person-table th {
+        background: #0F172A;
+        color: #9CA3AF;
+        border-bottom-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .person-table td {
+        border-bottom-color: #2D3A4F;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .person-table tr:hover td {
+        background: rgba(255,255,255,0.03);
+    }
+
+    [data-theme="dark"] .person-count-badge {
+        background: rgba(99, 102, 241, 0.15);
+        color: #818CF8;
+    }
+
+    /* Dark Theme */
+    [data-theme="dark"] .report-header-card,
+    [data-theme="dark"] .detail-section {
+        background: #1A2332;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .report-title {
+        color: #60A5FA;
+    }
+
+    [data-theme="dark"] .section-title {
+        color: #60A5FA;
+        border-bottom-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .section-title i {
+        color: #60A5FA;
+    }
+
+    [data-theme="dark"] .info-item {
+        background: #0F172A;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .info-label {
+        color: #9CA3AF;
+    }
+
+    [data-theme="dark"] .info-value {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .info-value.highlight {
+        color: #60A5FA;
+    }
+
+    [data-theme="dark"] .description-box {
+        background: #0F172A;
+        color: #D1D5DB;
+        border-left-color: #60A5FA;
+    }
+
+    [data-theme="dark"] .casualty-killed {
+        background: rgba(239, 68, 68, 0.15);
+        color: #F87171;
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    [data-theme="dark"] .casualty-injured {
+        background: rgba(245, 158, 11, 0.15);
+        color: #FBBF24;
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    [data-theme="dark"] .btn-back {
+        background: #0F172A;
+        border-color: #2D3A4F;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .btn-back:hover {
+        background: #1E293B;
+    }
+
+    [data-theme="dark"] .photo-item {
+        border-color: #2D3A4F;
+        background: #0F172A;
+    }
+
+    [data-theme="dark"] .photo-item:hover {
+        border-color: #60A5FA;
+    }
+
+    [data-theme="dark"] .no-photos {
+        background: #0F172A;
+        border-color: #2D3A4F;
+        color: #9CA3AF;
+    }
+
+    /* Activity Timeline */
+    .activity-timeline {
+        margin-top: 0.75rem;
+        position: relative;
+        padding-left: 1.5rem;
+    }
+
+    .activity-timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.55rem;
+        top: 0.25rem;
+        bottom: 0.25rem;
+        width: 2px;
+        background: #E5E7EB;
+        border-radius: 1px;
+    }
+
+    .activity-item {
+        position: relative;
+        padding: 0.4rem 0 0.6rem 0;
+    }
+
+    .activity-item:last-child {
+        padding-bottom: 0;
+    }
+
+    .activity-icon {
+        position: absolute;
+        left: -1.5rem;
+        top: 0.45rem;
+        width: 1.1rem;
+        height: 1.1rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.5rem;
+        color: white;
+        z-index: 1;
+    }
+
+    .activity-icon.submitted { background: #3B82F6; }
+    .activity-icon.approved { background: #10B981; }
+    .activity-icon.rejected { background: #EF4444; }
+    .activity-icon.resubmitted { background: #F59E0B; }
+    .activity-icon.edited { background: #6366F1; }
+
+    .activity-content {
+        font-size: 0.78rem;
+        color: #374151;
+    }
+
+    .activity-content strong {
+        color: #1F2937;
+    }
+
+    .activity-timestamp {
+        font-size: 0.68rem;
+        color: #9CA3AF;
+        margin-top: 0.1rem;
+    }
+
+    .activity-details {
+        font-size: 0.72rem;
+        color: #6B7280;
+        margin-top: 0.2rem;
+        padding: 0.3rem 0.5rem;
+        background: #F9FAFB;
+        border-radius: 4px;
+        border-left: 2px solid #E5E7EB;
+    }
+
+    .activity-hidden {
+        display: none;
+    }
+
+    .activity-timeline.expanded .activity-hidden {
+        display: block;
+    }
+
+    .activity-toggle-btn {
+        background: #F3F4F6;
+        border: none;
+        border-radius: 6px;
+        padding: 0.4rem 0;
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: #6B7280;
+        cursor: pointer;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        width: 100%;
+        transition: background 0.15s, color 0.15s;
+    }
+
+    .activity-toggle-btn:hover {
+        background: #E5E7EB;
+        color: #374151;
+    }
+
+    [data-theme="dark"] .activity-toggle-btn {
+        background: #0F172A;
+        color: #9CA3AF;
+    }
+
+    [data-theme="dark"] .activity-toggle-btn:hover {
+        background: #1A2332;
+        color: #D1D5DB;
+    }
+
+    [data-theme="dark"] .activity-timeline::before {
+        background: #2D3A4F;
+    }
+
+    [data-theme="dark"] .activity-content {
+        color: #D1D5DB;
+    }
+
+    [data-theme="dark"] .activity-content strong {
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .activity-timestamp {
+        color: #6B7280;
+    }
+
+    [data-theme="dark"] .activity-details {
+        background: #0F172A;
+        border-left-color: #2D3A4F;
+        color: #9CA3AF;
+    }
+
+    [data-theme="dark"] .verification-info {
+        background: rgba(16, 185, 129, 0.15);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    [data-theme="dark"] .verification-info.rejected {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    [data-theme="dark"] .verification-title {
+        color: #34D399;
+    }
+
+    [data-theme="dark"] .verification-info.rejected .verification-title {
+        color: #F87171;
+    }
+
+    [data-theme="dark"] .verification-details {
+        color: #D1D5DB;
+    }
+
+    [data-theme="dark"] .verification-details strong {
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .report-header-card.status-verified,
+    [data-theme="dark"] .report-header-card.status-rejected,
+    [data-theme="dark"] .report-header-card.status-pending,
+    [data-theme="dark"] .report-header-card.status-cancelled {
+        background: #1A2332;
+    }
+
+    [data-theme="dark"] .status-badge.status-cancelled {
+        background: #374151;
+        color: #9CA3AF;
+    }
+
+    [data-theme="dark"] .report-meta {
+        color: #9CA3AF;
+    }
+
+    [data-theme="dark"] .status-badge.status-pending {
+        background: rgba(245, 158, 11, 0.2);
+        color: #FBBF24;
+    }
+
+    [data-theme="dark"] .status-badge.status-verified {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34D399;
+    }
+
+    [data-theme="dark"] .status-badge.status-rejected {
+        background: rgba(239, 68, 68, 0.2);
+        color: #F87171;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .report-detail-container {
+            padding: 10px;
+        }
+
+        .report-title {
+            font-size: 1.05rem;
+        }
+
+        .report-header-card {
+            padding: 1rem 1.15rem;
+        }
+
+        .detail-section {
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            gap: 8px;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .action-buttons {
+            flex-wrap: wrap;
+        }
+
+        .btn-back {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .admin-actions {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .btn-approve,
+        .btn-reject {
+            min-width: auto;
+            padding: 0 12px;
+            font-size: 0.8rem;
+            height: 34px;
+            flex: 1;
+        }
+
+        .confirm-box {
+            width: 92%;
+            max-width: none;
+        }
+
+        .person-table {
+            font-size: 0.78rem;
+        }
+
+        .person-table th,
+        .person-table td {
+            padding: 6px 8px;
+        }
+
+        .photo-gallery {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-detail-container">
+    <!-- Header Card -->
+    <div class="report-header-card status-{{ report.status }}">
+        <div class="report-title-row">
+            <h1 class="report-title">{% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %}{% if report.municipal %} - {{ report.municipal }}{% endif %}</h1>
+            <span class="status-badge status-{{ report.status }}">
+                {% if report.status == 'pending' %}<i class="fas fa-clock"></i> Pending Verification{% endif %}
+                {% if report.status == 'verified' %}<i class="fas fa-check-circle"></i> Approved{% endif %}
+                {% if report.status == 'rejected' %}<i class="fas fa-times-circle"></i> Rejected{% endif %}
+                {% if report.status == 'investigating' %}<i class="fas fa-search"></i> Under Investigation{% endif %}
+                {% if report.status == 'cancelled' %}<i class="fas fa-ban"></i> Cancelled{% endif %}
+            </span>
+        </div>
+        <div class="report-meta">
+            <span><i class="fas fa-calendar"></i> Submitted {{ report.created_at|date:"F d, Y" }}</span>
+            <span><i class="fas fa-clock"></i> at {{ report.created_at|time:"g:i A" }}</span>
+            <span><i class="fas fa-user"></i> By {{ report.reporter_name }}</span>
+        </div>
+
+        {% if activity_logs %}
+        <div style="margin-top: 0.75rem; padding-top: 0.6rem; border-top: 1px solid #E5E7EB;">
+            <div style="font-size: 0.75rem; font-weight: 600; color: #6B7280; margin-bottom: 0.3rem;">
+                <span><i class="fas fa-history"></i> Activity Log</span>
+            </div>
+            <div class="activity-timeline">
+                {% for log in activity_logs %}
+                <div class="activity-item {% if not forloop.first %}activity-hidden{% endif %}">
+                    <div class="activity-icon {{ log.action }}">
+                        {% if log.action == 'submitted' %}<i class="fas fa-paper-plane"></i>
+                        {% elif log.action == 'approved' %}<i class="fas fa-check"></i>
+                        {% elif log.action == 'rejected' %}<i class="fas fa-times"></i>
+                        {% elif log.action == 'resubmitted' %}<i class="fas fa-redo"></i>
+                        {% elif log.action == 'edited' %}<i class="fas fa-edit"></i>
+                        {% endif %}
+                    </div>
+                    <div class="activity-content">
+                        <strong>{{ log.get_action_display }}</strong> by {{ log.actor_name }}
+                        {% if log.actor_role %}
+                        <span class="processor-role processor-{{ log.actor.profile.role }}">{{ log.actor_role }}</span>
+                        {% endif %}
+                        <div class="activity-timestamp">{{ log.timestamp|date:"F d, Y" }} at {{ log.timestamp|time:"g:i A" }}</div>
+                        {% if log.details %}
+                        <div class="activity-details">{{ log.details }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if activity_logs|length > 1 %}
+            <div style="text-align: center; margin-top: 0.5rem;">
+                <button type="button" class="activity-toggle-btn" id="activityToggleBtn" onclick="toggleActivityLog()">
+                    <i class="fas fa-chevron-down" id="activityToggleIcon"></i> See all logs ({{ activity_logs|length }})
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        {% elif report.status == 'verified' and report.verified_by %}
+        <div class="verification-info">
+            <div class="verification-title">
+                <i class="fas fa-check-circle"></i> Report Approved
+            </div>
+            <div class="verification-details">
+                Verified by <strong>{{ report.verified_by.get_full_name|default:report.verified_by.username }}</strong>
+                {% if report.verified_by.profile %}
+                <span class="processor-role processor-{{ report.verified_by.profile.role }}">{{ report.verified_by.profile.get_role_display }}</span>
+                {% endif %}
+                <br>on {{ report.verified_at|date:"F d, Y" }} at {{ report.verified_at|time:"g:i A" }}
+            </div>
+        </div>
+        {% elif report.status == 'rejected' and report.verified_by %}
+        <div class="verification-info rejected">
+            <div class="verification-title">
+                <i class="fas fa-times-circle"></i> Report Rejected
+            </div>
+            <div class="verification-details">
+                Rejected by <strong>{{ report.verified_by.get_full_name|default:report.verified_by.username }}</strong>
+                {% if report.verified_by.profile %}
+                <span class="processor-role processor-{{ report.verified_by.profile.role }}">{{ report.verified_by.profile.get_role_display }}</span>
+                {% endif %}
+                <br>on {{ report.verified_at|date:"F d, Y" }} at {{ report.verified_at|time:"g:i A" }}
+            </div>
+            {% if report.rejection_reason %}
+            <div class="verification-details" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(220, 38, 38, 0.3);">
+                <strong><i class="fas fa-comment-alt"></i> Reason:</strong><br>
+                {{ report.rejection_reason }}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Two-column body grid -->
+    <div class="detail-body-grid">
+    <div class="detail-main">
+    <!-- Incident Details -->
+    <div class="detail-section">
+        <h3 class="section-title"><i class="fas fa-car-crash"></i> Incident Details</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Date of Incident</div>
+                <div class="info-value">{{ report.incident_date|date:"F d, Y" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Time of Incident</div>
+                <div class="info-value">{{ report.incident_time|time:"g:i A" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Incident Type</div>
+                <div class="info-value">{% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display|default:"—" }}{% endif %}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Type of Place</div>
+                <div class="info-value">{% if report.type_of_place == 'OTHER' and report.type_of_place_other %}{{ report.type_of_place_other }}{% else %}{{ report.get_type_of_place_display|default:"—" }}{% endif %}</div>
+            </div>
+            {% if report.offense %}
+            <div class="info-item">
+                <div class="info-label">Offense</div>
+                <div class="info-value">{% if report.offense == 'OTHER' and report.offense_other %}{{ report.offense_other }}{% else %}{{ report.get_offense_display }}{% endif %}</div>
+            </div>
+            {% endif %}
+            {% if report.offense_type %}
+            <div class="info-item">
+                <div class="info-label">Offense Type</div>
+                <div class="info-value">{% if report.offense_type == 'OTHER' and report.offense_type_other %}{{ report.offense_type_other }}{% else %}{{ report.get_offense_type_display }}{% endif %}</div>
+            </div>
+            {% endif %}
+            {% if report.stage_of_felony %}
+            <div class="info-item">
+                <div class="info-label">Stage of Felony</div>
+                <div class="info-value">{{ report.get_stage_of_felony_display }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Location -->
+    <div class="detail-section">
+        <h3 class="section-title"><i class="fas fa-map-marker-alt"></i> Location</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Province</div>
+                <div class="info-value">{{ report.province }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Municipality</div>
+                <div class="info-value">{{ report.municipal }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Barangay</div>
+                <div class="info-value">{{ report.barangay }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Street Address</div>
+                <div class="info-value">{{ report.street_address }}</div>
+            </div>
+        </div>
+        {% if report.latitude and report.longitude %}
+        <div id="locationMap" class="location-map"></div>
+        {% endif %}
+    </div>
+
+    <!-- Victim Information -->
+    <div class="detail-section">
+        <h3 class="section-title">
+            <i class="fas fa-user-injured"></i> Victim Information
+            {% if report.victims_data %}<span class="person-count-badge">{{ report.victims_data|length }} victim{{ report.victims_data|length|pluralize }}</span>{% endif %}
+        </h3>
+        <div class="casualties-row">
+            <span class="casualty-box casualty-killed"><i class="fas fa-skull"></i> {{ report.casualties_killed }} Fatalities</span>
+            <span class="casualty-box casualty-injured"><i class="fas fa-user-injured"></i> {{ report.casualties_injured }} Injured</span>
+        </div>
+        {% if report.victims_data %}
+        <table class="person-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Status</th>
+                    <th>Nationality</th>
+                    <th>Occupation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in report.victims_data %}
+                <tr>
+                    <td>{{ v.name|default:"—" }}</td>
+                    <td>{{ v.age|default:"—" }}</td>
+                    <td>{{ v.gender|default:"—" }}</td>
+                    <td>{{ v.status|default:"—" }}</td>
+                    <td>{{ v.nationality|default:"FILIPINO" }}</td>
+                    <td>{{ v.occupation|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% elif report.victim_name %}
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Victim Name</div>
+                <div class="info-value">{{ report.victim_name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Gender</div>
+                <div class="info-value">{{ report.get_victim_gender_display|default:"—" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Age</div>
+                <div class="info-value">{{ report.victim_age|default:"—" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value">{{ report.get_victim_status_display|default:"—" }}</div>
+            </div>
+        </div>
+        {% else %}
+        <div class="info-grid">
+            <div class="info-item"><div class="info-value" style="color: #9CA3AF;">No victim information recorded</div></div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Suspect/Driver Information -->
+    <div class="detail-section">
+        <h3 class="section-title">
+            <i class="fas fa-user-secret"></i> Suspect / Driver Information
+            {% if report.suspects_data %}<span class="person-count-badge">{{ report.suspects_data|length }} suspect{{ report.suspects_data|length|pluralize }}</span>{% endif %}
+        </h3>
+        {% if report.suspects_data %}
+        <table class="person-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Status</th>
+                    <th>Nationality</th>
+                    <th>Occupation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in report.suspects_data %}
+                <tr>
+                    <td>{{ s.name|default:"—" }}</td>
+                    <td>{{ s.age|default:"—" }}</td>
+                    <td>{{ s.gender|default:"—" }}</td>
+                    <td>{{ s.status|default:"—" }}</td>
+                    <td>{{ s.nationality|default:"FILIPINO" }}</td>
+                    <td>{{ s.occupation|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% elif report.suspect_name %}
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Suspect/Driver Name</div>
+                <div class="info-value">{{ report.suspect_name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Driver Gender</div>
+                <div class="info-value">{{ report.get_driver_gender_display|default:"—" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Driver Age</div>
+                <div class="info-value">{{ report.driver_age|default:"—" }}</div>
+            </div>
+        </div>
+        {% else %}
+        <div class="info-grid">
+            <div class="info-item"><div class="info-value" style="color: #9CA3AF;">No suspect information recorded</div></div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Vehicle Information -->
+    <div class="detail-section">
+        <h3 class="section-title"><i class="fas fa-car"></i> Vehicle Information</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Vehicle Type</div>
+                <div class="info-value">{% if report.vehicle_kind == 'OTHER' and report.vehicle_kind_other %}{{ report.vehicle_kind_other }}{% else %}{{ report.get_vehicle_kind_display|default:"—" }}{% endif %}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Vehicle Make</div>
+                <div class="info-value">{% if report.vehicle_make == 'OTHER' and report.vehicle_make_other %}{{ report.vehicle_make_other }}{% else %}{{ report.vehicle_make|default:"—" }}{% endif %}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Vehicle Model</div>
+                <div class="info-value">{% if report.vehicle_model == 'OTHER' and report.vehicle_model_other %}{{ report.vehicle_model_other }}{% else %}{{ report.vehicle_model|default:"—" }}{% endif %}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Plate Number</div>
+                <div class="info-value">{{ report.vehicle_plate_no|default:"—" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Chassis Number</div>
+                <div class="info-value">{{ report.vehicle_chassis_no|default:"—" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Colorum</div>
+                <div class="info-value">
+                    {% if report.vehicle_colorum %}
+                    <span style="color: #DC2626; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Yes (Unfranchised)</span>
+                    {% else %}
+                    <span>No</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Drug / Alcohol Involved</div>
+                <div class="info-value">
+                    {% if report.drug_involved %}
+                    <span style="color: #DC2626; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Yes</span>
+                    {% else %}
+                    <span>No</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Narrative -->
+    <div class="detail-section">
+        <h3 class="section-title"><i class="fas fa-file-alt"></i> Incident Narrative</h3>
+        <div class="description-box">{{ report.incident_description|default:"No description provided." }}</div>
+    </div>
+    </div><!-- /detail-main -->
+
+    <!-- SIDEBAR -->
+    <div class="detail-sidebar">
+
+    <!-- Quick Actions -->
+    <div class="sidebar-actions-card detail-section">
+        <h3 class="section-title"><i class="fas fa-bolt"></i> Actions</h3>
+        <div class="action-buttons">
+            <a href="{% url 'my_reports' %}" class="btn-back" style="justify-content: center;">
+                <i class="fas fa-arrow-left"></i> Back to My Reports
+            </a>
+            {% if can_edit %}
+                <a href="{% url 'edit_report' report.pk %}" class="btn-back" style="background: #3B82F6; border-color: #3B82F6; color: white; justify-content: center;">
+                    <i class="fas fa-redo"></i> Edit &amp; Resubmit
+                </a>
+            {% endif %}
+            {% if can_take_action %}
+            <form id="approveForm" method="post" action="{% url 'approve_report' report.pk %}" style="margin: 0;">
+                {% csrf_token %}
+                <button type="button" class="btn-approve" onclick="showConfirm()">
+                    <i class="fas fa-check"></i> Approve Report
+                </button>
+            </form>
+            <a href="{% url 'reject_report' report.pk %}" class="btn-reject">
+                <i class="fas fa-times"></i> Reject Report
+            </a>
+            {% endif %}
+            {% if can_cancel %}
+            <form id="cancelOwnForm" method="post" action="{% url 'cancel_report' report.pk %}" style="margin: 0;">
+                {% csrf_token %}
+                <button type="button" class="btn-cancel-own" onclick="showCancelOwnConfirm()">
+                    <i class="fas fa-ban"></i> Cancel Report
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Photos -->
+    <div class="detail-section">
+        <h3 class="section-title"><i class="fas fa-camera"></i> Photos</h3>
+        {% if report.photo_1 or report.photo_2 or report.photo_3 %}
+        <div class="photo-gallery">
+            {% if report.photo_1 %}
+            <div class="photo-item" onclick="openLightbox('{{ report.photo_1.url }}')">
+                <img src="{{ report.photo_1.url }}" alt="Accident Photo 1">
+                <span class="photo-label">Photo 1</span>
+            </div>
+            {% endif %}
+            {% if report.photo_2 %}
+            <div class="photo-item" onclick="openLightbox('{{ report.photo_2.url }}')">
+                <img src="{{ report.photo_2.url }}" alt="Accident Photo 2">
+                <span class="photo-label">Photo 2</span>
+            </div>
+            {% endif %}
+            {% if report.photo_3 %}
+            <div class="photo-item" onclick="openLightbox('{{ report.photo_3.url }}')">
+                <img src="{{ report.photo_3.url }}" alt="Accident Photo 3">
+                <span class="photo-label">Photo 3</span>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="no-photos">
+            <i class="fas fa-image"></i>
+            <p>No photos attached to this report</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Photo Lightbox -->
+    <div class="photo-lightbox" id="photoLightbox" onclick="this.classList.remove('active')">
+        <img id="lightboxImg" src="" alt="Photo">
+    </div>
+
+    <!-- Reporter Information -->
+    <div class="detail-section">
+        <h3 class="section-title"><i class="fas fa-user-tie"></i> Reporter Information</h3>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:12px;">
+            <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#003087,#0052CC);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-user" style="color:white;font-size:1rem;"></i>
+            </div>
+            <div>
+                <div style="font-weight:700;font-size:1rem;color:#1F2937;">{{ report.reporter_name }}</div>
+                <div style="font-size:0.82rem;color:#6B7280;">
+                    {% if report.reported_by.profile.role %}
+                        {{ report.reported_by.profile.get_role_display }}
+                    {% else %}
+                        Reporter
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="info-grid" style="grid-template-columns: 1fr;">
+            {% if report.reporter_contact %}
+            <div class="info-item">
+                <div class="info-label">Contact Number</div>
+                <div class="info-value"><i class="fas fa-phone" style="color:#003087;margin-right:6px;font-size:0.85rem;"></i>{{ report.reporter_contact }}</div>
+            </div>
+            {% endif %}
+            {% if report.reported_by.email %}
+            <div class="info-item">
+                <div class="info-label">Email Address</div>
+                <div class="info-value"><i class="fas fa-envelope" style="color:#003087;margin-right:6px;font-size:0.85rem;"></i>{{ report.reported_by.email }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    </div><!-- /detail-sidebar -->
+    </div><!-- /detail-body-grid -->
+</div>
+
+{% if can_take_action %}
+<div class="confirm-overlay" id="confirmOverlay" onclick="if(event.target===this)hideConfirm()">
+    <div class="confirm-box">
+        <div class="confirm-box-header">
+            <div class="confirm-box-icon approve">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="confirm-box-title">Approve this report?</div>
+        </div>
+        <div class="confirm-box-msg">This will add the report to the official accident records database. This action cannot be undone.</div>
+        <div class="confirm-box-actions">
+            <button class="confirm-btn-cancel" onclick="hideConfirm()">Cancel</button>
+            <button class="confirm-btn-ok" onclick="document.getElementById('approveForm').submit()">
+                <i class="fas fa-check"></i> Yes, Approve
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+function showConfirm() { document.getElementById('confirmOverlay').classList.add('active'); }
+function hideConfirm() { document.getElementById('confirmOverlay').classList.remove('active'); }
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') hideConfirm(); });
+</script>
+{% endif %}
+
+{% if can_cancel %}
+<div class="confirm-overlay" id="cancelOwnOverlay" onclick="if(event.target===this)hideCancelOwnConfirm()">
+    <div class="confirm-box" style="text-align:center;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:0.6rem;margin-bottom:0.6rem;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#FEF3C7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-exclamation-triangle" style="font-size:0.9rem;color:#F59E0B;"></i>
+            </div>
+            <div class="confirm-box-title" style="font-size:1rem;">Cancel This Report?</div>
+        </div>
+        <div class="confirm-box-msg" style="text-align:center;">This will withdraw your submission. Higher-ranking officers will be notified. You can resubmit or delete the report later.</div>
+        <div class="confirm-box-actions" style="justify-content:center;">
+            <button class="confirm-btn-cancel" onclick="hideCancelOwnConfirm()">No, Keep It</button>
+            <button class="confirm-btn-ok" style="background:#F59E0B;" onclick="document.getElementById('cancelOwnForm').submit()">
+                <i class="fas fa-ban"></i> Yes, Cancel Report
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+function showCancelOwnConfirm() { document.getElementById('cancelOwnOverlay').classList.add('active'); }
+function hideCancelOwnConfirm() { document.getElementById('cancelOwnOverlay').classList.remove('active'); }
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { hideCancelOwnConfirm(); } });
+</script>
+{% endif %}
+
+{% if report.latitude and report.longitude %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lat = {{ report.latitude }};
+    const lng = {{ report.longitude }};
+
+    const map = L.map('locationMap', {
+        fullscreenControl: true,
+        fullscreenControlOptions: { position: 'topright' }
+    }).setView([lat, lng], 16);
+
+    const detailedStreet = L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+    });
+
+    const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+    });
+
+    const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri',
+        maxZoom: 19
+    });
+
+    detailedStreet.addTo(map);
+
+    L.control.layers({
+        'Street Map': detailedStreet,
+        'Standard': streetMap,
+        'Satellite': satellite
+    }, null, { position: 'topright' }).addTo(map);
+
+    L.marker([lat, lng]).addTo(map)
+        .bindPopup('<strong>Incident Location</strong><br>{{ report.street_address }}')
+        .openPopup();
+});
+</script>
+{% endif %}
+
+<script>
+function toggleActivityLog() {
+    var timeline = document.querySelector('.activity-timeline');
+    var btn = document.getElementById('activityToggleBtn');
+    var icon = document.getElementById('activityToggleIcon');
+    if (!timeline || !btn) return;
+
+    var isExpanded = timeline.classList.toggle('expanded');
+    if (isExpanded) {
+        icon.className = 'fas fa-chevron-up';
+        btn.innerHTML = '<i class="fas fa-chevron-up" id="activityToggleIcon"></i> Show less';
+    } else {
+        var count = document.querySelectorAll('.activity-item').length;
+        icon.className = 'fas fa-chevron-down';
+        btn.innerHTML = '<i class="fas fa-chevron-down" id="activityToggleIcon"></i> See all (' + count + ')';
+    }
+}
+
+function openLightbox(url) {
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('photoLightbox').classList.add('active');
+}
+</script>
+{% endblock %}

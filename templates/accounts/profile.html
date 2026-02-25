@@ -5,1046 +5,638 @@
 
 {% block extra_css %}
 <style>
-    /* Modern Profile Container */
-    .modern-profile-container {
-        max-width: 1200px;
-        margin: 2rem auto;
-        padding: 0 1.5rem;
+    .profile-container {
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
-    /* Profile Header Card */
-    .profile-header-card {
+    /* Header */
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
         background: linear-gradient(135deg, #003087 0%, #0047AB 100%);
-        border-radius: 16px;
-        padding: 2.5rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 24px rgba(0, 48, 135, 0.15);
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
         position: relative;
         overflow: hidden;
     }
 
-    .profile-header-card::before {
+    .profile-header::before {
         content: '';
         position: absolute;
-        top: -50%;
-        right: -10%;
-        width: 400px;
-        height: 400px;
-        background: rgba(255, 255, 255, 0.05);
+        top: -40%;
+        right: -5%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.04);
         border-radius: 50%;
     }
 
-    .profile-header-content {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: 2rem;
-        align-items: center;
-        position: relative;
-        z-index: 1;
-    }
-
-    /* Profile Picture Section */
-    .profile-picture-section {
-        position: relative;
-    }
-
-    .profile-picture-wrapper {
-        width: 140px;
-        height: 140px;
+    .profile-avatar {
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
-        background: white;
-        padding: 6px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        position: relative;
-    }
-
-    .profile-picture {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
-        background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 3rem;
-        font-weight: 700;
-        color: #003087;
-    }
-
-    .profile-picture img {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .profile-picture-badge {
-        position: absolute;
-        bottom: 5px;
-        right: 5px;
-        width: 40px;
-        height: 40px;
-        background: #10B981;
-        border-radius: 50%;
-        border: 4px solid white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Profile Info Section */
-    .profile-info-section {
-        color: white;
-    }
-
-    .profile-name {
-        font-size: 2rem;
-        font-weight: 700;
-        margin: 0 0 0.5rem 0;
-        color: white;
-    }
-
-    .profile-meta {
-        display: flex;
-        gap: 1.5rem;
-        flex-wrap: wrap;
-        margin-top: 0.75rem;
-    }
-
-    .profile-meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: rgba(255, 255, 255, 0.15);
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        backdrop-filter: blur(10px);
-    }
-
-    .profile-meta-item i {
-        opacity: 0.9;
-    }
-
-    /* Quick Actions */
-    .profile-quick-actions {
-        display: flex;
-        gap: 0.75rem;
-    }
-
-    .quick-action-btn {
         background: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: 700;
         color: white;
-        padding: 0.75rem 1.25rem;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        backdrop-filter: blur(10px);
-        font-size: 0.9rem;
+        flex-shrink: 0;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.3);
     }
 
-    .quick-action-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-        border-color: rgba(255, 255, 255, 0.5);
-        transform: translateY(-2px);
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
-    /* Content Grid */
-    .profile-content-grid {
+    .profile-header-info h1 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 0.15rem 0;
+    }
+
+    .profile-header-meta {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.85);
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.15rem 0;
+    }
+
+    .profile-header-meta span {
+        margin-right: 0.85rem;
+    }
+
+    .profile-header-meta i {
+        margin-right: 0.2rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Two-column grid */
+    .profile-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
+        gap: 1rem;
     }
 
-    /* Modern Card */
-    .modern-card {
+    /* Cards */
+    .profile-card {
         background: white;
-        border-radius: 12px;
-        padding: 1.75rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        border: 1px solid #f0f0f0;
-        transition: all 0.2s;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
     }
 
-    .modern-card:hover {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        border-color: #e0e0e0;
-    }
-
-    .card-header {
+    .profile-card-header {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #f0f0f0;
+        gap: 0.6rem;
+        padding: 0.65rem 1rem;
+        background: linear-gradient(135deg, #003087 0%, #0047AB 100%);
     }
 
-    .card-header-icon {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #003087 0%, #0047AB 100%);
-        border-radius: 10px;
+    .profile-card-header i {
+        color: white;
+        font-size: 0.85rem;
+        width: 28px;
+        height: 28px;
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-size: 1.1rem;
     }
 
-    .card-header-title {
-        font-size: 1.1rem;
+    .profile-card-header span {
+        font-size: 0.825rem;
         font-weight: 700;
-        color: #1a1a1a;
-        margin: 0;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
     }
 
-    /* Info Row */
-    .info-row {
-        display: grid;
-        grid-template-columns: 140px 1fr;
-        gap: 1rem;
-        padding: 1rem 0;
-        border-bottom: 1px solid #f5f5f5;
+    .profile-card-body {
+        padding: 0.25rem 1rem;
+    }
+
+    /* Info rows */
+    .profile-field {
+        display: flex;
         align-items: center;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid #f3f4f6;
+        gap: 0.75rem;
     }
 
-    .info-row:last-child {
+    .profile-field:last-child {
         border-bottom: none;
     }
 
-    .info-label {
-        font-size: 0.875rem;
+    .profile-field-label {
+        width: 110px;
+        flex-shrink: 0;
+        font-size: 0.8rem;
         font-weight: 600;
-        color: #666;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+        color: #6b7280;
     }
 
-    .info-label i {
-        color: #003087;
+    .profile-field-label i {
         width: 16px;
+        margin-right: 0.35rem;
+        color: #003087;
+        text-align: center;
+        font-size: 0.8rem;
     }
 
-    .info-value {
-        font-size: 0.95rem;
+    .profile-field-value {
+        flex: 1;
+        font-size: 0.85rem;
         color: #1a1a1a;
         font-weight: 500;
     }
 
-    .info-value.editable {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .info-value input {
-        flex: 1;
-        padding: 0.5rem 0.75rem;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        font-size: 0.95rem;
-        transition: all 0.2s;
-    }
-
-    .info-value input:focus {
-        outline: none;
-        border-color: #003087;
-        background: #f8f9fa;
-    }
-
-    .info-value input:disabled {
-        background: transparent;
-        border-color: transparent;
-        cursor: default;
-    }
-
-    /* Action Buttons */
-    .info-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .btn-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-size: 0.875rem;
-    }
-
-    .btn-edit {
-        background: #f0f7ff;
-        color: #003087;
-    }
-
-    .btn-edit:hover {
-        background: #003087;
-        color: white;
-    }
-
-    .btn-save {
-        background: #d1fae5;
-        color: #065f46;
-    }
-
-    .btn-save:hover {
-        background: #10b981;
-        color: white;
-    }
-
-    .btn-cancel {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .btn-cancel:hover {
-        background: #ef4444;
-        color: white;
-    }
-
-    /* Stats Cards */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.25rem;
-        margin-top: 1.5rem;
-    }
-
-    .stat-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-        border-radius: 12px;
-        padding: 1.5rem;
-        border: 2px solid #f0f0f0;
-        text-align: center;
-        transition: all 0.2s;
-    }
-
-    .stat-card:hover {
-        border-color: #003087;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 48, 135, 0.1);
-    }
-
-    .stat-icon {
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, #003087 0%, #0047AB 100%);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.25rem;
-        margin: 0 auto 0.75rem;
-    }
-
-    .stat-value {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #003087;
-        margin-bottom: 0.25rem;
-    }
-
-    .stat-label {
-        font-size: 0.875rem;
-        color: #666;
-        font-weight: 600;
-    }
-
-    /* Badge Styles */
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.375rem 0.875rem;
+    .role-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
         border-radius: 20px;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         font-weight: 600;
-    }
-
-    .status-active {
-        background: #d1fae5;
-        color: #065f46;
-    }
-
-    .status-verified {
         background: #dbeafe;
         color: #1e40af;
     }
 
+    .rank-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    /* Change Password button */
+    .profile-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+
+    .btn-change-pw {
+        background: linear-gradient(135deg, #003087 0%, #0047AB 100%);
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-change-pw:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 48, 135, 0.3);
+    }
+
+    /* Stats row */
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .profile-stat {
+        text-align: center;
+        padding: 0.6rem 0.4rem;
+        border-radius: 6px;
+        background: #f8f9fa;
+    }
+
+    .profile-stat-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #003087;
+    }
+
+    .profile-stat-label {
+        font-size: 0.7rem;
+        color: #666;
+        font-weight: 600;
+        margin-top: 0.1rem;
+    }
+
     /* Responsive */
-    @media (max-width: 992px) {
-        .profile-content-grid {
+    @media (max-width: 768px) {
+        .profile-grid {
             grid-template-columns: 1fr;
-        }
-
-        .profile-header-content {
-            grid-template-columns: 1fr;
-            text-align: center;
-            gap: 1.5rem;
-        }
-
-        .profile-picture-section {
-            margin: 0 auto;
-        }
-
-        .profile-quick-actions {
-            justify-content: center;
-        }
-
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
         }
     }
 
     @media (max-width: 576px) {
-        .info-row {
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
+        .profile-header {
+            flex-direction: column;
+            text-align: center;
+            padding: 1rem;
         }
 
-        .stats-grid {
-            grid-template-columns: 1fr;
+        .profile-header-meta {
+            justify-content: center;
         }
 
-        .profile-header-card {
-            padding: 1.5rem;
+        .profile-field {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.2rem;
         }
+
+        .profile-field-label {
+            width: auto;
+        }
+
+        .profile-actions {
+            justify-content: center;
+        }
+
+        .btn-change-pw {
+            padding: 0.4rem 1rem;
+            font-size: 0.78rem;
+        }
+    }
+
+    /* ===== DARK THEME ===== */
+    [data-theme="dark"] .profile-header {
+        background: linear-gradient(135deg, #1E3A5F 0%, #0D47A1 100%) !important;
+    }
+
+    [data-theme="dark"] .profile-card {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .profile-card-header {
+        background: linear-gradient(135deg, #1E3A5F 0%, #0D47A1 100%) !important;
+    }
+
+    [data-theme="dark"] .profile-field {
+        border-bottom-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .profile-field-label {
+        color: #9CA3AF !important;
+    }
+
+    [data-theme="dark"] .profile-field-label i {
+        color: #60A5FA !important;
+    }
+
+    [data-theme="dark"] .profile-field-value {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .role-badge {
+        background: rgba(59, 130, 246, 0.2) !important;
+        color: #60A5FA !important;
+    }
+
+    [data-theme="dark"] .rank-badge {
+        background: rgba(251, 191, 36, 0.2) !important;
+        color: #FCD34D !important;
+    }
+
+    [data-theme="dark"] .profile-stat {
+        background: #0F172A !important;
+    }
+
+    [data-theme="dark"] .profile-stat-value {
+        color: #60A5FA !important;
+    }
+
+    [data-theme="dark"] .profile-stat-label {
+        color: #9CA3AF !important;
+    }
+
+    /* Dark Modal */
+    [data-theme="dark"] .pw-modal-content {
+        background: #1A2332 !important;
+        border: 1px solid #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .pw-modal-content h3 {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .pw-modal-content label {
+        color: #9CA3AF !important;
+    }
+
+    [data-theme="dark"] .pw-modal-content input {
+        background: #0F172A !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .pw-modal-content input:focus {
+        border-color: #4A90D9 !important;
+        background: #1E293B !important;
+    }
+
+    [data-theme="dark"] .pw-modal-content input::placeholder {
+        color: #6B7280 !important;
+    }
+
+    [data-theme="dark"] .pw-info-box {
+        background: rgba(59, 130, 246, 0.15) !important;
+        border-color: rgba(59, 130, 246, 0.3) !important;
+        color: #93C5FD !important;
+    }
+
+    [data-theme="dark"] .pw-error {
+        background: rgba(239, 68, 68, 0.15) !important;
+        border-color: rgba(239, 68, 68, 0.3) !important;
+        color: #FCA5A5 !important;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="modern-profile-container">
-    <!-- Profile Header Card -->
-    <div class="profile-header-card">
-        <div class="profile-header-content">
-            <!-- Profile Picture -->
-            <div class="profile-picture-section">
-                <div class="profile-picture-wrapper">
-                    <div class="profile-picture">
-                        {% if user.profile and user.profile.profile_picture %}
-                        <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}">
-                        {% else %}
-                        {{ user.username|first|upper }}
-                        {% endif %}
-                    </div>
-                    <div class="profile-picture-badge">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                </div>
-            </div>
+<div class="profile-container">
+<!-- Header -->
+<div class="profile-header">
+    <div class="profile-avatar">
+        {% if user.profile and user.profile.profile_picture %}
+        <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}">
+        {% else %}
+        {{ user.username|first|upper }}
+        {% endif %}
+    </div>
+    <div class="profile-header-info">
+        <h1>{{ user.get_full_name|default:user.username }}</h1>
+        <div class="profile-header-meta">
+            {% if user.profile %}
+            <span><i class="fas fa-shield-alt"></i> {{ user.profile.badge_number|default:"—" }}</span>
+            <span><i class="fas fa-star"></i> {{ user.profile.get_rank_display }}</span>
+            {% endif %}
+            <span><i class="fas fa-calendar"></i> Joined {{ user.date_joined|date:"M Y" }}</span>
+        </div>
+    </div>
+</div>
 
-            <!-- Profile Info -->
-            <div class="profile-info-section">
-                <h1 class="profile-name">{{ user.get_full_name|default:user.username }}</h1>
-                <div class="profile-meta">
-                    {% if user.profile %}
-                    <div class="profile-meta-item">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>{{ user.profile.badge_number|default:"No Badge" }}</span>
-                    </div>
-                    <div class="profile-meta-item">
-                        <i class="fas fa-star"></i>
-                        <span>{{ user.profile.get_rank_display|default:"No Rank" }}</span>
-                    </div>
-                    <div class="profile-meta-item">
-                        <i class="fas fa-building"></i>
-                        <span>{{ user.profile.station|default:"No Station" }}</span>
-                    </div>
-                    {% endif %}
-                </div>
+<div class="profile-grid">
+    <!-- Account Information -->
+    <div class="profile-card">
+        <div class="profile-card-header">
+            <i class="fas fa-user"></i>
+            <span>Account Information</span>
+        </div>
+        <div class="profile-card-body">
+            <div class="profile-field">
+                <div class="profile-field-label"><i class="fas fa-user"></i> Username</div>
+                <div class="profile-field-value">{{ user.username }}</div>
             </div>
-
-            <!-- Quick Actions -->
-            <div class="profile-quick-actions">
-                <button class="quick-action-btn" onclick="openPasswordChangeModal()">
-                    <i class="fas fa-key"></i> Change Password
-                </button>
+            <div class="profile-field">
+                <div class="profile-field-label"><i class="fas fa-id-card"></i> Full Name</div>
+                <div class="profile-field-value">{{ user.get_full_name|default:"—" }}</div>
+            </div>
+            <div class="profile-field">
+                <div class="profile-field-label"><i class="fas fa-envelope"></i> Email</div>
+                <div class="profile-field-value">{{ user.email|default:"—" }}</div>
             </div>
         </div>
     </div>
 
-    <!-- Content Grid -->
-    <div class="profile-content-grid">
-        <!-- Account Information -->
-        <div class="modern-card">
-            <div class="card-header">
-                <div class="card-header-icon">
-                    <i class="fas fa-user"></i>
-                </div>
-                <h2 class="card-header-title">Account Information</h2>
+    <!-- PNP Details -->
+    {% if user.profile %}
+    <div class="profile-card">
+        <div class="profile-card-header">
+            <i class="fas fa-shield-alt"></i>
+            <span>PNP Details</span>
+        </div>
+        <div class="profile-card-body">
+            <div class="profile-field">
+                <div class="profile-field-label"><i class="fas fa-id-badge"></i> Badge No.</div>
+                <div class="profile-field-value">{{ user.profile.badge_number|default:"—" }}</div>
             </div>
-
-            <div class="info-row">
-                <div class="info-label">
-                    <i class="fas fa-user"></i>
-                    Username
-                </div>
-                <div class="info-value editable">
-                    <input
-                        type="text"
-                        id="usernameInput"
-                        value="{{ user.username }}"
-                        disabled
-                    >
-                    <div id="usernameActions" style="display: none;" class="info-actions">
-                        <button type="button" class="btn-icon btn-save" onclick="saveUsername()" title="Save">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button type="button" class="btn-icon btn-cancel" onclick="cancelEdit()" title="Cancel">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <button type="button" class="btn-icon btn-edit" id="editIcon" onclick="enableEdit()" title="Edit username">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                </div>
+            <div class="profile-field">
+                <div class="profile-field-label"><i class="fas fa-star"></i> Rank</div>
+                <div class="profile-field-value"><span class="rank-badge">{{ user.profile.get_rank_display }}</span></div>
             </div>
-
-            <div class="info-row">
-                <div class="info-label">
-                    <i class="fas fa-envelope"></i>
-                    Email
-                </div>
-                <div class="info-value">{{ user.email|default:"Not set" }}</div>
+            <div class="profile-field">
+                <div class="profile-field-label"><i class="fas fa-briefcase"></i> Role</div>
+                <div class="profile-field-value"><span class="role-badge">{{ user.profile.get_role_display }}</span></div>
             </div>
-
-            <div class="info-row">
-                <div class="info-label">
-                    <i class="fas fa-id-card"></i>
-                    Full Name
-                </div>
-                <div class="info-value">{{ user.get_full_name|default:"Not set" }}</div>
+            <div class="profile-field">
+                <div class="profile-field-label"><i class="fas fa-users"></i> Unit</div>
+                <div class="profile-field-value">{{ user.profile.unit|default:"—" }}</div>
             </div>
-
-            <div class="info-row">
-                <div class="info-label">
-                    <i class="fas fa-calendar"></i>
-                    Status
-                </div>
-                <div class="info-value">
-                    <span class="status-badge status-active">
-                        <i class="fas fa-check-circle"></i>
-                        Active Account
-                    </span>
-                </div>
+            <div class="profile-field">
+                <div class="profile-field-label"><i class="fas fa-building"></i> Station</div>
+                <div class="profile-field-value">{{ user.profile.station|default:"—" }}</div>
+            </div>
+            <div class="profile-field">
+                <div class="profile-field-label"><i class="fas fa-map-marker-alt"></i> Province</div>
+                <div class="profile-field-value">{{ user.profile.province|default:"—" }}</div>
             </div>
         </div>
+    </div>
 
-        <!-- PNP Details -->
-        {% if user.profile %}
-        <div class="modern-card">
-            <div class="card-header">
-                <div class="card-header-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h2 class="card-header-title">PNP Details</h2>
+    <!-- Contact Information -->
+    <div class="profile-card">
+        <div class="profile-card-header">
+            <i class="fas fa-phone-alt"></i>
+            <span>Contact Information</span>
+        </div>
+        <div class="profile-card-body">
+            <div class="profile-field">
+                <div class="profile-field-label"><i class="fas fa-phone"></i> Phone</div>
+                <div class="profile-field-value">{{ user.profile.phone_number|default:"—" }}</div>
             </div>
-
-            <div class="info-row">
-                <div class="info-label">
-                    <i class="fas fa-id-badge"></i>
-                    Badge Number
-                </div>
-                <div class="info-value">{{ user.profile.badge_number|default:"Not set" }}</div>
-            </div>
-
-            <div class="info-row">
-                <div class="info-label">
-                    <i class="fas fa-star"></i>
-                    Rank
-                </div>
-                <div class="info-value">{{ user.profile.get_rank_display|default:"Not set" }}</div>
-            </div>
-
-            <div class="info-row">
-                <div class="info-label">
-                    <i class="fas fa-briefcase"></i>
-                    Role
-                </div>
-                <div class="info-value">{{ user.profile.get_role_display|default:"Not set" }}</div>
-            </div>
-
-            <div class="info-row">
-                <div class="info-label">
-                    <i class="fas fa-users"></i>
-                    Unit
-                </div>
-                <div class="info-value">{{ user.profile.unit|default:"Not set" }}</div>
-            </div>
-
-            <div class="info-row">
-                <div class="info-label">
-                    <i class="fas fa-building"></i>
-                    Station
-                </div>
-                <div class="info-value">{{ user.profile.station|default:"Not set" }}</div>
-            </div>
-
-            <div class="info-row">
-                <div class="info-label">
-                    <i class="fas fa-map-marker-alt"></i>
-                    Province
-                </div>
-                <div class="info-value">{{ user.profile.province|default:"Not set" }}</div>
+            <div class="profile-field">
+                <div class="profile-field-label"><i class="fas fa-mobile-alt"></i> Mobile</div>
+                <div class="profile-field-value">{{ user.profile.mobile_number|default:"—" }}</div>
             </div>
         </div>
-        {% endif %}
     </div>
 
     <!-- Activity Stats -->
-    <div class="modern-card">
-        <div class="card-header">
-            <div class="card-header-icon">
-                <i class="fas fa-chart-line"></i>
-            </div>
-            <h2 class="card-header-title">Activity Overview</h2>
+    <div class="profile-card">
+        <div class="profile-card-header">
+            <i class="fas fa-chart-line"></i>
+            <span>Activity</span>
         </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div class="stat-value">{{ user_reports.count|default:0 }}</div>
-                <div class="stat-label">Total Reports</div>
+        <div class="profile-stats">
+            <div class="profile-stat">
+                <div class="profile-stat-value">{{ user_reports.count|default:0 }}</div>
+                <div class="profile-stat-label">Reports</div>
             </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                <div class="stat-value">{{ user.date_joined|date:"M Y" }}</div>
-                <div class="stat-label">Member Since</div>
+            <div class="profile-stat">
+                <div class="profile-stat-value">{{ user.date_joined|date:"M Y" }}</div>
+                <div class="profile-stat-label">Joined</div>
             </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="stat-value">{{ user.last_login|date:"M d" }}</div>
-                <div class="stat-label">Last Login</div>
+            <div class="profile-stat">
+                <div class="profile-stat-value">{{ user.last_login|date:"M d" }}</div>
+                <div class="profile-stat-label">Last Login</div>
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
-<!-- Password Confirmation Modal (keeping existing modal) -->
-<div class="modal-overlay" id="passwordModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; align-items: center; justify-content: center;">
-    <div class="modal-content" style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.2); position: relative; z-index: 9999;">
-        <div class="modal-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; color: #003087;">
-            <i class="fas fa-lock" style="font-size: 1.5rem;"></i>
-            <h3 style="margin: 0; font-size: 1.3rem;">Confirm Password</h3>
-        </div>
-        <div class="modal-body" style="margin-bottom: 1.5rem;">
-            <div class="change-info" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; color: #856404;">
-                <strong><i class="fas fa-info-circle"></i> Username Change</strong><br>
-                Changing from: <strong id="oldUsername"></strong><br>
-                Changing to: <strong id="newUsername"></strong>
-            </div>
-
-            <div id="errorMessage" style="display: none; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;"></div>
-
-            <form id="passwordForm" onsubmit="return false;">
-                {% csrf_token %}
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="currentPassword" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555;">
-                        <i class="fas fa-key"></i> Enter your password to confirm
-                    </label>
-                    <input
-                        type="password"
-                        id="currentPassword"
-                        name="password"
-                        required
-                        placeholder="Your current password"
-                        autocomplete="current-password"
-                        style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box;"
-                    >
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-            <button type="button" class="btn btn-cancel" onclick="closeModal()" style="padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; background: #6c757d; color: white;">
-                <i class="fas fa-times"></i> Cancel
-            </button>
-            <button type="button" class="btn btn-save" onclick="confirmChange()" style="padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; background: #28a745; color: white;">
-                <i class="fas fa-check"></i> Confirm Change
-            </button>
-        </div>
-    </div>
+<!-- Change Password -->
+<div class="profile-actions">
+    <button type="button" class="btn-change-pw" onclick="openPasswordChangeModal()">
+        <i class="fas fa-key"></i> Change Password
+    </button>
 </div>
 
 <!-- Password Change Modal -->
-<div class="modal-overlay" id="passwordChangeModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; align-items: center; justify-content: center;">
-    <div class="modal-content" style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.2); position: relative; z-index: 9999;">
-        <div class="modal-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; color: #003087;">
-            <i class="fas fa-key" style="font-size: 1.5rem;"></i>
-            <h3 style="margin: 0; font-size: 1.3rem;">Change Password</h3>
+<div id="passwordChangeModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; align-items: flex-start; justify-content: center; padding-top: 5px;">
+    <div class="pw-modal-content" style="background: white; border-radius: 10px; padding: 1.75rem; max-width: 440px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.2); position: relative; z-index: 9999;">
+        <h3 style="margin: 0 0 1.25rem 0; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-key" style="color: #003087;"></i> Change Password
+        </h3>
+
+        <div class="pw-info-box" style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 6px; padding: 0.65rem 0.85rem; margin-bottom: 1rem; color: #0d47a1; font-size: 0.825rem;">
+            <i class="fas fa-info-circle"></i> Password must be at least 8 characters and cannot be entirely numeric.
         </div>
-        <div class="modal-body" style="margin-bottom: 1.5rem;">
-            <div class="info-box" style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; color: #0d47a1;">
-                <i class="fas fa-info-circle"></i> <strong>Security Notice</strong><br>
-                Your password must be at least 8 characters long and cannot be entirely numeric.
+
+        <div class="pw-error" id="passwordChangeError" style="display: none; padding: 0.65rem 0.85rem; border-radius: 6px; margin-bottom: 1rem; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; font-size: 0.85rem;"></div>
+
+        <form id="passwordChangeForm" onsubmit="return false;">
+            {% csrf_token %}
+            <div style="margin-bottom: 0.85rem;">
+                <label style="display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.825rem; color: #555;">Current Password</label>
+                <input type="password" id="oldPassword" required placeholder="Enter current password" autocomplete="current-password"
+                    style="width: 100%; padding: 0.6rem 0.75rem; border: 1.5px solid #ddd; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;">
             </div>
+            <div style="margin-bottom: 0.85rem;">
+                <label style="display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.825rem; color: #555;">New Password</label>
+                <input type="password" id="newPassword1" required placeholder="Enter new password" autocomplete="new-password"
+                    style="width: 100%; padding: 0.6rem 0.75rem; border: 1.5px solid #ddd; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 0;">
+                <label style="display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.825rem; color: #555;">Confirm New Password</label>
+                <input type="password" id="newPassword2" required placeholder="Re-type new password" autocomplete="new-password"
+                    style="width: 100%; padding: 0.6rem 0.75rem; border: 1.5px solid #ddd; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;">
+            </div>
+        </form>
 
-            <div id="passwordChangeError" style="display: none; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;"></div>
-
-            <form id="passwordChangeForm" onsubmit="return false;">
-                {% csrf_token %}
-
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="oldPassword" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555;">
-                        <i class="fas fa-lock"></i> Current Password
-                    </label>
-                    <input
-                        type="password"
-                        id="oldPassword"
-                        name="old_password"
-                        required
-                        placeholder="Enter your current password"
-                        autocomplete="current-password"
-                        style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box;"
-                    >
-                </div>
-
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="newPassword1" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555;">
-                        <i class="fas fa-key"></i> New Password
-                    </label>
-                    <input
-                        type="password"
-                        id="newPassword1"
-                        name="new_password1"
-                        required
-                        placeholder="Enter new password"
-                        autocomplete="new-password"
-                        style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box;"
-                    >
-                </div>
-
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="newPassword2" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555;">
-                        <i class="fas fa-check-double"></i> Confirm New Password
-                    </label>
-                    <input
-                        type="password"
-                        id="newPassword2"
-                        name="new_password2"
-                        required
-                        placeholder="Re-type new password"
-                        autocomplete="new-password"
-                        style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box;"
-                    >
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-            <button type="button" class="btn btn-cancel" onclick="closePasswordChangeModal()" style="padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; background: #6c757d; color: white;">
-                <i class="fas fa-times"></i> Cancel
+        <div style="display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 1.25rem;">
+            <button type="button" onclick="closePasswordChangeModal()" style="padding: 0.5rem 1rem; border: 1.5px solid #ccc; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; background: white; color: #555;">
+                Cancel
             </button>
-            <button type="button" class="btn btn-save" onclick="submitPasswordChange()" id="passwordChangeSubmitBtn" style="padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; background: #28a745; color: white;">
+            <button type="button" onclick="submitPasswordChange()" id="passwordChangeSubmitBtn" style="padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; background: #003087; color: white;">
                 <i class="fas fa-check"></i> Change Password
             </button>
         </div>
     </div>
 </div>
+</div><!-- /.profile-container -->
 
 <script>
-    let originalUsername = "{{ user.username }}";
-    let newUsernameValue = "";
-
-    function enableEdit() {
-        const input = document.getElementById('usernameInput');
-        const actions = document.getElementById('usernameActions');
-        const editIcon = document.getElementById('editIcon');
-
-        input.disabled = false;
-        input.focus();
-        input.select();
-        actions.style.display = 'flex';
-        editIcon.style.display = 'none';
-    }
-
-    function cancelEdit() {
-        const input = document.getElementById('usernameInput');
-        const actions = document.getElementById('usernameActions');
-        const editIcon = document.getElementById('editIcon');
-
-        input.value = originalUsername;
-        input.disabled = true;
-        actions.style.display = 'none';
-        editIcon.style.display = 'block';
-    }
-
-    function saveUsername() {
-        const input = document.getElementById('usernameInput');
-        newUsernameValue = input.value.trim();
-
-        // Validation
-        if (!newUsernameValue) {
-            showPopupNotification('Username cannot be empty', 'warning', 4000);
-            return;
-        }
-
-        if (newUsernameValue === originalUsername) {
-            cancelEdit();
-            return;
-        }
-
-        if (newUsernameValue.length < 3) {
-            showPopupNotification('Username must be at least 3 characters long', 'warning', 4000);
-            return;
-        }
-
-        if (!/^[a-zA-Z0-9_]+$/.test(newUsernameValue)) {
-            showPopupNotification('Username can only contain letters, numbers, and underscores', 'warning', 4000);
-            return;
-        }
-
-        // Show password confirmation modal
-        document.getElementById('oldUsername').textContent = originalUsername;
-        document.getElementById('newUsername').textContent = newUsernameValue;
-        document.getElementById('currentPassword').value = '';
-        document.getElementById('errorMessage').style.display = 'none';
-        showModal();
-    }
-
-    function showModal() {
-        const modal = document.getElementById('passwordModal');
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        document.getElementById('currentPassword').focus();
-
-        // Close on Escape key
-        document.addEventListener('keydown', escapeHandler);
-    }
-
-    function closeModal() {
-        const modal = document.getElementById('passwordModal');
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-        document.removeEventListener('keydown', escapeHandler);
-        cancelEdit();
-    }
-
-    function escapeHandler(e) {
-        if (e.key === 'Escape') {
-            closeModal();
-        }
-    }
-
-    // Close modal when clicking outside
-    document.getElementById('passwordModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeModal();
-        }
-    });
-
-    async function confirmChange() {
-        const password = document.getElementById('currentPassword').value;
-        const errorDiv = document.getElementById('errorMessage');
-
-        if (!password) {
-            errorDiv.textContent = 'Please enter your password';
-            errorDiv.style.display = 'block';
-            return;
-        }
-
-        // Show loading state
-        const confirmBtn = event.target;
-        const originalText = confirmBtn.innerHTML;
-        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirming...';
-        confirmBtn.disabled = true;
-
-        try {
-            const response = await fetch('{% url "change_username" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    new_username: newUsernameValue,
-                    password: password
-                })
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                // Success - reload page
-                showPopupNotification('Username changed successfully! You will be logged out.', 'success', 3000);
-                setTimeout(() => {
-                    window.location.href = '{% url "login" %}';
-                }, 3000);
-            } else {
-                // Show error
-                errorDiv.textContent = data.error || 'Failed to change username';
-                errorDiv.style.display = 'block';
-                confirmBtn.innerHTML = originalText;
-                confirmBtn.disabled = false;
-            }
-        } catch (error) {
-            errorDiv.textContent = 'An error occurred. Please try again.';
-            errorDiv.style.display = 'block';
-            confirmBtn.innerHTML = originalText;
-            confirmBtn.disabled = false;
-        }
-    }
-
-    // Allow Enter key to submit password
-    document.getElementById('currentPassword').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            confirmChange();
-        }
-    });
-
-    // Password Change Modal Functions
     function openPasswordChangeModal() {
         const modal = document.getElementById('passwordChangeModal');
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
-
-        // Clear form and errors
         document.getElementById('passwordChangeForm').reset();
         document.getElementById('passwordChangeError').style.display = 'none';
         document.getElementById('oldPassword').focus();
-
-        // Close on Escape key
-        document.addEventListener('keydown', passwordModalEscapeHandler);
+        document.addEventListener('keydown', pwEscHandler);
     }
 
     function closePasswordChangeModal() {
-        const modal = document.getElementById('passwordChangeModal');
-        modal.style.display = 'none';
+        document.getElementById('passwordChangeModal').style.display = 'none';
         document.body.style.overflow = '';
-        document.removeEventListener('keydown', passwordModalEscapeHandler);
-
-        // Reset form
+        document.removeEventListener('keydown', pwEscHandler);
         document.getElementById('passwordChangeForm').reset();
         document.getElementById('passwordChangeError').style.display = 'none';
-
-        // Reset button state
-        const submitBtn = document.getElementById('passwordChangeSubmitBtn');
-        submitBtn.innerHTML = '<i class="fas fa-check"></i> Change Password';
-        submitBtn.disabled = false;
+        const btn = document.getElementById('passwordChangeSubmitBtn');
+        btn.innerHTML = '<i class="fas fa-check"></i> Change Password';
+        btn.disabled = false;
     }
 
-    function passwordModalEscapeHandler(e) {
-        if (e.key === 'Escape') {
-            closePasswordChangeModal();
-        }
+    function pwEscHandler(e) {
+        if (e.key === 'Escape') closePasswordChangeModal();
     }
 
-    // Close modal when clicking outside
     document.getElementById('passwordChangeModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closePasswordChangeModal();
-        }
+        if (e.target === this) closePasswordChangeModal();
     });
 
     async function submitPasswordChange() {
-        const oldPassword = document.getElementById('oldPassword').value;
-        const newPassword1 = document.getElementById('newPassword1').value;
-        const newPassword2 = document.getElementById('newPassword2').value;
+        const oldPw = document.getElementById('oldPassword').value;
+        const newPw1 = document.getElementById('newPassword1').value;
+        const newPw2 = document.getElementById('newPassword2').value;
         const errorDiv = document.getElementById('passwordChangeError');
-
-        // Clear previous errors
         errorDiv.style.display = 'none';
 
-        // Client-side validation
-        if (!oldPassword || !newPassword1 || !newPassword2) {
+        if (!oldPw || !newPw1 || !newPw2) {
             errorDiv.textContent = 'All fields are required.';
             errorDiv.style.display = 'block';
             return;
         }
-
-        if (newPassword1 !== newPassword2) {
+        if (newPw1 !== newPw2) {
             errorDiv.textContent = 'New passwords do not match.';
             errorDiv.style.display = 'block';
             return;
         }
-
-        if (newPassword1.length < 8) {
+        if (newPw1.length < 8) {
             errorDiv.textContent = 'Password must be at least 8 characters long.';
             errorDiv.style.display = 'block';
             return;
         }
-
-        if (/^\d+$/.test(newPassword1)) {
+        if (/^\d+$/.test(newPw1)) {
             errorDiv.textContent = 'Password cannot be entirely numeric.';
             errorDiv.style.display = 'block';
             return;
         }
-
-        if (oldPassword === newPassword1) {
+        if (oldPw === newPw1) {
             errorDiv.textContent = 'New password must be different from current password.';
             errorDiv.style.display = 'block';
             return;
         }
 
-        // Show loading state
-        const submitBtn = document.getElementById('passwordChangeSubmitBtn');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing...';
-        submitBtn.disabled = true;
+        const btn = document.getElementById('passwordChangeSubmitBtn');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing...';
+        btn.disabled = true;
 
         try {
-            const response = await fetch('{% url "change_password_api" %}', {
+            const resp = await fetch('{% url "change_password_api" %}', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    old_password: oldPassword,
-                    new_password1: newPassword1,
-                    new_password2: newPassword2
-                })
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ old_password: oldPw, new_password1: newPw1, new_password2: newPw2 })
             });
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                // Success - close modal and show popup
+            const data = await resp.json();
+            if (resp.ok && data.success) {
                 closePasswordChangeModal();
                 showPopupNotification('Password changed successfully!', 'success', 5000);
             } else {
-                // Show error
-                errorDiv.textContent = data.error || 'Failed to change password. Please try again.';
+                errorDiv.textContent = data.error || 'Failed to change password.';
                 errorDiv.style.display = 'block';
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Change Password';
+                btn.disabled = false;
             }
-        } catch (error) {
+        } catch (err) {
             errorDiv.textContent = 'An error occurred. Please try again.';
             errorDiv.style.display = 'block';
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Change Password';
+            btn.disabled = false;
         }
     }
 
-    // Allow Enter key to submit password change
     ['oldPassword', 'newPassword1', 'newPassword2'].forEach(id => {
         document.getElementById(id).addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                submitPasswordChange();
-            }
+            if (e.key === 'Enter') submitPasswordChange();
         });
     });
 </script>

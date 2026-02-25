@@ -49,7 +49,7 @@
 
     .map-container {
         height: calc(100vh - 280px);
-        min-height: 600px;
+        min-height: 400px;
         position: relative;
     }
 
@@ -116,6 +116,11 @@
 
     .toggle-icon-btn:hover::after {
         opacity: 1;
+    }
+
+    /* Label inside toggle button - hidden on desktop */
+    .btn-label {
+        display: none;
     }
 
     .map-stats {
@@ -210,10 +215,10 @@
     /* Stats Sections */
     .stats-section {
         margin-bottom: 12px;
-        border: 1px solid #E9ECEF;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
         overflow: hidden;
-        background: white;
+        background: rgba(255, 255, 255, 0.03);
     }
 
     .stats-section:last-child {
@@ -221,7 +226,7 @@
     }
 
     .stats-section-header {
-        background: #F8F9FA;
+        background: rgba(255, 255, 255, 0.08);
         padding: 10px 12px;
         cursor: pointer;
         display: flex;
@@ -232,18 +237,18 @@
     }
 
     .stats-section-header:hover {
-        background: #E9ECEF;
+        background: rgba(255, 255, 255, 0.12);
     }
 
     .stats-section-header span {
         font-size: 0.85rem;
         font-weight: 600;
-        color: #003087;
+        color: #ffffff;
     }
 
     .stats-section-icon {
         font-size: 0.75rem;
-        color: #666;
+        color: rgba(255, 255, 255, 0.7);
         transition: transform 0.3s ease;
     }
 
@@ -271,8 +276,9 @@
         margin-bottom: 8px;
         font-size: 0.8rem;
         padding: 6px 8px;
-        background: #F8F9FA;
+        background: rgba(255, 255, 255, 0.08);
         border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .stat-item:last-child {
@@ -280,14 +286,14 @@
     }
 
     .stat-label {
-        color: #666;
+        color: rgba(255, 255, 255, 0.8);
         font-weight: 500;
         flex: 1;
     }
 
     .stat-value {
         font-weight: 700;
-        color: #003087;
+        color: #60a5fa;
         font-size: 0.9rem;
         margin-left: 8px;
     }
@@ -309,9 +315,10 @@
     .stats-chart-container {
         margin-top: 12px;
         padding: 10px;
-        background: white;
+        background: rgba(255, 255, 255, 0.05);
         border-radius: 6px;
         height: 180px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .stats-chart-container canvas {
@@ -329,9 +336,10 @@
         align-items: center;
         padding: 8px;
         margin-bottom: 6px;
-        background: #F8F9FA;
+        background: rgba(255, 255, 255, 0.08);
         border-radius: 6px;
         font-size: 0.8rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .stats-list-item:last-child {
@@ -339,21 +347,21 @@
     }
 
     .stats-list-label {
-        color: #666;
+        color: rgba(255, 255, 255, 0.85);
         font-weight: 500;
         flex: 1;
     }
 
     .stats-list-value {
         font-weight: 700;
-        color: #003087;
+        color: #60a5fa;
         font-size: 0.85rem;
         margin-left: 8px;
     }
 
     .stats-list-bar {
         height: 4px;
-        background: #E9ECEF;
+        background: rgba(255, 255, 255, 0.15);
         border-radius: 2px;
         margin-top: 4px;
         overflow: hidden;
@@ -361,13 +369,13 @@
 
     .stats-list-bar-fill {
         height: 100%;
-        background: linear-gradient(90deg, #003087, #0056b3);
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
         transition: width 0.5s ease;
     }
 
     .stats-empty {
         text-align: center;
-        color: #999;
+        color: rgba(255, 255, 255, 0.5);
         font-size: 0.8rem;
         padding: 12px;
         font-style: italic;
@@ -378,20 +386,21 @@
         position: absolute;
         top: 55px;
         right: 12px;
-        background: white;
+        background: #1e293b;
         border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         padding: 8px;
         min-width: 180px;
         z-index: 1000;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .export-menu-header {
         font-size: 0.8rem;
         font-weight: 600;
-        color: #003087;
+        color: #ffffff;
         padding: 8px 10px;
-        border-bottom: 1px solid #E9ECEF;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         margin-bottom: 6px;
     }
 
@@ -399,8 +408,8 @@
         width: 100%;
         padding: 10px 12px;
         margin-bottom: 4px;
-        background: #F8F9FA;
-        border: 1px solid #E9ECEF;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 6px;
         cursor: pointer;
         font-size: 0.8rem;
@@ -409,13 +418,13 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        color: #333;
+        color: rgba(255, 255, 255, 0.9);
     }
 
     .export-btn:hover {
-        background: #003087;
+        background: #3b82f6;
         color: white;
-        border-color: #003087;
+        border-color: #3b82f6;
         transform: translateX(4px);
     }
 
@@ -425,15 +434,179 @@
 
     .export-btn-cancel {
         margin-top: 6px;
-        border-top: 1px solid #E9ECEF;
-        background: white;
-        color: #DC143C;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: #f87171;
     }
 
     .export-btn-cancel:hover {
         background: #DC143C;
         color: white;
         border-color: #DC143C;
+    }
+
+    /* ---- Stats Panel Light Mode Fixes ---- */
+    .stats-section-header {
+        background: rgba(0, 0, 0, 0.04);
+    }
+
+    .stats-section-header:hover {
+        background: rgba(0, 0, 0, 0.07);
+    }
+
+    .stats-section-header span {
+        color: #1E293B;
+    }
+
+    .stats-section-icon {
+        color: #6B7280;
+    }
+
+    .stat-item {
+        background: #F8FAFC;
+        border-color: #E2E8F0;
+    }
+
+    .stat-label {
+        color: #374151;
+    }
+
+    .stat-value {
+        color: #2563EB;
+    }
+
+    .stat-percentage {
+        color: #6B7280;
+    }
+
+    .stats-chart-container {
+        background: #F8FAFC;
+        border-color: #E2E8F0;
+    }
+
+    .stats-list-item {
+        background: #F8FAFC;
+        border-color: #E2E8F0;
+    }
+
+    .stats-list-label {
+        color: #374151;
+    }
+
+    .stats-list-value {
+        color: #2563EB;
+    }
+
+    .stats-list-bar {
+        background: #E2E8F0;
+    }
+
+    .stats-empty {
+        color: #9CA3AF;
+    }
+
+    .stats-export-menu {
+        background: white;
+        border-color: #E2E8F0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    .export-menu-header {
+        color: #1E293B;
+        border-bottom-color: #E2E8F0;
+    }
+
+    .export-btn {
+        background: #F8FAFC;
+        border-color: #E2E8F0;
+        color: #374151;
+    }
+
+    .export-btn-cancel {
+        border-top-color: #E2E8F0;
+        background: #FEF2F2;
+    }
+
+    /* ---- Dark Mode: restore original dark styling ---- */
+    [data-theme="dark"] .stats-section-header {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-theme="dark"] .stats-section-header:hover {
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    [data-theme="dark"] .stats-section-header span {
+        color: #ffffff;
+    }
+
+    [data-theme="dark"] .stats-section-icon {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    [data-theme="dark"] .stat-item {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="dark"] .stat-label {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    [data-theme="dark"] .stat-value {
+        color: #60a5fa;
+    }
+
+    [data-theme="dark"] .stat-percentage {
+        color: #999;
+    }
+
+    [data-theme="dark"] .stats-chart-container {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="dark"] .stats-list-item {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="dark"] .stats-list-label {
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    [data-theme="dark"] .stats-list-value {
+        color: #60a5fa;
+    }
+
+    [data-theme="dark"] .stats-list-bar {
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    [data-theme="dark"] .stats-empty {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    [data-theme="dark"] .stats-export-menu {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    [data-theme="dark"] .export-menu-header {
+        color: #ffffff;
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="dark"] .export-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    [data-theme="dark"] .export-btn-cancel {
+        border-top-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
     }
 
     /* Enhanced Map Controls Panel */
@@ -451,6 +624,11 @@
         transform: translateX(-100%);
         opacity: 0;
         pointer-events: none;
+        /* Flex column so body fills available height and scrolls */
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        max-height: calc(100vh - 100px);
     }
 
     .map-controls.show {
@@ -477,12 +655,15 @@
 
     .controls-body {
         padding: 1.1rem;
-        max-height: 500px;
+        /* Fill remaining panel height and scroll — max-height is now governed by parent */
+        flex: 1;
+        min-height: 0;
         overflow-y: auto;
     }
 
     body.fullscreen-mode .controls-body {
-        max-height: calc(100vh - 80px);  
+        /* max-height already removed — parent flex does the job */
+        max-height: none;
     }
 
     .control-section {
@@ -615,6 +796,51 @@
         pointer-events: auto;
     }
 
+    /* ── Panel resize handle ── */
+    .panel-resize-handle {
+        width: 100%;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: row-resize;
+        flex-shrink: 0;
+        background: transparent;
+        user-select: none;
+        touch-action: none;
+        transition: background 0.2s;
+    }
+    .panel-resize-handle:hover {
+        background: rgba(0, 48, 135, 0.06);
+    }
+    .panel-resize-handle::before {
+        content: '';
+        width: 38px;
+        height: 4px;
+        background: #cbd5e1;
+        border-radius: 2px;
+        transition: background 0.2s, width 0.2s;
+    }
+    .panel-resize-handle:hover::before {
+        background: var(--primary-blue);
+        width: 52px;
+    }
+    /* Legend handle now at bottom — drag upward to expand (legend grows upward) */
+    .map-legend .panel-resize-handle {
+        cursor: s-resize;
+    }
+    /* During resize: lock cursor globally so it never flickers */
+    .panel-resizing,
+    .panel-resizing * {
+        cursor: row-resize !important;
+        user-select: none !important;
+    }
+    /* Prep panels for smooth GPU-composited resize */
+    .map-stats,
+    .map-controls,
+    .map-legend {
+        will-change: height;
+    }
     .map-legend h4 {
         margin: 0 0 0.65rem 0;
         font-size: 0.85rem;
@@ -641,68 +867,175 @@
         flex-shrink: 0;
     }
 
-    /* Time Filter Badge */
-.time-filter-badge {
+    /* Filter Badges Container - Single Row */
+.filter-badges-container {
     position: absolute;
-    top: 20px;
+    top: 15px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--primary-blue);
-    color: white;
-    padding: 0.6rem 1.2rem;
-    border-radius: 25px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    z-index: 800;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    display: none;
+    display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 12px;
-    transition: all 0.4s ease;
-    white-space: nowrap;
-    max-width: 5000px; /* Limit maximum width */
-    overflow: hidden;
-    text-overflow: ellipsis;
+    z-index: 800;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 95%;
 }
 
-/* Move banners below search bar when search is active */
-.time-filter-badge.below-search {
-    top: 110px;
+/* Badge separator dot between visible badges */
+.filter-badges-container > div.show + div.show::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 50%;
+}
+
+/* Time Filter Badge - Blue (Time Range, Province, Severity) */
+.time-filter-badge {
+    background: linear-gradient(135deg, #003087, #1E5FAA);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0, 48, 135, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    display: none;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
 .time-filter-badge.show {
     display: flex;
 }
+
+/* Hotspot Circle Pulse Animation */
+@keyframes hotspotPulse {
+    0% {
+        stroke-width: 2;
+        stroke-opacity: 1;
+        fill-opacity: 0.2;
+    }
+    50% {
+        stroke-width: 5;
+        stroke-opacity: 0.8;
+        fill-opacity: 0.4;
+    }
+    100% {
+        stroke-width: 2;
+        stroke-opacity: 1;
+        fill-opacity: 0.2;
+    }
+}
+
+.leaflet-interactive.hotspot-pulse {
+    animation: hotspotPulse 0.8s ease-in-out 2;
+}
+
+/* Filter Results Highlight */
+@keyframes markerBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+/* All badge close buttons */
 .time-filter-badge .close-banner,
-.search-active-banner .close-banner {
+.search-active-banner .close-banner,
+.active-filters-badge .close-banner {
     background: rgba(255,255,255,0.3);
     border: none;
     color: white;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.9rem;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
     flex-shrink: 0;
     font-weight: bold;
-    flex-shrink: 0 !important;
-    margin-left: auto !important;
-}
-.time-filter-badge.show:only-child {
-    transform: translateX(-50%);
-}
-.search-active-banner.show:only-child {
-    transform: translateX(-50%);
 }
 
 .time-filter-badge .close-banner:hover,
-.search-active-banner .close-banner:hover {
+.search-active-banner .close-banner:hover,
+.active-filters-badge .close-banner:hover {
     background: rgba(255,255,255,0.5);
     transform: scale(1.1);
+}
+
+/* Active Filters Badge - Orange (Year, Incident Type, Day of Week) */
+.active-filters-badge {
+    background: linear-gradient(135deg, #FF6B35, #F7931E);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    display: none;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.active-filters-badge.show {
+    display: flex;
+}
+
+[data-theme="dark"] .active-filters-badge {
+    background: linear-gradient(135deg, #E65100, #FF8C00);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Search Active Banner - Yellow */
+.search-active-banner {
+    background: linear-gradient(135deg, #F4D03F, #E9B824);
+    color: #333;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(244, 208, 63, 0.4);
+    display: none;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.search-active-banner.show {
+    display: flex;
+}
+
+.search-active-banner .close-banner {
+    background: rgba(0,0,0,0.2);
+    color: #333;
+}
+
+.search-active-banner .close-banner:hover {
+    background: rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .search-active-banner {
+    background: linear-gradient(135deg, #C9A227, #B8860B);
+    color: white;
+}
+
+[data-theme="dark"] .search-active-banner .close-banner {
+    background: rgba(255,255,255,0.3);
+    color: white;
 }
 
     @keyframes pulse {
@@ -781,20 +1114,237 @@
 
     /* Responsive */
     @media (max-width: 768px) {
-        .map-toggle-buttons {
-            left: 10px;
-            top: 10px;
-            transform: none;
-        }
 
-        .toggle-icon-btn {
-            width: 42px;
-            height: 42px;
-            font-size: 1.2rem;
-        }
-
+        /* ── Map container height ── */
         .map-container {
-            height: 500px;
+            height: calc(100vh - 180px);
+            min-height: 320px;
+        }
+
+        /* ── Page header compact ── */
+        .page-header {
+            padding: 0.65rem 0.85rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+        }
+        .page-header h2 { font-size: 1rem; }
+        .page-header p  { font-size: 0.72rem; }
+        .dashboard-actions { gap: 0.35rem; }
+        .dashboard-actions .btn {
+            padding: 0.28rem 0.6rem;
+            font-size: 0.72rem;
+        }
+
+        /* ── Toggle icon buttons → labeled pill bar at bottom-center ── */
+        .map-toggle-buttons {
+            top: auto !important;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            flex-direction: row;
+            gap: 6px;
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            box-shadow: none;
+            backdrop-filter: none;
+            z-index: 1000;
+        }
+
+        /* Each button gets its own shadow/bg — no pill */
+        .toggle-icon-btn {
+            width: 52px;
+            height: 54px;
+            font-size: 1.25rem;
+            border-radius: 10px;
+            flex-direction: column;
+            gap: 2px;
+            padding: 4px 2px;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+        }
+
+        /* Show labels on mobile */
+        .toggle-icon-btn .btn-label {
+            display: block;
+            font-size: 0.53rem;
+            font-weight: 600;
+            line-height: 1;
+            color: #374151;
+            white-space: nowrap;
+        }
+
+        .toggle-icon-btn.active .btn-label {
+            color: white;
+        }
+
+        /* Hide desktop tooltips on mobile */
+        .toggle-icon-btn::after { display: none; }
+
+        /* ── Search + Fullscreen: grouped pair at top-right ── */
+        .floating-search-btn {
+            top: 10px;
+            right: 10px;
+            transform: none;
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+            border-radius: 8px;
+        }
+        .floating-search-btn:hover { transform: scale(1.05); }
+        .floating-search-btn::after { display: none; }
+
+        /* Fullscreen sits directly below search, same right edge */
+        .fullscreen-btn {
+            position: absolute;
+            top: 54px;   /* 10px top + 36px btn + 8px gap */
+            right: 10px;
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+            border-radius: 8px;
+        }
+
+        /* ── Search bar — full width, compact ── */
+        .map-search-container {
+            top: 10px;
+            left: 8px;
+            right: 54px;   /* leave room for search/fullscreen buttons */
+            width: auto;
+            max-width: none;
+            transform: translateX(0) translateY(-120%);
+        }
+        .map-search-container.active {
+            transform: translateX(0) translateY(0);
+        }
+        .search-bar {
+            padding: 0.25rem 0.35rem;
+            gap: 0.25rem;
+            border-radius: 14px;
+            border-width: 1.5px;
+        }
+        .search-bar input {
+            padding: 0.4rem 0.5rem;
+            font-size: 0.78rem;
+            min-width: 0;   /* let it shrink */
+        }
+        /* hide text search button and history on mobile — Enter submits */
+        .search-btn,
+        .history-btn {
+            display: none !important;
+        }
+        .close-search-btn {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            font-size: 0.85rem;
+        }
+        /* quick tags: single scrollable row */
+        .quick-search-tags {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            gap: 5px;
+            padding: 3px 2px 4px;
+            scrollbar-width: none;
+        }
+        .quick-search-tags::-webkit-scrollbar { display: none; }
+        .tag-btn {
+            flex-shrink: 0;
+            font-size: 0.65rem;
+            padding: 0.18rem 0.5rem;
+        }
+
+        /* ── Stats, Controls, Legend panels — compact, centred ── */
+        /* Switch show/hide to Y-axis so X is free for centering */
+        .map-stats,
+        .map-controls,
+        .map-legend {
+            left: 50% !important;
+            right: auto !important;
+            width: min(88vw, 300px) !important;
+            max-width: 300px !important;
+            margin-left: calc(-1 * min(44vw, 150px)) !important;
+        }
+
+        /* Stats + Controls: slide in from top */
+        .map-stats,
+        .map-controls {
+            top: 58px;
+            bottom: auto !important;
+            max-height: 58vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(-115%) !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .map-stats.show,
+        .map-controls.show {
+            transform: translateY(0) !important;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .stats-content,
+        .controls-body {
+            flex: 1;
+            overflow-y: auto;
+            max-height: none !important;
+        }
+
+        /* Compact inner padding on mobile */
+        .stats-header,
+        .controls-header {
+            padding: 0.6rem 0.85rem;
+            font-size: 0.8rem;
+        }
+        .stats-content  { padding: 8px; }
+        .controls-body  { padding: 0.75rem; }
+
+        .stat-item          { font-size: 0.72rem; padding: 4px 6px; }
+        .stats-section-header span { font-size: 0.78rem; }
+        .control-section h4 { font-size: 0.75rem; }
+        .control-group label { font-size: 0.72rem; }
+        .control-group select,
+        .control-group input { font-size: 0.78rem; padding: 0.4rem; }
+        .control-group button { font-size: 0.78rem; padding: 0.45rem; }
+        .layer-toggle span  { font-size: 0.78rem; }
+
+        /* Legend: slide in from bottom */
+        .map-legend {
+            bottom: 76px !important;
+            top: auto !important;
+            max-height: 38vh;
+            overflow: hidden;
+            transform: translateY(115%) !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .map-legend.show {
+            transform: translateY(0) !important;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .map-legend h4  { font-size: 0.8rem; padding: 0.6rem 0.85rem; }
+
+        .legend-content {
+            max-height: 28vh;
+            overflow-y: auto;
+            padding: 6px 8px;
+        }
+
+        .legend-content .legend-item { font-size: 0.72rem; }
+
+        /* Filter badges compact */
+        .time-filter-badge,
+        .search-active-banner {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.6rem;
         }
     }
 
@@ -880,7 +1430,7 @@
     background: white;
     padding: 0.5rem;
     border-radius: 30px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border: 2px solid var(--primary-blue);
 }
 
@@ -891,11 +1441,25 @@
     font-size: 0.9rem;
     outline: none;
     background: transparent;
-    color: var(--text-dark);
+    color: #1f2937;
 }
 
 .search-bar input::placeholder {
-    color: var(--text-light);
+    color: #9ca3af;
+}
+
+/* Dark theme for search bar */
+[data-theme="dark"] .search-bar {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .search-bar input {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .search-bar input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .search-btn {
@@ -945,59 +1509,89 @@
     left: 0;
     right: 0;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    max-height: 400px; /* Default max height */
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08);
+    max-height: calc(100vh - 200px);
     overflow-y: auto;
     z-index: 1001;
     margin-top: 0.5rem;
-    border: 1px solid var(--border-color);
-    max-height: calc(100vh - 200px); 
+    border: 1px solid #E2E8F0;
 }
 body.fullscreen-mode .search-suggestions {
-    max-height: calc(100vh - 150px); /* More space in fullscreen */
+    max-height: calc(100vh - 150px);
 }
+
+.search-suggestions::-webkit-scrollbar { width: 5px; }
+.search-suggestions::-webkit-scrollbar-track { background: transparent; }
+.search-suggestions::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
 
 .suggestion-item {
     display: flex;
     align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #F1F5F9;
     cursor: pointer;
-    transition: all 0.2s ease;
-    gap: 0.75rem;
+    transition: all 0.15s ease;
+    gap: 0.7rem;
 }
 .suggestion-item:hover {
-    background: var(--light-blue);
-    padding-left: 1.25rem;
+    background: #EFF6FF;
+}
+.suggestion-item:first-child {
+    border-radius: 14px 14px 0 0;
 }
 .suggestion-item:last-child {
     border-bottom: none;
+    border-radius: 0 0 14px 14px;
+}
+.suggestion-item:only-child {
+    border-radius: 14px;
 }
 .suggestion-icon {
-    font-size: 1.1rem;
-    width: 24px;
-    text-align: center;
+    font-size: 1rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F1F5F9;
+    border-radius: 8px;
     flex-shrink: 0;
 }
 
 .suggestion-text {
     flex: 1;
-    font-weight: 500;
-    color: var(--text-dark);
-    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1E293B;
+    font-size: 0.85rem;
+    letter-spacing: 0.01em;
 }
 
 .suggestion-type {
-    background: var(--bg-light);
-    color: var(--text-medium);
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 600;
+    background: #1E293B;
+    color: white;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.62rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+.suggestion-type[data-type="location"] { background: #2563EB; }
+.suggestion-type[data-type="vehicle"] { background: #DC2626; }
+.suggestion-type[data-type="history"] { background: #059669; }
+
+[data-theme="dark"] .search-suggestions {
+    background: #1E293B;
+    border-color: #334155;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .search-suggestions::-webkit-scrollbar-thumb { background: #475569; }
+[data-theme="dark"] .suggestion-item { border-bottom-color: #334155; }
+[data-theme="dark"] .suggestion-item:hover { background: #334155; }
+[data-theme="dark"] .suggestion-icon { background: #334155; }
+[data-theme="dark"] .suggestion-text { color: #F1F5F9; }
 /* Search History */
 .search-history {
     position: absolute;
@@ -1005,13 +1599,13 @@ body.fullscreen-mode .search-suggestions {
     left: 0;
     right: 0;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    max-height: calc(100vh - 200px); /* Same dynamic height */
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08);
+    max-height: calc(100vh - 200px);
     overflow-y: auto;
     z-index: 1001;
     margin-top: 0.5rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid #E2E8F0;
 }
 body.fullscreen-mode .search-history {
     max-height: calc(100vh - 150px);
@@ -1021,26 +1615,26 @@ body.fullscreen-mode .search-history {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    background: var(--bg-light);
-    border-bottom: 1px solid var(--border-color);
-    border-radius: 12px 12px 0 0;
+    padding: 0.7rem 1rem;
+    background: #F8FAFC;
+    border-bottom: 1px solid #E2E8F0;
+    border-radius: 14px 14px 0 0;
 }
 
 .history-header span {
     font-weight: 600;
-    color: var(--text-dark);
-    font-size: 0.9rem;
+    color: #1E293B;
+    font-size: 0.85rem;
 }
 
 .clear-history {
     background: var(--primary-blue);
     color: white;
     border: none;
-    padding: 0.4rem 0.8rem;
+    padding: 0.35rem 0.7rem;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     transition: all 0.2s;
 }
 
@@ -1052,14 +1646,14 @@ body.fullscreen-mode .search-history {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.9rem 1rem;
-    border-bottom: 1px solid var(--border-color);
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #F1F5F9;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.15s;
 }
 
 .history-item:hover {
-    background: var(--light-blue);
+    background: #EFF6FF;
 }
 
 .history-item:last-child {
@@ -1067,15 +1661,25 @@ body.fullscreen-mode .search-history {
 }
 
 .history-query {
-    font-weight: 500;
-    color: var(--text-dark);
+    font-weight: 600;
+    color: #1E293B;
     font-size: 0.85rem;
 }
 
 .history-time {
-    color: var(--text-light);
+    color: #9CA3AF;
     font-size: 0.75rem;
 }
+
+[data-theme="dark"] .search-history {
+    background: #1E293B;
+    border-color: #334155;
+}
+[data-theme="dark"] .history-header { background: #0F172A; border-color: #334155; }
+[data-theme="dark"] .history-header span { color: #F1F5F9; }
+[data-theme="dark"] .history-item { border-bottom-color: #334155; }
+[data-theme="dark"] .history-item:hover { background: #334155; }
+[data-theme="dark"] .history-query { color: #F1F5F9; }
 
 .history-remove {
     background: #DC143C;
@@ -1101,10 +1705,12 @@ body.fullscreen-mode .search-history {
 /* Loading and Empty States */
 .suggestions-loading,
 .no-suggestions {
-    padding: 2rem;
+    padding: 1.5rem;
     text-align: center;
-    color: var(--text-medium);
+    color: #6B7280;
 }
+[data-theme="dark"] .suggestions-loading,
+[data-theme="dark"] .no-suggestions { color: #9CA3AF; }
 
 .suggestions-loading-spinner {
     width: 30px;
@@ -1177,9 +1783,9 @@ body.fullscreen-mode .search-history {
     /* Quick Search Tags */
 .quick-search-tags {
     display: flex;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+    flex-wrap: nowrap;
     justify-content: center;
     animation: fadeIn 0.5s ease 0.2s both;
 }
@@ -1191,13 +1797,16 @@ body.fullscreen-mode .search-history {
 
 .tag-btn {
     background: white;
-    border: 1px solid var(--border-color);
-    padding: 0.4rem 0.9rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    border: 1px solid #d1d5db;
+    padding: 0.35rem 0.7rem;
+    border-radius: 16px;
+    font-size: 0.75rem;
     cursor: pointer;
     transition: all 0.2s;
-    color: var(--text-dark);
+    color: #374151;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    white-space: nowrap;
 }
 
 .tag-btn:hover {
@@ -1205,7 +1814,19 @@ body.fullscreen-mode .search-history {
     color: white;
     border-color: var(--primary-blue);
     transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Dark theme for tag buttons */
+[data-theme="dark"] .tag-btn {
+    background: rgba(15, 23, 42, 0.95);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] .tag-btn:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 
     /* Search Info Panel */
@@ -1218,7 +1839,7 @@ body.fullscreen-mode .search-history {
         width: 48px;
         height: 48px;
         background: white;
-        border: none;
+        border: 1px solid #d1d5db;
         border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         cursor: pointer;
@@ -1226,16 +1847,51 @@ body.fullscreen-mode .search-history {
         align-items: center;
         justify-content: center;
         font-size: 1.4rem;
+        color: #374151;
         transition: all 0.3s ease;
     }
 
     .fullscreen-btn:hover {
-        background: var(--light-blue);
+        background: #f3f4f6;
         transform: scale(1.1);
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        border-color: #9ca3af;
     }
 
     .fullscreen-btn.active {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    /* Dark theme for fullscreen button */
+    [data-theme="dark"] .fullscreen-btn {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-color: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    [data-theme="dark"] .fullscreen-btn:hover {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        border-color: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    /* Dark theme for floating search button */
+    [data-theme="dark"] .floating-search-btn {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    [data-theme="dark"] .floating-search-btn:hover {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        border-color: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    [data-theme="dark"] .floating-search-btn.active {
         background: var(--primary-blue);
         color: white;
     }
@@ -1251,7 +1907,7 @@ body.fullscreen-mode .search-history {
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 9999;
+        z-index: 20000;
         border-radius: 0;
         margin: 0;
     }
@@ -1266,9 +1922,46 @@ body.fullscreen-mode .search-history {
     }
 
     /* Hide other elements in fullscreen */
+    body.fullscreen-mode .navbar,
     body.fullscreen-mode .breadcrumb,
     body.fullscreen-mode .page-header {
-        display: none;
+        display: none !important;
+    }
+
+    /* Remove top padding so map fills the screen edge-to-edge */
+    body.fullscreen-mode {
+        padding-top: 0 !important;
+    }
+
+    /* Mobile fullscreen: compact panels, no navbar offset */
+    @media (max-width: 768px) {
+        /* No navbar in fullscreen → panels start from top of screen */
+        body.fullscreen-mode .map-stats,
+        body.fullscreen-mode .map-controls {
+            top: 8px !important;
+            max-height: 56vh !important;
+            width: min(88vw, 300px) !important;
+            max-width: 300px !important;
+            left: 50% !important;
+            right: auto !important;
+            margin-left: calc(-1 * min(44vw, 150px)) !important;
+        }
+
+        body.fullscreen-mode .map-legend {
+            bottom: 76px !important;
+            max-height: 38vh !important;
+            width: min(88vw, 300px) !important;
+            max-width: 300px !important;
+            left: 50% !important;
+            right: auto !important;
+            margin-left: calc(-1 * min(44vw, 150px)) !important;
+        }
+
+        /* Override the tall controls-body set outside media query */
+        body.fullscreen-mode .controls-body,
+        body.fullscreen-mode .stats-content {
+            max-height: none !important;
+        }
     }
 
     /* Responsive Search */
@@ -1482,17 +2175,20 @@ body.fullscreen-mode .search-history {
     user-select: none;
 }
 .stats-header,
-.legend-header {
+.legend-header,
+.controls-header {
     cursor: grab;
     user-select: none;
 }
 .stats-header *,
-.legend-header * {
+.legend-header *,
+.controls-header * {
     user-select: none;
     -webkit-user-select: none;
 }
 .map-stats.dragging,
-.map-legend.dragging {
+.map-legend.dragging,
+.map-controls.dragging {
     box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     opacity: 0.95;
     transition: none;
@@ -1505,99 +2201,8 @@ body.fullscreen-mode .search-history {
     -webkit-user-select: none;
 }
 
-    /* Responsive stat and legend*/
-    @media (max-width: 768px) {
-        .map-stats,
-        .map-legend {
-            left: 10px;
-            width: calc(100vw - 85px);
-            max-width: 220px;
-        }
-        
-        .map-legend {
-            bottom: 10px;
-        }
-    }
-@media (max-width: 768px) {
-    .search-suggestions,
-    .search-history {
-        max-height: calc(100vh - 120px); /* Less space on mobile */
-    }
-}
-/* Responsive adjustments for mobile */
-@media (max-width: 768px) {
-    .time-filter-badge,
-    .search-active-banner {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-        max-width: 300px;
-        gap: 8px;
-    }
-    
-    .time-filter-badge.show {
-        transform: translateX(calc(-50% - 80px));
-    }
-    
-    .search-active-banner.show {
-        transform: translateX(calc(-50% + 80px));
-    }
-}
-    /* ============================================================================
-       SEARCH ACTIVE BANNER
-       ============================================================================ */
+    /* Responsive stat and legend — handled by main 768px block above */
 
-.search-active-banner {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #FFA500, #FF8C00);
-    color: white;
-    padding: 0.6rem 1.2rem;
-    border-radius: 25px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    z-index: 800;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    display: none;
-    align-items: center;
-    gap: 12px;
-    transition: all 0.4s ease;
-    white-space: nowrap;
-    max-width: 500px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Move banner below search bar when search is active */
-.search-active-banner.below-search {
-    top: 110px;
-}
-
-.search-active-banner.show {
-    display: flex;
-}
-
-
-.search-active-banner .close-banner {
-    background: rgba(255,255,255,0.3);
-    border: none;
-    color: white;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    flex-shrink: 0;
-}
-.search-active-banner .close-banner:hover {
-    background: rgba(255,255,255,0.5);
-    transform: scale(1.1);
-}
 /* Animations */
 @keyframes slideDown {
     from {
@@ -1711,6 +2316,436 @@ body.fullscreen-mode .search-history {
     0%, 100% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.05); opacity: 0.9; }
 }
+
+/* ============================================================================
+   COMPREHENSIVE MOBILE RESPONSIVE STYLES
+   ============================================================================ */
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .page-header {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+
+    .page-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .dashboard-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    /* Filter badges mobile */
+    .filter-badges-container {
+        top: 10px;
+        gap: 6px;
+        padding: 0 10px;
+    }
+
+    .time-filter-badge,
+    .active-filters-badge,
+    .search-active-banner {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.7rem;
+        gap: 6px;
+    }
+
+    .time-filter-badge .close-banner,
+    .active-filters-badge .close-banner,
+    .search-active-banner .close-banner {
+        width: 18px;
+        height: 18px;
+        font-size: 0.8rem;
+    }
+
+    /* Leaflet popups on mobile */
+    .marker-popup {
+        min-width: 220px;
+        max-width: calc(100vw - 60px);
+    }
+
+    .popup-header {
+        padding: 0.7rem;
+    }
+
+    .popup-header h4 {
+        font-size: 0.85rem;
+    }
+
+    .popup-body {
+        padding: 0.7rem;
+    }
+
+    .popup-body p {
+        font-size: 0.8rem;
+    }
+
+    .popup-footer {
+        padding: 0 0.7rem 0.7rem;
+        flex-wrap: wrap;
+    }
+
+    .popup-footer a {
+        flex: 1;
+        text-align: center;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+    .map-container {
+        height: calc(100vh - 160px);
+        min-height: 350px;
+    }
+
+    .page-header h2 {
+        font-size: 1rem;
+    }
+
+    .dashboard-actions .btn span:first-child {
+        display: none;
+    }
+
+    .toggle-icon-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    .map-stats,
+    .map-legend,
+    .map-controls {
+        max-height: 50vh;
+    }
+
+    .stat-item {
+        font-size: 0.75rem;
+        padding: 4px 6px;
+    }
+
+    .stat-value {
+        font-size: 0.8rem;
+    }
+}
+
+/* ===== DARK MODE STYLES ===== */
+[data-theme="dark"] .page-header {
+    background: #1E2A3A;
+    border-color: #2D3A4F;
+}
+
+[data-theme="dark"] .page-header h2 {
+    color: #E8E8E8;
+}
+
+[data-theme="dark"] .page-header p {
+    color: #B0B0B0;
+}
+
+[data-theme="dark"] .map-wrapper {
+    background: #1E2A3A;
+}
+
+[data-theme="dark"] .map-stats,
+[data-theme="dark"] .map-legend,
+[data-theme="dark"] .map-controls {
+    background: #1E2A3A;
+    border-color: #2D3A4F;
+}
+
+[data-theme="dark"] .stats-header,
+[data-theme="dark"] .legend-header,
+[data-theme="dark"] .controls-header {
+    background: linear-gradient(135deg, #1E3A5F 0%, #0D1B2A 100%);
+}
+
+[data-theme="dark"] .stats-section,
+[data-theme="dark"] .control-section {
+    background: #1A2332;
+    border-color: #2D3A4F;
+}
+
+[data-theme="dark"] .stats-section-header {
+    background: #243447;
+}
+
+[data-theme="dark"] .stats-section-header:hover {
+    background: #2D3A4F;
+}
+
+[data-theme="dark"] .stats-section-header span {
+    color: #E8E8E8;
+}
+
+[data-theme="dark"] .stat-item {
+    background: #1E2A3A;
+}
+
+[data-theme="dark"] .stat-label {
+    color: #B0B0B0;
+}
+
+[data-theme="dark"] .stat-value {
+    color: #E8E8E8;
+}
+
+[data-theme="dark"] .control-group label {
+    color: #E8E8E8;
+}
+
+[data-theme="dark"] .control-group select,
+[data-theme="dark"] .control-group input {
+    background: #1A2332;
+    border-color: #2D3A4F;
+    color: #E8E8E8;
+}
+
+[data-theme="dark"] .control-group select:focus,
+[data-theme="dark"] .control-group input:focus {
+    border-color: #4A90D9;
+}
+
+[data-theme="dark"] .layer-toggle {
+    color: #E8E8E8;
+}
+
+[data-theme="dark"] .legend-category-title {
+    color: #E8E8E8;
+}
+
+[data-theme="dark"] .legend-item span {
+    color: #B0B0B0;
+}
+
+[data-theme="dark"] .toggle-icon-btn {
+    background: #1E2A3A;
+    border-color: #2D3A4F;
+    color: #E8E8E8;
+}
+
+[data-theme="dark"] .toggle-icon-btn:hover {
+    background: #2D3A4F;
+}
+
+[data-theme="dark"] .toggle-icon-btn.active {
+    background: #4A90D9;
+    color: white;
+}
+
+[data-theme="dark"] .search-box,
+[data-theme="dark"] .search-info-panel {
+    background: #1E2A3A;
+    border-color: #2D3A4F;
+}
+
+[data-theme="dark"] .search-input {
+    background: #1A2332;
+    border-color: #2D3A4F;
+    color: #E8E8E8;
+}
+
+[data-theme="dark"] .search-input::placeholder {
+    color: #666;
+}
+
+[data-theme="dark"] .time-filter-badge {
+    background: #1E2A3A;
+    border-color: #2D3A4F;
+    color: #E8E8E8;
+}
+
+[data-theme="dark"] .search-active-banner {
+    background: #1E3A5F;
+}
+
+[data-theme="dark"] .btn-outline {
+    border-color: #3D4A5F;
+    color: #E8E8E8;
+}
+
+[data-theme="dark"] .btn-outline:hover {
+    background: rgba(74, 144, 217, 0.15);
+    border-color: #4A90D9;
+}
+
+[data-theme="dark"] .loading-overlay {
+    background: rgba(13, 27, 42, 0.95);
+}
+
+/* Force all text visible in dark mode */
+[data-theme="dark"] .page-header h1,
+[data-theme="dark"] .page-header h2 {
+    color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .page-header p,
+[data-theme="dark"] .page-header span {
+    color: #B0B0B0 !important;
+}
+
+[data-theme="dark"] .stats-section h4,
+[data-theme="dark"] .control-section h4,
+[data-theme="dark"] .section-title {
+    color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .stat-value,
+[data-theme="dark"] .stat-number {
+    color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .stat-label {
+    color: #B0B0B0 !important;
+}
+
+[data-theme="dark"] .control-group label {
+    color: #E8E8E8 !important;
+}
+
+/* ===== MAP POPUP DARK MODE ===== */
+[data-theme="dark"] .leaflet-popup-content-wrapper {
+    background: #1E2A3A !important;
+    color: #E8E8E8 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .leaflet-popup-tip {
+    background: #1E2A3A !important;
+}
+
+[data-theme="dark"] .leaflet-popup-content {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] .marker-popup {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] .popup-body {
+    background: #1E2A3A !important;
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] .popup-body p {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] .popup-footer {
+    background: #1E2A3A !important;
+    border-top-color: #2D3A4F !important;
+}
+
+[data-theme="dark"] .marker-popup h4,
+[data-theme="dark"] .marker-popup h3 {
+    color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .leaflet-popup-close-button {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] .leaflet-popup-close-button:hover {
+    color: #FFFFFF !important;
+    background: rgba(220, 53, 69, 0.2) !important;
+}
+
+/* Override inline text colors in popup */
+[data-theme="dark"] .marker-popup [style*="color: #6"],
+[data-theme="dark"] .marker-popup [style*="color:#6"],
+[data-theme="dark"] .marker-popup [style*="color: #5"],
+[data-theme="dark"] .marker-popup [style*="color:#5"],
+[data-theme="dark"] .marker-popup [style*="color: #4"],
+[data-theme="dark"] .marker-popup [style*="color:#4"],
+[data-theme="dark"] .marker-popup [style*="color: #3"],
+[data-theme="dark"] .marker-popup [style*="color:#3"] {
+    color: #B0B0B0 !important;
+}
+
+[data-theme="dark"] .marker-popup [style*="color: #0"],
+[data-theme="dark"] .marker-popup [style*="color:#0"],
+[data-theme="dark"] .marker-popup [style*="color: #1"],
+[data-theme="dark"] .marker-popup [style*="color:#1"],
+[data-theme="dark"] .marker-popup [style*="color: #2"],
+[data-theme="dark"] .marker-popup [style*="color:#2"] {
+    color: #E8E8E8 !important;
+}
+
+/* Popup severity badge */
+[data-theme="dark"] .popup-body .severity-badge,
+[data-theme="dark"] .marker-popup .severity-badge {
+    background: rgba(74, 144, 217, 0.25) !important;
+    color: #8FC8FF !important;
+}
+
+/* Property Damage Only line with inline light background */
+[data-theme="dark"] .marker-popup p[style*="background: #E8F5E9"],
+[data-theme="dark"] .marker-popup p[style*="background:#E8F5E9"],
+[data-theme="dark"] .popup-body p[style*="background: #E8F5E9"],
+[data-theme="dark"] .popup-body p[style*="background:#E8F5E9"],
+[data-theme="dark"] .leaflet-popup-content p[style*="background: #E8F5E9"],
+[data-theme="dark"] .leaflet-popup-content p[style*="background:#E8F5E9"] {
+    background: rgba(40, 167, 69, 0.25) !important;
+    color: #7FE08A !important;
+}
+
+/* Fatal Accident line */
+[data-theme="dark"] .marker-popup p[style*="background: #FFE5E5"],
+[data-theme="dark"] .marker-popup p[style*="background:#FFE5E5"],
+[data-theme="dark"] .popup-body p[style*="background: #FFE5E5"],
+[data-theme="dark"] .leaflet-popup-content p[style*="background: #FFE5E5"] {
+    background: rgba(220, 20, 60, 0.25) !important;
+    color: #FF6B7A !important;
+}
+
+/* Injury Accident line */
+[data-theme="dark"] .marker-popup p[style*="background: #FFF3E0"],
+[data-theme="dark"] .marker-popup p[style*="background:#FFF3E0"],
+[data-theme="dark"] .popup-body p[style*="background: #FFF3E0"],
+[data-theme="dark"] .leaflet-popup-content p[style*="background: #FFF3E0"] {
+    background: rgba(255, 165, 0, 0.25) !important;
+    color: #FFB74D !important;
+}
+
+/* Popup footer buttons */
+[data-theme="dark"] .popup-footer a {
+    background: #4A90D9 !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+[data-theme="dark"] .popup-footer a:hover {
+    background: #3A7BC8 !important;
+}
+
+[data-theme="dark"] .popup-footer a[style*="background: #FFA500"],
+[data-theme="dark"] .popup-footer a[style*="background:#FFA500"] {
+    background: #E6940A !important;
+    color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .popup-footer a[style*="background: #FFA500"]:hover,
+[data-theme="dark"] .popup-footer a[style*="background:#FFA500"]:hover {
+    background: #CC8400 !important;
+}
+
+[data-theme="dark"] [style*="color: #0"],
+[data-theme="dark"] [style*="color:#0"],
+[data-theme="dark"] [style*="color: #1"],
+[data-theme="dark"] [style*="color:#1"],
+[data-theme="dark"] [style*="color: #2"],
+[data-theme="dark"] [style*="color:#2"],
+[data-theme="dark"] [style*="color: #3"],
+[data-theme="dark"] [style*="color:#3"] {
+    color: #E8E8E8 !important;
+}
 </style>
 {% endblock %}
 
@@ -1720,30 +2755,38 @@ body.fullscreen-mode .search-history {
     <div class="map-container">
         <div id="mainMap"></div>
 
-        <div class="time-filter-badge" id="timeFilterBadge">
-            <span>📅 All Time Periods</span>
-            <button class="close-banner" onclick="clearTimeFilterBadge()">×</button>
-        </div>
+        <!-- Filter Badges Container - Two Badges: Filters (Blue) + Search (Yellow) -->
+        <div class="filter-badges-container" id="filterBadgesContainer">
+            <!-- All Filters Badge (Blue) - Time, Province, Severity, Year, Incident Type, Day of Week -->
+            <div class="time-filter-badge" id="timeFilterBadge">
+                <span>📅 All Filters</span>
+                <button class="close-banner" onclick="clearAllFilters()">×</button>
+            </div>
 
-        <!-- Search Active Banner -->
-        <div class="search-active-banner" id="searchActiveBanner">
-            <span>🔍 Search Active: <strong id="searchBannerText">""</strong></span>
-            <button class="close-banner" onclick="clearSearchFromBanner()">×</button>
+            <!-- Search Active Banner (Yellow) -->
+            <div class="search-active-banner" id="searchActiveBanner">
+                <span>🔍 Search: <strong id="searchBannerText">""</strong></span>
+                <button class="close-banner" onclick="clearSearchFromBanner()">×</button>
+            </div>
         </div>
 
         <!-- Toggle Buttons - Left Side -->
         <div class="map-toggle-buttons">
             <button class="toggle-icon-btn" id="statsToggle" data-tooltip="Statistics" onclick="toggleStats()">
                 📊
+                <span class="btn-label">Stats</span>
             </button>
             <button class="toggle-icon-btn" id="legendToggle" data-tooltip="Legend" onclick="toggleLegend()">
                 🗺️
+                <span class="btn-label">Legend</span>
             </button>
             <button class="toggle-icon-btn" id="controlsToggle" data-tooltip="Map Controls" onclick="toggleMapControls()">
                 ⚙️
+                <span class="btn-label">Controls</span>
             </button>
             <button class="toggle-icon-btn" id="layerToggle" data-tooltip="Map Layer: Street" onclick="toggleMapLayer()">
                 🛰️
+                <span class="btn-label">Layer</span>
             </button>
         </div>
 
@@ -1962,6 +3005,8 @@ body.fullscreen-mode .search-history {
                         Cancel
                     </button>
                 </div>
+            <!-- Resize handle -->
+            <div class="panel-resize-handle" data-panel="statsBox" data-dir="bottom" title="Drag to resize"></div>
             </div>
 
         <!-- Enhanced Map Controls Panel -->
@@ -2011,7 +3056,7 @@ body.fullscreen-mode .search-history {
                 <!-- Data Filters -->
                 <div class="control-section">
                     <h4>🔍 Data Filters</h4>
-                    
+
                     <div class="control-group">
                         <label for="provinceFilter">Province</label>
                         <select id="provinceFilter" onchange="applyFilters()">
@@ -2026,6 +3071,47 @@ body.fullscreen-mode .search-history {
                             <option value="SURIGAO DEL SUR">Surigao del Sur</option>
                             <option value="DINAGAT ISLANDS">Dinagat Islands</option>
                             {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="yearFilter">Year</label>
+                        <select id="yearFilter" onchange="applyFilters()">
+                            <option value="">All Years</option>
+                            {% for year in years %}
+                            <option value="{{ year }}">{{ year }}</option>
+                            {% empty %}
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                            <option value="2021">2021</option>
+                            <option value="2020">2020</option>
+                            <option value="2019">2019</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="incidentTypeFilter">Incident Type</label>
+                        <select id="incidentTypeFilter" onchange="applyFilters()">
+                            <option value="">All Types</option>
+                            <option value="FATAL">Fatal Accidents</option>
+                            <option value="INJURY">Injury Accidents</option>
+                            <option value="PROPERTY">Property Damage Only</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="dayOfWeekFilter">Day of Week</label>
+                        <select id="dayOfWeekFilter" onchange="applyFilters()">
+                            <option value="">All Days</option>
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5">Friday</option>
+                            <option value="6">Saturday</option>
+                            <option value="0">Sunday</option>
                         </select>
                     </div>
 
@@ -2085,6 +3171,8 @@ body.fullscreen-mode .search-history {
                     </div>
                 </div>
             </div>
+            <!-- Resize handle -->
+            <div class="panel-resize-handle" data-panel="mapControls" data-dir="bottom" title="Drag to resize"></div>
         </div>
 
 <!-- Enhanced Legend -->
@@ -2152,6 +3240,8 @@ body.fullscreen-mode .search-history {
             </div>
         </div>
     </div>
+    <!-- Resize handle at bottom — drag upward to expand -->
+    <div class="panel-resize-handle" data-panel="legendBox" data-dir="top" title="Drag to resize"></div>
 </div>
 
 <!-- Loading Overlay (PNP Theme) -->
@@ -2214,7 +3304,10 @@ let currentFilters = {
     timeOfDay: 'all',
     province: '',
     severity: 0,
-    searchQuery: ''
+    searchQuery: '',
+    year: '',
+    incidentType: '',
+    dayOfWeek: ''
 };
 
 // Active markers (currently visible on map)
@@ -2338,6 +3431,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize draggable panels
         makePanelDraggable('statsBox', 'statsHeader');
         makePanelDraggable('legendBox', 'legendHeader');
+        makePanelDraggable('mapControls', 'controlsHeader');
 
         // Check for URL parameters to jump to specific location
         checkURLParametersAndJump();
@@ -2404,8 +3498,8 @@ function validateData() {
 
 function initializeEnhancedMap() {
     try {
-        // Center on Caraga Region (approximate center)
-        map = L.map('mainMap').setView([9.0, 125.5], 9);
+        // Center on Caraga Region, zoom 8 so all provinces visible
+        map = L.map('mainMap').setView([9.0, 125.5], 8);
 
         // Create street (vector) layer
         streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -2868,12 +3962,21 @@ function calculateMaxDistance(centerLat, centerLng, accidents) {
 function applyAllFilters() {
     console.log('🔍 Applying unified filters...');
     showLoading();
-    
+
     currentFilters.timeRange = document.getElementById('timeRange').value;
     currentFilters.timeOfDay = document.getElementById('timeOfDay').value;
     currentFilters.province = document.getElementById('provinceFilter').value;
     currentFilters.severity = parseInt(document.getElementById('severityFilter').value);
-    
+
+    // New filters
+    const yearFilter = document.getElementById('yearFilter');
+    const incidentTypeFilter = document.getElementById('incidentTypeFilter');
+    const dayOfWeekFilter = document.getElementById('dayOfWeekFilter');
+
+    currentFilters.year = yearFilter ? yearFilter.value : '';
+    currentFilters.incidentType = incidentTypeFilter ? incidentTypeFilter.value : '';
+    currentFilters.dayOfWeek = dayOfWeekFilter ? dayOfWeekFilter.value : '';
+
     const customRange = document.getElementById('customDateRange');
     if (customRange) {
         customRange.style.display = currentFilters.timeRange === 'custom' ? 'block' : 'none';
@@ -2883,28 +3986,28 @@ function applyAllFilters() {
         filterAndDisplayMarkers();
         updateTimeFilterBadge();
         updateAllStatistics();
-        
+
         if (document.getElementById('showHeatmap') && document.getElementById('showHeatmap').checked) {
             createHeatmap();
         }
-        
+
         const searchInput = document.getElementById('mapSearchInput');
         const searchBanner = document.getElementById('searchActiveBanner');
         const bannerText = document.getElementById('searchBannerText');
-        
+
         if (currentFilters.searchQuery && searchBanner && bannerText) {
             bannerText.textContent = `"${currentFilters.searchQuery}"`;
             searchBanner.classList.add('show');
-            
+
             const searchPanel = document.getElementById('searchInfoPanel');
             if (searchPanel && searchPanel.style.display !== 'none') {
                 showSearchResultsSummary(currentFilters.searchQuery);
             }
         }
-        
+
         hideLoading();
         console.log('✅ All filters applied successfully');
-        
+
         const visibleCount = activeMarkers.length;
         if (visibleCount === 0) {
             showNotification('No accidents match your filters', 'info');
@@ -2916,56 +4019,263 @@ function applyAllFilters() {
 
 function filterAndDisplayMarkers() {
     const { startDate, endDate } = getDateRange();
-    
+
     console.log('🔄 Filtering markers with search query:', currentFilters.searchQuery);
-    
+
     markerClusterGroup.clearLayers();
     activeMarkers = [];
-    
+
     let stats = { total: 0, fatal: 0, injury: 0, property: 0 };
-    
+
     accidentMarkers.forEach(marker => {
         if (!marker.accidentData) return;
-        
+
         const accident = marker.accidentData;
-        
+
         if (passesAllFilters(accident, startDate, endDate)) {
             markerClusterGroup.addLayer(marker);
             activeMarkers.push(marker);
-            
+
             stats.total++;
             if (accident.victim_killed) stats.fatal++;
             else if (accident.victim_injured) stats.injury++;
             else stats.property++;
         }
     });
-    
+
     console.log('=== FILTER RESULTS ===');
     console.log('Search query:', currentFilters.searchQuery);
     console.log('Filtered accidents:', stats);
     console.log('Active markers on map:', activeMarkers.length);
-    
+
     if (!map.hasLayer(markerClusterGroup)) {
         map.addLayer(markerClusterGroup);
         console.log('✅ Added cluster group to map');
     }
-    
+
+    // Auto-center map on filtered results with animation
+    centerMapOnFilteredResults();
+
     updateHotspotDisplay(startDate, endDate);
+
+    // Pulse hotspot circles to highlight the filter change
+    pulseHotspotCircles();
+
     updateAllStatistics();
 }
 
+// Center and zoom map to show filtered accidents with smooth animation
+function centerMapOnFilteredResults() {
+    if (activeMarkers.length === 0) {
+        console.log('📍 No markers to center on');
+        return;
+    }
+
+    // Check if any filter is actually active (not just default values)
+    const hasActiveFilter =
+        currentFilters.timeRange !== 'all' ||
+        currentFilters.timeOfDay !== 'all' ||
+        currentFilters.province !== '' ||
+        currentFilters.severity > 0 ||
+        currentFilters.searchQuery !== '' ||
+        currentFilters.year !== '' ||
+        currentFilters.incidentType !== '' ||
+        currentFilters.dayOfWeek !== '';
+
+    if (!hasActiveFilter) {
+        console.log('📍 No active filters, skipping auto-center');
+        return;
+    }
+
+    // Calculate bounds of all visible markers
+    const bounds = L.latLngBounds();
+    activeMarkers.forEach(marker => {
+        bounds.extend(marker.getLatLng());
+    });
+
+    // Add visual flash effect to indicate filter applied
+    showFilterAppliedEffect();
+
+    // Smoothly fit map to show all filtered markers
+    setTimeout(() => {
+        if (activeMarkers.length === 1) {
+            // Single marker - zoom to it directly
+            const marker = activeMarkers[0];
+            map.setView(marker.getLatLng(), 14, {
+                animate: true,
+                duration: 1.2
+            });
+
+            // Open popup for single result
+            setTimeout(() => {
+                marker.openPopup();
+            }, 1300);
+        } else {
+            // Multiple markers - fit bounds with padding
+            map.fitBounds(bounds, {
+                padding: [80, 80],
+                maxZoom: 14,
+                animate: true,
+                duration: 1.2
+            });
+        }
+
+        console.log('📍 Map centered on', activeMarkers.length, 'filtered markers');
+    }, 100);
+}
+
+// Visual flash effect when filter is applied
+function showFilterAppliedEffect() {
+    // Create overlay flash element
+    let flashOverlay = document.getElementById('filterFlashOverlay');
+
+    if (!flashOverlay) {
+        flashOverlay = document.createElement('div');
+        flashOverlay.id = 'filterFlashOverlay';
+        flashOverlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 48, 135, 0.3), rgba(30, 95, 170, 0.2));
+            pointer-events: none;
+            z-index: 600;
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+        `;
+        document.getElementById('mainMap').appendChild(flashOverlay);
+    }
+
+    // Trigger flash animation
+    flashOverlay.style.opacity = '1';
+
+    setTimeout(() => {
+        flashOverlay.style.opacity = '0';
+    }, 400);
+
+    // Show center results banner
+    showFilterResultsBanner();
+
+    console.log('✨ Filter applied visual effect shown');
+}
+
+// Show a compact small toast notification for filter results
+function showFilterResultsBanner() {
+    // Get or create the results banner
+    let resultsBanner = document.getElementById('filterResultsBanner');
+
+    if (!resultsBanner) {
+        resultsBanner = document.createElement('div');
+        resultsBanner.id = 'filterResultsBanner';
+        resultsBanner.style.cssText = `
+            position: absolute;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-15px);
+            background: linear-gradient(135deg, #003087, #1E5FAA);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0, 48, 135, 0.5);
+            z-index: 850;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        `;
+        document.getElementById('mainMap').appendChild(resultsBanner);
+    }
+
+    // Build compact results
+    const accidentCount = activeMarkers.length;
+    const visibleHotspots = hotspotCircles.filter(item => item.accidents && item.accidents.length > 0).length;
+
+    let bannerHTML = '';
+
+    if (accidentCount === 0) {
+        bannerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <span>No results found</span>
+        `;
+    } else {
+        bannerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <span><strong>${accidentCount.toLocaleString()}</strong> accident${accidentCount !== 1 ? 's' : ''}${visibleHotspots > 0 ? ` • ${visibleHotspots} hotspot${visibleHotspots !== 1 ? 's' : ''}` : ''}</span>
+        `;
+    }
+
+    resultsBanner.innerHTML = bannerHTML;
+
+    // Show with slide down animation
+    setTimeout(() => {
+        resultsBanner.style.opacity = '1';
+        resultsBanner.style.transform = 'translateX(-50%) translateY(0)';
+    }, 100);
+
+    // Hide after 2 seconds
+    setTimeout(() => {
+        resultsBanner.style.opacity = '0';
+        resultsBanner.style.transform = 'translateX(-50%) translateY(-15px)';
+    }, 2000);
+}
+
+// Pulse animation for hotspot circles when filters are applied
+function pulseHotspotCircles() {
+    // Check if any filter is actually active
+    const hasActiveFilter =
+        currentFilters.timeRange !== 'all' ||
+        currentFilters.timeOfDay !== 'all' ||
+        currentFilters.province !== '' ||
+        currentFilters.severity > 0 ||
+        currentFilters.searchQuery !== '' ||
+        currentFilters.year !== '' ||
+        currentFilters.incidentType !== '' ||
+        currentFilters.dayOfWeek !== '';
+
+    if (!hasActiveFilter) {
+        return;
+    }
+
+    // Apply pulse animation to all visible hotspot circles
+    setTimeout(() => {
+        hotspotCircles.forEach(item => {
+            if (item.circle && item.circle._path) {
+                const pathElement = item.circle._path;
+
+                // Add pulse class
+                pathElement.classList.add('hotspot-pulse');
+
+                // Remove class after animation completes
+                setTimeout(() => {
+                    pathElement.classList.remove('hotspot-pulse');
+                }, 1600); // 2 pulses * 0.8s
+            }
+        });
+
+        console.log('💫 Hotspot circles pulsed:', hotspotCircles.length);
+    }, 200);
+}
+
 function updateHotspotDisplay(startDate, endDate) {
-    console.log('🎯 Updating hotspot display...');
-    
+    console.log('🎯 Updating hotspot display with filters:', currentFilters);
+
+    // Remove all existing hotspot circles from map
     hotspotCircles.forEach(item => {
         if (item.circle && item.circle.remove) {
             item.circle.remove();
         }
     });
-    
+
     let visibleHotspotCount = 0;
     const clusterMap = new Map();
-    
+
+    // Build cluster map from currently filtered accidents (activeMarkers)
     activeMarkers.forEach(marker => {
         const accident = marker.accidentData;
         if (accident && accident.cluster_id) {
@@ -2975,77 +4285,117 @@ function updateHotspotDisplay(startDate, endDate) {
             clusterMap.get(accident.cluster_id).push(accident);
         }
     });
-    
+
     console.log('📊 Clusters with visible accidents:', clusterMap.size);
-    
+    console.log('📊 Total active markers:', activeMarkers.length);
+
+    // Build active filter summary for popup
+    const activeFiltersList = [];
+    if (currentFilters.year && currentFilters.year !== '') {
+        activeFiltersList.push(`Year: ${currentFilters.year}`);
+    }
+    if (currentFilters.incidentType && currentFilters.incidentType !== '') {
+        const typeLabels = { 'FATAL': 'Fatal', 'INJURY': 'Injury', 'PROPERTY': 'Property Damage' };
+        activeFiltersList.push(`Type: ${typeLabels[currentFilters.incidentType] || currentFilters.incidentType}`);
+    }
+    if (currentFilters.dayOfWeek && currentFilters.dayOfWeek !== '') {
+        const dayLabels = { '0': 'Sunday', '1': 'Monday', '2': 'Tuesday', '3': 'Wednesday', '4': 'Thursday', '5': 'Friday', '6': 'Saturday' };
+        activeFiltersList.push(`Day: ${dayLabels[currentFilters.dayOfWeek]}`);
+    }
+    if (currentFilters.province && currentFilters.province !== '') {
+        activeFiltersList.push(`Province: ${currentFilters.province}`);
+    }
+    if (currentFilters.timeOfDay && currentFilters.timeOfDay !== 'all') {
+        activeFiltersList.push(`Time: ${currentFilters.timeOfDay}`);
+    }
+    if (currentFilters.searchQuery && currentFilters.searchQuery !== '') {
+        activeFiltersList.push(`Search: "${currentFilters.searchQuery}"`);
+    }
+
+    const hasActiveFilters = activeFiltersList.length > 0;
+    const filterBadgeHtml = hasActiveFilters
+        ? `<div style="background: #FFF3CD; color: #856404; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; margin-bottom: 10px;">
+               <strong>🔍 Active Filters:</strong> ${activeFiltersList.join(' | ')}
+           </div>`
+        : '';
+
     hotspotCircles.forEach(item => {
         const hotspot = item.hotspot;
         const circle = item.circle;
         const hotspotAccidents = clusterMap.get(hotspot.cluster_id) || [];
-        
+
         if (hotspotAccidents.length === 0) {
             console.log(`❌ Hotspot ${hotspot.cluster_id} filtered out - no visible accidents`);
             return;
         }
-        
+
         console.log(`✅ Hotspot ${hotspot.cluster_id} has ${hotspotAccidents.length} visible accidents - DISPLAYING`);
         visibleHotspotCount++;
-        
+
+        // Calculate statistics from FILTERED accidents only
         const fatalCount = hotspotAccidents.filter(a => a.victim_killed).length;
         const injuryCount = hotspotAccidents.filter(a => a.victim_injured && !a.victim_killed).length;
-        const riskLevel = getRiskLevel(hotspot.severity_score);
-        
+        const propertyCount = hotspotAccidents.length - fatalCount - injuryCount;
+
+        // Recalculate severity based on filtered accidents
+        const filteredSeverity = Math.min(100, (fatalCount * 30) + (injuryCount * 15) + (propertyCount * 5));
+        const riskLevel = getRiskLevel(filteredSeverity > 0 ? filteredSeverity : hotspot.severity_score);
+
+        // Dynamic colors based on filtered severity
         let fillColor, borderColor;
-        if (hotspot.severity_score >= 70) {
-            fillColor = 'rgba(220, 20, 60, 0.2)';
+        const displaySeverity = filteredSeverity > 0 ? filteredSeverity : hotspot.severity_score;
+        if (displaySeverity >= 70) {
+            fillColor = 'rgba(220, 20, 60, 0.25)';
             borderColor = '#DC143C';
-        } else if (hotspot.severity_score >= 50) {
-            fillColor = 'rgba(255, 165, 0, 0.2)';
+        } else if (displaySeverity >= 50) {
+            fillColor = 'rgba(255, 165, 0, 0.25)';
             borderColor = '#FFA500';
         } else {
-            fillColor = 'rgba(40, 167, 69, 0.2)';
+            fillColor = 'rgba(40, 167, 69, 0.25)';
             borderColor = '#28A745';
         }
-        
+
         circle.setStyle({
             fillColor: fillColor,
             color: borderColor,
-            fillOpacity: 0.2,
-            weight: 2
+            fillOpacity: 0.25,
+            weight: 3
         });
-        
+
         const popupContent = `
             <div class="marker-popup">
                 <div class="popup-header" style="background: linear-gradient(135deg, ${borderColor}, ${borderColor}99);">
                     <h4>🔴 ${riskLevel} RISK HOTSPOT</h4>
                 </div>
                 <div class="popup-body">
+                    ${filterBadgeHtml}
                     <p><strong>📍 Location:</strong> ${hotspot.primary_location}</p>
-                    <p><strong>📊 Visible Accidents:</strong> ${hotspotAccidents.length}</p>
-                    <p><strong>💀 Fatal:</strong> <span style="color: #DC143C;">${fatalCount}</span></p>
-                    <p><strong>🚑 Injury:</strong> <span style="color: #FFA500;">${injuryCount}</span></p>
-                    <p><strong>⚡ Severity:</strong> ${hotspot.severity_score.toFixed(1)}/100</p>
+                    <p><strong>📊 ${hasActiveFilters ? 'Filtered' : 'Total'} Accidents:</strong> <span style="font-weight: bold; color: ${borderColor};">${hotspotAccidents.length}</span></p>
+                    <p><strong>💀 Fatal:</strong> <span style="color: #DC143C; font-weight: bold;">${fatalCount}</span></p>
+                    <p><strong>🚑 Injury:</strong> <span style="color: #FFA500; font-weight: bold;">${injuryCount}</span></p>
+                    <p><strong>🚗 Property:</strong> <span style="color: #28A745; font-weight: bold;">${propertyCount}</span></p>
+                    <p><strong>⚡ Severity:</strong> ${displaySeverity.toFixed(1)}/100</p>
                     <p><strong>📏 Coverage:</strong> ${Math.round(circle.getRadius())}m radius</p>
                     <p><strong>🆔 Cluster ID:</strong> #${hotspot.cluster_id}</p>
-                    ${currentFilters.searchQuery ? `<p><strong>🔍 Search Match:</strong> "${currentFilters.searchQuery}"</p>` : ''}
                 </div>
                 <div class="popup-footer">
-                    <a href="/hotspots/${hotspot.cluster_id}/">View Details</a>
-                    <a href="javascript:void(0)" onclick="zoomToHotspotArea(${hotspot.cluster_id}, ${hotspot.center_latitude}, ${hotspot.center_longitude})" style="background: #FFA500;">🔍 Zoom to Area</a>
+                    <a href="/hotspots/${hotspot.cluster_id}/">View Full Details</a>
+                    <a href="javascript:void(0)" onclick="zoomToHotspotArea(${hotspot.cluster_id}, ${hotspot.center_latitude}, ${hotspot.center_longitude})" style="background: #FFA500;">🔍 Zoom</a>
                 </div>
             </div>
         `;
-        
-        circle.bindPopup(popupContent, { maxWidth: 350 });
-        
+
+        circle.bindPopup(popupContent, { maxWidth: 380 });
+
+        // Add circle to map if hotspots layer is enabled
         const hotspotsEnabled = document.getElementById('showHotspots')?.checked;
         if (hotspotsEnabled && circle) {
             circle.addTo(map);
-            console.log(`✅ Added hotspot ${hotspot.cluster_id} to map`);
+            console.log(`✅ Added hotspot ${hotspot.cluster_id} to map with ${hotspotAccidents.length} filtered accidents`);
         }
     });
-    
-    console.log(`✅ Displayed ${visibleHotspotCount} filtered hotspot circles`);
+
+    console.log(`✅ Displayed ${visibleHotspotCount} of ${hotspotCircles.length} hotspot circles (filtered)`);
     updateHotspotStatistics(visibleHotspotCount);
 }
 
@@ -3057,35 +4407,62 @@ function passesAllFilters(accident, startDate, endDate) {
     } catch (error) {
         return false;
     }
-    
+
     if (accidentDate < startDate || accidentDate > endDate) {
         return false;
     }
-    
+
     if (currentFilters.timeOfDay !== 'all') {
         if (!passesTimeOfDayFilter(accident.time_committed, currentFilters.timeOfDay)) {
             return false;
         }
     }
-    
+
     if (currentFilters.province && currentFilters.province !== '') {
         if (!accident.province || accident.province !== currentFilters.province) {
             return false;
         }
     }
-    
+
     if (currentFilters.severity > 0) {
         if (!passesSeverityFilter(accident, currentFilters.severity)) {
             return false;
         }
     }
-    
+
     if (currentFilters.searchQuery) {
         if (!passesSearchFilter(accident, currentFilters.searchQuery)) {
             return false;
         }
     }
-    
+
+    // Year filter
+    if (currentFilters.year && currentFilters.year !== '') {
+        const accidentYear = accidentDate.getFullYear().toString();
+        if (accidentYear !== currentFilters.year) {
+            return false;
+        }
+    }
+
+    // Incident Type filter
+    if (currentFilters.incidentType && currentFilters.incidentType !== '') {
+        if (currentFilters.incidentType === 'FATAL') {
+            if (!accident.victim_killed) return false;
+        } else if (currentFilters.incidentType === 'INJURY') {
+            if (!accident.victim_injured || accident.victim_killed) return false;
+        } else if (currentFilters.incidentType === 'PROPERTY') {
+            if (accident.victim_killed || accident.victim_injured) return false;
+        }
+    }
+
+    // Day of Week filter
+    if (currentFilters.dayOfWeek && currentFilters.dayOfWeek !== '') {
+        const accidentDayOfWeek = accidentDate.getDay().toString();
+        if (accidentDayOfWeek !== currentFilters.dayOfWeek) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -3995,35 +5372,62 @@ function updateCustomRange() {
 function updateTimeFilterBadge() {
     const badge = document.getElementById('timeFilterBadge');
     if (!badge) return;
-    
+
     const timeRange = document.getElementById('timeRange').value;
     const timeOfDay = document.getElementById('timeOfDay').value;
     const province = document.getElementById('provinceFilter').value;
     const severity = document.getElementById('severityFilter').value;
-    
-    let text = '📅 ';
-    switch(timeRange) {
-        case 'current_year': text += 'Current Year'; break;
-        case 'last_year': text += 'Last Year'; break;
-        case 'last_6_months': text += 'Last 6 Months'; break;
-        case 'last_3_months': text += 'Last 3 Months'; break;
-        case 'last_month': text += 'Last Month'; break;
-        case 'custom': text += 'Custom Range'; break;
-        default: text += 'All Time';
+
+    // Build filter parts array - ALL filters in one badge
+    const filterParts = [];
+
+    // Time Range
+    if (timeRange !== 'all') {
+        switch(timeRange) {
+            case 'current_year': filterParts.push('Current Year'); break;
+            case 'last_year': filterParts.push('Last Year'); break;
+            case 'last_6_months': filterParts.push('Last 6 Months'); break;
+            case 'last_3_months': filterParts.push('Last 3 Months'); break;
+            case 'last_month': filterParts.push('Last Month'); break;
+            case 'custom': filterParts.push('Custom Range'); break;
+        }
     }
 
+    // Time of Day
     if (timeOfDay !== 'all') {
-        text += ` • ${timeOfDay.charAt(0).toUpperCase() + timeOfDay.slice(1)}`;
+        filterParts.push(timeOfDay.charAt(0).toUpperCase() + timeOfDay.slice(1));
     }
 
+    // Province
     if (province !== '') {
-        text += ` • ${province}`;
+        filterParts.push(province);
     }
 
+    // Severity
     if (severity !== '0') {
-        text += ` • Severity ${severity}+`;
+        filterParts.push(`Severity ${severity}+`);
     }
-    
+
+    // Year filter
+    if (currentFilters.year && currentFilters.year !== '') {
+        filterParts.push(currentFilters.year);
+    }
+
+    // Incident Type filter
+    if (currentFilters.incidentType && currentFilters.incidentType !== '') {
+        const typeLabels = { 'FATAL': 'Fatal', 'INJURY': 'Injury', 'PROPERTY': 'Property' };
+        filterParts.push(typeLabels[currentFilters.incidentType] || currentFilters.incidentType);
+    }
+
+    // Day of Week filter
+    if (currentFilters.dayOfWeek && currentFilters.dayOfWeek !== '') {
+        const dayLabels = { '0': 'Sunday', '1': 'Monday', '2': 'Tuesday', '3': 'Wednesday', '4': 'Thursday', '5': 'Friday', '6': 'Saturday' };
+        filterParts.push(dayLabels[currentFilters.dayOfWeek]);
+    }
+
+    // Build text with calendar icon prefix
+    const text = filterParts.length > 0 ? `📅 ${filterParts.join(' • ')}` : '';
+
     const textElement = badge.querySelector('span') || document.createElement('span');
     if (!badge.querySelector('span')) {
         textElement.textContent = text;
@@ -4031,67 +5435,170 @@ function updateTimeFilterBadge() {
     } else {
         textElement.textContent = text;
     }
-    
-    const shouldShow = timeRange !== 'all' || timeOfDay !== 'all' || province !== '' || severity !== '0';
+
+    // Show badge if ANY filter is active
+    const shouldShow = filterParts.length > 0;
     badge.classList.toggle('show', shouldShow);
-    
+
     setTimeout(updateBadgePositions, 10);
-    
-    console.log('🕒 Time filter badge updated:', { text, shouldShow });
+
+    console.log('🕒 Filter badge updated:', { text, shouldShow, filterParts });
+}
+
+// Update the active filters summary badge (shows Year, Incident Type, Day of Week filters)
+function updateActiveFiltersBadge() {
+    const badge = document.getElementById('activeFiltersBadge');
+    const textElement = document.getElementById('activeFiltersText');
+    if (!badge || !textElement) return;
+
+    const filterParts = [];
+
+    // Year filter
+    if (currentFilters.year && currentFilters.year !== '') {
+        filterParts.push(`📅 ${currentFilters.year}`);
+    }
+
+    // Incident Type filter
+    if (currentFilters.incidentType && currentFilters.incidentType !== '') {
+        const typeLabels = { 'FATAL': '💀 Fatal', 'INJURY': '🚑 Injury', 'PROPERTY': '🚗 Property' };
+        filterParts.push(typeLabels[currentFilters.incidentType] || currentFilters.incidentType);
+    }
+
+    // Day of Week filter
+    if (currentFilters.dayOfWeek && currentFilters.dayOfWeek !== '') {
+        const dayLabels = { '0': 'Sun', '1': 'Mon', '2': 'Tue', '3': 'Wed', '4': 'Thu', '5': 'Fri', '6': 'Sat' };
+        filterParts.push(`📆 ${dayLabels[currentFilters.dayOfWeek]}`);
+    }
+
+    if (filterParts.length > 0) {
+        textElement.textContent = `🎯 ${filterParts.join(' • ')}`;
+        badge.classList.add('show');
+    } else {
+        badge.classList.remove('show');
+    }
+
+    setTimeout(updateBadgePositions, 10);
+    console.log('🔍 Active filters badge updated:', filterParts);
+}
+
+// Clear only the advanced filters (Year, Incident Type, Day of Week) - called when closing the badge
+function clearAdvancedFilters() {
+    console.log('🗑️ Clearing advanced filters (Year, Incident Type, Day of Week)...');
+
+    // Reset Year filter
+    const yearFilter = document.getElementById('yearFilter');
+    if (yearFilter) yearFilter.value = '';
+
+    // Reset Incident Type filter
+    const incidentTypeFilter = document.getElementById('incidentTypeFilter');
+    if (incidentTypeFilter) incidentTypeFilter.value = '';
+
+    // Reset Day of Week filter
+    const dayOfWeekFilter = document.getElementById('dayOfWeekFilter');
+    if (dayOfWeekFilter) dayOfWeekFilter.value = '';
+
+    // Update currentFilters object
+    currentFilters.year = '';
+    currentFilters.incidentType = '';
+    currentFilters.dayOfWeek = '';
+
+    // Hide the badge
+    const badge = document.getElementById('activeFiltersBadge');
+    if (badge) badge.classList.remove('show');
+
+    // Re-apply filters to update the map
+    applyAllFilters();
+
+    console.log('✅ Advanced filters cleared');
 }
 
 function applyFilters() {
     applyAllFilters();
+    // Auto-show statistics panel when filters are applied
+    setTimeout(() => {
+        showStatsPanel();
+    }, 300);
 }
 
 function clearAllFilters() {
-    console.log('🗑️ Clearing all filters...');
-    
+    console.log('🗑️ Clearing all filters (preserving search)...');
+
+    // Preserve the current search query
+    const preservedSearchQuery = currentFilters.searchQuery;
+    const searchInput = document.getElementById('mapSearchInput');
+    const preservedSearchInputValue = searchInput ? searchInput.value : '';
+
+    // Reset filter dropdowns
     document.getElementById('timeRange').value = 'all';
     document.getElementById('timeOfDay').value = 'all';
     document.getElementById('provinceFilter').value = '';
     document.getElementById('severityFilter').value = '0';
-    
+
+    // Clear new filters
+    const yearFilter = document.getElementById('yearFilter');
+    if (yearFilter) yearFilter.value = '';
+    const incidentTypeFilter = document.getElementById('incidentTypeFilter');
+    if (incidentTypeFilter) incidentTypeFilter.value = '';
+    const dayOfWeekFilter = document.getElementById('dayOfWeekFilter');
+    if (dayOfWeekFilter) dayOfWeekFilter.value = '';
+
     const customRange = document.getElementById('customDateRange');
     if (customRange) customRange.style.display = 'none';
-    
+
     const clusterIntensity = document.getElementById('clusterIntensity');
     if (clusterIntensity) {
         clusterIntensity.value = '50';
         const valueDisplay = document.getElementById('clusterIntensityValue');
         if (valueDisplay) valueDisplay.textContent = '50';
     }
-    
+
     const heatmapIntensity = document.getElementById('heatmapIntensity');
     if (heatmapIntensity) heatmapIntensity.value = '25';
-    
-    const searchInput = document.getElementById('mapSearchInput');
-    if (searchInput) searchInput.value = '';
-    
+
+    // Reset currentFilters but PRESERVE searchQuery
     currentFilters = {
         timeRange: 'all',
         timeOfDay: 'all',
         province: '',
         severity: 0,
-        searchQuery: ''
+        searchQuery: preservedSearchQuery,  // Keep the search!
+        year: '',
+        incidentType: '',
+        dayOfWeek: ''
     };
-    
+
+    // Restore search input value
+    if (searchInput && preservedSearchInputValue) {
+        searchInput.value = preservedSearchInputValue;
+    }
+
+    // Hide filter badge only
     const timeBadge = document.getElementById('timeFilterBadge');
     if (timeBadge) timeBadge.classList.remove('show');
-    
+
+    // Keep search banner visible if search is active
     const searchBanner = document.getElementById('searchActiveBanner');
-    if (searchBanner) searchBanner.classList.remove('show');
-    
+    if (searchBanner) {
+        if (preservedSearchQuery) {
+            searchBanner.classList.add('show');
+        } else {
+            searchBanner.classList.remove('show');
+        }
+    }
+
+    const activeFiltersBadge = document.getElementById('activeFiltersBadge');
+    if (activeFiltersBadge) activeFiltersBadge.classList.remove('show');
+
     updateBadgePositions();
     applyAllFilters();
-    
+
     setTimeout(() => {
         updateClusterIntensity();
         const { startDate, endDate } = getDateRange();
         updateHotspotDisplay(startDate, endDate);
     }, 300);
-        
-    console.log('✅ All filters cleared');
+
+    console.log('✅ Filters cleared, search preserved:', preservedSearchQuery);
 }
 
 // ============================================================================
@@ -4380,7 +5887,7 @@ function toggleStats() {
     const toggle = document.getElementById('statsToggle');
     if (statsBox && toggle) {
         const isShowing = statsBox.classList.contains('show');
-        
+
         if (!isShowing) {
             statsBox.classList.add('show');
             toggle.classList.add('active');
@@ -4388,6 +5895,22 @@ function toggleStats() {
         } else {
             statsBox.classList.remove('show');
             toggle.classList.remove('active');
+        }
+    }
+}
+
+// Helper function to show statistics panel automatically
+function showStatsPanel() {
+    const statsBox = document.getElementById('statsBox');
+    const toggle = document.getElementById('statsToggle');
+    if (statsBox && toggle) {
+        const isShowing = statsBox.classList.contains('show');
+
+        if (!isShowing) {
+            statsBox.classList.add('show');
+            toggle.classList.add('active');
+            bringToFront('statsBox');
+            console.log('📊 Statistics panel auto-opened after filter/search');
         }
     }
 }
@@ -4402,6 +5925,8 @@ function toggleLegend() {
             legendBox.classList.add('show');
             toggle.classList.add('active');
             bringToFront('legendBox');
+            // Only show resize handle when content actually overflows
+            setTimeout(syncLegendHandle, 80);
         } else {
             legendBox.classList.remove('show');
             toggle.classList.remove('active');
@@ -4671,7 +6196,12 @@ function performSearch() {
         bannerText.textContent = `"${query}"`;
         banner.classList.add('show');
     }
-    
+
+    // Auto-show statistics panel after search
+    setTimeout(() => {
+        showStatsPanel();
+    }, 300);
+
     setTimeout(updateBadgePositions, 10);
 
     setTimeout(() => {
@@ -4945,7 +6475,7 @@ function displaySearchSuggestions(suggestions, originalQuery) {
                 <div class="suggestion-item" onclick="selectSuggestion('${suggestion.query.replace(/'/g, "\\'")}')">
                     <span class="suggestion-icon">${icon}</span>
                     <span class="suggestion-text">${suggestion.text}</span>
-                    <span class="suggestion-type">${suggestion.type}</span>
+                    <span class="suggestion-type" data-type="${suggestion.type}">${suggestion.type}</span>
                 </div>
             `;
         }).join('');
@@ -5236,9 +6766,12 @@ function hideSearchResults() {
 function toggleFullscreen() {
     const body = document.body;
     const btn = document.getElementById('fullscreenBtn');
+    const navbar = document.querySelector('.navbar');
     
     if (!body.classList.contains('fullscreen-mode')) {
+        // Enter fullscreen
         body.classList.add('fullscreen-mode');
+        if (navbar) navbar.style.display = 'none';
         if (btn) {
             btn.classList.add('active');
             btn.innerHTML = '⛶';
@@ -5251,7 +6784,9 @@ function toggleFullscreen() {
         
         showNotification('Fullscreen mode enabled', 'success');
     } else {
+        // Exit fullscreen
         body.classList.remove('fullscreen-mode');
+        if (navbar) navbar.style.display = '';
         if (btn) {
             btn.classList.remove('active');
             btn.innerHTML = '⛶';
@@ -5346,46 +6881,14 @@ style.textContent = `
 document.head.appendChild(style);
 
 // ============================================================================
-// BADGE POSITIONING
+// BADGE POSITIONING - Badges are in a flex container, auto-arranged horizontally
 // ============================================================================
 
 function updateBadgePositions() {
-    const timeBadge = document.getElementById('timeFilterBadge');
-    const searchBanner = document.getElementById('searchActiveBanner');
-    
-    if (!timeBadge || !searchBanner) return;
-    
-    const timeVisible = timeBadge.classList.contains('show');
-    const searchVisible = searchBanner.classList.contains('show');
-    
-    timeBadge.style.transform = 'translateX(-50%)';
-    searchBanner.style.transform = 'translateX(-50%)';
-    timeBadge.style.top = '20px';
-    searchBanner.style.top = '20px';
-    
-    if (timeVisible && searchVisible) {
-        const timeWidth = timeBadge.offsetWidth;
-        const searchWidth = searchBanner.offsetWidth;
-        const totalWidth = timeWidth + searchWidth + 20;
-        const maxAllowedWidth = window.innerWidth * 0.8;
-        
-        if (totalWidth <= maxAllowedWidth) {
-            const spacing = (timeWidth + searchWidth) / 2 + 20;
-            timeBadge.style.transform = `translateX(calc(-50% - ${spacing / 2}px))`;
-            searchBanner.style.transform = `translateX(calc(-50% + ${spacing / 2}px))`;
-        } else {
-            timeBadge.style.transform = 'translateX(-50%)';
-            timeBadge.style.top = '20px';
-            searchBanner.style.transform = 'translateX(-50%)';
-            searchBanner.style.top = '70px';
-        }
-    } else if (timeVisible) {
-        timeBadge.style.transform = 'translateX(-50%)';
-        timeBadge.style.top = '20px';
-    } else if (searchVisible) {
-        searchBanner.style.transform = 'translateX(-50%)';
-        searchBanner.style.top = '20px';
-    }
+    // Badges are now in a flex container (.filter-badges-container)
+    // They automatically arrange horizontally when visible
+    // This function is kept for compatibility but no manual positioning needed
+    console.log('📍 Badge positions updated (flex container handles layout)');
 }
 
 // ============================================================================
@@ -5494,18 +6997,22 @@ function makePanelDraggable(panelId, handleId) {
     function updatePanelPosition() {
         if (!draggedPanel || !isDragging) return;
 
-        const x = currentMousePos.x - dragOffset.x;
-        const y = currentMousePos.y - dragOffset.y;
+        // Panels are position:absolute inside .map-wrapper (their offsetParent).
+        // clientX/Y is viewport-relative, so we must subtract the parent's
+        // top-left offset to get parent-relative coordinates.
+        // This makes dragging identical in fullscreen (parent at 0,0) and
+        // non-fullscreen (parent offset below the navbar).
+        const parent     = panel.offsetParent || document.documentElement;
+        const parentRect = parent.getBoundingClientRect();
 
-        // Cache dimensions
-        const maxX = window.innerWidth - panel.offsetWidth;
-        const maxY = window.innerHeight - panel.offsetHeight;
+        const x = currentMousePos.x - dragOffset.x - parentRect.left;
+        const y = currentMousePos.y - dragOffset.y - parentRect.top;
 
-        const boundedX = Math.max(10, Math.min(x, maxX - 10));
-        const boundedY = Math.max(10, Math.min(y, maxY - 10));
+        const maxX = parent.offsetWidth  - panel.offsetWidth  - 10;
+        const maxY = parent.offsetHeight - panel.offsetHeight - 10;
 
-        panel.style.left = boundedX + 'px';
-        panel.style.top = boundedY + 'px';
+        panel.style.left      = Math.max(10, Math.min(x, maxX)) + 'px';
+        panel.style.top       = Math.max(10, Math.min(y, maxY)) + 'px';
         panel.style.transform = 'none';
 
         // Continue animation loop
@@ -5819,7 +7326,7 @@ function displaySearchSuggestions(suggestions, originalQuery) {
                 <div class="suggestion-item" onclick="selectSuggestion('${suggestion.query.replace(/'/g, "\\'")}')">
                     <span class="suggestion-icon">${icon}</span>
                     <span class="suggestion-text">${suggestion.text}</span>
-                    <span class="suggestion-type">${suggestion.type}</span>
+                    <span class="suggestion-type" data-type="${suggestion.type}">${suggestion.type}</span>
                 </div>
             `;
         }).join('');
@@ -5827,5 +7334,121 @@ function displaySearchSuggestions(suggestions, originalQuery) {
     
     container.style.display = 'block';
 }
+
+// ── Panel Drag-Resize ────────────────────────────────────────────────────────
+function initPanelResize() {
+    const MIN_H = 80; // px — minimum panel height
+
+    document.querySelectorAll('.panel-resize-handle').forEach(handle => {
+        const panelId = handle.dataset.panel;
+        const dir     = handle.dataset.dir; // 'bottom' or 'top'
+        const panel   = document.getElementById(panelId);
+        if (!panel) return;
+
+        // Values captured at drag-start
+        let startH  = 0;   // panel height when drag began
+        let startY  = 0;   // cursor Y when drag began (clientY)
+        let rafId   = null;
+        let latestY = 0;
+        let active  = false;
+
+        function getMaxH() {
+            const wrapper = panel.closest('.map-wrapper') || panel.parentElement;
+            return (wrapper ? wrapper.getBoundingClientRect().height : window.innerHeight) - 76;
+        }
+
+        function applyHeight() {
+            if (!active) return;
+            // Pure delta: every px the cursor travels = 1px panel height change.
+            // Works identically in fullscreen and non-fullscreen regardless of
+            // navbar/wrapper offset or page scroll position.
+            const diff = dir === 'bottom'
+                ? latestY - startY     // drag down → grow
+                : startY - latestY;    // drag up  → grow (legend bottom handle)
+            const newH = startH + diff;
+            panel.style.height = Math.min(Math.max(newH, MIN_H), getMaxH()) + 'px';
+            rafId = null;
+        }
+
+        function onStart(e) {
+            e.preventDefault();
+            const rect    = panel.getBoundingClientRect();
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            // Lock current size so panel stops auto-shrinking
+            startH = rect.height;
+            startY = clientY;
+            panel.style.maxHeight = 'none';
+            panel.style.height    = rect.height + 'px';
+
+            latestY = clientY;
+            active  = true;
+            document.body.classList.add('panel-resizing');
+
+            document.addEventListener('mousemove', onMove, { passive: false });
+            document.addEventListener('mouseup',   onEnd);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend',  onEnd);
+        }
+
+        function onMove(e) {
+            if (e.cancelable) e.preventDefault();
+            latestY = e.touches ? e.touches[0].clientY : e.clientY;
+            // Schedule at most one paint per frame
+            if (!rafId) rafId = requestAnimationFrame(applyHeight);
+        }
+
+        function onEnd() {
+            active = false;
+            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            document.body.classList.remove('panel-resizing');
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup',   onEnd);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend',  onEnd);
+        }
+
+        handle.addEventListener('mousedown',  onStart);
+        handle.addEventListener('touchstart', onStart, { passive: false });
+    });
+}
+
+initPanelResize();
+
+// ── Fit map height to remaining viewport ───────────────────────────────────
+function fitMapHeight() {
+    // Skip while in fullscreen — it uses 100vh already
+    if (document.body.classList.contains('fullscreen-mode')) return;
+    const wrapper   = document.querySelector('.map-wrapper');
+    const container = document.querySelector('.map-container');
+    if (!wrapper || !container) return;
+    const top  = wrapper.getBoundingClientRect().top + window.scrollY;
+    // Distance from where the map starts to the bottom of the viewport, minus a small gap
+    const available = window.innerHeight - wrapper.getBoundingClientRect().top - 6;
+    container.style.height = Math.max(available, 300) + 'px';
+    if (typeof map !== 'undefined' && map) map.invalidateSize();
+}
+
+window.addEventListener('resize', fitMapHeight);
+document.addEventListener('DOMContentLoaded', () => {
+    fitMapHeight();
+    // Re-run once fonts/images settle
+    setTimeout(fitMapHeight, 300);
+});
+
+// ── Legend handle: only show when content overflows ─────────────────────────
+function syncLegendHandle() {
+    const legendBox = document.getElementById('legendBox');
+    if (!legendBox) return;
+    const content = legendBox.querySelector('.legend-content');
+    const handle  = legendBox.querySelector('.panel-resize-handle');
+    if (!content || !handle) return;
+    // Show handle only when content is taller than the visible area
+    const overflows = content.scrollHeight > content.clientHeight + 2;
+    handle.style.visibility = overflows ? 'visible' : 'hidden';
+    handle.style.pointerEvents = overflows ? 'auto' : 'none';
+}
+
+window.addEventListener('resize', syncLegendHandle);
 </script>
 {% endblock %}

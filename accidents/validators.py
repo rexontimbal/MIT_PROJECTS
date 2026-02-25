@@ -208,10 +208,11 @@ def validate_image_file_size(value):
 def validate_image_file_extension(value):
     """Validate image file extension."""
     if value:
+        import os
         allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif']
-        ext = value.name.lower()[-4:]
+        ext = os.path.splitext(value.name.lower())[1]
 
-        if not any(ext.endswith(allowed_ext) for allowed_ext in allowed_extensions):
+        if ext not in allowed_extensions:
             raise ValidationError(
                 _('Only JPG, JPEG, PNG, and GIF files are allowed.'),
             )

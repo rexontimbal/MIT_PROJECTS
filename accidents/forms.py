@@ -3,96 +3,44 @@ from .models import AccidentReport
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 class AccidentReportForm(forms.ModelForm):
-    """Form for reporting new accidents"""
-    
-    # Additional fields for better UX
-    vehicle_type_1 = forms.CharField(
-        max_length=100,
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'e.g., Motorcycle, Car, Truck'
-        })
-    )
-    vehicle_plate_1 = forms.CharField(
-        max_length=50,
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'e.g., ABC 1234'
-        })
-    )
-    
-    vehicle_type_2 = forms.CharField(
-        max_length=100,
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Second vehicle (if any)'
-        })
-    )
-    vehicle_plate_2 = forms.CharField(
-        max_length=50,
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Plate number'
-        })
-    )
-    
+    """Form for reporting new accidents - matches CARAGA dataset structure"""
+
     class Meta:
         model = AccidentReport
         fields = [
-            'reporter_name',
-            'reporter_contact',
-            'incident_date',
-            'incident_time',
-            'latitude',
-            'longitude',
-            'province',
-            'municipal',
-            'barangay',
-            'street_address',
+            'incident_date', 'incident_time', 'incident_type', 'incident_type_other', 'type_of_place', 'type_of_place_other',
+            'offense', 'offense_other', 'offense_type', 'offense_type_other', 'stage_of_felony',
+            'latitude', 'longitude', 'province', 'municipal', 'barangay', 'street_address',
+            'vehicle_kind', 'vehicle_kind_other', 'vehicle_make', 'vehicle_make_other', 'vehicle_model', 'vehicle_model_other', 'vehicle_plate_no', 'vehicle_chassis_no', 'vehicle_colorum',
+            'drug_involved',
             'incident_description',
-            'casualties_killed',
-            'casualties_injured',
-            'photo_1',
-            'photo_2',
-            'photo_3',
+            'photo_1', 'photo_2', 'photo_3',
         ]
-        
+
         widgets = {
-            'reporter_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Your full name'
-            }),
-            'reporter_contact': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Phone number or email'
-            }),
-            'incident_date': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
-            }),
-            'incident_time': forms.TimeInput(attrs={
-                'class': 'form-control',
-                'type': 'time'
-            }),
+            # Incident Details
+            'incident_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'incident_time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'incident_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_incident_type'}),
+            'incident_type_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify...'}),
+            'type_of_place': forms.Select(attrs={'class': 'form-control', 'id': 'id_type_of_place'}),
+            'type_of_place_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify...'}),
+            # Offense / Legal Classification
+            'offense': forms.Select(attrs={'class': 'form-control', 'id': 'id_offense'}),
+            'offense_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify offense...'}),
+            'offense_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_offense_type'}),
+            'offense_type_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify offense type...'}),
+            'stage_of_felony': forms.Select(attrs={'class': 'form-control'}),
+            # Location
             'latitude': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Click on map to set location',
-                'readonly': 'readonly',
-                'step': '0.000001'
+                'class': 'form-control', 'placeholder': 'Click on map',
+                'readonly': 'readonly', 'step': '0.000001'
             }),
             'longitude': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Click on map to set location',
-                'readonly': 'readonly',
-                'step': '0.000001'
+                'class': 'form-control', 'placeholder': 'Click on map',
+                'readonly': 'readonly', 'step': '0.000001'
             }),
-            'province': forms.Select(attrs={
-                'class': 'form-control'
-            }, choices=[
+            'province': forms.Select(attrs={'class': 'form-control'}, choices=[
                 ('', 'Select Province'),
                 ('AGUSAN DEL NORTE', 'Agusan del Norte'),
                 ('AGUSAN DEL SUR', 'Agusan del Sur'),
@@ -100,98 +48,39 @@ class AccidentReportForm(forms.ModelForm):
                 ('SURIGAO DEL SUR', 'Surigao del Sur'),
                 ('DINAGAT ISLANDS', 'Dinagat Islands'),
             ]),
-            'municipal': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Municipality/City'
-            }),
-            'barangay': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Barangay name'
-            }),
-            'street_address': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Street name or landmark'
-            }),
+            'municipal': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Municipality/City'}),
+            'barangay': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Barangay name'}),
+            'street_address': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Street name or landmark'}),
+            # Vehicle Info
+            'vehicle_kind': forms.Select(attrs={'class': 'form-control', 'id': 'id_vehicle_kind'}),
+            'vehicle_kind_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify...'}),
+            'vehicle_make': forms.Select(attrs={'class': 'form-control', 'id': 'id_vehicle_make'}, choices=[('', 'Select Vehicle Type first')]),
+            'vehicle_make_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify brand...'}),
+            'vehicle_model': forms.Select(attrs={'class': 'form-control', 'id': 'id_vehicle_model'}, choices=[('', 'Select Vehicle Make first')]),
+            'vehicle_model_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify model...'}),
+            'vehicle_plate_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., ABC 1234'}),
+            'vehicle_chassis_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., MHKE8FF22PJK001562'}),
+            'vehicle_colorum': forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_vehicle_colorum'}),
+            'drug_involved': forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_drug_involved'}),
+            # Narrative
             'incident_description': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 6,
-                'placeholder': 'Describe what happened in detail...'
+                'class': 'form-control', 'rows': 4,
+                'placeholder': 'Provide a detailed narrative of the accident including sequence of events, circumstances, and relevant details...'
             }),
-            'casualties_killed': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'value': '0'
-            }),
-            'casualties_injured': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'value': '0'
-            }),
-            'photo_1': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*'
-            }),
-            'photo_2': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*'
-            }),
-            'photo_3': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*'
-            }),
+            # Photos
+            'photo_1': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+            'photo_2': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+            'photo_3': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
         }
-    
+
     def clean(self):
         cleaned_data = super().clean()
-        
-        # Validate coordinates
         latitude = cleaned_data.get('latitude')
         longitude = cleaned_data.get('longitude')
-        
         if latitude and longitude:
-            # Check if coordinates are within Caraga Region
             if not (7.5 <= float(latitude) <= 10.5 and 124.5 <= float(longitude) <= 127.0):
-                raise forms.ValidationError(
-                    'Coordinates must be within Caraga Region bounds'
-                )
-        
-        # Validate casualties
-        killed = cleaned_data.get('casualties_killed', 0)
-        injured = cleaned_data.get('casualties_injured', 0)
-        
-        if killed < 0 or injured < 0:
-            raise forms.ValidationError('Casualties cannot be negative')
-        
+                raise forms.ValidationError('Coordinates must be within Caraga Region bounds')
         return cleaned_data
-    
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        
-        # Build vehicles_involved JSON from individual vehicle fields
-        vehicles = []
-        
-        vehicle_type_1 = self.cleaned_data.get('vehicle_type_1')
-        vehicle_plate_1 = self.cleaned_data.get('vehicle_plate_1')
-        if vehicle_type_1:
-            vehicles.append({
-                'type': vehicle_type_1,
-                'plate': vehicle_plate_1 or 'N/A'
-            })
-        
-        vehicle_type_2 = self.cleaned_data.get('vehicle_type_2')
-        vehicle_plate_2 = self.cleaned_data.get('vehicle_plate_2')
-        if vehicle_type_2:
-            vehicles.append({
-                'type': vehicle_type_2,
-                'plate': vehicle_plate_2 or 'N/A'
-            })
-        
-        instance.vehicles_involved = vehicles
-        
-        if commit:
-            instance.save()
-        
-        return instance
 
 
 class AccidentFilterForm(forms.Form):

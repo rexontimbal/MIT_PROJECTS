@@ -94,16 +94,68 @@ class Accident(models.Model):
     vehicle_make = models.CharField(max_length=300, null=True, blank=True)  # INCREASED
     vehicle_model = models.CharField(max_length=300, null=True, blank=True)  # INCREASED
     vehicle_plate_no = models.CharField(max_length=100, null=True, blank=True)  # INCREASED
-    
+    vehicle_chassis_no = models.CharField(max_length=100, null=True, blank=True)
+    vehicle_colorum = models.BooleanField(default=False)
+
+    # Drug involvement
+    drug_involved = models.BooleanField(default=False)
+
     # Detailed Information (stored as text)
     victim_details = models.TextField(null=True, blank=True)  # Already TextField - GOOD
     suspect_details = models.TextField(null=True, blank=True)  # Already TextField - GOOD
     narrative = models.TextField(blank=True, null=True)  # Already TextField - GOOD, ADDED null=True
+
+    # Gender Information (extracted from victim_details and suspect_details)
+    GENDER_CHOICES = [
+        ('MALE', 'Male'),
+        ('FEMALE', 'Female'),
+        ('UNKNOWN', 'Unknown/Not Specified'),
+    ]
+
+    driver_gender = models.CharField(
+        max_length=10,
+        choices=GENDER_CHOICES,
+        default='UNKNOWN',
+        help_text="Gender of primary driver/suspect involved in accident"
+    )
+    victim_gender = models.CharField(
+        max_length=10,
+        choices=GENDER_CHOICES,
+        default='UNKNOWN',
+        help_text="Gender of primary victim involved in accident"
+    )
+
+    # Additional demographic data
+    driver_age = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(150)],
+        help_text="Age of primary driver (0-150)"
+    )
+    victim_age = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(150)],
+        help_text="Age of primary victim (0-150)"
+    )
     
     # Case Status
-    case_status = models.CharField(max_length=100, blank=True, null=True)  # INCREASED
-    case_solve_type = models.CharField(max_length=200, null=True, blank=True)  # INCREASED
-    
+    CASE_STATUS_CHOICES = [
+        ('Under Investigation', 'Under Investigation'),
+        ('Solved', 'Solved'),
+        ('Unsolved', 'Unsolved'),
+    ]
+    CASE_SOLVE_TYPE_CHOICES = [
+        ('SOLVED (AMICABLY SETTLED)', 'Amicably Settled'),
+        ('SOLVED (FILED IN COURT)', 'Filed in Court'),
+        ('SOLVED (CLEARED BY ARREST)', 'Cleared by Arrest'),
+        ('SOLVED (CLEARED BY OTHER MEANS)', 'Cleared by Other Means'),
+    ]
+    case_status = models.CharField(max_length=100, blank=True, null=True, default='Under Investigation')
+    case_solve_type = models.CharField(max_length=200, null=True, blank=True)
+    case_status_updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='case_status_updates')
+    case_status_updated_at = models.DateTimeField(null=True, blank=True)
+
     # System Fields
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -193,6 +245,7 @@ class AccidentReport(models.Model):
         ('investigating', 'Under Investigation'),
         ('resolved', 'Resolved'),
         ('rejected', 'Rejected'),
+        ('cancelled', 'Cancelled'),
     ]
     
     # Reporter Information
@@ -206,6 +259,86 @@ class AccidentReport(models.Model):
         help_text="Date of the accident"
     )
     incident_time = models.TimeField(help_text="Time of the accident")
+
+    INCIDENT_TYPE_CHOICES = [
+        ('VEHICULAR_ACCIDENT', 'Vehicular Accident'),
+        ('HIT_AND_RUN', 'Hit and Run'),
+        ('RECKLESS_DRIVING', 'Reckless Driving'),
+        ('ROAD_COLLISION', 'Road Collision'),
+        ('PEDESTRIAN_ACCIDENT', 'Pedestrian Accident'),
+        ('OTHER', 'Other'),
+    ]
+
+    PLACE_TYPE_CHOICES = [
+        ('ALONG_STREET', 'Along the street'),
+        ('HIGHWAY', 'Highway'),
+        ('INTERSECTION', 'Intersection'),
+        ('BRIDGE', 'Bridge'),
+        ('CURVE_BEND', 'Curve/Bend'),
+        ('PARKING_AREA', 'Parking Area'),
+        ('RESIDENTIAL', 'Residential Area'),
+        ('OTHER', 'Other'),
+    ]
+
+    GENDER_CHOICES = [
+        ('MALE', 'Male'),
+        ('FEMALE', 'Female'),
+        ('UNKNOWN', 'Unknown'),
+    ]
+
+    VEHICLE_KIND_CHOICES = [
+        ('MOTORCYCLE', 'Motorcycle'),
+        ('TRICYCLE', 'Tricycle'),
+        ('CAR', 'Car/Sedan'),
+        ('SUV', 'SUV/Pickup'),
+        ('VAN', 'Van'),
+        ('TRUCK', 'Truck'),
+        ('BUS', 'Bus'),
+        ('JEEPNEY', 'Jeepney'),
+        ('BICYCLE', 'Bicycle'),
+        ('PEDESTRIAN', 'Pedestrian (No Vehicle)'),
+        ('OTHER', 'Other'),
+    ]
+
+    incident_type = models.CharField(max_length=200, choices=INCIDENT_TYPE_CHOICES, default='VEHICULAR_ACCIDENT')
+    incident_type_other = models.CharField(max_length=200, blank=True, null=True, help_text="Specify if Other is selected")
+    type_of_place = models.CharField(max_length=200, choices=PLACE_TYPE_CHOICES, blank=True, null=True)
+    type_of_place_other = models.CharField(max_length=200, blank=True, null=True, help_text="Specify if Other is selected")
+
+    # Offense / Legal Classification
+    OFFENSE_CHOICES = [
+        ('RECKLESS_IMPRUDENCE_DAMAGE_PROPERTY', 'Reckless Imprudence Resulting to Damage to Property - RPC Art 365'),
+        ('RECKLESS_IMPRUDENCE_PHYSICAL_INJURY', 'Reckless Imprudence Resulting to Physical Injury - RPC Art 365'),
+        ('RECKLESS_IMPRUDENCE_HOMICIDE', 'Reckless Imprudence Resulting to Homicide - RPC Art 365'),
+        ('RECKLESS_IMPRUDENCE_MULTIPLE_PHYSICAL_INJURY', 'Reckless Imprudence Resulting to Multiple Physical Injury - RPC Art 365'),
+        ('RECKLESS_IMPRUDENCE_MULTIPLE_DAMAGE_PROPERTY', 'Reckless Imprudence Resulting to Multiple Damage to Property - RPC Art 365'),
+        ('RECKLESS_IMPRUDENCE_MULTIPLE_HOMICIDE', 'Reckless Imprudence Resulting to Multiple Homicide - RPC Art 365'),
+        ('ANTI_DRUNK_DRUGGED_DRIVING', 'Anti-Drunk and Drugged Driving Act of 2013 - RA 10586'),
+        ('LAND_TRANSPORTATION_TRAFFIC_CODE', 'Land Transportation and Traffic Code - RA 4136'),
+        ('OTHER', 'Other'),
+    ]
+
+    OFFENSE_TYPE_CHOICES = [
+        ('CRIMES_AGAINST_PROPERTY', 'Crimes Against Property'),
+        ('CRIMES_AGAINST_PERSONS', 'Crimes Against Persons'),
+        ('REPUBLIC_ACT', 'Republic Act'),
+        ('CRIMES_AGAINST_POPULAR_REPRESENTATION', 'Crimes Against Popular Representation'),
+        ('CRIMES_AGAINST_PERSONAL_LIBERTY', 'Crimes Against Personal Liberty and Security'),
+        ('PRESIDENTIAL_DECREE', 'Presidential Decree'),
+        ('OTHER', 'Other'),
+    ]
+
+    offense = models.CharField(max_length=300, choices=OFFENSE_CHOICES, blank=True, null=True, help_text="Offense description")
+    offense_other = models.CharField(max_length=500, blank=True, null=True, help_text="Specify if Other is selected")
+    offense_type = models.CharField(max_length=300, choices=OFFENSE_TYPE_CHOICES, blank=True, null=True, help_text="Type of offense")
+    offense_type_other = models.CharField(max_length=300, blank=True, null=True, help_text="Specify if Other is selected")
+
+    STAGE_OF_FELONY_CHOICES = [
+        ('ATTEMPTED', 'Attempted'),
+        ('FRUSTRATED', 'Frustrated'),
+        ('CONSUMMATED', 'Consummated'),
+    ]
+    stage_of_felony = models.CharField(max_length=100, choices=STAGE_OF_FELONY_CHOICES, blank=True, null=True)
 
     # Location
     latitude = models.DecimalField(
@@ -223,7 +356,7 @@ class AccidentReport(models.Model):
     province = models.CharField(max_length=100)
     municipal = models.CharField(max_length=100)
     barangay = models.CharField(max_length=100)
-    street_address = models.CharField(max_length=200)
+    street_address = models.CharField(max_length=200, blank=True, null=True)
     
     # Incident Details
     incident_description = models.TextField(help_text="Detailed description of the accident")
@@ -238,8 +371,44 @@ class AccidentReport(models.Model):
         help_text="Number of injured persons"
     )
 
-    # Vehicle involved
-    vehicles_involved = models.JSONField(default=list)  # List of vehicle details
+    # Victim Details (legacy single fields - kept for backward compat)
+    victim_name = models.CharField(max_length=200, blank=True, null=True, help_text="Full name of victim")
+    victim_gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='UNKNOWN')
+    victim_age = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(150)])
+
+    VICTIM_STATUS_CHOICES = [
+        ('KILLED', 'Killed'),
+        ('INJURED', 'Injured'),
+        ('UNHARMED', 'Unharmed'),
+    ]
+    victim_status = models.CharField(max_length=20, choices=VICTIM_STATUS_CHOICES, blank=True, null=True)
+
+    # Multi-victim/suspect data (JSON arrays matching CARAGA dataset format)
+    victims_data = models.JSONField(default=list, blank=True, help_text="List of victims [{name, age, gender, status, nationality, occupation}]")
+    suspects_data = models.JSONField(default=list, blank=True, help_text="List of suspects [{name, age, gender, status, nationality, occupation}]")
+
+    # Suspect/Driver Details (legacy single fields - kept for backward compat)
+    suspect_name = models.CharField(max_length=200, blank=True, null=True, help_text="Full name of suspect/driver")
+    suspect_count = models.IntegerField(default=1, validators=[MinValueValidator(0), MaxValueValidator(50)])
+    driver_gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='UNKNOWN')
+    driver_age = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(150)])
+
+    # Vehicle Information (structured)
+    vehicle_kind = models.CharField(max_length=200, choices=VEHICLE_KIND_CHOICES, blank=True, null=True)
+    vehicle_kind_other = models.CharField(max_length=200, blank=True, null=True, help_text="Specify if Other is selected")
+    vehicle_make = models.CharField(max_length=100, blank=True, null=True)
+    vehicle_make_other = models.CharField(max_length=100, blank=True, null=True, help_text="Specify if Other brand")
+    vehicle_model = models.CharField(max_length=100, blank=True, null=True)
+    vehicle_model_other = models.CharField(max_length=100, blank=True, null=True, help_text="Specify if Other model")
+    vehicle_plate_no = models.CharField(max_length=50, blank=True, null=True)
+    vehicle_chassis_no = models.CharField(max_length=100, blank=True, null=True, help_text="Vehicle chassis/serial number")
+    vehicle_colorum = models.BooleanField(default=False, help_text="Vehicle operating without franchise (colorum)")
+
+    # Drug involvement
+    drug_involved = models.BooleanField(default=False, help_text="Whether drugs/alcohol were involved")
+
+    # Vehicle involved (legacy JSON - kept for backward compatibility)
+    vehicles_involved = models.JSONField(default=list, blank=True)
 
     # Media attachments
     photo_1 = models.ImageField(
@@ -268,6 +437,7 @@ class AccidentReport(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_reports')
     verified_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, null=True, help_text="Reason for rejection (if rejected)")
     
     # Link to official accident record (after verification)
     accident = models.OneToOneField(Accident, on_delete=models.SET_NULL, null=True, blank=True, related_name='report')
@@ -282,6 +452,67 @@ class AccidentReport(models.Model):
     
     def __str__(self):
         return f"Report by {self.reporter_name} - {self.incident_date} ({self.status})"
+
+
+class Notification(models.Model):
+    """In-app notifications for users"""
+
+    TYPE_CHOICES = [
+        ('report_submitted', 'New Report Submitted'),
+        ('report_approved', 'Report Approved'),
+        ('report_rejected', 'Report Rejected'),
+        ('report_cancelled', 'Report Cancelled'),
+        ('info', 'Information'),
+    ]
+
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    notification_type = models.CharField(max_length=30, choices=TYPE_CHOICES)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    url = models.CharField(max_length=500, blank=True, default='')
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # Optional: link to related report
+    related_report = models.ForeignKey(
+        'AccidentReport', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='notifications'
+    )
+
+    class Meta:
+        db_table = 'notifications'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.notification_type}] {self.title} → {self.recipient.username}"
+
+
+class ReportActivityLog(models.Model):
+    """Activity log tracking all report lifecycle events"""
+
+    ACTION_CHOICES = [
+        ('submitted', 'Report Submitted'),
+        ('approved', 'Report Approved'),
+        ('rejected', 'Report Rejected'),
+        ('resubmitted', 'Report Resubmitted'),
+        ('edited', 'Report Edited'),
+        ('cancelled', 'Report Cancelled'),
+    ]
+
+    report = models.ForeignKey('AccidentReport', on_delete=models.CASCADE, related_name='activity_logs')
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    actor_name = models.CharField(max_length=200)
+    actor_role = models.CharField(max_length=100, blank=True)
+    details = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'report_activity_logs'
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.timestamp:%Y-%m-%d %H:%M} - {self.actor_name}: {self.get_action_display()}"
 
 
 class ClusteringJob(models.Model):

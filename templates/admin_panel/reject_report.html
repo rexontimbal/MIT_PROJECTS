@@ -1,0 +1,370 @@
+{% extends base_tpl %}
+{% load static %}
+
+{% block title %}Reject Report{% if base_tpl == 'admin_panel/base.html' %} - Admin Panel{% endif %}{% endblock %}
+
+{% block page_header %}
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">
+            <i class="fas fa-times-circle"></i> Reject &mdash; {% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %}
+        </h1>
+        <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+            {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
+            <a href="{% url 'admin_panel:dashboard' %}">Dashboard</a>
+            <span>/</span>
+            {% endif %}
+            <a href="{% url 'pending_reports' %}">Manage Reports</a>
+            <span>/</span>
+            <span>Reject Report</span>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rejection-container {
+        max-width: 640px;
+        margin: 0 auto;
+    }
+
+    .report-preview {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        border: 1px solid #E5E7EB;
+    }
+
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.8rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .report-id {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--pnp-blue);
+    }
+
+    .status-badge {
+        padding: 0.2rem 0.55rem;
+        background: #FEF3C7;
+        color: #D97706;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.7rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .info-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .info-table td {
+        padding: 0.45rem 0.6rem;
+        font-size: 0.8rem;
+        border-bottom: 1px solid #F3F4F6;
+    }
+
+    .info-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .info-table .info-label {
+        font-size: 0.7rem;
+        color: #6B7280;
+        font-weight: 600;
+        width: 120px;
+        white-space: nowrap;
+    }
+
+    .info-table .info-value {
+        color: #1F2937;
+        font-weight: 500;
+    }
+
+    .rejection-warning {
+        background: #FEF2F2;
+        border: 1px solid #FECACA;
+        color: #991B1B;
+        padding: 0.8rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .rejection-warning h3 {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 0.3rem;
+        font-size: 0.85rem;
+        color: #DC2626;
+    }
+
+    .rejection-warning p {
+        margin: 0;
+        font-size: 0.75rem;
+        color: #7F1D1D;
+    }
+
+    .reason-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        border: 1px solid #E5E7EB;
+    }
+
+    .reason-section label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.82rem;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .reason-section textarea {
+        width: 100%;
+        min-height: 80px;
+        padding: 0.7rem;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        resize: vertical;
+        font-family: inherit;
+        box-sizing: border-box;
+    }
+
+    .reason-section textarea:focus {
+        outline: none;
+        border-color: var(--pnp-blue);
+        box-shadow: 0 0 0 2px rgba(26, 86, 219, 0.1);
+    }
+
+    .quick-reasons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.5rem;
+    }
+
+    .quick-reason {
+        padding: 0.3rem 0.65rem;
+        background: #F3F4F6;
+        border: 1px solid #E5E7EB;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        color: #6B7280;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .quick-reason:hover {
+        background: #EEF2FF;
+        border-color: var(--pnp-blue);
+        color: var(--pnp-blue);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn-cancel,
+    .btn-reject {
+        color: white;
+        border: none;
+        outline: none;
+        padding: 0 0.85rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.78rem;
+        font-family: inherit;
+        line-height: 1;
+        height: 32px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        transition: all 0.15s;
+        box-sizing: border-box;
+        min-width: 80px;
+    }
+
+    .btn-cancel { background: #6B7280; }
+    .btn-cancel:hover { background: #4B5563; color: white; }
+    .btn-reject { background: #EF4444; }
+    .btn-reject:hover { background: #DC2626; }
+
+    /* Dark Theme */
+    [data-theme="dark"] .report-preview,
+    [data-theme="dark"] .reason-section {
+        background: #1A2332;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .preview-header {
+        border-bottom-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .report-id {
+        color: #60A5FA;
+    }
+
+    [data-theme="dark"] .status-badge {
+        background: rgba(245, 158, 11, 0.2);
+        color: #FBBF24;
+    }
+
+    [data-theme="dark"] .info-table td {
+        border-bottom-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .info-table .info-label {
+        color: #9CA3AF;
+    }
+
+    [data-theme="dark"] .info-table .info-value {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .rejection-warning {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.25);
+    }
+
+    [data-theme="dark"] .rejection-warning h3 {
+        color: #F87171;
+    }
+
+    [data-theme="dark"] .rejection-warning p {
+        color: #FCA5A5;
+    }
+
+    [data-theme="dark"] .reason-section label {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .reason-section textarea {
+        background: #0F172A;
+        border-color: #2D3A4F;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .reason-section textarea:focus {
+        border-color: #60A5FA;
+    }
+
+    [data-theme="dark"] .quick-reason {
+        background: #0F172A;
+        border-color: #2D3A4F;
+        color: #9CA3AF;
+    }
+
+    [data-theme="dark"] .quick-reason:hover {
+        background: rgba(96, 165, 250, 0.15);
+        border-color: #60A5FA;
+        color: #60A5FA;
+    }
+
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-cancel,
+        .btn-reject {
+            min-width: auto;
+            width: 100%;
+            justify-content: center;
+            padding: 0 0.6rem;
+            font-size: 0.72rem;
+            height: 32px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .info-table .info-label { width: 90px; font-size: 0.65rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rejection-container">
+    <div class="report-preview">
+        <div class="preview-header">
+            <span class="report-id">{% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %}{% if report.municipal %} - {{ report.municipal }}{% endif %}</span>
+            <span class="status-badge">
+                <i class="fas fa-clock"></i> Pending Verification
+            </span>
+        </div>
+
+        <table class="info-table">
+            <tr>
+                <td class="info-label">Reporter</td>
+                <td class="info-value">{{ report.reporter_name }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Incident Date</td>
+                <td class="info-value">{{ report.incident_date|date:"F d, Y" }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Location</td>
+                <td class="info-value">{{ report.barangay }}, {{ report.municipal }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Submitted By</td>
+                <td class="info-value">{{ report.reported_by.username }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="rejection-warning">
+        <h3><i class="fas fa-exclamation-triangle"></i> Reject This Report?</h3>
+        <p>This report will be marked as rejected. The reporter will be notified.</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="reason-section">
+            <label for="reason"><i class="fas fa-comment-alt"></i> Reason for Rejection (Optional)</label>
+            <textarea name="reason" id="reason" placeholder="Provide a reason for rejecting this report..."></textarea>
+            <div class="quick-reasons">
+                <span class="quick-reason" onclick="setReason('Duplicate report - this incident has already been recorded.')">Duplicate Report</span>
+                <span class="quick-reason" onclick="setReason('Incomplete or missing information.')">Incomplete Info</span>
+                <span class="quick-reason" onclick="setReason('Unable to verify the incident details.')">Unverifiable</span>
+                <span class="quick-reason" onclick="setReason('Location details are inaccurate or invalid.')">Invalid Location</span>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="{% url 'pending_reports' %}?status=pending" class="btn-cancel">
+                <i class="fas fa-arrow-left"></i> Cancel
+            </a>
+            <button type="submit" class="btn-reject">
+                <i class="fas fa-times"></i> Reject Report
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function setReason(text) {
+    document.getElementById('reason').value = text;
+}
+</script>
+{% endblock %}

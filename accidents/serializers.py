@@ -10,7 +10,8 @@ class AccidentSerializer(serializers.ModelSerializer):
             'municipal', 'province', 'victim_count',
             'victim_killed', 'victim_injured', 'year',
             'vehicle_kind', 'case_status', 'is_hotspot',
-            'cluster_id'
+            'cluster_id', 'driver_gender', 'victim_gender',
+            'driver_age', 'victim_age'
         ]
 
 class AccidentClusterSerializer(serializers.ModelSerializer):

@@ -60,7 +60,8 @@ class AccidentExporter:
             'year', 'incident_type', 'offense', 'victim_killed',
             'victim_injured', 'victim_unharmed', 'victim_count',
             'vehicle_kind', 'vehicle_make', 'vehicle_model',
-            'is_hotspot', 'cluster_id'
+            'is_hotspot', 'cluster_id', 'driver_gender', 'victim_gender',
+            'driver_age', 'victim_age'
         ))
 
         df = pd.DataFrame(data)
@@ -118,8 +119,12 @@ class AccidentExporter:
         summary_ws['B5'] = df['victim_injured'].sum() if 'victim_injured' in df.columns else 0
         summary_ws['A6'] = 'Hotspot Accidents:'
         summary_ws['B6'] = df['is_hotspot'].sum() if 'is_hotspot' in df.columns else 0
-        summary_ws['A7'] = 'Export Date:'
-        summary_ws['B7'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        summary_ws['A7'] = 'Male Drivers:'
+        summary_ws['B7'] = (df['driver_gender'] == 'MALE').sum() if 'driver_gender' in df.columns else 0
+        summary_ws['A8'] = 'Female Drivers:'
+        summary_ws['B8'] = (df['driver_gender'] == 'FEMALE').sum() if 'driver_gender' in df.columns else 0
+        summary_ws['A9'] = 'Export Date:'
+        summary_ws['B9'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         # Save workbook
         wb.save(filepath)

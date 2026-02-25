@@ -1245,13 +1245,17 @@
         width: 100%;
         height: 100%;
         z-index: 9999;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 5px;
         animation: fadeIn 0.3s ease;
     }
 
     .accident-modal.active {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
+        padding-top: 5px;
     }
 
     .modal-overlay {
@@ -1270,48 +1274,87 @@
         border-radius: 12px;
         width: 90%;
         max-width: 600px;
+        max-height: 90vh;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         animation: slideUp 0.3s ease;
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
+    }
+
+    /* Scrollable area inside modal */
+    .modal-scroll-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 8px 0 0;
+        margin: 0 4px 0 0;
+    }
+
+    /* Custom Scrollbar for Modal - Same as Advanced Statistics */
+    .modal-scroll-area::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .modal-scroll-area::-webkit-scrollbar-track {
+        background: var(--scrollbar-track, #F3F4F6);
+        border-radius: 10px;
+    }
+
+    .modal-scroll-area::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb, var(--primary-blue));
+        border-radius: 10px;
+    }
+
+    .modal-scroll-area::-webkit-scrollbar-thumb:hover {
+        background: var(--scrollbar-thumb-hover, #0052CC);
     }
 
     .modal-close {
         position: absolute;
-        top: 1rem;
-        right: 1rem;
-        background: transparent;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: rgba(255,255,255,0.2);
         border: none;
-        font-size: 1.5rem;
-        color: #6B7280;
+        font-size: 1.25rem;
+        color: white;
         cursor: pointer;
         z-index: 10;
-        transition: color 0.2s;
+        transition: all 0.2s;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .modal-close:hover {
-        color: #DC143C;
+        background: rgba(255,255,255,0.3);
+        color: white;
     }
 
     .modal-header {
         background: linear-gradient(135deg, #003087 0%, #0052CC 100%);
         color: white;
-        padding: 1.5rem 2rem;
+        padding: 0.875rem 1.25rem;
+        flex-shrink: 0;
+        position: relative;
     }
 
     .modal-header h2 {
         margin: 0;
-        font-size: 1.5rem;
-        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+        margin-bottom: 0.4rem;
     }
 
     .modal-badges {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.4rem;
         flex-wrap: wrap;
     }
 
     .modal-body {
-        padding: 2rem;
+        padding: 1.25rem 1.5rem;
     }
 
     .modal-info-grid {
@@ -1348,24 +1391,25 @@
     }
 
     .modal-footer {
-        padding: 1.5rem 2rem;
+        padding: 0.75rem 1.25rem;
         background: #F9FAFB;
         border-top: 1px solid #E5E7EB;
         display: flex;
-        gap: 1rem;
+        gap: 0.5rem;
         justify-content: flex-end;
+        flex-shrink: 0;
     }
 
     .modal-btn {
-        padding: 0.75rem 1.5rem;
+        padding: 0.5rem 0.875rem;
         border: none;
-        border-radius: 8px;
+        border-radius: 6px;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.75rem;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.35rem;
         transition: all 0.2s ease;
     }
 
@@ -1389,6 +1433,125 @@
         background: #002070;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 48, 135, 0.3);
+    }
+
+    /* Scrollable Modal Sections - Similar to Map Advanced Statistics */
+    .modal-section {
+        margin: 0 1.5rem 1rem 1.5rem;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .modal-section-header {
+        background: linear-gradient(135deg, #F8F9FA 0%, #EDF2F7 100%);
+        padding: 0.625rem 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .modal-section-header i {
+        color: var(--primary-blue);
+        font-size: 0.875rem;
+    }
+
+    .modal-section-header h4 {
+        margin: 0;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .modal-section-content {
+        padding: 0.75rem;
+        font-size: 0.8rem;
+        color: #4B5563;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        background: #FAFBFC;
+    }
+
+    /* Person Details Grid */
+    .modal-persons-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin: 0 1.5rem 1rem 1.5rem;
+    }
+
+    .modal-person-card {
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .modal-person-header {
+        background: linear-gradient(135deg, #F8F9FA 0%, #EDF2F7 100%);
+        padding: 0.5rem 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .modal-person-header.victim {
+        border-left: 3px solid #F59E0B;
+    }
+
+    .modal-person-header.suspect {
+        border-left: 3px solid #6B7280;
+    }
+
+    .modal-person-header i {
+        font-size: 0.75rem;
+    }
+
+    .modal-person-header.victim i {
+        color: #F59E0B;
+    }
+
+    .modal-person-header.suspect i {
+        color: #6B7280;
+    }
+
+    .modal-person-header h4 {
+        margin: 0;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .modal-person-content {
+        padding: 0.6rem 0.75rem;
+        max-height: 80px;
+        overflow-y: auto;
+        font-size: 0.75rem;
+        color: #4B5563;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        background: #FAFBFC;
+    }
+
+    .modal-person-content::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .modal-person-content::-webkit-scrollbar-track {
+        background: var(--scrollbar-track, #F3F4F6);
+        border-radius: 10px;
+    }
+
+    .modal-person-content::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb, #9CA3AF);
+        border-radius: 10px;
     }
 
     @keyframes fadeIn {
@@ -1418,7 +1581,48 @@
         }
 
         .accidents-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .accident-card .card-header {
+            padding: 10px 12px;
+        }
+
+        .accident-card .card-body {
+            padding: 12px;
+        }
+
+        .card-location-title {
+            font-size: 0.85rem;
+        }
+
+        .card-location-sub,
+        .card-type,
+        .card-date {
+            font-size: 0.72rem;
+        }
+
+        .card-date {
+            margin-bottom: 8px;
+        }
+
+        .card-location {
+            margin-bottom: 8px;
+        }
+
+        .card-type {
+            margin-bottom: 10px;
+        }
+
+        .severity-badge {
+            font-size: 0.65rem;
+            padding: 3px 7px;
+        }
+
+        .card-action-btn {
+            font-size: 0.68rem;
+            padding: 5px 6px;
         }
 
         .quick-filters {
@@ -1466,12 +1670,26 @@
             justify-content: center;
         }
 
+        .modal-section {
+            margin: 0.75rem 1rem;
+        }
+
+        .modal-persons-grid {
+            grid-template-columns: 1fr;
+            margin: 0.75rem 1rem;
+        }
+
         .filters-content {
             grid-template-columns: 1fr;
         }
     }
 
     @media (max-width: 480px) {
+        .accidents-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.4rem;
+        }
+
         .stats-section {
             grid-template-columns: 1fr;
         }
@@ -1633,7 +1851,6 @@
     /* Date Modal Alert - Beautiful & Clean */
     .date-modal-alert {
         background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
-        border-left: 4px solid #FF9800;
         border-radius: 8px;
         padding: 0.75rem 1rem;
         margin-bottom: 0.75rem;
@@ -1914,6 +2131,1510 @@
 
         .date-modal-actions button {
             flex: 1;
+        }
+    }
+
+    /* ============================================================================
+       COMPREHENSIVE MOBILE RESPONSIVE STYLES
+       ============================================================================ */
+
+    @media (max-width: 768px) {
+        /* Hero section mobile */
+        .page-hero {
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .page-hero-content {
+            min-width: auto;
+        }
+
+        .page-hero h1 {
+            font-size: 1.3rem;
+            gap: 8px;
+        }
+
+        .page-hero p {
+            font-size: 0.85rem;
+        }
+
+        .hero-badge {
+            font-size: 0.8rem;
+            padding: 3px 10px;
+        }
+
+        .hero-actions {
+            width: 100%;
+        }
+
+        .hero-actions .btn {
+            flex: 1;
+            padding: 0.35rem 0.6rem;
+            font-size: 0.72rem;
+            justify-content: center;
+        }
+
+        /* Filters section mobile */
+        .filters-section {
+            padding: 1rem;
+        }
+
+        .filters-header {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .search-wrapper {
+            flex-direction: column;
+        }
+
+        .search-button {
+            min-height: 44px;
+        }
+
+        #searchInput,
+        #hotspotSearch {
+            min-height: 44px;
+        }
+
+        /* Quick search buttons mobile */
+        .quick-search-btn {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.7rem;
+        }
+
+        /* Table horizontal scroll */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -1rem;
+            padding: 0 1rem;
+        }
+
+        /* Edit/Detail modal improvements */
+        .modal-content,
+        .chart-modal-content {
+            width: 98% !important;
+            max-width: none !important;
+            margin: 2vh auto;
+            max-height: 96vh;
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+
+        .modal-header {
+            padding: 0.75rem 1rem;
+        }
+
+        .modal-footer {
+            padding: 0.75rem 1rem;
+        }
+
+        /* Tab navigation in edit modal */
+        .edit-tabs,
+        .modal-tabs {
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .edit-tabs .tab-btn,
+        .modal-tabs .tab-btn {
+            flex: 1;
+            min-width: auto;
+            padding: 0.5rem 0.5rem;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        /* Form inputs in edit modal */
+        .edit-form input,
+        .edit-form select,
+        .edit-form textarea {
+            min-height: 44px;
+            font-size: 0.9rem;
+        }
+
+        /* Pagination mobile */
+        .pagination {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        .pagination a,
+        .pagination span {
+            min-width: 36px;
+            min-height: 36px;
+            font-size: 0.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-hero {
+            padding: 1rem;
+        }
+
+        .page-hero h1 {
+            font-size: 1.1rem;
+        }
+
+        .hero-actions .btn span:first-child {
+            display: none;
+        }
+
+        .hero-actions .btn {
+            padding: 0.3rem 0.5rem;
+            font-size: 0.68rem;
+        }
+
+        .filters-section {
+            padding: 0.75rem;
+        }
+
+        .filters-header h3 {
+            font-size: 0.95rem;
+        }
+
+        /* Card view items on small mobile */
+        .accident-card {
+            padding: 0.75rem;
+        }
+
+        .card-actions {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .card-actions button,
+        .card-actions a {
+            flex: 1;
+            min-height: 36px;
+            font-size: 0.75rem;
+        }
+    }
+
+    /* ===== DARK MODE STYLES ===== */
+    [data-theme="dark"] .filters-section,
+    [data-theme="dark"] .summary-card,
+    [data-theme="dark"] .accident-card,
+    [data-theme="dark"] .table-container {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .filters-header h3,
+    [data-theme="dark"] .summary-card h3 {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .summary-card p {
+        color: #B0B0B0;
+    }
+
+    [data-theme="dark"] .search-input,
+    [data-theme="dark"] .filter-select,
+    [data-theme="dark"] select,
+    [data-theme="dark"] input[type="text"],
+    [data-theme="dark"] input[type="date"] {
+        background: #1A2332;
+        border-color: #2D3A4F;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .search-input:focus,
+    [data-theme="dark"] .filter-select:focus {
+        border-color: var(--primary-blue);
+        background: #1E2A3A;
+    }
+
+    [data-theme="dark"] .search-input::placeholder {
+        color: #666;
+    }
+
+    [data-theme="dark"] .btn-outline {
+        border-color: #3D4A5F;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .btn-outline:hover {
+        background: rgba(0, 82, 204, 0.15);
+        border-color: var(--primary-blue);
+    }
+
+    [data-theme="dark"] .accident-card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="dark"] .accident-card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    [data-theme="dark"] .card-title {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .card-meta,
+    [data-theme="dark"] .card-location {
+        color: #B0B0B0;
+    }
+
+    [data-theme="dark"] table {
+        background: #1E2A3A;
+    }
+
+    [data-theme="dark"] th {
+        background: #1E3A5F;
+        color: white;
+    }
+
+    [data-theme="dark"] td {
+        color: #E8E8E8;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] tr:nth-child(even) {
+        background: #1A2332;
+    }
+
+    [data-theme="dark"] tr:hover {
+        background: #243447;
+    }
+
+    [data-theme="dark"] .pagination a,
+    [data-theme="dark"] .pagination span {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .pagination a:hover {
+        background: #2D3A4F;
+    }
+
+    [data-theme="dark"] .pagination .active {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    [data-theme="dark"] .modal-content {
+        background: #1E2A3A;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .modal-header {
+        border-bottom-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .modal-footer {
+        border-top-color: #2D3A4F;
+        background: #1A2332;
+    }
+
+    /* ===== ACCIDENT MODAL DARK MODE - NARRATIVE & PERSON CARDS ===== */
+    [data-theme="dark"] .modal-body {
+        background: #1E2A3A !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .modal-info-grid {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] .modal-info-item {
+        background: #1E2A3A !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .modal-label {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .modal-value {
+        color: #FFFFFF !important;
+    }
+
+    /* Narrative Section Dark Mode */
+    [data-theme="dark"] .modal-section {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .modal-section-header {
+        background: #1E3A5F !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .modal-section-header h4 {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .modal-section-header i {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .modal-section-content {
+        background: #1A2332 !important;
+        color: #E8E8E8 !important;
+    }
+
+    /* Victim/Suspect Person Cards Dark Mode */
+    [data-theme="dark"] .modal-persons-grid {
+        background: transparent !important;
+    }
+
+    [data-theme="dark"] .modal-person-card {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .modal-person-header {
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .modal-person-header.victim {
+        background: linear-gradient(135deg, #FF8C00 0%, #FFA500 100%) !important;
+    }
+
+    [data-theme="dark"] .modal-person-header.suspect {
+        background: linear-gradient(135deg, #1E5FAA 0%, #4A90D9 100%) !important;
+    }
+
+    [data-theme="dark"] .modal-person-header h4 {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .modal-person-header i {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .modal-person-content {
+        background: #1A2332 !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .modal-person-content p,
+    [data-theme="dark"] .modal-person-content span,
+    [data-theme="dark"] .modal-person-content div {
+        color: #E8E8E8 !important;
+    }
+
+    /* Modal scroll area */
+    [data-theme="dark"] .modal-scroll-area {
+        background: #1E2A3A !important;
+    }
+
+    /* Note: Scrollbar styles now use CSS variables from main.css */
+
+    [data-theme="dark"] .export-dropdown-menu {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .export-dropdown-item {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .export-dropdown-item:hover {
+        background: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .empty-state {
+        color: #B0B0B0;
+    }
+
+    /* Force all text visible in dark mode */
+    [data-theme="dark"] .accident-card h4,
+    [data-theme="dark"] .accident-title {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .accident-card p,
+    [data-theme="dark"] .accident-meta,
+    [data-theme="dark"] .accident-location {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .accident-card .stat-value,
+    [data-theme="dark"] .accident-card .number {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .summary-card .stat-value,
+    [data-theme="dark"] .summary-card .number,
+    [data-theme="dark"] .summary-card h2 {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .summary-card p,
+    [data-theme="dark"] .summary-card .label {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .filters-section label {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] table td,
+    [data-theme="dark"] table td a {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] table th {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .page-header h1,
+    [data-theme="dark"] .page-title {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .page-header p,
+    [data-theme="dark"] .page-subtitle {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] [style*="color: #"],
+    [data-theme="dark"] [style*="color:#"] {
+        color: inherit !important;
+    }
+
+    /* Table row backgrounds in dark mode */
+    [data-theme="dark"] .table-container {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] table tbody tr {
+        background: #1A2332 !important;
+    }
+
+    [data-theme="dark"] table tbody tr:nth-child(even) {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] table tbody tr:hover {
+        background: #243447 !important;
+    }
+
+    [data-theme="dark"] table tbody td {
+        border-color: #2D3A4F !important;
+    }
+
+    /* Card view in dark mode */
+    [data-theme="dark"] .accident-card {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .accident-card:hover {
+        background: #243447 !important;
+        border-color: #3D4A5F !important;
+    }
+
+    /* Severity indicators */
+    [data-theme="dark"] .accident-card.fatal,
+    [data-theme="dark"] tr.fatal {
+        background: rgba(220, 53, 69, 0.15) !important;
+        border-left-color: #DC3545 !important;
+    }
+
+    [data-theme="dark"] .accident-card.injury,
+    [data-theme="dark"] tr.injury {
+        background: rgba(255, 193, 7, 0.15) !important;
+        border-left-color: #FFC107 !important;
+    }
+
+    [data-theme="dark"] .accident-card.property,
+    [data-theme="dark"] tr.property {
+        background: rgba(40, 167, 69, 0.15) !important;
+        border-left-color: #28A745 !important;
+    }
+
+    /* ===== BADGES DARK MODE ===== */
+    [data-theme="dark"] .severity-badge.property {
+        background: rgba(74, 144, 217, 0.3) !important;
+        color: #8FC8FF !important;
+    }
+
+    [data-theme="dark"] .severity-badge.injury {
+        background: rgba(255, 193, 7, 0.3) !important;
+        color: #FFD966 !important;
+    }
+
+    [data-theme="dark"] .severity-badge.fatal {
+        background: rgba(220, 53, 69, 0.3) !important;
+        color: #FF6B7A !important;
+    }
+
+    [data-theme="dark"] .hotspot-mini-badge {
+        background: rgba(217, 119, 6, 0.25) !important;
+        color: #FFD580 !important;
+        border-color: rgba(217, 119, 6, 0.4) !important;
+    }
+
+    [data-theme="dark"] .hotspot-mini-badge i {
+        color: #FFB84D !important;
+    }
+
+    /* ===== CARD ACTION BUTTONS DARK MODE ===== */
+    [data-theme="dark"] .card-actions {
+        border-top-color: #2D3A4F !important;
+        background: transparent !important;
+    }
+
+    [data-theme="dark"] .card-action-btn {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .card-action-btn i {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .card-action-btn:hover {
+        background: #3D4A5F !important;
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-view {
+        background: rgba(74, 144, 217, 0.2) !important;
+        color: #8FC8FF !important;
+        border-color: rgba(74, 144, 217, 0.4) !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-view i {
+        color: #8FC8FF !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-view:hover {
+        background: #4A90D9 !important;
+        color: #FFFFFF !important;
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-view:hover i {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-map {
+        background: rgba(40, 167, 69, 0.2) !important;
+        color: #7FD99A !important;
+        border-color: rgba(40, 167, 69, 0.4) !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-map i {
+        color: #7FD99A !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-map:hover {
+        background: #28A745 !important;
+        color: #FFFFFF !important;
+        border-color: #28A745 !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-map:hover i {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-edit {
+        background: #4A90D9 !important;
+        color: #FFFFFF !important;
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-edit i {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-edit:hover {
+        background: rgba(74, 144, 217, 0.2) !important;
+        color: #8FC8FF !important;
+        border-color: rgba(74, 144, 217, 0.4) !important;
+    }
+
+    [data-theme="dark"] .card-action-btn.btn-edit:hover i {
+        color: #8FC8FF !important;
+    }
+
+    /* Card body text in dark mode */
+    [data-theme="dark"] .card-body {
+        background: transparent !important;
+    }
+
+    [data-theme="dark"] .card-date {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .card-date strong {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .card-date i {
+        color: #888 !important;
+    }
+
+    [data-theme="dark"] .card-location-title {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .card-location-sub {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .card-type {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .card-type i {
+        color: #888 !important;
+    }
+
+    /* ===== TABLE ACTION BUTTONS DARK MODE ===== */
+    [data-theme="dark"] .table-actions {
+        background: transparent !important;
+    }
+
+    [data-theme="dark"] .table-action-btn {
+        background: #2D3A4F !important;
+        color: #E8E8E8 !important;
+        border: 1px solid #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.view {
+        background: rgba(74, 144, 217, 0.2) !important;
+        color: #8FC8FF !important;
+        border-color: rgba(74, 144, 217, 0.4) !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.view:hover {
+        background: #4A90D9 !important;
+        color: #FFFFFF !important;
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.map {
+        background: rgba(40, 167, 69, 0.2) !important;
+        color: #7FD99A !important;
+        border-color: rgba(40, 167, 69, 0.4) !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.map:hover {
+        background: #28A745 !important;
+        color: #FFFFFF !important;
+        border-color: #28A745 !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.edit {
+        background: #4A90D9 !important;
+        color: #FFFFFF !important;
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.edit:hover {
+        background: rgba(74, 144, 217, 0.2) !important;
+        color: #8FC8FF !important;
+        border-color: rgba(74, 144, 217, 0.4) !important;
+    }
+
+    /* ===== FILTER LABELS DARK MODE ===== */
+    [data-theme="dark"] .filter-group label,
+    [data-theme="dark"] .filters-grid label,
+    [data-theme="dark"] .filters-section label,
+    [data-theme="dark"] .search-section label {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .filter-group select,
+    [data-theme="dark"] .filter-group input[type="date"],
+    [data-theme="dark"] .filters-grid select,
+    [data-theme="dark"] .search-input,
+    [data-theme="dark"] #searchInput,
+    [data-theme="dark"] #hotspotSearch {
+        background: #1A2332 !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #searchInput::placeholder,
+    [data-theme="dark"] #hotspotSearch::placeholder {
+        color: #8899AA !important;
+    }
+
+    [data-theme="dark"] .search-icon {
+        color: #8899AA !important;
+    }
+
+    [data-theme="dark"] .filter-group select:hover,
+    [data-theme="dark"] .filter-group input[type="date"]:hover,
+    [data-theme="dark"] #hotspotSearch:hover {
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .filter-group select:focus,
+    [data-theme="dark"] .filter-group input[type="date"]:focus,
+    [data-theme="dark"] .search-input:focus,
+    [data-theme="dark"] #searchInput:focus,
+    [data-theme="dark"] #hotspotSearch:focus {
+        border-color: #4A90D9 !important;
+        background: #1E2A3A !important;
+        box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15) !important;
+    }
+
+    [data-theme="dark"] #searchInput:hover {
+        border-color: #4A5A6F !important;
+    }
+
+    [data-theme="dark"] .search-section h3,
+    [data-theme="dark"] .filters-header h3 {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .active-filters {
+        border-top-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .filter-tag {
+        background: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .date-selector {
+        background: #1A2332 !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    /* ===== PAGINATION DARK MODE ===== */
+    [data-theme="dark"] .pagination-container {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .pagination-info {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] #pageInfo,
+    [data-theme="dark"] .page-info {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #itemsPerPage,
+    [data-theme="dark"] .items-per-page {
+        background: #1A2332 !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .pagination-controls button,
+    [data-theme="dark"] .pagination-btn {
+        background: #1A2332 !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .pagination-controls button:hover:not(:disabled),
+    [data-theme="dark"] .pagination-btn:hover:not(:disabled) {
+        background: #2D3A4F !important;
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .pagination-controls button:disabled,
+    [data-theme="dark"] .pagination-btn:disabled {
+        background: #151C28 !important;
+        color: #666 !important;
+    }
+
+    /* ===== VIEW TOGGLE DARK MODE ===== */
+    [data-theme="dark"] .view-toggle {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .view-option {
+        color: #B0B0B0 !important;
+        background: transparent !important;
+    }
+
+    [data-theme="dark"] .view-option:hover:not(.active) {
+        color: #4A90D9 !important;
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .view-option.active {
+        background: linear-gradient(135deg, #003087 0%, #0052CC 100%) !important;
+        color: #FFFFFF !important;
+    }
+
+    /* ===== BUTTONS GENERAL DARK MODE ===== */
+    [data-theme="dark"] .btn,
+    [data-theme="dark"] button:not(.view-option) {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .btn-outline,
+    [data-theme="dark"] .btn-secondary {
+        background: #1A2332 !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .btn-outline:hover,
+    [data-theme="dark"] .btn-secondary:hover {
+        background: #2D3A4F !important;
+        border-color: #4A90D9 !important;
+    }
+
+    /* ===== CALENDAR/DATE PICKER DARK MODE ===== */
+    [data-theme="dark"] .chart-modal-content {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] .chart-modal-header {
+        background: #1A2332 !important;
+        border-bottom-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .chart-modal-header h3 {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .chart-modal-close {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .chart-modal-close:hover {
+        background: #DC143C !important;
+        border-color: #DC143C !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .calendar-container {
+        background: #1A2332 !important;
+    }
+
+    [data-theme="dark"] .calendar-nav {
+        background: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .calendar-nav:hover {
+        background: #4A90D9 !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .calendar-select {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .calendar-select:hover,
+    [data-theme="dark"] .calendar-select:focus {
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .weekday {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .calendar-day {
+        background: #1E2A3A !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .calendar-day:hover {
+        background: #2D3A4F !important;
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .calendar-day.other-month {
+        color: #6B7280 !important;
+    }
+
+    [data-theme="dark"] .calendar-day.selected {
+        background: #4A90D9 !important;
+        border-color: #4A90D9 !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .calendar-day.today {
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .calendar-day.disabled {
+        background: #1A2332 !important;
+        color: #4B5563 !important;
+    }
+
+    [data-theme="dark"] .calendar-day.disabled:hover {
+        background: #1A2332 !important;
+        border-color: transparent !important;
+    }
+
+    /* Date Modal Dark Mode */
+    [data-theme="dark"] .date-modal-body {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] .date-tab {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .date-tab:hover {
+        border-color: #4A90D9 !important;
+        background: #243447 !important;
+    }
+
+    [data-theme="dark"] .date-tab.active {
+        background: #4A90D9 !important;
+        border-color: #4A90D9 !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .tab-label {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .date-tab.active .tab-label {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    [data-theme="dark"] .tab-value {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .date-tab.active .tab-value {
+        color: white !important;
+    }
+
+    [data-theme="dark"] .date-modal-alert {
+        background: rgba(255, 152, 0, 0.15) !important;
+        border-left-color: #FF9800 !important;
+    }
+
+    [data-theme="dark"] .date-modal-alert .alert-message {
+        color: #FFB74D !important;
+    }
+
+    [data-theme="dark"] .date-modal-actions {
+        border-top-color: #2D3A4F !important;
+    }
+
+    /* Date Modal Content */
+    [data-theme="dark"] #dateModal .modal-content,
+    [data-theme="dark"] .date-modal .modal-content {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] #dateModal .modal-header,
+    [data-theme="dark"] .date-modal .modal-header {
+        background: #1A2332 !important;
+        border-bottom-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] #dateModal .modal-header h3,
+    [data-theme="dark"] .date-modal .modal-header h3 {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #dateModal .modal-close,
+    [data-theme="dark"] .date-modal .modal-close {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #dateModal .modal-close:hover,
+    [data-theme="dark"] .date-modal .modal-close:hover {
+        background: #DC143C !important;
+        border-color: #DC143C !important;
+        color: white !important;
+    }
+
+    /* ===== CUSTOM CONFIRM MODAL ===== */
+    .confirm-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 99999;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 5px;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .confirm-modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .confirm-modal {
+        background: white;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        transform: scale(0.9) translateY(-30px);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .confirm-modal-overlay.active .confirm-modal {
+        transform: scale(1) translateY(0);
+    }
+
+    .confirm-modal-header {
+        background: linear-gradient(135deg, #DC143C 0%, #8B0000 100%);
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .confirm-modal-icon {
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .confirm-modal-title {
+        color: white;
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .confirm-modal-body {
+        padding: 1.25rem;
+    }
+
+    .confirm-modal-message {
+        color: #374151;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin: 0 0 0.75rem;
+    }
+
+    .confirm-modal-warning {
+        background: #FEF3C7;
+        border: 1px solid #F59E0B;
+        border-radius: 6px;
+        padding: 0.6rem 0.75rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        text-align: left;
+        margin-bottom: 0.75rem;
+    }
+
+    .confirm-modal-warning i {
+        color: #D97706;
+        font-size: 0.9rem;
+        margin-top: 2px;
+    }
+
+    .confirm-modal-warning span {
+        color: #92400E;
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .confirm-modal-footer {
+        display: flex;
+        gap: 0.6rem;
+        padding: 0 1.25rem 1.25rem;
+    }
+
+    .confirm-modal-btn {
+        flex: 1;
+        padding: 0.65rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .confirm-modal-btn-cancel {
+        background: #F3F4F6;
+        color: #374151;
+    }
+
+    .confirm-modal-btn-cancel:hover {
+        background: #E5E7EB;
+    }
+
+    .confirm-modal-btn-confirm {
+        background: linear-gradient(135deg, #DC143C 0%, #B91C1C 100%);
+        color: white;
+    }
+
+    .confirm-modal-btn-confirm:hover {
+        background: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(185, 28, 28, 0.3);
+    }
+
+    /* Dark Theme for Confirm Modal */
+    [data-theme="dark"] .confirm-modal {
+        background: #1A2332;
+    }
+
+    [data-theme="dark"] .confirm-modal-body {
+        background: #1A2332;
+    }
+
+    [data-theme="dark"] .confirm-modal-message {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .confirm-modal-warning {
+        background: rgba(245, 158, 11, 0.15);
+        border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    [data-theme="dark"] .confirm-modal-warning i {
+        color: #FBBF24;
+    }
+
+    [data-theme="dark"] .confirm-modal-warning span {
+        color: #FCD34D;
+    }
+
+    [data-theme="dark"] .confirm-modal-btn-cancel {
+        background: #2D3A4F;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .confirm-modal-btn-cancel:hover {
+        background: #3D4A5F;
+    }
+
+    /* ===================================================
+       MOBILE ENHANCEMENTS  ≤768px
+       =================================================== */
+    @media (max-width: 768px) {
+
+        /* ── Hero: compact ── */
+        .page-hero {
+            padding: 12px 14px !important;
+            border-radius: 10px !important;
+            margin-bottom: 10px !important;
+            gap: 8px !important;
+        }
+        .page-hero-content { min-width: 0 !important; }
+        .page-hero h1 {
+            font-size: 1.05rem !important;
+            gap: 8px !important;
+            margin-bottom: 2px !important;
+        }
+        .page-hero p { display: none !important; }
+        .hero-badge {
+            font-size: 0.65rem !important;
+            padding: 2px 7px !important;
+        }
+        .hero-actions { gap: 5px !important; }
+        .hero-actions .btn {
+            padding: 6px 10px !important;
+            font-size: 0.7rem !important;
+            gap: 4px !important;
+        }
+
+        /* ── Summary cards: single compact row of 4 ── */
+        .summary-cards {
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 5px !important;
+            margin-bottom: 10px !important;
+        }
+        .summary-card {
+            padding: 8px 4px !important;
+            border-radius: 6px !important;
+        }
+        .summary-card:hover { transform: none !important; }
+        .summary-card h3 {
+            font-size: 1.1rem !important;
+            margin-bottom: 0 !important;
+        }
+        .summary-card p {
+            font-size: 0.55rem !important;
+            margin: 0 !important;
+        }
+
+        /* ── Filters section ── */
+        .filters-section {
+            padding: 0.7rem !important;
+            margin-bottom: 10px !important;
+            border-radius: 8px !important;
+        }
+        .filters-header { margin-bottom: 0.55rem !important; }
+        .filters-header h3 { font-size: 0.8rem !important; }
+        .filters-header .btn-outline.btn-sm {
+            padding: 0.18rem 0.55rem !important;
+            font-size: 0.65rem !important;
+        }
+
+        /* Search input + button */
+        #hotspotSearch {
+            padding: 0.42rem 0.7rem 0.42rem 2.1rem !important;
+            font-size: 0.78rem !important;
+        }
+        #hotspotSearch + .search-icon,
+        .search-icon { font-size: 0.75rem !important; }
+
+        /* Quick filter buttons */
+        .quick-search-btn {
+            padding: 0.2rem 0.5rem !important;
+            font-size: 0.65rem !important;
+            border-radius: 4px !important;
+        }
+
+        /* Filter grid: 2-col on mobile */
+        .filters-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.4rem !important;
+            margin-top: 0.6rem !important;
+        }
+        .filter-group label {
+            font-size: 0.65rem !important;
+            margin-bottom: 0.12rem !important;
+        }
+        .filter-group select,
+        .filter-group input.form-control,
+        .filter-group .date-selector {
+            font-size: 0.72rem !important;
+            padding: 0.28rem 0.4rem !important;
+        }
+
+        /* Active filter tags */
+        .filter-tag { font-size: 0.62rem !important; padding: 2px 6px !important; }
+
+        /* ── View toggle ── */
+        .view-toggle {
+            gap: 4px !important;
+            margin-bottom: 8px !important;
+        }
+        .view-option {
+            padding: 0.28rem 0.7rem !important;
+            font-size: 0.7rem !important;
+        }
+
+        /* ── Pagination ── */
+        .pagination-container {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+            padding: 0.75rem 1rem !important;
+            position: relative !important;
+        }
+        .pagination-info {
+            text-align: center !important;
+            font-size: 0.75rem !important;
+        }
+        .pagination-controls {
+            position: relative !important;
+            left: auto !important;
+            transform: none !important;
+            justify-content: center !important;
+            gap: 0.4rem !important;
+            flex-wrap: wrap !important;
+            font-size: 0.72rem !important;
+        }
+        .pagination-controls .btn {
+            padding: 0.3rem 0.75rem !important;
+            font-size: 0.72rem !important;
+        }
+        #pageInfo {
+            font-size: 0.72rem !important;
+            padding: 0 0.5rem !important;
+        }
+        #itemsPerPage {
+            width: 100% !important;
+            font-size: 0.75rem !important;
+            padding: 0.3rem 0.5rem !important;
+        }
+
+        /* ── CARDS VIEW: compact ── */
+        .accidents-grid {
+            gap: 0.45rem !important;
+            margin-bottom: 1rem !important;
+        }
+        .accident-card .card-header {
+            padding: 8px 12px !important;
+        }
+        .severity-badge {
+            font-size: 0.6rem !important;
+            padding: 3px 7px !important;
+            gap: 3px !important;
+        }
+        .hotspot-mini-badge {
+            font-size: 0.6rem !important;
+            padding: 3px 7px !important;
+        }
+        .accident-card .card-body {
+            padding: 10px 12px !important;
+        }
+        .card-date {
+            font-size: 0.68rem !important;
+            gap: 4px !important;
+            margin-bottom: 5px !important;
+        }
+        .card-location-title {
+            font-size: 0.8rem !important;
+            font-weight: 600;
+            margin-bottom: 2px !important;
+        }
+        .card-location-sub {
+            font-size: 0.63rem !important;
+        }
+        .card-type {
+            font-size: 0.63rem !important;
+            margin-top: 4px !important;
+        }
+        .card-actions {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            gap: 0.3rem !important;
+            margin-top: 8px !important;
+            padding-top: 8px !important;
+            border-top: 1px solid #f3f4f6 !important;
+        }
+        .card-action-btn {
+            flex: 1 !important;
+            padding: 0.28rem 0.35rem !important;
+            font-size: 0.65rem !important;
+            justify-content: center !important;
+            border-radius: 5px !important;
+        }
+
+        /* ── TABLE VIEW → mobile cards ── */
+        .accidents-table-container .table-responsive {
+            overflow-x: hidden !important;
+        }
+        .accidents-table,
+        .accidents-table tbody {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .accidents-table thead { display: none !important; }
+        .accidents-table td::before { display: none !important; }
+
+        /* Card-style rows */
+        .accidents-table tbody tr {
+            display: grid !important;
+            grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+            grid-template-areas:
+                "sev  loc"
+                "dt   cas"
+                "act  act";
+            row-gap: 0.12rem;
+            column-gap: 0.4rem;
+            align-items: center;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            border: 1px solid #e5e7eb;
+            border-left: 3px solid #6b7280;
+            border-radius: 8px;
+            margin-bottom: 0.45rem;
+            padding: 0.5rem 0.6rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transform: none !important;
+        }
+        .accidents-table tbody tr:has(.severity-dot.fatal)   { border-left-color: #ef4444; }
+        .accidents-table tbody tr:has(.severity-dot.injury)  { border-left-color: #f59e0b; }
+
+        /* Reset all tds */
+        .accidents-table td {
+            display: flex !important;
+            align-items: center;
+            padding: 0 !important;
+            border: none !important;
+            min-width: 0;
+            box-sizing: border-box !important;
+        }
+
+        /* Grid area assignments */
+        .accidents-table td[data-label="Severity"]   { grid-area: sev; }
+        .accidents-table td[data-label="Location"]   { grid-area: loc; overflow: hidden; flex-direction: column; align-items: flex-start; gap: 0; }
+        .accidents-table td[data-label="Date"]       { grid-area: dt;  flex-direction: column; align-items: flex-start; gap: 0; }
+        .accidents-table td[data-label="Casualties"] { grid-area: cas; justify-content: flex-end; }
+        .accidents-table td[data-label="Type"]       { display: none !important; }
+        .accidents-table td[data-label="Hotspot"]    { display: none !important; }
+        .accidents-table td[data-label="Actions"]    {
+            grid-area: act;
+            justify-content: flex-start;
+            padding-top: 0.35rem !important;
+            border-top: 1px solid #f3f4f6 !important;
+            min-height: 34px !important;
+            overflow: visible !important;
+        }
+
+        /* Cell content sizes */
+        .accidents-table td[data-label="Location"] div  { font-size: 0.75rem !important; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .accidents-table td[data-label="Location"] small { font-size: 0.6rem !important; color: #9ca3af; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .accidents-table td[data-label="Date"] div   { font-size: 0.68rem !important; font-weight: 500; color: #6b7280; line-height: 1.3; }
+        .accidents-table td[data-label="Date"] small { font-size: 0.6rem !important; color: #9ca3af; line-height: 1.3; }
+        .accidents-table td[data-label="Casualties"] span { font-size: 0.75rem !important; font-weight: 700; }
+
+        /* Severity dot size */
+        .accidents-table .severity-dot { width: 10px !important; height: 10px !important; }
+
+        /* Table action buttons — keep original colors, just resize */
+        .accidents-table .table-actions { gap: 0.35rem !important; flex-wrap: nowrap; width: 100%; }
+        .accidents-table .table-action-btn {
+            padding: 0.3rem 0.75rem !important;
+            font-size: 0.72rem !important;
+            border-radius: 5px !important;
+            flex: 1 !important;
+            justify-content: center !important;
+            min-height: 30px !important;
+        }
+        .accidents-table .table-action-btn.view {
+            background: #E3F2FD !important;
+            color: var(--primary-blue) !important;
+            border: 1px solid #BBDEFB !important;
+        }
+        .accidents-table .table-action-btn.map {
+            background: #2E7D32 !important;
+            color: #ffffff !important;
+            border: 1px solid #1B5E20 !important;
+        }
+        .accidents-table .table-action-btn.edit {
+            background: #FFF8E1 !important;
+            color: #F57F17 !important;
+            border: 1px solid #FFE082 !important;
         }
     }
 </style>
@@ -2357,12 +4078,44 @@ function updateMunicipalityDropdown() {
     }
 }
 
-// Export to CSV
+// Export to CSV (legacy function - now using dropdown)
 function exportToCSV() {
     const searchParams = new URLSearchParams(window.location.search);
     searchParams.set('export', 'csv');
     window.location.href = '{% url "accident_list" %}?' + searchParams.toString();
 }
+
+// Export Dropdown Toggle
+function toggleExportDropdown() {
+    const menu = document.getElementById('exportDropdownMenu');
+    if (menu.style.display === 'none' || menu.style.display === '') {
+        menu.style.display = 'block';
+    } else {
+        menu.style.display = 'none';
+    }
+}
+
+// Close export dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.querySelector('.export-dropdown');
+    const menu = document.getElementById('exportDropdownMenu');
+    if (dropdown && menu && !dropdown.contains(event.target)) {
+        menu.style.display = 'none';
+    }
+});
+
+// Add hover effect to export dropdown items
+document.addEventListener('DOMContentLoaded', function() {
+    const items = document.querySelectorAll('.export-dropdown-item');
+    items.forEach(function(item) {
+        item.addEventListener('mouseenter', function() {
+            this.style.background = '#f5f5f5';
+        });
+        item.addEventListener('mouseleave', function() {
+            this.style.background = 'transparent';
+        });
+    });
+});
 
 // Navigate to accident
 function viewAccident(id) {
@@ -2381,7 +4134,7 @@ function viewOnMap(lat, lng, accidentId) {
 let currentAccidentData = {};
 
 function openAccidentModal(id, date, time, barangay, municipal, province, incidentType, isFatal, isInjury, isHotspot, lat, lng, street, victimCount, placeType, vehicle, station, clusterId) {
-    currentAccidentData = { id, lat, lng };
+    currentAccidentData = { id, lat, lng, date, time, barangay, municipal, province, incidentType, isFatal, isInjury, street, victimCount, placeType, vehicle, station, clusterId };
 
     const modal = document.getElementById('accidentModal');
 
@@ -2396,6 +4149,31 @@ function openAccidentModal(id, date, time, barangay, municipal, province, incide
     document.getElementById('modalVehicle').textContent = vehicle || 'Not specified';
     document.getElementById('modalStation').textContent = station || 'Not specified';
     document.getElementById('modalCluster').textContent = clusterId || '-';
+
+    // Clear narrative/person fields while loading
+    document.getElementById('modalNarrative').textContent = 'Loading...';
+    document.getElementById('modalVictimDetails').textContent = 'Loading...';
+    document.getElementById('modalSuspectDetails').textContent = 'Loading...';
+
+    // Fetch narrative and person details via AJAX
+    fetch(`/accidents/${id}/details-json/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('modalNarrative').textContent = data.narrative || 'No narrative available.';
+            document.getElementById('modalVictimDetails').textContent = data.victim_details || 'N/A';
+            document.getElementById('modalSuspectDetails').textContent = data.suspect_details || 'N/A';
+            // Store for print
+            currentAccidentData.narrative = data.narrative;
+            currentAccidentData.victim_details = data.victim_details;
+            currentAccidentData.suspect_details = data.suspect_details;
+            currentAccidentData.case_status = data.case_status;
+            currentAccidentData.offense = data.offense;
+        })
+        .catch(() => {
+            document.getElementById('modalNarrative').textContent = 'Unable to load narrative.';
+            document.getElementById('modalVictimDetails').textContent = 'N/A';
+            document.getElementById('modalSuspectDetails').textContent = 'N/A';
+        });
 
     // Add badges
     let badgesHTML = '';
@@ -2431,6 +4209,208 @@ function closeAccidentModal() {
     const modal = document.getElementById('accidentModal');
     modal.classList.remove('active');
     document.body.style.overflow = 'auto';
+}
+
+// Print Accident Report
+function printAccidentReport() {
+    const d = currentAccidentData;
+
+    // Determine severity
+    let severity = 'Property Damage';
+    let severityClass = 'property';
+    if (d.isFatal) {
+        severity = 'FATAL';
+        severityClass = 'fatal';
+    } else if (d.isInjury) {
+        severity = 'INJURY';
+        severityClass = 'injury';
+    }
+
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Accident Report - ${d.date}</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    padding: 20px;
+                    font-size: 11pt;
+                    color: #333;
+                    line-height: 1.5;
+                }
+                .report-header {
+                    text-align: center;
+                    border-bottom: 3px solid #003087;
+                    padding-bottom: 15px;
+                    margin-bottom: 20px;
+                }
+                .report-header h1 {
+                    color: #003087;
+                    font-size: 18pt;
+                    margin-bottom: 5px;
+                }
+                .report-header .subtitle {
+                    color: #666;
+                    font-size: 10pt;
+                }
+                .severity-banner {
+                    text-align: center;
+                    padding: 8px;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    font-size: 12pt;
+                    margin-bottom: 20px;
+                }
+                .severity-banner.fatal { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
+                .severity-banner.injury { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+                .severity-banner.property { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 12px;
+                    margin-bottom: 20px;
+                }
+                .info-item {
+                    display: flex;
+                    gap: 8px;
+                }
+                .info-label {
+                    font-weight: 600;
+                    color: #003087;
+                    min-width: 100px;
+                }
+                .info-value {
+                    color: #333;
+                }
+                .section {
+                    margin-bottom: 15px;
+                }
+                .section-title {
+                    font-weight: 600;
+                    color: #003087;
+                    border-bottom: 1px solid #ddd;
+                    padding-bottom: 5px;
+                    margin-bottom: 8px;
+                    font-size: 11pt;
+                }
+                .section-content {
+                    color: #444;
+                    white-space: pre-wrap;
+                    font-size: 10pt;
+                    background: #f9f9f9;
+                    padding: 10px;
+                    border-radius: 5px;
+                }
+                .person-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 15px;
+                }
+                .footer {
+                    margin-top: 30px;
+                    padding-top: 15px;
+                    border-top: 1px solid #ddd;
+                    text-align: center;
+                    font-size: 9pt;
+                    color: #666;
+                }
+                .footer .generated {
+                    margin-bottom: 5px;
+                }
+                @media print {
+                    body { padding: 0; }
+                    @page { margin: 15mm; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="report-header">
+                <h1>TRAFFIC ACCIDENT REPORT</h1>
+                <div class="subtitle">AGNES Hotspot Detection System - PNP Caraga</div>
+            </div>
+
+            <div class="severity-banner ${severityClass}">
+                ${severity} ACCIDENT
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Date:</span>
+                    <span class="info-value">${d.date}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Time:</span>
+                    <span class="info-value">${d.time}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Location:</span>
+                    <span class="info-value">${d.barangay}, ${d.municipal}, ${d.province}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Street:</span>
+                    <span class="info-value">${d.street || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Incident Type:</span>
+                    <span class="info-value">${d.incidentType}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Victims:</span>
+                    <span class="info-value">${d.victimCount} victim(s)</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Place Type:</span>
+                    <span class="info-value">${d.placeType || 'Road/Highway'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Vehicle(s):</span>
+                    <span class="info-value">${d.vehicle || 'Not specified'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Police Station:</span>
+                    <span class="info-value">${d.station || 'Not specified'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Cluster ID:</span>
+                    <span class="info-value">${d.clusterId || '-'}</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">NARRATIVE</div>
+                <div class="section-content">${d.narrative || 'No narrative available.'}</div>
+            </div>
+
+            <div class="person-grid">
+                <div class="section">
+                    <div class="section-title">VICTIM DETAILS</div>
+                    <div class="section-content">${d.victim_details || 'N/A'}</div>
+                </div>
+                <div class="section">
+                    <div class="section-title">SUSPECT/DRIVER DETAILS</div>
+                    <div class="section-content">${d.suspect_details || 'N/A'}</div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <div class="generated">Generated on ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}</div>
+                <div>AGNES Hotspot Detection System | PNP Regional Office Caraga</div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+
+    // Print after content loads
+    setTimeout(() => {
+        printWindow.print();
+    }, 250);
 }
 
 // Close modal on Escape key
@@ -3012,10 +4992,29 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                 Import CSV
             </button>
             {% endif %}
-            <button class="btn btn-outline-light" onclick="exportToCSV()">
-                <i class="fas fa-download"></i>
-                Export CSV
-            </button>
+            <!-- Export Dropdown -->
+            <div class="export-dropdown" style="position: relative;">
+                <button class="btn btn-outline-light" onclick="toggleExportDropdown()" id="exportDropdownBtn">
+                    <i class="fas fa-download"></i>
+                    Export
+                    <i class="fas fa-chevron-down" style="font-size: 0.75rem; margin-left: 5px;"></i>
+                </button>
+                <div class="export-dropdown-menu" id="exportDropdownMenu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 180px; z-index: 1000; overflow: hidden;">
+                    <a href="{% url 'export_accidents_csv' %}?{{ request.GET.urlencode }}" class="export-dropdown-item" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #333; text-decoration: none; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #28A745; width: 20px;"></i>
+                        <span>Export CSV</span>
+                    </a>
+                    <a href="{% url 'export_accidents_excel' %}?{{ request.GET.urlencode }}" class="export-dropdown-item" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #333; text-decoration: none; transition: background 0.2s;">
+                        <i class="fas fa-file-excel" style="color: #217346; width: 20px;"></i>
+                        <span>Export Excel</span>
+                    </a>
+                    <div style="height: 1px; background: #eee; margin: 4px 0;"></div>
+                    <a href="{% url 'export_analytics_pdf' %}" class="export-dropdown-item" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #333; text-decoration: none; transition: background 0.2s;">
+                        <i class="fas fa-file-pdf" style="color: #DC3545; width: 20px;"></i>
+                        <span>Export PDF Report</span>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -3212,6 +5211,14 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                     <div class="card-type">
                         <i class="fas fa-info-circle"></i>
                         {{ accident.incident_type|truncatewords:5 }}
+                        {% if accident.case_status %}
+                        <span style="margin-left: 0.4rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;
+                            {% if accident.case_status == 'Solved' %}background: #D1FAE5; color: #059669;
+                            {% elif accident.case_status == 'Unsolved' %}background: #FEE2E2; color: #DC2626;
+                            {% else %}background: #FEF3C7; color: #D97706;{% endif %}">
+                            {{ accident.case_status }}
+                        </span>
+                        {% endif %}
                     </div>
 
                     <div class="card-actions">
@@ -3257,33 +5264,46 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                 <tbody>
                     {% for accident in accidents %}
                     <tr onclick="viewAccident({{ accident.pk }})">
-                        <td>
+                        <td data-label="Severity">
                             <span class="severity-dot {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}"></span>
                         </td>
-                        <td>
+                        <td data-label="Date">
                             <div style="font-weight: 600;">{{ accident.date_committed|date:"M d, Y" }}</div>
                             <small style="color: #666;">{{ accident.time_committed|time:"g:i A" }}</small>
                         </td>
-                        <td>
+                        <td data-label="Location">
                             <div style="font-weight: 600; color: #333;">{{ accident.barangay }}</div>
                             <small style="color: #666;">{{ accident.municipal }}, {{ accident.province }}</small>
                         </td>
-                        <td>
+                        <td data-label="Type">
                             <span style="font-size: 0.9rem;">{{ accident.incident_type|truncatewords:4 }}</span>
+                            {% if accident.case_status %}
+                            <div style="margin-top: 0.15rem;">
+                                <span style="padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;
+                                    {% if accident.case_status == 'Solved' %}background: #D1FAE5; color: #059669;
+                                    {% elif accident.case_status == 'Unsolved' %}background: #FEE2E2; color: #DC2626;
+                                    {% else %}background: #FEF3C7; color: #D97706;{% endif %}">
+                                    {% if accident.case_status == 'Solved' %}<i class="fas fa-check-circle"></i>
+                                    {% elif accident.case_status == 'Unsolved' %}<i class="fas fa-times-circle"></i>
+                                    {% else %}<i class="fas fa-search"></i>{% endif %}
+                                    {{ accident.case_status }}
+                                </span>
+                            </div>
+                            {% endif %}
                         </td>
-                        <td class="text-center">
+                        <td data-label="Casualties" class="text-center">
                             <span style="font-weight: 700; color: {% if accident.victim_killed %}var(--fatal-red){% elif accident.victim_injured %}var(--injury-orange){% else %}#6c757d{% endif %}">
                                 {{ accident.victim_count|default:0 }}
                             </span>
                         </td>
-                        <td class="text-center">
+                        <td data-label="Hotspot" class="text-center">
                             {% if accident.is_hotspot %}
                             <i class="fas fa-fire" style="color: var(--hotspot-red);"></i>
                             {% else %}
                             <span style="color: #ccc;">—</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-label="Actions">
                             <div class="table-actions" onclick="event.stopPropagation()">
                                 <button class="table-action-btn view" onclick="viewAccident({{ accident.pk }})">
                                     <i class="fas fa-eye"></i> View
@@ -3330,6 +5350,7 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
             <div id="modalBadges" class="modal-badges"></div>
         </div>
 
+        <div class="modal-scroll-area">
         <div class="modal-body">
             <div class="modal-info-grid">
                 <div class="modal-info-item">
@@ -3414,7 +5435,38 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
             </div>
         </div>
 
+        <!-- Narrative Section -->
+        <div class="modal-section" id="modalNarrativeSection">
+            <div class="modal-section-header">
+                <i class="fas fa-align-left"></i>
+                <h4>Narrative</h4>
+            </div>
+            <div class="modal-section-content" id="modalNarrative"></div>
+        </div>
+
+        <!-- Victim/Suspect Details -->
+        <div class="modal-persons-grid">
+            <div class="modal-person-card">
+                <div class="modal-person-header victim">
+                    <i class="fas fa-user-injured"></i>
+                    <h4>Victim Details</h4>
+                </div>
+                <div class="modal-person-content" id="modalVictimDetails"></div>
+            </div>
+            <div class="modal-person-card">
+                <div class="modal-person-header suspect">
+                    <i class="fas fa-user"></i>
+                    <h4>Suspect Details</h4>
+                </div>
+                <div class="modal-person-content" id="modalSuspectDetails"></div>
+            </div>
+        </div>
+        </div><!-- End modal-scroll-area -->
+
         <div class="modal-footer">
+            <button class="modal-btn btn-print" onclick="printAccidentReport()" style="background: #6c757d; color: white;">
+                <i class="fas fa-print"></i> Print Report
+            </button>
             <button class="modal-btn btn-map" id="modalMapBtn">
                 <i class="fas fa-map-marked-alt"></i> View on Map
             </button>
@@ -3517,73 +5569,182 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
 
 <!-- CSV Upload Modal -->
 <div id="uploadModal" class="accident-modal" style="display: none;">
-    <div class="modal-overlay" onclick="closeUploadModal()"></div>
-    <div class="modal-content" style="max-width: 600px;">
-        <button class="modal-close" onclick="closeUploadModal()">
-            <i class="fas fa-times"></i>
-        </button>
-
-        <div class="modal-header">
-            <h2><i class="fas fa-upload"></i> Import Accident Data</h2>
-            <p style="margin-top: 0.5rem; color: #666; font-size: 0.95rem;">Upload a CSV file containing accident records</p>
+    <div class="modal-overlay" id="uploadModalOverlay" onclick="closeUploadModal()"></div>
+    <div class="modal-content" style="max-width: 520px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
+        <!-- Compact fixed header -->
+        <div style="background: linear-gradient(135deg, #003087 0%, #0052CC 100%); color: white; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+            <div>
+                <h2 style="margin: 0; font-size: 1rem; font-weight: 700;"><i class="fas fa-file-import" style="margin-right: 0.4rem;"></i>Import Accident Data</h2>
+                <p style="margin: 0.15rem 0 0; font-size: 0.75rem; opacity: 0.8;">Upload CSV or Excel file</p>
+            </div>
+            <button id="uploadModalCloseBtn" onclick="closeUploadModal()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
 
-        <div class="modal-body">
+        <!-- Scrollable body -->
+        <div style="overflow-y: auto; flex: 1; padding: 1rem; -webkit-overflow-scrolling: touch;">
             <form id="uploadForm" method="POST" action="{% url 'accident_csv_upload' %}" enctype="multipart/form-data">
                 {% csrf_token %}
 
-                <!-- Drag & Drop Upload Area -->
-                <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                    </div>
-                    <div class="upload-text">
-                        <strong>Drag & drop your CSV file here</strong>
-                        <span>or click to browse</span>
-                    </div>
-                    <input type="file" id="csvFile" name="csv_file" accept=".csv" style="display: none;">
-                    <button type="button" class="btn btn-outline" onclick="document.getElementById('csvFile').click()">
-                        <i class="fas fa-folder-open"></i> Browse Files
-                    </button>
-                </div>
-
-                <!-- Selected File Display -->
-                <div id="selectedFile" style="display: none; margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <i class="fas fa-file-csv" style="font-size: 1.5rem; color: #28a745;"></i>
-                            <div>
-                                <div id="fileName" style="font-weight: 600; color: #333;"></div>
-                                <div id="fileSize" style="font-size: 0.85rem; color: #666;"></div>
+                <!-- Step 1: File Selection -->
+                <div id="uploadStep1">
+                    <!-- Drag & Drop Upload Area -->
+                    <div class="upload-area" id="uploadArea" style="padding: 1.25rem 1rem; min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <!-- Default Upload Content -->
+                        <div id="uploadContent">
+                            <div class="upload-icon" style="text-align: center;">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 1.8rem; color: #003087; margin-bottom: 0.5rem;"></i>
+                            </div>
+                            <div class="upload-text" style="text-align: center;">
+                                <strong style="font-size: 0.9rem; color: #333;">Drag & drop your file here</strong>
+                                <span style="display: block; color: #888; margin-top: 0.2rem; font-size: 0.78rem;">CSV (.csv) and Excel (.xlsx, .xls)</span>
+                            </div>
+                            <div style="text-align: center;">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('csvFile').click()" style="margin-top: 0.65rem; font-size: 0.8rem; padding: 0.4rem 0.9rem;">
+                                    <i class="fas fa-folder-open"></i> Browse Files
+                                </button>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline" onclick="clearSelectedFile()">
-                            <i class="fas fa-times"></i>
+
+                        <!-- Selected File Display (inside upload area) -->
+                        <div id="selectedFile" style="display: none; width: 100%; padding: 0.5rem;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(40, 167, 69, 0.1); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid rgba(40, 167, 69, 0.3);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <i id="fileIcon" class="fas fa-file-csv" style="font-size: 1.5rem; color: #28a745;"></i>
+                                    <div>
+                                        <div id="fileName" style="font-weight: 600; color: #333; font-size: 0.9rem;"></div>
+                                        <div id="fileSize" style="font-size: 0.75rem; color: #666;"></div>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="clearSelectedFile()" style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3); border-radius: 50%; cursor: pointer; color: #dc3545; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#dc3545'; this.style.color='white';" onmouseout="this.style.background='rgba(220, 53, 69, 0.1)'; this.style.color='#dc3545';">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <input type="file" id="csvFile" name="csv_file" accept=".csv,.xlsx,.xls" style="display: none;">
+                    </div>
+
+                    <!-- Import Mode Selection -->
+                    <div id="importModeSection" style="margin-top: 0.85rem;">
+                        <div style="font-weight: 600; color: #333; margin-bottom: 0.4rem; font-size: 0.8rem;">
+                            <i class="fas fa-cog"></i> Import Mode
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <label id="modeAddLabel" style="display: flex; align-items: flex-start; gap: 0.4rem; padding: 0.55rem 0.6rem; border: 2px solid #003087; border-radius: 6px; cursor: pointer; background: #f0f4ff; transition: all 0.2s;">
+                                <input type="radio" name="import_mode" value="add" checked style="margin-top: 2px; accent-color: #003087;">
+                                <div>
+                                    <div style="font-weight: 600; color: #003087; font-size: 0.78rem;"><i class="fas fa-plus-circle"></i> Add to Existing</div>
+                                    <div style="font-size: 0.7rem; color: #666; margin-top: 0.1rem;">Append new records</div>
+                                </div>
+                            </label>
+                            <label id="modeReplaceLabel" style="display: flex; align-items: flex-start; gap: 0.4rem; padding: 0.55rem 0.6rem; border: 2px solid #ddd; border-radius: 6px; cursor: pointer; background: #fff; transition: all 0.2s;">
+                                <input type="radio" name="import_mode" value="replace" style="margin-top: 2px; accent-color: #c62828;">
+                                <div>
+                                    <div style="font-weight: 600; color: #333; font-size: 0.78rem;"><i class="fas fa-sync-alt"></i> Replace All</div>
+                                    <div style="font-size: 0.7rem; color: #666; margin-top: 0.1rem;">Clear & import fresh</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Replace Confirmation (hidden by default) -->
+                    <div id="replaceWarning" style="display: none; margin-top: 0.5rem; padding: 0.5rem 0.65rem; background: #fff3e0; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #e65100; font-size: 0.75rem;">
+                            <i class="fas fa-exclamation-triangle"></i> Warning: Deletes ALL existing records!
+                        </div>
+                        <div style="font-size: 0.72rem; color: #666; margin-top: 0.15rem;">
+                            All current data will be permanently removed. This cannot be undone.
+                        </div>
+                    </div>
+
+                    <!-- Format Info -->
+                    <div style="margin-top: 0.75rem; padding: 0.5rem 0.65rem; background: #f0f7ff; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #1565c0; margin-bottom: 0.2rem; font-size: 0.75rem;">
+                            <i class="fas fa-info-circle"></i> File Requirements
+                        </div>
+                        <ul style="margin: 0; padding-left: 1rem; color: #555; font-size: 0.72rem; line-height: 1.5;">
+                            <li>Formats: <strong>.csv</strong>, <strong>.xlsx</strong>, <strong>.xls</strong> (max 50MB)</li>
+                            <li>Headers: province, municipal, barangay, lat, lng, dateCommitted, etc.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Actions (sticky bottom) -->
+                    <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #eee;">
+                        <button type="button" class="btn btn-outline" onclick="closeUploadModal()" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;">
+                            Cancel
+                        </button>
+                        <button type="button" id="uploadBtn" class="btn btn-primary" disabled onclick="startImport()" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;">
+                            <i class="fas fa-upload"></i> Import Data
                         </button>
                     </div>
                 </div>
 
-                <!-- Upload Instructions -->
-                <div style="margin-top: 1.5rem; padding: 1rem; background: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 4px;">
-                    <div style="font-weight: 600; color: #1976d2; margin-bottom: 0.5rem;">
-                        <i class="fas fa-info-circle"></i> CSV Format Requirements
+                <!-- Step 2: Import Progress -->
+                <div id="uploadStep2" style="display: none;">
+                    <div style="text-align: center; padding: 1.25rem 0;">
+                        <div id="importSpinner" style="margin-bottom: 1rem;">
+                            <div style="width: 44px; height: 44px; border: 3px solid #e0e0e0; border-top: 3px solid #003087; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                        </div>
+                        <div id="importStatusText" style="font-size: 0.95rem; font-weight: 600; color: #333; margin-bottom: 0.35rem;">
+                            Importing data...
+                        </div>
+                        <div id="importSubText" style="font-size: 0.8rem; color: #888;">
+                            Reading and processing your file...
+                        </div>
+                        <div style="margin: 1rem 0; background: #e9ecef; border-radius: 6px; height: 8px; overflow: hidden;">
+                            <div id="importProgressBar" style="height: 100%; background: linear-gradient(90deg, #003087, #0052CC); border-radius: 6px; width: 0%; transition: width 0.5s ease;"></div>
+                        </div>
+                        <div id="importProgressText" style="font-size: 0.75rem; color: #666;">Preparing...</div>
+                        <div style="margin-top: 1rem; padding: 0.5rem 0.75rem; background: #FFF8E1; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-lock" style="color: #F59E0B; font-size: 0.8rem;"></i>
+                            <span style="font-size: 0.75rem; color: #92400E;">Please do not close or refresh this window until import is complete.</span>
+                        </div>
                     </div>
-                    <ul style="margin: 0; padding-left: 1.5rem; color: #555; font-size: 0.9rem;">
-                        <li>File must be in CSV format (.csv)</li>
-                        <li>Maximum file size: 50MB</li>
-                        <li>Required columns should match database schema</li>
-                        <li>Date format: YYYY-MM-DD or MM/DD/YYYY</li>
-                    </ul>
                 </div>
 
-                <!-- Modal Actions -->
-                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
-                    <button type="button" class="btn btn-outline" onclick="closeUploadModal()">
-                        Cancel
-                    </button>
-                    <button type="submit" id="uploadBtn" class="btn btn-primary" disabled>
-                        <i class="fas fa-upload"></i> Upload CSV
-                    </button>
+                <!-- Step 3: Import Result -->
+                <div id="uploadStep3" style="display: none;">
+                    <div style="text-align: center; padding: 0.75rem 0;">
+                        <div id="resultIcon" style="font-size: 2.5rem; margin-bottom: 0.6rem;"></div>
+                        <div id="resultTitle" style="font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem;"></div>
+                        <div id="resultSubtitle" style="font-size: 0.8rem; color: #666; margin-bottom: 1rem;"></div>
+
+                        <!-- Stats cards -->
+                        <div id="resultStats" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem;">
+                            <div style="background: #e8f5e9; border-radius: 6px; padding: 0.6rem;">
+                                <div id="statImported" style="font-size: 1.2rem; font-weight: 700; color: #2e7d32;">0</div>
+                                <div style="font-size: 0.7rem; color: #4caf50;">Imported</div>
+                            </div>
+                            <div style="background: #fff3e0; border-radius: 6px; padding: 0.6rem;">
+                                <div id="statErrors" style="font-size: 1.2rem; font-weight: 700; color: #e65100;">0</div>
+                                <div style="font-size: 0.7rem; color: #ff9800;">Errors</div>
+                            </div>
+                            <div style="background: #e3f2fd; border-radius: 6px; padding: 0.6rem;">
+                                <div id="statTotal" style="font-size: 1.2rem; font-weight: 700; color: #1565c0;">0</div>
+                                <div style="font-size: 0.7rem; color: #2196f3;">Total Rows</div>
+                            </div>
+                        </div>
+
+                        <!-- Error samples -->
+                        <div id="errorSamplesBox" style="display: none; text-align: left; background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 0.6rem; margin-bottom: 0.85rem;">
+                            <div style="font-weight: 600; color: #f57f17; font-size: 0.75rem; margin-bottom: 0.3rem;">
+                                <i class="fas fa-exclamation-triangle"></i> Sample Errors:
+                            </div>
+                            <ul id="errorSamplesList" style="margin: 0; padding-left: 1rem; font-size: 0.72rem; color: #666; line-height: 1.4;"></ul>
+                        </div>
+
+                        <!-- Actions -->
+                        <div style="display: flex; justify-content: center; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #eee;">
+                            <button type="button" class="btn btn-outline" onclick="closeUploadModal()" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;">
+                                Close
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="window.location.reload()" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;">
+                                <i class="fas fa-sync-alt"></i> Refresh Page
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
@@ -3755,6 +5916,40 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                             <label for="editSuspectDetails">Suspect Details</label>
                             <textarea id="editSuspectDetails" name="suspect_details" class="form-control" rows="3" placeholder="Enter detailed information about suspects"></textarea>
                         </div>
+
+                        <!-- Gender and Age Information -->
+                        <h4 style="margin: 1.5rem 0 1rem; color: #333; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-venus-mars" style="color: #003087;"></i> Demographic Information
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="editDriverGender">Driver Gender</label>
+                                <select id="editDriverGender" name="driver_gender" class="form-control">
+                                    <option value="UNKNOWN">Unknown/Not Specified</option>
+                                    <option value="MALE">Male</option>
+                                    <option value="FEMALE">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="editDriverAge">Driver Age</label>
+                                <input type="number" id="editDriverAge" name="driver_age" class="form-control" min="0" max="150" placeholder="Enter age">
+                            </div>
+                            <div class="form-group">
+                                <label for="editVictimGender">Victim Gender</label>
+                                <select id="editVictimGender" name="victim_gender" class="form-control">
+                                    <option value="UNKNOWN">Unknown/Not Specified</option>
+                                    <option value="MALE">Male</option>
+                                    <option value="FEMALE">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="editVictimAge">Victim Age</label>
+                                <input type="number" id="editVictimAge" name="victim_age" class="form-control" min="0" max="150" placeholder="Enter age">
+                            </div>
+                        </div>
+                        <p style="margin-top: 0.5rem; color: #666; font-size: 0.875rem;">
+                            <i class="fas fa-info-circle"></i> If multiple persons involved, enter information for primary driver and victim.
+                        </p>
                     </div>
 
                     <!-- Vehicle Tab -->
@@ -3842,7 +6037,7 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                             <textarea id="editNarrative" name="narrative" class="form-control" rows="8" style="resize: vertical;" placeholder="Enter detailed narrative of the accident"></textarea>
                         </div>
 
-                        <div style="margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #2196f3;">
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
                             <div style="font-weight: 600; color: #1976d2; margin-bottom: 0.5rem;">
                                 <i class="fas fa-info-circle"></i> Read-Only Information
                             </div>
@@ -3873,57 +6068,348 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
     </div>
 </div>
 
+<!-- Custom Confirm Modal for Replace All Data -->
+<div class="confirm-modal-overlay" id="confirmReplaceModal">
+    <div class="confirm-modal">
+        <div class="confirm-modal-header">
+            <div class="confirm-modal-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="confirm-modal-title">Replace All Data</h3>
+        </div>
+        <div class="confirm-modal-body">
+            <p class="confirm-modal-message">
+                This action will <strong>permanently delete ALL existing accident records</strong> and replace them with the data from the uploaded file.
+            </p>
+            <div class="confirm-modal-warning">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>This action cannot be undone. Make sure you have a backup of your current data before proceeding.</span>
+            </div>
+            <p class="confirm-modal-message" style="margin-bottom: 0; font-weight: 600;">
+                Are you sure you want to continue?
+            </p>
+        </div>
+        <div class="confirm-modal-footer">
+            <button type="button" class="confirm-modal-btn confirm-modal-btn-cancel" onclick="closeConfirmModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button type="button" class="confirm-modal-btn confirm-modal-btn-confirm" onclick="proceedWithReplace()">
+                <i class="fas fa-trash-alt"></i> Yes, Replace All
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
 <script>
-// CSV Upload Modal Functions
+// === Processing lock - prevents interruption during upload/import ===
+var isImportProcessing = false;
+
+// Warn user if they try to leave/refresh during processing
+window.addEventListener('beforeunload', function(e) {
+    if (isImportProcessing) {
+        e.preventDefault();
+        e.returnValue = 'Import is still in progress. Leaving now may result in incomplete data. Are you sure?';
+        return e.returnValue;
+    }
+});
+
+// Block Escape key during processing
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && isImportProcessing) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+});
+
+// Upload Modal Functions
 function openUploadModal() {
+    // Reset to step 1
+    document.getElementById('uploadStep1').style.display = 'block';
+    document.getElementById('uploadStep2').style.display = 'none';
+    document.getElementById('uploadStep3').style.display = 'none';
+    clearSelectedFile();
+    // Reset import mode to "Add"
+    var addRadio = document.querySelector('input[name="import_mode"][value="add"]');
+    if (addRadio) addRadio.checked = true;
+    var addLabel = document.getElementById('modeAddLabel');
+    var replaceLabel = document.getElementById('modeReplaceLabel');
+    if (addLabel) { addLabel.style.borderColor = '#003087'; addLabel.style.background = '#f0f4ff'; }
+    if (replaceLabel) { replaceLabel.style.borderColor = '#ddd'; replaceLabel.style.background = '#fff'; }
+    var replaceWarning = document.getElementById('replaceWarning');
+    if (replaceWarning) replaceWarning.style.display = 'none';
     document.getElementById('uploadModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
 
 function closeUploadModal() {
+    if (isImportProcessing) return; // Block closing during import
     document.getElementById('uploadModal').style.display = 'none';
     document.body.style.overflow = 'auto';
-    clearSelectedFile();
 }
 
 function clearSelectedFile() {
     document.getElementById('csvFile').value = '';
     document.getElementById('selectedFile').style.display = 'none';
+    document.getElementById('uploadContent').style.display = 'block';
     document.getElementById('uploadBtn').disabled = true;
     document.getElementById('uploadArea').style.borderColor = '#ddd';
+    document.getElementById('uploadArea').style.background = '#fafafa';
+}
+
+// Import mode toggle styling
+document.addEventListener('DOMContentLoaded', function() {
+    var modeRadios = document.querySelectorAll('input[name="import_mode"]');
+    modeRadios.forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            var addLabel = document.getElementById('modeAddLabel');
+            var replaceLabel = document.getElementById('modeReplaceLabel');
+            var replaceWarning = document.getElementById('replaceWarning');
+
+            if (this.value === 'replace') {
+                replaceLabel.style.borderColor = '#c62828';
+                replaceLabel.style.background = '#fff5f5';
+                addLabel.style.borderColor = '#ddd';
+                addLabel.style.background = '#fff';
+                replaceWarning.style.display = 'block';
+            } else {
+                addLabel.style.borderColor = '#003087';
+                addLabel.style.background = '#f0f4ff';
+                replaceLabel.style.borderColor = '#ddd';
+                replaceLabel.style.background = '#fff';
+                replaceWarning.style.display = 'none';
+            }
+        });
+    });
+});
+
+function handleFileSelected(file) {
+    if (!file) return;
+
+    const name = file.name.toLowerCase();
+    const validExts = ['.csv', '.xlsx', '.xls'];
+    const isValid = validExts.some(ext => name.endsWith(ext));
+
+    if (!isValid) {
+        showPopupNotification('Please select a CSV or Excel file (.csv, .xlsx, .xls)', 'error');
+        clearSelectedFile();
+        return;
+    }
+
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+        showPopupNotification('File too large. Maximum size is 50MB.', 'error');
+        clearSelectedFile();
+        return;
+    }
+
+    // Set file icon based on type
+    const fileIcon = document.getElementById('fileIcon');
+    if (name.endsWith('.csv')) {
+        fileIcon.className = 'fas fa-file-csv';
+        fileIcon.style.color = '#28a745';
+    } else {
+        fileIcon.className = 'fas fa-file-excel';
+        fileIcon.style.color = '#217346';
+    }
+
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    document.getElementById('uploadContent').style.display = 'none';
+    document.getElementById('selectedFile').style.display = 'flex';
+    document.getElementById('uploadBtn').disabled = false;
+    document.getElementById('uploadArea').style.borderColor = '#28a745';
+    document.getElementById('uploadArea').style.background = '#f0fff4';
+}
+
+// AJAX import with progress
+function startImport() {
+    const fileInput = document.getElementById('csvFile');
+    if (!fileInput.files[0]) return;
+
+    // Check import mode
+    const importMode = document.querySelector('input[name="import_mode"]:checked').value;
+
+    // If replace mode, show custom confirm modal
+    if (importMode === 'replace') {
+        showConfirmModal();
+        return; // Wait for user confirmation via modal
+    }
+
+    // Continue with import
+    executeImport();
+}
+
+// Custom Confirm Modal Functions
+function showConfirmModal() {
+    document.getElementById('confirmReplaceModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirmReplaceModal').classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+function proceedWithReplace() {
+    closeConfirmModal();
+    executeImport();
+}
+
+function executeImport() {
+    const fileInput = document.getElementById('csvFile');
+    const importMode = document.querySelector('input[name="import_mode"]:checked').value;
+
+    // Lock processing - prevent interruption
+    isImportProcessing = true;
+    // Hide close button and disable overlay during processing
+    var closeBtn = document.getElementById('uploadModalCloseBtn');
+    var overlay = document.getElementById('uploadModalOverlay');
+    if (closeBtn) closeBtn.style.display = 'none';
+    if (overlay) overlay.style.pointerEvents = 'none';
+
+    // Switch to progress step
+    document.getElementById('uploadStep1').style.display = 'none';
+    document.getElementById('uploadStep2').style.display = 'block';
+    document.getElementById('uploadStep3').style.display = 'none';
+
+    // Animate progress bar through stages
+    const progressBar = document.getElementById('importProgressBar');
+    const progressText = document.getElementById('importProgressText');
+    const statusText = document.getElementById('importStatusText');
+    const subText = document.getElementById('importSubText');
+
+    // Stage 1: Uploading file
+    progressBar.style.width = '15%';
+    progressText.textContent = 'Uploading file...';
+
+    if (importMode === 'replace') {
+        statusText.textContent = 'Replacing all data...';
+        subText.textContent = 'Clearing existing records and importing new data...';
+    }
+
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('csv_file', fileInput.files[0]);
+    formData.append('import_mode', importMode);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+    // Simulate progress stages while waiting for server
+    let stage = 0;
+    const progressInterval = setInterval(function() {
+        stage++;
+        if (stage === 1) {
+            progressBar.style.width = '30%';
+            progressText.textContent = 'Reading file contents...';
+            subText.textContent = 'Parsing columns and rows from your file...';
+        } else if (stage === 2) {
+            progressBar.style.width = '50%';
+            statusText.textContent = 'Processing records...';
+            progressText.textContent = 'Validating and importing data...';
+            subText.textContent = 'This may take a moment for large files...';
+        } else if (stage === 3) {
+            progressBar.style.width = '70%';
+            progressText.textContent = 'Saving to database...';
+        } else if (stage >= 4) {
+            progressBar.style.width = '85%';
+            progressText.textContent = 'Almost done...';
+        }
+    }, 2000);
+
+    // Send AJAX request
+    fetch('{% url "accident_csv_upload" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        clearInterval(progressInterval);
+
+        // Complete progress bar
+        progressBar.style.width = '100%';
+        progressText.textContent = 'Complete!';
+
+        setTimeout(function() {
+            showImportResult(data);
+        }, 500);
+    })
+    .catch(function(error) {
+        clearInterval(progressInterval);
+        showImportResult({
+            success: false,
+            error: 'Network error: ' + error.message
+        });
+    });
+}
+
+function showImportResult(data) {
+    // Unlock processing - allow closing modal again
+    isImportProcessing = false;
+    // Restore close button and overlay
+    var closeBtn = document.getElementById('uploadModalCloseBtn');
+    var overlay = document.getElementById('uploadModalOverlay');
+    if (closeBtn) closeBtn.style.display = 'flex';
+    if (overlay) overlay.style.pointerEvents = 'auto';
+
+    document.getElementById('uploadStep2').style.display = 'none';
+    document.getElementById('uploadStep3').style.display = 'block';
+
+    const resultIcon = document.getElementById('resultIcon');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultSubtitle = document.getElementById('resultSubtitle');
+
+    if (data.success) {
+        // Success
+        resultIcon.innerHTML = '<i class="fas fa-check-circle" style="color: #2e7d32;"></i>';
+        resultTitle.textContent = 'Import Successful!';
+        resultTitle.style.color = '#2e7d32';
+        var modeText = data.import_mode === 'replace' ? ' (Replaced all data)' : ' (Added to existing)';
+        resultSubtitle.textContent = data.file_name + ' - ' + data.success_rate + '% success rate' + modeText;
+
+        document.getElementById('statImported').textContent = data.imported;
+        document.getElementById('statErrors').textContent = data.errors;
+        document.getElementById('statTotal').textContent = data.total_rows;
+
+        // Show error samples if any
+        if (data.error_samples && data.error_samples.length > 0) {
+            document.getElementById('errorSamplesBox').style.display = 'block';
+            var list = document.getElementById('errorSamplesList');
+            list.innerHTML = '';
+            data.error_samples.forEach(function(err) {
+                var li = document.createElement('li');
+                li.textContent = err;
+                list.appendChild(li);
+            });
+        } else {
+            document.getElementById('errorSamplesBox').style.display = 'none';
+        }
+
+        document.getElementById('resultStats').style.display = 'grid';
+    } else {
+        // Error
+        resultIcon.innerHTML = '<i class="fas fa-times-circle" style="color: #c62828;"></i>';
+        resultTitle.textContent = 'Import Failed';
+        resultTitle.style.color = '#c62828';
+        resultSubtitle.textContent = data.error || 'An unexpected error occurred.';
+
+        document.getElementById('resultStats').style.display = 'none';
+        document.getElementById('errorSamplesBox').style.display = 'none';
+    }
 }
 
 // File input change handler
 document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('csvFile');
-    const uploadArea = document.getElementById('uploadArea');
+    var fileInput = document.getElementById('csvFile');
+    var uploadArea = document.getElementById('uploadArea');
 
     if (fileInput) {
         fileInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                // Validate file type
-                if (!file.name.endsWith('.csv')) {
-                    alert('Please select a CSV file');
-                    clearSelectedFile();
-                    return;
-                }
-
-                // Validate file size (50MB max)
-                const maxSize = 50 * 1024 * 1024;
-                if (file.size > maxSize) {
-                    alert('File too large. Maximum size is 50MB.');
-                    clearSelectedFile();
-                    return;
-                }
-
-                // Display selected file
-                document.getElementById('fileName').textContent = file.name;
-                document.getElementById('fileSize').textContent = formatFileSize(file.size);
-                document.getElementById('selectedFile').style.display = 'block';
-                document.getElementById('uploadBtn').disabled = false;
-                uploadArea.style.borderColor = '#28a745';
-            }
+            handleFileSelected(e.target.files[0]);
         });
     }
 
@@ -3946,10 +6432,10 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadArea.style.borderColor = '#ddd';
             uploadArea.style.background = '#fafafa';
 
-            const files = e.dataTransfer.files;
+            var files = e.dataTransfer.files;
             if (files.length > 0) {
                 fileInput.files = files;
-                fileInput.dispatchEvent(new Event('change'));
+                handleFileSelected(files[0]);
             }
         });
 
@@ -4041,7 +6527,59 @@ async function loadBarangays() {
     }
 }
 
-// Set location dropdowns to existing values
+// Case-insensitive key finder for location data
+function findKeyInsensitive(obj, searchKey) {
+    if (!obj || !searchKey) return null;
+    const lower = searchKey.toLowerCase().trim();
+    // Try exact match first
+    if (obj[searchKey] !== undefined) return searchKey;
+    // Try case-insensitive match
+    for (const key of Object.keys(obj)) {
+        if (key.toLowerCase().trim() === lower) return key;
+    }
+    return null;
+}
+
+// Case-insensitive value finder in array
+function findValueInsensitive(arr, searchVal) {
+    if (!arr || !searchVal) return null;
+    const lower = searchVal.toLowerCase().trim();
+    // Try exact match first
+    const exact = arr.find(v => v === searchVal);
+    if (exact) return exact;
+    // Try case-insensitive match
+    return arr.find(v => v.toLowerCase().trim() === lower) || null;
+}
+
+// Set a select dropdown value with case-insensitive matching
+function setSelectInsensitive(selectEl, value) {
+    if (!selectEl || !value) return false;
+    // Try exact match
+    for (let i = 0; i < selectEl.options.length; i++) {
+        if (selectEl.options[i].value === value) {
+            selectEl.value = value;
+            return true;
+        }
+    }
+    // Try case-insensitive match
+    const lower = value.toLowerCase().trim();
+    for (let i = 0; i < selectEl.options.length; i++) {
+        if (selectEl.options[i].value.toLowerCase().trim() === lower) {
+            selectEl.value = selectEl.options[i].value;
+            return true;
+        }
+    }
+    // No match found - add the value as a dynamic option so the user sees it
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = value;
+    option.setAttribute('data-dynamic', 'true');
+    selectEl.appendChild(option);
+    selectEl.value = value;
+    return true;
+}
+
+// Set location dropdowns to existing values (case-insensitive)
 async function setLocationValues(province, municipal, barangay) {
     const data = await loadLocationData();
 
@@ -4053,40 +6591,60 @@ async function setLocationValues(province, municipal, barangay) {
     municipalSelect.innerHTML = '<option value="">Select Municipality</option>';
     barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
 
-    // Set province
+    // Set province (case-insensitive)
     if (province && province !== '') {
-        provinceSelect.value = province;
+        setSelectInsensitive(provinceSelect, province);
     } else {
         provinceSelect.value = '';
     }
 
-    // Load and set municipalities if province is selected
-    if (province && province !== '' && data[province]) {
-        Object.keys(data[province]).sort().forEach(mun => {
+    // Find the matching province key in JSON data (case-insensitive)
+    const matchedProvince = findKeyInsensitive(data, province);
+
+    // Load and set municipalities if province found in data
+    if (matchedProvince && data[matchedProvince]) {
+        Object.keys(data[matchedProvince]).sort().forEach(mun => {
             const option = document.createElement('option');
             option.value = mun;
             option.textContent = mun;
             municipalSelect.appendChild(option);
         });
 
-        // Set selected municipality
+        // Set selected municipality (case-insensitive)
         if (municipal && municipal !== '') {
-            municipalSelect.value = municipal;
+            setSelectInsensitive(municipalSelect, municipal);
         }
 
-        // Load and set barangays if municipality is selected
-        if (municipal && municipal !== '' && data[province][municipal]) {
-            data[province][municipal].sort().forEach(brgy => {
+        // Find the matching municipality key in JSON data (case-insensitive)
+        const matchedMunicipal = findKeyInsensitive(data[matchedProvince], municipal);
+
+        // Load and set barangays if municipality found in data
+        if (matchedMunicipal && data[matchedProvince][matchedMunicipal]) {
+            data[matchedProvince][matchedMunicipal].sort().forEach(brgy => {
                 const option = document.createElement('option');
                 option.value = brgy;
                 option.textContent = brgy;
                 barangaySelect.appendChild(option);
             });
 
-            // Set selected barangay
+            // Set selected barangay (case-insensitive)
             if (barangay && barangay !== '') {
-                barangaySelect.value = barangay;
+                setSelectInsensitive(barangaySelect, barangay);
             }
+        } else if (municipal && municipal !== '') {
+            // Municipality not found in JSON - still show the DB value
+            setSelectInsensitive(municipalSelect, municipal);
+            if (barangay && barangay !== '') {
+                setSelectInsensitive(barangaySelect, barangay);
+            }
+        }
+    } else if (province && province !== '') {
+        // Province not found in JSON - still show DB values so user sees them
+        if (municipal && municipal !== '') {
+            setSelectInsensitive(municipalSelect, municipal);
+        }
+        if (barangay && barangay !== '') {
+            setSelectInsensitive(barangaySelect, barangay);
         }
     }
 }
@@ -4105,7 +6663,7 @@ function resetDropdown(selectId) {
     select.value = ''; // Reset to empty
 }
 
-// Helper function to set dropdown value (properly handles custom values)
+// Helper function to set dropdown value (case-insensitive, handles custom values)
 function setDropdownValue(selectId, value) {
     const select = document.getElementById(selectId);
 
@@ -4123,26 +6681,37 @@ function setDropdownValue(selectId, value) {
         return;
     }
 
-    // Check if the value exists in the dropdown
-    let optionExists = false;
+    // Try exact match first
+    let matchFound = false;
     for (let i = 0; i < select.options.length; i++) {
         if (select.options[i].value === value) {
-            optionExists = true;
+            select.value = value;
+            matchFound = true;
             break;
         }
     }
 
-    // If option doesn't exist, add it as a dynamic option
-    if (!optionExists) {
+    // Try case-insensitive match
+    if (!matchFound) {
+        const lower = value.toLowerCase().trim();
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value.toLowerCase().trim() === lower) {
+                select.value = select.options[i].value;
+                matchFound = true;
+                break;
+            }
+        }
+    }
+
+    // If still no match, add it as a dynamic option so the user sees the DB value
+    if (!matchFound) {
         const option = document.createElement('option');
         option.value = value;
         option.textContent = value;
-        option.setAttribute('data-dynamic', 'true'); // Mark as dynamically added
+        option.setAttribute('data-dynamic', 'true');
         select.appendChild(option);
+        select.value = value;
     }
-
-    // Set the value
-    select.value = value;
 }
 
 function switchEditTab(event, tabId) {
@@ -4225,6 +6794,12 @@ function openEditModal(accidentId) {
             document.getElementById('editSuspectCount').value = data.suspect_count || 0;
             document.getElementById('editVictimDetails').value = data.victim_details || '';
             document.getElementById('editSuspectDetails').value = data.suspect_details || '';
+
+            // Gender and demographic information
+            setDropdownValue('editDriverGender', data.driver_gender || 'UNKNOWN');
+            setDropdownValue('editVictimGender', data.victim_gender || 'UNKNOWN');
+            document.getElementById('editDriverAge').value = data.driver_age || '';
+            document.getElementById('editVictimAge').value = data.victim_age || '';
 
             // Vehicle information
             setDropdownValue('editVehicleKind', data.vehicle_kind);
@@ -4361,8 +6936,9 @@ function closeEditModal() {
     right: 0;
     bottom: 0;
     z-index: 10000;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    padding-top: 5px;
 }
 
 .modal-overlay {
@@ -4438,6 +7014,203 @@ function closeEditModal() {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* ===== UPLOAD MODAL DARK MODE ===== */
+[data-theme="dark"] #uploadModal .modal-content {
+    background: #1E2A3A !important;
+}
+
+[data-theme="dark"] #uploadModal .modal-content > div:nth-child(3) {
+    background: #1E2A3A !important;
+}
+
+[data-theme="dark"] .upload-area {
+    background: #1A2332 !important;
+    border-color: #3D4A5F !important;
+}
+
+[data-theme="dark"] .upload-area:hover {
+    background: #243447 !important;
+    border-color: #4A90D9 !important;
+}
+
+[data-theme="dark"] .upload-icon i {
+    color: #4A90D9 !important;
+}
+
+[data-theme="dark"] .upload-text {
+    color: #B0B0B0 !important;
+}
+
+[data-theme="dark"] .upload-text strong {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] .upload-text span {
+    color: #888 !important;
+}
+
+/* Selected file section (inside upload area) */
+[data-theme="dark"] #selectedFile > div {
+    background: rgba(40, 167, 69, 0.15) !important;
+    border-color: rgba(40, 167, 69, 0.4) !important;
+}
+
+[data-theme="dark"] #selectedFile [style*="color: #333"],
+[data-theme="dark"] #fileName {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] #selectedFile [style*="color: #666"],
+[data-theme="dark"] #fileSize {
+    color: #B0B0B0 !important;
+}
+
+[data-theme="dark"] #selectedFile button {
+    background: rgba(220, 53, 69, 0.2) !important;
+    border-color: rgba(220, 53, 69, 0.4) !important;
+    color: #FF6B7A !important;
+}
+
+[data-theme="dark"] #selectedFile button:hover {
+    background: #dc3545 !important;
+    color: white !important;
+}
+
+/* Import mode section */
+[data-theme="dark"] #importModeSection [style*="color: #333"] {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] #modeAddLabel {
+    background: rgba(74, 144, 217, 0.15) !important;
+    border-color: #4A90D9 !important;
+}
+
+[data-theme="dark"] #modeAddLabel [style*="color: #003087"] {
+    color: #8FC8FF !important;
+}
+
+[data-theme="dark"] #modeReplaceLabel {
+    background: #1A2332 !important;
+    border-color: #3D4A5F !important;
+}
+
+[data-theme="dark"] #modeReplaceLabel [style*="color: #333"] {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] #modeAddLabel [style*="color: #666"],
+[data-theme="dark"] #modeReplaceLabel [style*="color: #666"] {
+    color: #B0B0B0 !important;
+}
+
+/* Warning box */
+[data-theme="dark"] #replaceWarning {
+    background: rgba(255, 152, 0, 0.15) !important;
+    border-color: #FF9800 !important;
+}
+
+[data-theme="dark"] #replaceWarning [style*="color: #666"] {
+    color: #B0B0B0 !important;
+}
+
+/* Info box */
+[data-theme="dark"] #uploadModal [style*="background: #f0f7ff"] {
+    background: rgba(33, 150, 243, 0.15) !important;
+    border-color: #2196F3 !important;
+}
+
+[data-theme="dark"] #uploadModal [style*="color: #1565c0"] {
+    color: #64B5F6 !important;
+}
+
+[data-theme="dark"] #uploadModal [style*="color: #555"],
+[data-theme="dark"] #uploadModal ul {
+    color: #B0B0B0 !important;
+}
+
+/* Actions footer */
+[data-theme="dark"] #uploadModal [style*="border-top: 1px solid #eee"] {
+    border-top-color: #2D3A4F !important;
+}
+
+/* Progress step */
+[data-theme="dark"] #importStatusText {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] #importSubText,
+[data-theme="dark"] #importProgressText {
+    color: #B0B0B0 !important;
+}
+
+[data-theme="dark"] #uploadModal [style*="background: #e9ecef"] {
+    background: #2D3A4F !important;
+}
+
+/* Result step */
+[data-theme="dark"] #resultTitle {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] #resultSubtitle {
+    color: #B0B0B0 !important;
+}
+
+/* Result stats cards */
+[data-theme="dark"] #resultStats > div:nth-child(1) {
+    background: rgba(40, 167, 69, 0.2) !important;
+}
+
+[data-theme="dark"] #resultStats > div:nth-child(1) > div:last-child {
+    color: #7FD99A !important;
+}
+
+[data-theme="dark"] #resultStats > div:nth-child(2) {
+    background: rgba(255, 152, 0, 0.2) !important;
+}
+
+[data-theme="dark"] #resultStats > div:nth-child(2) > div:last-child {
+    color: #FFD580 !important;
+}
+
+[data-theme="dark"] #resultStats > div:nth-child(3) {
+    background: rgba(33, 150, 243, 0.2) !important;
+}
+
+[data-theme="dark"] #resultStats > div:nth-child(3) > div:last-child {
+    color: #64B5F6 !important;
+}
+
+/* Error samples box */
+[data-theme="dark"] #errorSamplesBox {
+    background: rgba(255, 193, 7, 0.15) !important;
+    border-color: rgba(255, 193, 7, 0.4) !important;
+}
+
+[data-theme="dark"] #errorSamplesBox [style*="color: #666"],
+[data-theme="dark"] #errorSamplesList {
+    color: #B0B0B0 !important;
+}
+
+/* Generic inline style overrides for upload modal */
+[data-theme="dark"] #uploadModal [style*="color: #333"] {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] #uploadModal [style*="color: #666"] {
+    color: #B0B0B0 !important;
+}
+
+[data-theme="dark"] #uploadModal [style*="color: #888"] {
+    color: #888 !important;
+}
+
+[data-theme="dark"] #uploadModal [style*="background: #f8f9fa"],
+[data-theme="dark"] #uploadModal [style*="background: #fafafa"] {
+    background: #1A2332 !important;
 }
 </style>
 

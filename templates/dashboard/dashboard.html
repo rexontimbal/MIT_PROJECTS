@@ -23,10 +23,10 @@
             </div>
             <div class="alert-actions">
                 {% if alert.action_url %}
-                <a href="{{ alert.action_url }}" class="btn-alert">View Details</a>
+                <a href="{{ alert.action_url }}" class="btn-alert"><i class="fas fa-external-link-alt" style="font-size:0.75rem; margin-right:0.3rem;"></i>View Details</a>
                 {% endif %}
-                <button class="btn-alert-close" onclick="dismissAlert(this)" title="Dismiss">
-                    ×
+                <button class="btn-alert-close" onclick="dismissAlert(this)" title="Dismiss alert">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
@@ -39,14 +39,14 @@
         <h2 style="color: #003087; margin-bottom: 0.5rem; font-size: 1.8rem; font-weight: 700;">🚔 PNP Caraga - Command Center Dashboard</h2>
         <p style="color: #666; margin: 0;">Real-time accident monitoring and hotspot detection | <span id="currentDateTime">{{ current_time|date:"F d, Y - h:i A" }}</span></p>
     </div>
-    <div class="dashboard-actions" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-        <button class="btn btn-primary" onclick="window.location.href='{% url 'report_accident' %}'" style="padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; border: 2px solid #DC143C; background: #DC143C; color: white; cursor: pointer; text-decoration: none; box-shadow: 0 2px 8px rgba(220, 20, 60, 0.3);">
+    <div class="dashboard-actions">
+        <button class="btn dash-btn dash-btn-primary" onclick="window.location.href='{% url 'report_accident' %}'">
             <span>🚨</span> Report Accident
         </button>
-        <button class="btn btn-outline" onclick="window.location.href='{% url 'hotspots' %}'" style="padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; border: 2px solid #003087; background: transparent; color: #003087; cursor: pointer; text-decoration: none;">
+        <button class="btn dash-btn dash-btn-outline" onclick="window.location.href='{% url 'hotspots' %}'">
             <span>🗺️</span> View Hotspots
         </button>
-        <button class="btn btn-outline" onclick="AGNESSystem.printPage()" style="padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; border: 2px solid #666; background: transparent; color: #666; cursor: pointer; text-decoration: none;">
+        <button class="btn dash-btn dash-btn-print" onclick="AGNESSystem.printPage()">
             <span>🖨️</span> Print
         </button>
     </div>
@@ -106,10 +106,43 @@
                     <span>⚠️ Requires attention</span>
                 </div>
             </div>
+
+            <!-- PENDING REPORTS -->
+            <div class="time-stat-card" style="background: rgba(245, 158, 11, 0.9); backdrop-filter: blur(10px); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255, 255, 255, 0.3); color: white;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span style="font-size: 1.5rem;">📋</span>
+                    <span style="font-weight: 600; font-size: 0.9rem;">PENDING REPORTS</span>
+                </div>
+                <div style="font-size: 2rem; font-weight: 700; margin: 0.5rem 0;" id="opSummaryPending">{{ pending_reports|default:0 }}</div>
+                <div style="font-size: 0.85rem; opacity: 0.95;">
+                    <span>⏳ Awaiting verification</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
+    <!-- My Report Stats (for reporters) -->
+    {% if my_total > 0 %}
+    <div class="my-reports-bar">
+        <span class="my-reports-label"><i class="fas fa-file-alt"></i> My Reports</span>
+        <div class="my-reports-counts">
+            <a href="{% url 'my_reports' %}?status=all" class="my-reports-stat">
+                <span class="my-stat-num" style="color: var(--primary-blue);">{{ my_total }}</span> Total
+            </a>
+            <a href="{% url 'my_reports' %}?status=verified" class="my-reports-stat">
+                <span class="my-stat-num" style="color: #059669;">{{ my_approved }}</span> Approved
+            </a>
+            <a href="{% url 'my_reports' %}?status=pending" class="my-reports-stat">
+                <span class="my-stat-num" style="color: #D97706;">{{ my_pending }}</span> Pending
+            </a>
+            <a href="{% url 'my_reports' %}?status=rejected" class="my-reports-stat last">
+                <span class="my-stat-num" style="color: #DC2626;">{{ my_rejected }}</span> Rejected
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Statistics Cards - Row 1 -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon" style="background-color: #DC143C;">🚗</div>
@@ -132,14 +165,17 @@
         </div>
 
         <div class="stat-card">
-            <div class="stat-icon" style="background-color: #28A745;">📝</div>
+            <div class="stat-icon" style="background-color: #6C757D;">👥</div>
             <div class="stat-content">
-                <h3>{{ pending_reports|default:0 }}</h3>
-                <p>Pending Reports</p>
-                <span class="stat-trend">⏳ Awaiting verification</span>
+                <h3>{{ male_driver_pct|default:0 }}% / {{ female_driver_pct|default:0 }}%</h3>
+                <p>Driver Gender Distribution</p>
+                <span class="stat-trend">
+                    ♂️ {{ male_drivers|default:0 }} Male, ♀️ {{ female_drivers|default:0 }} Female
+                </span>
             </div>
         </div>
     </div>
+
 
     <!-- Charts Section -->
     <div class="charts-section">
@@ -226,26 +262,26 @@
                                 </thead>
                                 <tbody>
                                     {% for accident in recent_accidents %}
-                                    <tr class="accident-row {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}" 
+                                    <tr class="accident-row {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}"
                                         data-severity="{% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}">
-                                        <td>
+                                        <td data-label="Date & Time">
                                             <div class="datetime-cell">
                                                 <strong>{{ accident.date_committed|date:"M d, Y" }}</strong>
                                                 <small>{{ accident.time_committed|time:"H:i" }}</small>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Location">
                                             <div class="location-cell">
                                                 <strong>{{ accident.barangay }}</strong>
                                                 <span>{{ accident.municipal }}, {{ accident.province }}</span>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Type">
                                             <span class="incident-type" title="{{ accident.incident_type }}">
                                                 {{ accident.incident_type|truncatewords:3 }}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td data-label="Casualties">
                                             <div class="casualty-indicator {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}">
                                                 <span class="casualty-count">{{ accident.victim_count }}</span>
                                                 {% if accident.victim_killed %}
@@ -257,12 +293,12 @@
                                                 {% endif %}
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Status">
                                             <span class="status-badge status-{{ accident.case_status|lower|cut:' ' }}">
                                                 {{ accident.case_status }}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td data-label="Actions">
                                             <div class="action-buttons">
                                                 <button class="btn-icon view-btn" onclick="viewAccident({{ accident.id }})" title="View Details">
                                                     👁️
@@ -318,14 +354,14 @@
                                 <tbody>
                                     {% for hotspot in top_hotspots %}
                                     <tr class="hotspot-row" data-severity="{{ hotspot.severity_score }}">
-                                        <td>
+                                        <td data-label="Hotspot">
                                             <div class="hotspot-info">
                                                 <span class="hotspot-badge cluster-{{ hotspot.cluster_id }}">
                                                     #{{ hotspot.cluster_id }}
                                                 </span>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Location">
                                             <div class="location-cell">
                                                 <strong>{{ hotspot.primary_location }}</strong>
                                                 <span>
@@ -338,13 +374,13 @@
                                                 </span>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Accidents">
                                             <div class="accident-count">
                                                 <strong>{{ hotspot.accident_count }}</strong>
                                                 <small>accidents</small>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Severity">
                                             <div class="severity-meter">
                                                 <div class="severity-track">
                                                     <div class="severity-progress" style="width: {{ hotspot.severity_score }}%">
@@ -353,7 +389,7 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Risk Level">
                                             <span class="risk-level risk-{% if hotspot.severity_score >= 80 %}critical{% elif hotspot.severity_score >= 60 %}high{% elif hotspot.severity_score >= 40 %}medium{% else %}low{% endif %}">
                                                 {% if hotspot.severity_score >= 80 %}CRITICAL
                                                 {% elif hotspot.severity_score >= 60 %}HIGH
@@ -361,7 +397,7 @@
                                                 {% else %}LOW{% endif %}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td data-label="Actions">
                                             <div class="action-buttons">
                                                 <button class="btn-icon analyze-btn" onclick="analyzeHotspot({{ hotspot.cluster_id }})" title="Analyze Hotspot">
                                                     📈
@@ -395,8 +431,96 @@
 
 {% block extra_css %}
 <style>
-    
-        /* Real-time Alert Banner Styles */
+    /* My Reports Bar */
+    .my-reports-bar {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #E5E7EB;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .my-reports-label {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1F2937;
+    }
+
+    .my-reports-label i {
+        color: var(--primary-blue, #1A56DB);
+        margin-right: 0.4rem;
+        font-size: 1.1rem;
+    }
+
+    .my-reports-counts {
+        display: flex;
+        gap: 0;
+        flex: 1;
+    }
+
+    .my-reports-stat {
+        flex: 1;
+        text-align: center;
+        padding: 0.7rem 0.75rem;
+        background: #F9FAFB;
+        border: 1px solid #E5E7EB;
+        border-left: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #374151;
+        text-decoration: none;
+        transition: background 0.15s;
+    }
+
+    .my-reports-stat:first-child {
+        border-left: 1px solid #E5E7EB;
+        border-radius: 8px 0 0 8px;
+    }
+
+    .my-reports-stat.last {
+        border-radius: 0 8px 8px 0;
+    }
+
+    .my-reports-stat:hover {
+        background: #EFF6FF;
+    }
+
+    .my-stat-num {
+        font-size: 1.35rem;
+        font-weight: 700;
+        display: block;
+        margin-bottom: 0.1rem;
+    }
+
+    [data-theme="dark"] .my-reports-bar {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .my-reports-label {
+        color: #D1D5DB;
+    }
+
+    [data-theme="dark"] .my-reports-label i {
+        color: #60A5FA;
+    }
+
+    [data-theme="dark"] .my-reports-stat {
+        background: #0F172A;
+        border-color: #2D3A4F;
+        color: #D1D5DB;
+    }
+
+    [data-theme="dark"] .my-reports-stat:hover {
+        background: rgba(96, 165, 250, 0.1);
+    }
+
+    /* Real-time Alert Banner Styles */
     .alerts-container {
         margin-bottom: 1.5rem;
     }
@@ -488,21 +612,27 @@
     }
 
     .btn-alert-close {
-        background: none;
-        border: none;
-        font-size: 1.25rem;
-        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 50%;
+        font-size: 0.8rem;
         color: inherit;
         cursor: pointer;
-        padding: 0.25rem;
-        border-radius: 4px;
+        padding: 0;
+        flex-shrink: 0;
         transition: all 0.2s ease;
-        opacity: 0.7;
+        opacity: 0.75;
     }
 
     .btn-alert-close:hover {
         opacity: 1;
-        background: rgba(0,0,0,0.1);
+        background: rgba(0,0,0,0.2);
+        transform: scale(1.1);
     }
 
     /* Alert animations */
@@ -530,13 +660,6 @@
         font-size: 0.75rem;
         font-weight: 700;
         margin-left: 0.5rem;
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-        100% { transform: scale(1); }
     }
 
     /* Responsive alerts */
@@ -1023,7 +1146,8 @@
 
     /* Keep your existing dashboard styles for other sections */
     .dashboard-container {
-        max-width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
     .page-header {
@@ -1047,7 +1171,41 @@
 
     .dashboard-actions {
         display: flex;
-        gap: 1rem;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .dash-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.82rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .dash-btn-primary {
+        border: 2px solid #DC143C;
+        background: #DC143C;
+        color: white;
+        box-shadow: 0 2px 8px rgba(220, 20, 60, 0.3);
+    }
+
+    .dash-btn-outline {
+        border: 2px solid #003087;
+        background: transparent;
+        color: #003087;
+    }
+
+    .dash-btn-print {
+        border: 2px solid #666;
+        background: transparent;
+        color: #666;
     }
 
     .stats-grid {
@@ -1157,11 +1315,21 @@
             justify-content: flex-start !important;
         }
 
-        .dashboard-actions button {
+        .dashboard-actions {
+            gap: 0.4rem;
+        }
+
+        .dash-btn {
             flex: 1;
-            min-width: auto !important;
-            padding: 0.5rem 0.8rem !important;
-            font-size: 0.85rem !important;
+            padding: 0.35rem 0.5rem;
+            font-size: 0.72rem;
+            border-width: 1.5px;
+            gap: 0.2rem;
+            justify-content: center;
+        }
+
+        .dash-btn span:first-child {
+            display: none;
         }
 
         .operational-stats-section {
@@ -1173,20 +1341,106 @@
         }
 
         .time-stats-grid {
-            grid-template-columns: 1fr !important;
-            gap: 0.75rem !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.5rem !important;
+            display: grid !important;
         }
 
         .time-stat-card {
-            padding: 0.75rem !important;
+            padding: 0.6rem 0.75rem !important;
+        }
+
+        .time-stat-card > div:nth-child(1) {
+            font-size: 0.7rem !important;
         }
 
         .time-stat-card > div:nth-child(2) {
-            font-size: 1.5rem !important;
+            font-size: 1.3rem !important;
         }
 
+        .operational-stats-section h3 {
+            font-size: 0.85rem !important;
+            margin-bottom: 0.6rem !important;
+        }
+
+        /* Stat cards - 2 column on tablet */
         .stats-grid {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.75rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .stat-card {
+            padding: 0.85rem !important;
+            gap: 0.6rem !important;
+            border-radius: 10px !important;
+        }
+
+        .stat-icon {
+            width: 42px !important;
+            height: 42px !important;
+            font-size: 1.2rem !important;
+            border-radius: 8px !important;
+            flex-shrink: 0;
+        }
+
+        .stat-content h3 {
+            font-size: 1.4rem !important;
+            margin-bottom: 0.1rem !important;
+        }
+
+        .stat-content p {
+            font-size: 0.72rem !important;
+            margin-bottom: 0.2rem !important;
+        }
+
+        .stat-trend {
+            font-size: 0.68rem !important;
+        }
+
+        /* Charts compact */
+        .charts-section {
+            margin-bottom: 1rem !important;
+        }
+
+        .chart-row {
+            gap: 0.75rem !important;
+            margin-bottom: 0.75rem !important;
+        }
+
+        .chart-container {
+            min-height: 220px !important;
+        }
+
+        /* Table sections compact */
+        .data-tables-section {
+            margin-bottom: 1rem !important;
+        }
+
+        .table-row {
+            gap: 0.75rem !important;
+        }
+
+        .table-container .card-header {
+            padding: 0.6rem 0.75rem !important;
+        }
+
+        .card-title {
+            font-size: 0.85rem !important;
+        }
+
+        .data-table th {
+            padding: 0.45rem 0.6rem !important;
+            font-size: 0.68rem !important;
+        }
+
+        .data-table td {
+            padding: 0.4rem 0.6rem !important;
+            font-size: 0.75rem !important;
+        }
+
+        .data-table tbody tr {
+            height: auto !important;
         }
     }
 
@@ -1196,12 +1450,937 @@
         }
 
         .time-stat-card > div:nth-child(2) {
-            font-size: 1.3rem !important;
+            font-size: 1.1rem !important;
         }
 
-        .dashboard-actions button span:first-child {
-            display: none;
+        .dash-btn {
+            padding: 0.3rem 0.4rem;
+            font-size: 0.68rem;
+            border-width: 1px;
         }
+
+        /* Stat cards - 2 column on small mobile too */
+        .stats-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.5rem !important;
+        }
+
+        .stat-card {
+            padding: 0.7rem !important;
+            gap: 0.5rem !important;
+        }
+
+        .stat-icon {
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 1rem !important;
+        }
+
+        .stat-content h3 {
+            font-size: 1.2rem !important;
+        }
+
+        .stat-content p {
+            font-size: 0.68rem !important;
+        }
+
+        .stat-trend {
+            font-size: 0.62rem !important;
+        }
+
+        .chart-container {
+            min-height: 180px !important;
+        }
+
+        .chart-row {
+            gap: 0.5rem !important;
+        }
+
+        .data-table th {
+            padding: 0.35rem 0.4rem !important;
+            font-size: 0.62rem !important;
+        }
+
+        .data-table td {
+            padding: 0.3rem 0.4rem !important;
+            font-size: 0.7rem !important;
+        }
+
+        .card-title {
+            font-size: 0.8rem !important;
+        }
+
+        .header-actions {
+            flex-wrap: wrap;
+        }
+
+        .header-actions .btn {
+            font-size: 0.62rem;
+            padding: 0.2rem 0.35rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .btn-icon {
+            padding: 0.2rem 0.35rem;
+            font-size: 0.78rem;
+        }
+    }
+
+    /* Fix chart overflow on mobile */
+    @media (max-width: 768px) {
+        .chart-row {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .chart-container {
+            min-height: 280px;
+        }
+
+        .chart-container canvas {
+            max-height: 250px;
+        }
+
+        /* Make tables horizontally scrollable */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    /* ===== MOBILE CARD LAYOUT FOR TABLES (≤768px) ===== */
+    @media (max-width: 768px) {
+
+        /* Overflow containment */
+        .data-tables-section,
+        .table-row,
+        .table-container,
+        .table-container .card,
+        .table-container .card-body,
+        .table-container .table-responsive {
+            overflow-x: hidden !important;
+            max-width: 100% !important;
+        }
+
+        /* Hide table headers */
+        #recentAccidentsTable thead,
+        #hotspotsTable thead {
+            display: none !important;
+        }
+
+        /* Force table + tbody to block layout */
+        #recentAccidentsTable,
+        #recentAccidentsTable tbody,
+        #hotspotsTable,
+        #hotspotsTable tbody {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* Suppress ::before labels */
+        #recentAccidentsTable td::before,
+        #hotspotsTable td::before {
+            display: none !important;
+        }
+
+        /* ══ RECENT ACCIDENTS CARD ══
+           Row 1: Location (1fr) | Status (auto)
+           Row 2: Date+Time (1fr) | Casualties (auto)
+           Row 3: Actions (full width)
+        */
+        #recentAccidentsTable tbody tr {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+            grid-template-areas:
+                "acc-loc    acc-status"
+                "acc-dt     acc-cas"
+                "acc-act    acc-act";
+            row-gap: 0.15rem;
+            column-gap: 0.4rem;
+            align-items: center;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            border: 1px solid #e5e7eb;
+            border-left: 3px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 0.6rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transform: none !important;
+        }
+
+        /* Hide Type column on mobile */
+        #recentAccidentsTable td[data-label="Type"] { display: none !important; }
+
+        /* Reset all accident tds — no overflow:hidden here so actions stay visible */
+        #recentAccidentsTable td {
+            display: flex !important;
+            align-items: center;
+            padding: 0 !important;
+            border: none !important;
+            min-width: 0;
+            box-sizing: border-box !important;
+        }
+
+        #recentAccidentsTable td[data-label="Location"]    { grid-area: acc-loc;    overflow: hidden; }
+        #recentAccidentsTable td[data-label="Status"]      { grid-area: acc-status; justify-content: flex-end; }
+        #recentAccidentsTable td[data-label="Date & Time"] { grid-area: acc-dt; }
+        #recentAccidentsTable td[data-label="Casualties"]  { grid-area: acc-cas;    justify-content: flex-end; }
+        #recentAccidentsTable td[data-label="Actions"]     {
+            grid-area: acc-act;
+            justify-content: flex-end;
+            padding-top: 0.3rem !important;
+            border-top: 1px solid #f3f4f6 !important;
+        }
+        #recentAccidentsTable td.no-data { grid-column: 1 / -1; justify-content: center; }
+
+        /* Location cell */
+        #recentAccidentsTable .location-cell { gap: 0.05rem; }
+        #recentAccidentsTable .location-cell strong {
+            font-size: 0.75rem !important;
+            line-height: 1.2;
+        }
+        #recentAccidentsTable .location-cell span {
+            font-size: 0.62rem !important;
+            color: #9ca3af;
+            line-height: 1.2;
+        }
+
+        /* Date+Time: inline */
+        #recentAccidentsTable .datetime-cell {
+            flex-direction: row !important;
+            gap: 0.25rem;
+            align-items: center;
+        }
+        #recentAccidentsTable .datetime-cell strong {
+            font-size: 0.65rem !important;
+            font-weight: 500 !important;
+            color: #6b7280 !important;
+        }
+        #recentAccidentsTable .datetime-cell small {
+            font-size: 0.62rem !important;
+            color: #9ca3af !important;
+        }
+
+        /* Status badge: simple flat gray */
+        #recentAccidentsTable .status-badge {
+            font-size: 0.58rem !important;
+            padding: 0.1rem 0.4rem !important;
+            white-space: nowrap;
+            border-radius: 10px !important;
+            background: #f3f4f6 !important;
+            color: #4b5563 !important;
+            border: 1px solid #e5e7eb !important;
+            font-weight: 500 !important;
+        }
+
+        /* Casualty indicator: compact, no background */
+        #recentAccidentsTable .casualty-indicator {
+            font-size: 0.62rem !important;
+            padding: 0.1rem 0.3rem !important;
+            gap: 0.15rem !important;
+            background: transparent !important;
+            border: none !important;
+        }
+        #recentAccidentsTable .casualty-count { font-size: 0.68rem !important; }
+        #recentAccidentsTable .casualty-icon  { font-size: 0.7rem !important; }
+
+        /* Severity left-border colors (useful indicator, kept subtle) */
+        #recentAccidentsTable .accident-row.fatal    { border-left-color: #ef4444 !important; }
+        #recentAccidentsTable .accident-row.injury   { border-left-color: #f59e0b !important; }
+        #recentAccidentsTable .accident-row.property { border-left-color: #6b7280 !important; }
+
+        /* ══ TOP HOTSPOTS CARD ══
+           Row 1: #Badge (auto) | Location (1fr)
+           Row 2: Risk level (full width)
+           Row 3: Count (auto) | Severity bar (1fr)
+           Row 4: Actions (full width)
+        */
+        #hotspotsTable tbody tr {
+            display: grid !important;
+            grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+            grid-template-areas:
+                "hs-badge  hs-loc"
+                "hs-count  hs-risk"
+                "hs-act    hs-act";
+            row-gap: 0.15rem;
+            column-gap: 0.4rem;
+            align-items: center;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            border: 1px solid #e5e7eb;
+            border-left: 3px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 0.6rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transform: none !important;
+        }
+
+        /* Reset all hotspot tds — no overflow:hidden so actions stay visible */
+        #hotspotsTable td {
+            display: flex !important;
+            align-items: center;
+            padding: 0 !important;
+            border: none !important;
+            min-width: 0;
+            box-sizing: border-box !important;
+        }
+
+        #hotspotsTable td[data-label="Hotspot"]    { grid-area: hs-badge; }
+        #hotspotsTable td[data-label="Location"]   { grid-area: hs-loc;   overflow: hidden; }
+        #hotspotsTable td[data-label="Risk Level"] { grid-area: hs-risk;  justify-content: flex-end; }
+        #hotspotsTable td[data-label="Accidents"]  { grid-area: hs-count; }
+        #hotspotsTable td[data-label="Severity"]   { display: none !important; }
+        #hotspotsTable td[data-label="Actions"]    {
+            grid-area: hs-act;
+            justify-content: flex-end;
+            padding-top: 0.3rem !important;
+            border-top: 1px solid #f3f4f6 !important;
+        }
+        #hotspotsTable td.no-data { grid-column: 1 / -1; justify-content: center; }
+
+        /* Location cell */
+        #hotspotsTable .location-cell { gap: 0.05rem; }
+        #hotspotsTable .location-cell strong {
+            font-size: 0.75rem !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+        #hotspotsTable .location-cell span {
+            font-size: 0.6rem !important;
+            color: #9ca3af;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+
+        /* Hotspot rank badge: plain gray, no red */
+        #hotspotsTable .hotspot-badge,
+        #hotspotsTable [class*="hotspot-badge"],
+        #hotspotsTable [class*="cluster-"] {
+            font-size: 0.72rem !important;
+            padding: 0.15rem 0.45rem !important;
+            background: #f3f4f6 !important;
+            color: #374151 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 8px !important;
+            font-weight: 700 !important;
+        }
+
+        /* Risk level: flat gray — override ALL colored variants */
+        #hotspotsTable .risk-level,
+        #hotspotsTable .risk-critical,
+        #hotspotsTable .risk-high,
+        #hotspotsTable .risk-medium,
+        #hotspotsTable .risk-low {
+            font-size: 0.6rem !important;
+            padding: 0.1rem 0.45rem !important;
+            white-space: nowrap;
+            background: #f3f4f6 !important;
+            color: #4b5563 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 4px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.3px !important;
+        }
+
+        /* Casualty indicator: transparent, no gradient */
+        #recentAccidentsTable .casualty-indicator,
+        #recentAccidentsTable .casualty-indicator.fatal,
+        #recentAccidentsTable .casualty-indicator.injury,
+        #recentAccidentsTable .casualty-indicator.property {
+            background: transparent !important;
+            border: none !important;
+            color: #374151 !important;
+            font-size: 0.68rem !important;
+            padding: 0 !important;
+            gap: 0.15rem !important;
+        }
+
+        /* Status badge: flat gray — override all colored variants */
+        #recentAccidentsTable .status-badge,
+        #recentAccidentsTable [class*="status-"] {
+            font-size: 0.58rem !important;
+            padding: 0.1rem 0.45rem !important;
+            white-space: nowrap;
+            border-radius: 4px !important;
+            background: #f3f4f6 !important;
+            color: #4b5563 !important;
+            border: 1px solid #d1d5db !important;
+            font-weight: 600 !important;
+        }
+
+        /* Accident count: inline compact */
+        #hotspotsTable .accident-count {
+            flex-direction: row !important;
+            gap: 0.2rem;
+            align-items: center;
+        }
+        #hotspotsTable .accident-count strong { font-size: 0.72rem !important; }
+        #hotspotsTable .accident-count small  { font-size: 0.58rem !important; color: #9ca3af; }
+
+        /* Hide severity bar on mobile — too colorful, count is enough */
+        #hotspotsTable .severity-meter { display: none !important; }
+
+        /* Action buttons: clearly visible — medium gray */
+        #recentAccidentsTable .btn-icon,
+        #hotspotsTable .btn-icon {
+            padding: 0.3rem 0.55rem !important;
+            font-size: 0.85rem !important;
+            background: #e8edf2 !important;
+            border: 1px solid #adb5bd !important;
+            border-radius: 6px !important;
+            color: #374151 !important;
+            gap: 0 !important;
+            min-height: 30px !important;
+        }
+        #recentAccidentsTable .action-buttons,
+        #hotspotsTable .action-buttons {
+            gap: 0.35rem !important;
+        }
+
+        /* Ensure actions row always has visible height */
+        #recentAccidentsTable td[data-label="Actions"],
+        #hotspotsTable td[data-label="Actions"] {
+            min-height: 36px !important;
+            overflow: visible !important;
+        }
+    }
+
+    /* Dark mode mobile cards */
+    @media (max-width: 768px) {
+        [data-theme="dark"] #recentAccidentsTable tbody tr,
+        [data-theme="dark"] #hotspotsTable tbody tr {
+            border-color: #2D3A4F !important;
+            background: #1A2332 !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        [data-theme="dark"] #recentAccidentsTable td[data-label="Actions"],
+        [data-theme="dark"] #hotspotsTable td[data-label="Actions"] {
+            border-top-color: #2D3A4F !important;
+        }
+
+        [data-theme="dark"] #recentAccidentsTable .status-badge {
+            background: #1E293B !important;
+            color: #94a3b8 !important;
+            border-color: #334155 !important;
+        }
+
+        [data-theme="dark"] #hotspotsTable .risk-level {
+            background: #1E293B !important;
+            color: #94a3b8 !important;
+            border-color: #334155 !important;
+        }
+
+        [data-theme="dark"] #recentAccidentsTable .btn-icon,
+        [data-theme="dark"] #hotspotsTable .btn-icon {
+            background: #1E293B !important;
+            border-color: #475569 !important;
+            color: #cbd5e1 !important;
+        }
+        [data-theme="dark"] #recentAccidentsTable .status-badge,
+        [data-theme="dark"] #recentAccidentsTable [class*="status-"],
+        [data-theme="dark"] #hotspotsTable .risk-level,
+        [data-theme="dark"] #hotspotsTable .risk-critical,
+        [data-theme="dark"] #hotspotsTable .risk-high,
+        [data-theme="dark"] #hotspotsTable .risk-medium,
+        [data-theme="dark"] #hotspotsTable .risk-low,
+        [data-theme="dark"] #hotspotsTable .hotspot-badge,
+        [data-theme="dark"] #hotspotsTable [class*="cluster-"] {
+            background: #1E293B !important;
+            color: #94a3b8 !important;
+            border-color: #334155 !important;
+        }
+
+        [data-theme="dark"] #recentAccidentsTable .location-cell strong,
+        [data-theme="dark"] #hotspotsTable .location-cell strong { color: #E2E8F0 !important; }
+
+        [data-theme="dark"] #recentAccidentsTable .accident-row.fatal {
+            border-left-color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.08) !important;
+        }
+        [data-theme="dark"] #recentAccidentsTable .accident-row.injury {
+            border-left-color: #f59e0b !important;
+            background: rgba(245, 158, 11, 0.08) !important;
+        }
+        [data-theme="dark"] #recentAccidentsTable .accident-row.property {
+            border-left-color: #6b7280 !important;
+        }
+    }
+
+    /* Dashboard Print Styles */
+    @media print {
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            font-size: 9pt !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: white !important;
+        }
+
+        /* Hide non-essential elements */
+        .navbar,
+        .sidebar,
+        .topbar,
+        .breadcrumb,
+        .alerts-container,
+        .dashboard-actions,
+        .btn,
+        button,
+        footer,
+        .mobile-menu-toggle,
+        .notification-container,
+        #scrollTopBtn {
+            display: none !important;
+        }
+
+        .dashboard-container {
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .main-content {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* Page header */
+        .page-header {
+            display: block !important;
+            text-align: center !important;
+            margin-bottom: 1rem !important;
+            padding-bottom: 0.5rem !important;
+            border-bottom: 2px solid #003087 !important;
+        }
+
+        .page-header h2 {
+            font-size: 1.3rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        .page-header p {
+            font-size: 0.8rem !important;
+        }
+
+        /* Operational stats section */
+        .operational-stats-section {
+            padding: 0.75rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .operational-stats-section h3 {
+            font-size: 0.9rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .time-stats-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 0.5rem !important;
+        }
+
+        .time-stat-card {
+            padding: 0.5rem !important;
+        }
+
+        .time-stat-card > div:nth-child(2) {
+            font-size: 1.25rem !important;
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 0.75rem !important;
+            margin-bottom: 1rem !important;
+            margin-top: 0.75rem !important;
+        }
+
+        .stat-card {
+            padding: 0.75rem !important;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .stat-icon {
+            width: 35px !important;
+            height: 35px !important;
+            font-size: 1rem !important;
+        }
+
+        .stat-content h3 {
+            font-size: 1.1rem !important;
+        }
+
+        .stat-content p {
+            font-size: 0.75rem !important;
+        }
+
+        .stat-trend {
+            font-size: 0.7rem !important;
+        }
+
+        /* Charts section - hide charts on print */
+        .charts-section {
+            display: none !important;
+        }
+
+        /* Tables */
+        .tables-section {
+            margin-top: 1rem !important;
+        }
+
+        .card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            margin-bottom: 1rem !important;
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+
+        .card-header {
+            padding: 0.5rem 0.75rem !important;
+        }
+
+        .card-title {
+            font-size: 0.9rem !important;
+        }
+
+        .card-body {
+            padding: 0.5rem !important;
+        }
+
+        table {
+            font-size: 8pt !important;
+        }
+
+        th, td {
+            padding: 0.35rem !important;
+        }
+
+        /* Print header and footer */
+        .dashboard-container::before {
+            content: "DASHBOARD SUMMARY REPORT";
+            display: block;
+            text-align: center;
+            font-size: 14pt;
+            font-weight: bold;
+            color: #003087;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-container::after {
+            content: "Generated by AGNES Hotspot Detection System - PNP Caraga";
+            display: block;
+            text-align: center;
+            font-size: 8pt;
+            color: #666;
+            margin-top: 1rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #ddd;
+        }
+
+        @page {
+            margin: 10mm;
+            size: A4 landscape;
+        }
+    }
+
+    /* ===== DARK MODE STYLES ===== */
+    [data-theme="dark"] .dashboard-container {
+        background: transparent;
+    }
+
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .card,
+    [data-theme="dark"] .chart-card,
+    [data-theme="dark"] .quick-stats-card {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .stat-card h3,
+    [data-theme="dark"] .card-title,
+    [data-theme="dark"] .chart-title {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .stat-card p,
+    [data-theme="dark"] .stat-label,
+    [data-theme="dark"] .card-subtitle {
+        color: #B0B0B0;
+    }
+
+    [data-theme="dark"] .stat-card .stat-value {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .welcome-section {
+        background: linear-gradient(135deg, #1E3A5F 0%, #0D1B2A 100%);
+    }
+
+    [data-theme="dark"] .alert-banner {
+        background: #2D1A1A;
+        border-color: #5C2A2A;
+    }
+
+    [data-theme="dark"] .alert-banner.warning {
+        background: #2D2A1A;
+        border-color: #5C4A2A;
+    }
+
+    [data-theme="dark"] table {
+        background: #1E2A3A;
+    }
+
+    [data-theme="dark"] th {
+        background: #1E3A5F;
+        color: white;
+    }
+
+    [data-theme="dark"] td {
+        color: #E8E8E8;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] tr:nth-child(even) {
+        background: #1A2332;
+    }
+
+    [data-theme="dark"] tr:hover {
+        background: #243447;
+    }
+
+    [data-theme="dark"] .recent-activity-item {
+        background: #1A2332;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .activity-title {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .activity-meta {
+        color: #B0B0B0;
+    }
+
+    [data-theme="dark"] .quick-action-card {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .quick-action-card:hover {
+        background: #243447;
+    }
+
+    [data-theme="dark"] .section-title {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .btn-outline {
+        border-color: #3D4A5F;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .btn-outline:hover {
+        background: rgba(0, 82, 204, 0.15);
+    }
+
+    /* Force override inline styles in dark mode */
+    [data-theme="dark"] .welcome-section h2,
+    [data-theme="dark"] .welcome-section h1,
+    [data-theme="dark"] .welcome-section p,
+    [data-theme="dark"] .welcome-section span {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .welcome-section .btn-outline {
+        color: #FFFFFF !important;
+        border-color: rgba(255,255,255,0.5) !important;
+    }
+
+    [data-theme="dark"] .welcome-section .btn-outline:hover {
+        background: rgba(255,255,255,0.1) !important;
+        border-color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] [style*="color: #003087"],
+    [data-theme="dark"] [style*="color:#003087"] {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .stat-card h3,
+    [data-theme="dark"] .stat-card .stat-label,
+    [data-theme="dark"] .stat-card p {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .stat-card .stat-value,
+    [data-theme="dark"] .stat-card .number {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .chart-card h3,
+    [data-theme="dark"] .chart-card .chart-title {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .chart-card p,
+    [data-theme="dark"] .chart-card .chart-subtitle {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .card-header h3,
+    [data-theme="dark"] .card-header h4 {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .hotspot-card h4,
+    [data-theme="dark"] .hotspot-title {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .hotspot-meta,
+    [data-theme="dark"] .hotspot-location {
+        color: #B0B0B0 !important;
+    }
+
+    /* ===== TABLE ROWS DARK MODE ===== */
+    [data-theme="dark"] .table-container .card {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .table-container .card-header {
+        background: #1E3A5F !important;
+        border-bottom-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .table-container table {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] .table-container thead th {
+        background: #1E3A5F !important;
+        color: #FFFFFF !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .table-container tbody tr,
+    [data-theme="dark"] .accident-row,
+    [data-theme="dark"] .hotspot-row {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .table-container tbody tr:nth-child(even),
+    [data-theme="dark"] .accident-row:nth-child(even),
+    [data-theme="dark"] .hotspot-row:nth-child(even) {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] .table-container tbody tr:hover,
+    [data-theme="dark"] .accident-row:hover,
+    [data-theme="dark"] .hotspot-row:hover {
+        background: #243447 !important;
+    }
+
+    [data-theme="dark"] .table-container td,
+    [data-theme="dark"] .accident-row td,
+    [data-theme="dark"] .hotspot-row td {
+        color: #E8E8E8 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    /* Fatal/Injury/Property row styling in dark mode */
+    [data-theme="dark"] .accident-row.fatal {
+        background: rgba(220, 53, 69, 0.15) !important;
+        border-left-color: #DC3545 !important;
+    }
+
+    [data-theme="dark"] .accident-row.injury {
+        background: rgba(255, 193, 7, 0.15) !important;
+        border-left-color: #FFC107 !important;
+    }
+
+    [data-theme="dark"] .accident-row.property {
+        background: rgba(40, 167, 69, 0.15) !important;
+        border-left-color: #28A745 !important;
+    }
+
+    [data-theme="dark"] .accident-row.fatal:hover {
+        background: rgba(220, 53, 69, 0.25) !important;
+    }
+
+    [data-theme="dark"] .accident-row.injury:hover {
+        background: rgba(255, 193, 7, 0.25) !important;
+    }
+
+    [data-theme="dark"] .accident-row.property:hover {
+        background: rgba(40, 167, 69, 0.25) !important;
+    }
+
+    /* Hotspot row badges in dark mode */
+    [data-theme="dark"] .hotspot-badge,
+    [data-theme="dark"] .severity-badge {
+        color: #FFFFFF !important;
+    }
+
+    /* Table action buttons */
+    [data-theme="dark"] .table-container .btn,
+    [data-theme="dark"] .table-container .action-btn {
+        color: #E8E8E8 !important;
+        border-color: #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .table-container .btn:hover,
+    [data-theme="dark"] .table-container .action-btn:hover {
+        background: rgba(74, 144, 217, 0.2) !important;
+    }
+
+    /* Header action buttons */
+    [data-theme="dark"] .header-actions .btn-outline {
+        border-color: rgba(255,255,255,0.3) !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .header-actions .btn-outline:hover,
+    [data-theme="dark"] .header-actions .btn-outline.active {
+        background: rgba(255,255,255,0.15) !important;
+        border-color: rgba(255,255,255,0.5) !important;
+    }
+
+    /* Casualties icon styling */
+    [data-theme="dark"] .casualties-icon {
+        background: rgba(220, 53, 69, 0.2) !important;
+    }
+
+    /* Location and date text */
+    [data-theme="dark"] .accident-row .location,
+    [data-theme="dark"] .accident-row .date-time,
+    [data-theme="dark"] .hotspot-row .location {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .accident-row .location strong,
+    [data-theme="dark"] .hotspot-row .location strong {
+        color: #E8E8E8 !important;
     }
 </style>
 {% endblock %}
@@ -1573,8 +2752,24 @@ alertStyle.textContent = `
 `;
 document.head.appendChild(alertStyle);
 
-
-
+// Auto-update pending reports count on dashboard (syncs with header badge)
+(function() {
+    function updateDashboardPending() {
+        fetch('{% url "get_notifications" %}')
+            .then(r => r.json())
+            .then(data => {
+                var count = data.pending_count_total || 0;
+                var opEl = document.getElementById('opSummaryPending');
+                var statEl = document.getElementById('statCardPending');
+                if (opEl) opEl.textContent = count;
+                if (statEl) statEl.textContent = count;
+            })
+            .catch(function() {});
+    }
+    // Update after initial load, then every 3 seconds
+    setTimeout(updateDashboardPending, 1500);
+    setInterval(updateDashboardPending, 3000);
+})();
 
 
 </script>

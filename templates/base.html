@@ -2,12 +2,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- CRITICAL: Apply theme immediately to prevent flash of light theme -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme');
+            if (!theme) {
+                theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AGNES Hotspot Detection System{% endblock %} - PNP Caraga</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{% static 'images/pnp-logo.png' %}">
+
+    <!-- PWA Manifest & Meta -->
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <meta name="theme-color" content="#003087">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AGNES">
+    <link rel="apple-touch-icon" href="{% static 'images/pnp-logo.png' %}">
     
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,12 +34,13 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" />
 
     <!-- Chart.js for Visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=2.2">
     
     {% block extra_css %}{% endblock %}
     
@@ -37,17 +56,24 @@
             --transition: all 0.3s ease;
         }
 
-        /* Enhanced Navbar */
+        /* Enhanced Navbar - Fixed Position */
         .navbar {
             background: linear-gradient(135deg, var(--primary-blue) 0%, #001F3F 100%);
             border-bottom: 1px solid rgba(255,255,255,0.1);
             box-shadow: var(--shadow-lg);
-            position: sticky;
+            position: fixed;
             top: 0;
-            z-index: 1001;
+            left: 0;
+            right: 0;
+            z-index: 10003;
             height: 72px;
             display: flex;
             align-items: center;
+        }
+
+        /* Compensate for fixed navbar */
+        body {
+            padding-top: 72px;
         }
 
         .navbar-container {
@@ -63,6 +89,41 @@
             height: 100%;
         }
 
+        .navbar-back {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            background: none;
+            border: none;
+            outline: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: color 0.2s, transform 0.2s;
+            padding: 0;
+            z-index: 1;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-appearance: none;
+        }
+
+        .navbar-back:hover {
+            color: white;
+            transform: translateX(-3px);
+        }
+
+        .navbar-back:focus,
+        .navbar-back:active {
+            outline: none;
+            background: none;
+            box-shadow: none;
+        }
+
         .navbar-brand {
             display: flex;
             align-items: center;
@@ -75,7 +136,7 @@
             height: 70px;
             width: auto;
             object-fit: contain;
-            transition: var(--transition);
+            transition: transform 0.3s ease;
         }
 
         .navbar-brand:hover .navbar-logo {
@@ -122,7 +183,7 @@
             color: var(--text-light);
             text-decoration: none;
             border-radius: var(--border-radius);
-            transition: var(--transition);
+            transition: background 0.3s ease, transform 0.3s ease;
             font-weight: 500;
             position: relative;
             opacity: 0.9;
@@ -182,7 +243,7 @@
             border-radius: var(--border-radius);
             font-weight: 600;
             font-size: 1.1rem;
-            transition: var(--transition);
+            transition: background 0.3s ease, transform 0.3s ease;
             border: none;
             cursor: pointer;
             white-space: nowrap;
@@ -236,7 +297,7 @@
             border-radius: var(--border-radius);
             color: var(--text-light);
             cursor: pointer;
-            transition: var(--transition);
+            transition: background 0.3s ease, border-color 0.3s ease;
             height: 44px;
             white-space: nowrap;
         }
@@ -279,7 +340,7 @@
 
         .dropdown-arrow {
             font-size: 0.65rem;
-            transition: var(--transition);
+            transition: transform 0.3s ease;
         }
 
         .user-profile-dropdown.active .dropdown-arrow {
@@ -298,7 +359,7 @@
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
-            transition: var(--transition);
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
             z-index: 1000;
             border: 1px solid rgba(0,0,0,0.1);
         }
@@ -341,7 +402,7 @@
             padding: 0.75rem 1rem;
             color: #333;
             text-decoration: none;
-            transition: var(--transition);
+            transition: background 0.3s ease;
             border: none;
             background: none;
             width: 100%;
@@ -386,29 +447,42 @@
             background: none;
             border: none;
             cursor: pointer;
-            padding: 0.5rem;
-            gap: 0.25rem;
+            padding: 10px;
+            gap: 5px;
+            z-index: 1002;
+            position: relative;
+            min-height: auto;
+            min-width: auto;
+            -webkit-tap-highlight-color: rgba(255,255,255,0.2);
+            border-radius: 6px;
+        }
+
+        .mobile-menu-toggle:active {
+            background: rgba(255,255,255,0.15);
         }
 
         .mobile-menu-toggle span {
-            width: 25px;
+            display: block;
+            width: 24px;
             height: 3px;
-            background: var(--text-light);
+            background: white;
             border-radius: 2px;
-            transition: var(--transition);
+            transition: all 0.3s ease;
+            pointer-events: none;
         }
 
-        /* Mobile Menu Active State */
+        /* Mobile Menu Active State - X animation */
         .mobile-menu-toggle.active span:nth-child(1) {
-            transform: rotate(45deg) translate(6px, 6px);
+            transform: rotate(45deg) translate(5px, 5px);
         }
 
         .mobile-menu-toggle.active span:nth-child(2) {
             opacity: 0;
+            transform: translateX(-10px);
         }
 
         .mobile-menu-toggle.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(6px, -6px);
+            transform: rotate(-45deg) translate(5px, -5px);
         }
 
         /* ========== RESPONSIVE DESIGN ========== */
@@ -572,95 +646,817 @@
 
         /* Mobile */
         @media (max-width: 768px) {
-            .navbar-menu {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: var(--primary-blue);
-                flex-direction: column;
-                padding: 1rem;
-                box-shadow: var(--shadow-lg);
-                border-top: 1px solid rgba(255,255,255,0.1);
-                gap: 0.5rem;
-                margin: 0;
-            }
-
-            .navbar-menu.active {
-                display: flex;
-            }
-
-            .nav-link {
-                width: 100%;
-                padding: 1rem 1.5rem;
-                border-radius: var(--border-radius);
-                justify-content: flex-start;
-            }
-            
-            .nav-link span.text {
-                display: inline !important;
-                font-size: 0.95rem;
-            }
-            
-            .nav-link .icon {
-                font-size: 1.1rem;
-                width: 20px;
-            }
-
-            .navbar-actions {
-                gap: 0.5rem;
-            }
-
-            .user-profile-btn {
-                padding: 0.5rem;
-                gap: 0;
-            }
-
-            .user-info {
-                display: none;
-            }
-
-            .dropdown-arrow {
-                display: none;
-            }
-
-            .mobile-menu-toggle {
-                display: flex;
+            .navbar {
+                height: auto;
+                min-height: 60px;
             }
 
             .navbar-container {
                 padding: 0.5rem 1rem;
+                flex-wrap: wrap;
             }
-            
+
             .navbar-logo {
                 width: 40px;
                 height: 40px;
             }
-            
+
             .navbar-title h1 {
                 font-size: 1rem;
+            }
+
+            .navbar-brand {
+                min-width: auto;
+                flex: 1;
+            }
+
+            /* Hide desktop actions on mobile - they go inside mobile menu */
+            .navbar-actions {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: flex !important;
+            }
+
+            /* Mobile menu slides down */
+            .navbar-menu {
+                display: none !important;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, var(--primary-blue) 0%, #001F3F 100%);
+                flex-direction: column;
+                padding: 0.75rem 1rem 1rem;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+                border-top: 2px solid rgba(255,255,255,0.2);
+                gap: 0.25rem;
+                margin: 0;
+                z-index: 10002;
+                max-height: calc(100vh - 60px);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .navbar-menu.active {
+                display: flex !important;
+            }
+
+            .navbar-menu li {
+                list-style: none;
+            }
+
+            .nav-link {
+                width: 100%;
+                padding: 0.85rem 1.25rem;
+                border-radius: var(--border-radius);
+                justify-content: flex-start;
+                gap: 0.75rem;
+                min-height: 48px;
+            }
+
+            .nav-link:hover {
+                background: rgba(255,255,255,0.15);
+                transform: none;
+            }
+
+            .nav-link.active {
+                background: rgba(255,255,255,0.2);
+            }
+
+            .nav-link.active::after {
+                display: none;
+            }
+
+            .nav-link span.text {
+                display: inline !important;
+                font-size: 0.95rem;
+            }
+
+            .nav-link .icon {
+                font-size: 1.15rem;
+                width: 24px;
+                text-align: center;
+            }
+
+            /* Mobile-only menu items */
+            .mobile-menu-divider {
+                height: 1px;
+                background: rgba(255,255,255,0.15);
+                margin: 0.5rem 0;
+            }
+
+            .mobile-menu-section-label {
+                color: rgba(255,255,255,0.6);
+                font-size: 0.7rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                padding: 0.5rem 1.25rem 0.25rem;
+            }
+
+            .mobile-report-btn {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.85rem 1.25rem;
+                background: var(--accent-red);
+                color: white;
+                text-decoration: none;
+                border-radius: var(--border-radius);
+                font-weight: 600;
+                font-size: 0.95rem;
+                min-height: 48px;
+                transition: background 0.2s;
+            }
+
+            .mobile-report-btn:hover {
+                background: #B22222;
+            }
+
+            .mobile-user-section {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.85rem 1.25rem;
+                color: white;
+                border-radius: var(--border-radius);
+                background: rgba(255,255,255,0.1);
+            }
+
+            .mobile-user-avatar {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #0052CC 0%, #003087 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: 0.85rem;
+                color: white;
+                flex-shrink: 0;
+            }
+
+            .mobile-user-info {
+                flex: 1;
+            }
+
+            .mobile-user-name {
+                font-weight: 600;
+                font-size: 0.9rem;
+            }
+
+            .mobile-user-rank {
+                font-size: 0.75rem;
+                opacity: 0.8;
+            }
+
+            .mobile-menu-link {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.75rem 1.25rem;
+                color: white;
+                text-decoration: none;
+                border-radius: var(--border-radius);
+                font-size: 0.9rem;
+                min-height: 44px;
+                transition: background 0.2s;
+            }
+
+            .mobile-menu-link:hover {
+                background: rgba(255,255,255,0.1);
+            }
+
+            .mobile-menu-link i {
+                width: 24px;
+                text-align: center;
+                font-size: 1rem;
+            }
+
+            .mobile-menu-link.logout-link {
+                color: #ff6b6b;
+            }
+
+            .mobile-menu-link.logout-link:hover {
+                background: rgba(255,107,107,0.15);
+            }
+
+            /* Mobile menu overlay/backdrop */
+            .mobile-menu-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 1000;
+                backdrop-filter: blur(2px);
+            }
+
+            .mobile-menu-overlay.active {
+                display: block;
+            }
+
+            /* User dropdown - full width on mobile */
+            .user-profile-dropdown .dropdown-menu {
+                position: fixed;
+                left: 1rem;
+                right: 1rem;
+                top: auto;
+                bottom: 1rem;
+                width: auto;
+                border-radius: 12px;
+                box-shadow: 0 -4px 24px rgba(0,0,0,0.2);
             }
         }
 
         /* Small Mobile */
         @media (max-width: 480px) {
             .navbar-container {
-                padding: 0.5rem 1rem;
+                padding: 0.5rem 0.75rem;
             }
 
             .navbar-title h1 {
-                font-size: 0.9rem;
+                font-size: 0.85rem;
             }
 
             .navbar-title p {
                 display: none;
             }
-            
+
             .navbar-logo {
-                width: 35px;
-                height: 35px;
+                width: 32px;
+                height: 32px;
             }
+
+            .navbar-brand {
+                gap: 0.5rem;
+            }
+        }
+
+        /* ========== MOBILE BOTTOM NAVIGATION ========== */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #001F3F 100%);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            padding: 0;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+
+        .mobile-bottom-nav-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: auto;
+            min-height: 64px;
+            padding: 6px 0 4px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 4px 2px 6px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            position: relative;
+            min-width: 56px;
+        }
+
+        .mobile-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .mobile-nav-item span {
+            font-size: 0.6rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .mobile-nav-item:hover,
+        .mobile-nav-item:active {
+            color: white;
+        }
+
+        .mobile-nav-item:hover i {
+            transform: scale(1.1);
+        }
+
+        .mobile-nav-item.active {
+            color: white;
+        }
+
+        .mobile-nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 3px;
+            background: var(--accent-red);
+            border-radius: 0 0 3px 3px;
+        }
+
+        .mobile-nav-item.report-btn {
+            position: relative;
+        }
+
+        .mobile-nav-item.report-btn i {
+            background: var(--accent-red);
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.4);
+            position: relative;
+            top: -10px;
+        }
+
+        .mobile-nav-item.report-btn span {
+            position: relative;
+            top: -8px;
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+
+        /* Dark mode bottom nav */
+        [data-theme="dark"] .mobile-bottom-nav {
+            background: linear-gradient(135deg, #0D1B2A 0%, #1A1A2E 100%);
+        }
+
+        /* Show on mobile */
+        @media (max-width: 768px) {
+            .mobile-bottom-nav {
+                display: block;
+            }
+
+            /* Add padding to body to prevent content being hidden behind bottom nav */
+            body {
+                padding-bottom: 70px;
+            }
+
+            /* Hide footer on mobile when bottom nav is shown */
+            .footer {
+                margin-bottom: 60px;
+            }
+
+            /* Adjust scroll to top button position */
+            #scrollTopBtn {
+                bottom: 80px;
+            }
+
+            /* Adjust PWA install prompt */
+            #pwaInstallPrompt {
+                bottom: 70px;
+            }
+        }
+
+        /* ========== NOTIFICATIONS SYSTEM ========== */
+        .notifications-dropdown {
+            position: relative;
+        }
+
+        /* Pending Reports Indicator */
+        /* Default: normal subdued style */
+        .pending-reports-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+            font-size: 1.1rem;
+            position: relative;
+            text-decoration: none;
+        }
+        /* Highlighted only when currently on the pending reports page */
+        .pending-reports-btn.is-active-page {
+            background: rgba(245, 158, 11, 0.3);
+            border-color: rgba(245, 158, 11, 0.7);
+            color: #FCD34D;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.35);
+        }
+        /* has-pending: pulse badge only, no extra icon colour change */
+        .pending-reports-btn.has-pending {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .pending-reports-btn:hover {
+            background: rgba(245, 158, 11, 0.3);
+            border-color: rgba(245, 158, 11, 0.6);
+            color: #FCD34D;
+            transform: scale(1.05);
+        }
+        .pending-reports-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #F59E0B;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            animation: pendingPulse 2s infinite;
+        }
+        @keyframes pendingPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+            50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0); }
+        }
+        .dropdown-pending-badge {
+            background: #F59E0B;
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            margin-left: auto;
+        }
+
+        .notifications-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.3s ease;
+            font-size: 1.1rem;
+            position: relative;
+        }
+
+        .notifications-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.05);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--accent-red);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+
+        .notifications-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1001;
+            overflow: hidden;
+        }
+
+        .notifications-dropdown.active .notifications-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.85rem;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .notifications-header span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mark-all-read-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.75rem;
+        }
+
+        .mark-all-read-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .notifications-body {
+            max-height: 310px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            display: flex;
+            gap: 8px;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+
+        .notification-item.unread {
+            background: #E8F4FD;
+        }
+
+        .notification-item.unread:hover {
+            background: #D6EBFA;
+        }
+
+        .notification-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.75rem;
+        }
+
+        .notification-icon.fatal {
+            background: rgba(220, 20, 60, 0.15);
+            color: #DC143C;
+        }
+
+        .notification-icon.injury {
+            background: rgba(255, 165, 0, 0.15);
+            color: #FFA500;
+        }
+
+        .notification-icon.report {
+            background: rgba(0, 48, 135, 0.15);
+            color: #003087;
+        }
+
+        .notification-icon.info {
+            background: rgba(23, 162, 184, 0.15);
+            color: #17A2B8;
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 0.78rem;
+            color: #333;
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+
+        .notification-text {
+            font-size: 0.72rem;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .notification-time {
+            font-size: 0.65rem;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .notification-empty {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            color: #999;
+        }
+
+        .notification-empty i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        .notifications-footer {
+            padding: 0.4rem 0.85rem;
+            text-align: center;
+            border-top: 1px solid #eee;
+            background: #f8f9fa;
+        }
+
+        .notifications-footer a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .notifications-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Dark mode notifications */
+        [data-theme="dark"] .notifications-menu {
+            background: var(--card-bg);
+        }
+
+        [data-theme="dark"] .notification-item {
+            border-bottom-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .notification-item:hover {
+            background: var(--hover-bg);
+        }
+
+        [data-theme="dark"] .notification-item.unread {
+            background: rgba(74, 144, 217, 0.15);
+        }
+
+        [data-theme="dark"] .notification-title {
+            color: var(--text-dark);
+        }
+
+        [data-theme="dark"] .notification-text {
+            color: var(--text-medium);
+        }
+
+        [data-theme="dark"] .notifications-footer {
+            background: var(--bg-light);
+            border-top-color: var(--border-color);
+        }
+
+        /* Mobile notifications */
+        @media (max-width: 768px) {
+            .notifications-menu {
+                position: fixed;
+                top: auto;
+                bottom: 70px;
+                right: 10px;
+                left: 10px;
+                width: auto;
+                max-height: 60vh;
+                border-radius: 16px;
+            }
+        }
+
+        /* Dark Mode Toggle Button */
+        .dark-mode-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .dark-mode-toggle:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+
+        .dark-mode-toggle i {
+            transition: transform 0.5s ease;
+        }
+
+        [data-theme="dark"] .dark-mode-toggle {
+            background: rgba(255, 193, 7, 0.2);
+            border-color: rgba(255, 193, 7, 0.4);
+        }
+
+        [data-theme="dark"] .dark-mode-toggle:hover {
+            background: rgba(255, 193, 7, 0.3);
+        }
+
+        /* Mobile dark mode in menu */
+        .mobile-dark-mode-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1.25rem;
+            color: white;
+            border-radius: var(--border-radius);
+            background: rgba(255,255,255,0.05);
+            cursor: pointer;
+            min-height: 44px;
+        }
+
+        .mobile-dark-mode-toggle:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .mobile-dark-mode-toggle .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .mobile-dark-mode-toggle i {
+            width: 24px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .theme-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 13px;
+            transition: background 0.3s ease;
+        }
+
+        .theme-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        [data-theme="dark"] .theme-switch {
+            background: rgba(255, 193, 7, 0.5);
+        }
+
+        [data-theme="dark"] .theme-switch::after {
+            transform: translateX(24px);
         }
 
         /* Scroll to Top Button */
@@ -696,7 +1492,7 @@
 
         @media (max-width: 768px) {
             #scrollTopBtn {
-                bottom: 20px;
+                bottom: 80px;
                 right: 20px;
                 width: 45px;
                 height: 45px;
@@ -707,7 +1503,7 @@
         /* ========== POPUP NOTIFICATION STYLES ========== */
         .notification-container {
             position: fixed;
-            top: 20px;
+            top: 88px; /* 72px navbar height + 16px gap */
             left: 50%;
             transform: translateX(-50%);
             z-index: 10001;
@@ -718,7 +1514,7 @@
         }
 
         .popup-notification {
-            padding: 1.25rem 1.75rem;
+            padding: 1rem 1.25rem;
             border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             display: flex;
@@ -727,8 +1523,9 @@
             font-size: 1rem;
             font-weight: 500;
             min-width: 350px;
-            max-width: 600px;
+            max-width: 560px;
             opacity: 0;
+            transform: translateY(-10px);
             transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             color: white;
             backdrop-filter: blur(10px);
@@ -737,6 +1534,25 @@
 
         .popup-notification.show {
             opacity: 1;
+            transform: translateY(0);
+        }
+
+        .popup-notification-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.8);
+            font-size: 1.25rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 0.25rem;
+            margin-left: auto;
+            flex-shrink: 0;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .popup-notification-close:hover {
+            color: white;
+            transform: scale(1.2);
         }
 
         .popup-notification.success {
@@ -777,8 +1593,16 @@
     </style>
 </head>
 <body>
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
     <!-- Enhanced Navigation Bar -->
     <nav class="navbar">
+        <!-- Back Button - always anchored to screen left edge -->
+        <button class="navbar-back" onclick="history.back()" title="Go Back">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
         <div class="navbar-container">
             <!-- Brand Section -->
             <div class="navbar-brand">
@@ -825,10 +1649,140 @@
                         <span class="text">Analytics</span>
                     </a>
                 </li>
+
+                <!-- Mobile-only items (hidden on desktop via CSS) -->
+                <li class="mobile-only-item" style="display:none;">
+                    <div class="mobile-menu-divider"></div>
+                </li>
+                <li class="mobile-only-item" style="display:none;">
+                    <div class="mobile-menu-section-label">Quick Actions</div>
+                </li>
+                <li class="mobile-only-item" style="display:none;">
+                    <a href="{% url 'report_accident' %}" class="mobile-report-btn">
+                        <i class="fas fa-plus-circle"></i>
+                        Report Accident
+                    </a>
+                </li>
+                <li class="mobile-only-item" style="display:none;">
+                    <div class="mobile-menu-divider"></div>
+                </li>
+                <li class="mobile-only-item" style="display:none;">
+                    <div class="mobile-menu-section-label">Account</div>
+                </li>
+                <li class="mobile-only-item" style="display:none;">
+                    <div class="mobile-user-section">
+                        <div class="mobile-user-avatar">
+                            {{ user.first_name.0|default:user.username.0|upper }}
+                        </div>
+                        <div class="mobile-user-info">
+                            <div class="mobile-user-name">{{ user.get_full_name|default:user.username }}</div>
+                            <div class="mobile-user-rank">
+                                {% if user.profile %}{{ user.profile.get_rank_display }}{% else %}Officer{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li class="mobile-only-item" style="display:none;">
+                    <a href="{% url 'profile' %}" class="mobile-menu-link">
+                        <i class="fas fa-user"></i>
+                        My Profile
+                    </a>
+                </li>
+                <li class="mobile-only-item" style="display:none;">
+                    <a href="{% url 'my_reports' %}" class="mobile-menu-link">
+                        <i class="fas fa-file-alt"></i>
+                        My Reports
+                    </a>
+                </li>
+                {% if user.is_staff %}
+                <li class="mobile-only-item" style="display:none;">
+                    <a href="{% url 'admin_panel:dashboard' %}" class="mobile-menu-link">
+                        <i class="fas fa-cog"></i>
+                        Admin Panel
+                    </a>
+                </li>
+                {% endif %}
+                {% if user.profile.role in 'super_admin,regional_director,provincial_chief,station_commander' %}
+                <li class="mobile-only-item" style="display:none;">
+                    <a href="{% url 'pending_reports' %}" class="mobile-menu-link">
+                        <i class="fas fa-clipboard-list"></i>
+                        Manage Reports
+                    </a>
+                </li>
+                {% endif %}
+                <li class="mobile-only-item" style="display:none;">
+                    <div class="mobile-menu-divider"></div>
+                </li>
+                <li class="mobile-only-item" style="display:none;">
+                    <div class="mobile-menu-section-label">Appearance</div>
+                </li>
+                <li class="mobile-only-item" style="display:none;">
+                    <div class="mobile-dark-mode-toggle" id="mobileDarkModeToggle">
+                        <div class="toggle-label">
+                            <i class="fas fa-moon" id="mobileDarkModeIcon"></i>
+                            <span>Dark Mode</span>
+                        </div>
+                        <div class="theme-switch"></div>
+                    </div>
+                </li>
+                <li class="mobile-only-item" style="display:none;">
+                    <div class="mobile-menu-divider"></div>
+                </li>
+                <li class="mobile-only-item" style="display:none;">
+                    <a href="{% url 'logout' %}" class="mobile-menu-link logout-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </a>
+                </li>
             </ul>
 
-            <!-- Quick Actions -->
+            <!-- Mobile Menu Toggle (BEFORE actions so it renders correctly on mobile) -->
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <!-- Quick Actions (hidden on mobile - included in hamburger menu instead) -->
             <div class="navbar-actions">
+                <!-- Pending Reports Indicator (admin roles only) -->
+                {% if user.profile.role in 'super_admin,regional_director,provincial_chief,station_commander' %}
+                <a href="{% url 'pending_reports' %}?status=pending" class="pending-reports-btn{% if header_pending_count %} has-pending{% endif %}{% if '/manage/pending-reports' in request.path %} is-active-page{% endif %}" id="pendingReportsBtn" title="Pending Reports — {{ header_pending_count|default:'0' }} awaiting review">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span class="pending-reports-badge" id="pendingReportsBadge" style="{% if header_pending_count %}display: flex;{% else %}display: none;{% endif %}">{{ header_pending_count|default:"0" }}</span>
+                </a>
+                {% endif %}
+
+                <!-- Notifications Bell -->
+                <div class="notifications-dropdown" id="notificationsDropdown">
+                    <button class="notifications-btn" onclick="toggleNotifications()" type="button" title="Notifications" aria-label="View notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationBadge" style="{% if header_unread_count %}display: flex;{% else %}display: none;{% endif %}">{{ header_unread_count|default:"0" }}</span>
+                    </button>
+                    <div class="notifications-menu" id="notificationsMenu">
+                        <div class="notifications-header">
+                            <span><i class="fas fa-bell"></i> Notifications</span>
+                            <button class="mark-all-read-btn" onclick="markAllAsRead()" title="Mark all as read">
+                                <i class="fas fa-check-double"></i>
+                            </button>
+                        </div>
+                        <div class="notifications-body" id="notificationsBody">
+                            <div class="notification-empty">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>No new notifications</p>
+                            </div>
+                        </div>
+                        <div class="notifications-footer">
+                            <a href="{% url 'notifications' %}">View All Notifications</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dark Mode Toggle -->
+                <button class="dark-mode-toggle" id="darkModeToggle" type="button" title="Toggle Dark Mode" aria-label="Toggle dark mode">
+                    <i class="fas fa-moon" id="darkModeIcon"></i>
+                </button>
+
                 <a href="{% url 'report_accident' %}" class="quick-action-btn">
                     <i class="fas fa-plus-circle"></i>
                     <span class="text">Report Accident</span>
@@ -836,7 +1790,7 @@
 
                 <!-- User Profile Dropdown -->
                 <div class="user-profile-dropdown" id="userProfileDropdown">
-                    <button class="user-profile-btn" onclick="toggleUserDropdown()">
+                    <button class="user-profile-btn" onclick="toggleUserDropdown()" type="button">
                         {% if user.profile and user.profile.profile_picture %}
                         <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="user-avatar" style="object-fit: cover;">
                         {% else %}
@@ -877,10 +1831,23 @@
                             <span>My Profile</span>
                         </a>
 
+                        <a href="{% url 'my_reports' %}" class="dropdown-item">
+                            <i class="fas fa-file-alt"></i>
+                            <span>My Reports</span>
+                        </a>
+
                         {% if user.is_staff %}
                         <a href="{% url 'admin_panel:dashboard' %}" class="dropdown-item">
                             <i class="fas fa-cog"></i>
                             <span>Admin Panel</span>
+                        </a>
+                        {% endif %}
+
+                        {% if user.profile.role in 'super_admin,regional_director,provincial_chief,station_commander' %}
+                        <a href="{% url 'pending_reports' %}" class="dropdown-item" style="position: relative;">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Manage Reports</span>
+                            <span class="dropdown-pending-badge" id="dropdownPendingBadge" style="{% if header_pending_count %}display: inline-flex;{% else %}display: none;{% endif %}">{{ header_pending_count|default:"0" }}</span>
                         </a>
                         {% endif %}
 
@@ -900,13 +1867,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Mobile Menu Toggle -->
-            <button class="mobile-menu-toggle" id="mobileMenuToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
         </div>
     </nav>
 
@@ -984,41 +1944,125 @@
         </div>
     </footer>
 
+    <!-- Mobile Bottom Navigation (visible only on mobile) -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <div class="mobile-bottom-nav-container">
+            <a href="{% url 'dashboard' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'accident_list' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'accident_list' %}active{% endif %}">
+                <i class="fas fa-car-crash"></i>
+                <span>Accidents</span>
+            </a>
+            <a href="{% url 'report_accident' %}" class="mobile-nav-item report-btn">
+                <i class="fas fa-plus"></i>
+                <span>Report</span>
+            </a>
+            <a href="{% url 'map_view' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'map_view' %}active{% endif %}">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>Map</span>
+            </a>
+            <a href="{% url 'hotspots' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'hotspots' %}active{% endif %}">
+                <i class="fas fa-fire"></i>
+                <span>Hotspots</span>
+            </a>
+        </div>
+    </nav>
+
     <!-- Leaflet JS for Maps -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
 
     <!-- Custom JavaScript -->
-    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/main.js' %}?v=2.1"></script>
     
     <!-- Mobile Menu Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-            const navbarMenu = document.getElementById('navbarMenu');
-            
-            if (mobileMenuToggle && navbarMenu) {
+            var mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            var navbarMenu = document.getElementById('navbarMenu');
+            var mobileOverlay = document.getElementById('mobileMenuOverlay');
+            var mobileOnlyItems = document.querySelectorAll('.mobile-only-item');
+
+            console.log('[Mobile Menu] Toggle found:', !!mobileMenuToggle);
+            console.log('[Mobile Menu] NavbarMenu found:', !!navbarMenu);
+
+            // Show/hide mobile-only items based on screen size
+            function updateMobileItems() {
+                var isMobile = window.innerWidth <= 768;
+                mobileOnlyItems.forEach(function(item) {
+                    item.style.display = isMobile ? 'list-item' : 'none';
+                });
+                if (!isMobile) {
+                    closeMobileMenu();
+                }
+            }
+            updateMobileItems();
+            window.addEventListener('resize', updateMobileItems);
+
+            function openMobileMenu() {
+                console.log('[Mobile Menu] Opening menu');
+                if (navbarMenu) navbarMenu.classList.add('active');
+                if (mobileMenuToggle) mobileMenuToggle.classList.add('active');
+                if (mobileOverlay) mobileOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMobileMenu() {
+                if (navbarMenu) navbarMenu.classList.remove('active');
+                if (mobileMenuToggle) mobileMenuToggle.classList.remove('active');
+                if (mobileOverlay) mobileOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuToggle) {
+                // Use both click and touchend for maximum mobile compatibility
                 mobileMenuToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
                     e.stopPropagation();
-                    navbarMenu.classList.toggle('active');
-                    mobileMenuToggle.classList.toggle('active');
+                    console.log('[Mobile Menu] Toggle clicked');
+                    if (navbarMenu && navbarMenu.classList.contains('active')) {
+                        closeMobileMenu();
+                    } else {
+                        openMobileMenu();
+                    }
                 });
             }
-            
+
+            // Close when clicking overlay
+            if (mobileOverlay) {
+                mobileOverlay.addEventListener('click', function() {
+                    closeMobileMenu();
+                });
+            }
+
             // Close mobile menu when clicking outside
             document.addEventListener('click', function(event) {
-                if (!event.target.closest('.navbar-container')) {
-                    navbarMenu.classList.remove('active');
-                    mobileMenuToggle.classList.remove('active');
+                if (navbarMenu && navbarMenu.classList.contains('active')) {
+                    if (!event.target.closest('.navbar-menu') && !event.target.closest('.mobile-menu-toggle')) {
+                        closeMobileMenu();
+                    }
                 }
             });
-            
-            // Close mobile menu when clicking on a link
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', function() {
-                    navbarMenu.classList.remove('active');
-                    mobileMenuToggle.classList.remove('active');
+
+            // Close mobile menu when clicking on a nav link
+            if (navbarMenu) {
+                navbarMenu.querySelectorAll('a').forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        closeMobileMenu();
+                    });
                 });
+            }
+
+            // Close on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeMobileMenu();
+                    var dropdown = document.getElementById('userProfileDropdown');
+                    if (dropdown) dropdown.classList.remove('active');
+                }
             });
         });
 
@@ -1058,6 +2102,7 @@
                     <i class="fas ${icons[type] || icons.success}"></i>
                 </div>
                 <div class="popup-notification-content">${message}</div>
+                <button class="popup-notification-close" title="Close" onclick="this.closest('.popup-notification').remove()">&times;</button>
             `;
 
             // Add to container instead of body
@@ -1114,10 +2159,681 @@
         }
     </script>
 
+    <!-- Auto-Hide Header Script -->
+    <script>
+        (function() {
+            const navbar = document.querySelector('.navbar');
+            if (!navbar) return;
+
+            // Create hover trigger zone at the top
+            const hoverTrigger = document.createElement('div');
+            hoverTrigger.className = 'navbar-hover-trigger';
+            document.body.appendChild(hoverTrigger);
+
+            let lastScrollY = window.scrollY;
+            let scrollTimeout = null;
+            let isHidden = false;
+            let isHovering = false;
+
+            // Show header function
+            function showHeader() {
+                navbar.classList.remove('navbar-hidden');
+                isHidden = false;
+            }
+
+            // Hide header function
+            function hideHeader() {
+                if (!isHovering && window.scrollY > 100) {
+                    navbar.classList.add('navbar-hidden');
+                    isHidden = true;
+                }
+            }
+
+            // Handle scroll
+            function handleScroll() {
+                const currentScrollY = window.scrollY;
+
+                // Always show header at the top of page
+                if (currentScrollY < 100) {
+                    showHeader();
+                    return;
+                }
+
+                // Scrolling up - show header immediately
+                if (currentScrollY < lastScrollY) {
+                    showHeader();
+                    // Clear any pending hide timeout
+                    if (scrollTimeout) {
+                        clearTimeout(scrollTimeout);
+                        scrollTimeout = null;
+                    }
+                }
+                // Scrolling down - hide after delay
+                else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                    // Clear existing timeout
+                    if (scrollTimeout) {
+                        clearTimeout(scrollTimeout);
+                    }
+                    // Set new timeout to hide header
+                    scrollTimeout = setTimeout(hideHeader, 1500);
+                }
+
+                lastScrollY = currentScrollY;
+            }
+
+            // Hover trigger - show header when mouse near top
+            hoverTrigger.addEventListener('mouseenter', function() {
+                isHovering = true;
+                showHeader();
+            });
+
+            // Keep header visible while hovering on navbar
+            navbar.addEventListener('mouseenter', function() {
+                isHovering = true;
+                showHeader();
+            });
+
+            navbar.addEventListener('mouseleave', function() {
+                isHovering = false;
+                // Hide after delay if scrolled down
+                if (window.scrollY > 100) {
+                    scrollTimeout = setTimeout(hideHeader, 2000);
+                }
+            });
+
+            hoverTrigger.addEventListener('mouseleave', function() {
+                // Only set isHovering false if not on navbar
+                if (!navbar.matches(':hover')) {
+                    isHovering = false;
+                }
+            });
+
+            // Throttled scroll listener for performance
+            let ticking = false;
+            window.addEventListener('scroll', function() {
+                if (!ticking) {
+                    window.requestAnimationFrame(function() {
+                        handleScroll();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+
+            // Show header on page load
+            showHeader();
+        })();
+    </script>
+
     <!-- Scroll to Top Button -->
     <button id="scrollTopBtn" onclick="scrollToTop()" title="Back to Top">
         <i class="fas fa-arrow-up"></i>
     </button>
+
+    <!-- PWA Install Prompt Banner -->
+    <div id="pwaInstallPrompt" style="display:none; position:fixed; bottom:0; left:0; right:0; background:linear-gradient(135deg, #003087, #001F3F); color:white; padding:1rem 1.25rem; z-index:10000; box-shadow:0 -4px 20px rgba(0,0,0,0.3); border-top:2px solid rgba(255,255,255,0.15);">
+        <div style="max-width:600px; margin:0 auto; display:flex; align-items:center; gap:1rem;">
+            <img src="{% static 'images/pnp-logo.png' %}" alt="AGNES" style="width:44px; height:44px; border-radius:10px; flex-shrink:0;">
+            <div style="flex:1; min-width:0;">
+                <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.15rem;">Install AGNES App</div>
+                <div style="font-size:0.8rem; opacity:0.85;">Access offline & get a faster experience</div>
+            </div>
+            <div style="display:flex; gap:0.5rem; flex-shrink:0;">
+                <button id="pwaInstallBtn" style="padding:0.55rem 1.15rem; background:#DC143C; color:white; border:none; border-radius:6px; font-weight:600; font-size:0.85rem; cursor:pointer;">Install</button>
+                <button id="pwaDismissBtn" style="padding:0.55rem 0.75rem; background:rgba(255,255,255,0.15); color:white; border:none; border-radius:6px; font-size:0.85rem; cursor:pointer;">Not now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA Update Available Banner (hidden by default, shown by JS when new SW version detected) -->
+    <div id="pwaUpdateBanner" style="display:none; position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#0052CC; color:white; padding:0.75rem 1.25rem; border-radius:10px; z-index:10000; box-shadow:0 4px 20px rgba(0,0,0,0.3); font-size:0.9rem; align-items:center; gap:0.75rem; max-width:400px;">
+        <span style="flex:1;">A new version is available!</span>
+        <button id="pwaUpdateBtn" style="padding:0.4rem 0.85rem; background:white; color:#0052CC; border:none; border-radius:5px; font-weight:600; font-size:0.8rem; cursor:pointer;">Update</button>
+    </div>
+
+    <!-- Service Worker Registration & PWA Install Logic -->
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+                    .then(function(registration) {
+                        console.log('[PWA] Service Worker registered, scope:', registration.scope);
+
+                        // Check for updates
+                        registration.addEventListener('updatefound', function() {
+                            var newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    var updateBanner = document.getElementById('pwaUpdateBanner');
+                                    if (updateBanner) {
+                                        updateBanner.style.display = 'flex';
+                                        document.getElementById('pwaUpdateBtn').addEventListener('click', function() {
+                                            newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                            window.location.reload();
+                                        });
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(err) {
+                        console.log('[PWA] Service Worker registration failed:', err);
+                    });
+            });
+        }
+
+        // PWA Install Prompt
+        var deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Don't show if user dismissed recently
+            var dismissed = localStorage.getItem('pwa-install-dismissed');
+            if (dismissed) {
+                var dismissedTime = parseInt(dismissed);
+                // Show again after 7 days
+                if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) {
+                    return;
+                }
+            }
+
+            // Show install prompt
+            var prompt = document.getElementById('pwaInstallPrompt');
+            if (prompt) {
+                prompt.style.display = 'block';
+            }
+        });
+
+        // Install button
+        var installBtn = document.getElementById('pwaInstallBtn');
+        if (installBtn) {
+            installBtn.addEventListener('click', function() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(function(choiceResult) {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('[PWA] User accepted install');
+                        }
+                        deferredPrompt = null;
+                        document.getElementById('pwaInstallPrompt').style.display = 'none';
+                    });
+                }
+            });
+        }
+
+        // Dismiss button
+        var dismissBtn = document.getElementById('pwaDismissBtn');
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', function() {
+                document.getElementById('pwaInstallPrompt').style.display = 'none';
+                localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+            });
+        }
+
+        // Hide install prompt if app is already installed
+        window.addEventListener('appinstalled', function() {
+            console.log('[PWA] App installed successfully');
+            document.getElementById('pwaInstallPrompt').style.display = 'none';
+            deferredPrompt = null;
+        });
+    </script>
+
+    <!-- Real-Time Notifications Script -->
+    <script>
+        // Notifications System - Backend-powered
+        (function() {
+            let notifications = [];
+            let unreadCount = 0;
+
+            // Get CSRF token from cookie
+            function getCSRFToken() {
+                const cookies = document.cookie.split(';');
+                for (let c of cookies) {
+                    c = c.trim();
+                    if (c.startsWith('csrftoken=')) {
+                        return c.substring('csrftoken='.length);
+                    }
+                }
+                return '';
+            }
+
+            // Toggle notifications dropdown
+            window.toggleNotifications = function() {
+                const dropdown = document.getElementById('notificationsDropdown');
+                dropdown.classList.toggle('active');
+                // Fetch latest when opening
+                if (dropdown.classList.contains('active')) {
+                    fetchNotifications();
+                }
+            };
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('notificationsDropdown');
+                if (dropdown && !dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+
+            // Update notification badge
+            function updateBadge() {
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    if (unreadCount > 0) {
+                        badge.style.display = 'flex';
+                        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+
+            // Get icon based on notification type
+            function getNotificationIcon(type) {
+                const icons = {
+                    'report_submitted': 'fa-file-alt',
+                    'report_approved': 'fa-check-circle',
+                    'report_rejected': 'fa-times-circle',
+                    'report_cancelled': 'fa-ban',
+                    'info': 'fa-info-circle'
+                };
+                return icons[type] || 'fa-bell';
+            }
+
+            // Get icon color class
+            function getNotificationColor(type) {
+                const colors = {
+                    'report_submitted': 'report',
+                    'report_approved': 'info',
+                    'report_rejected': 'fatal',
+                    'report_cancelled': 'report',
+                    'info': 'info'
+                };
+                return colors[type] || 'info';
+            }
+
+            // Render notifications in dropdown
+            function renderNotifications() {
+                const body = document.getElementById('notificationsBody');
+                if (!body) return;
+
+                if (notifications.length === 0) {
+                    body.innerHTML = `
+                        <div class="notification-empty">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>No notifications yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                body.innerHTML = notifications.map(n => `
+                    <div class="notification-item ${n.is_read ? '' : 'unread'}" onclick="handleNotificationClick(${n.id}, '${n.url}')" style="cursor: pointer;">
+                        <div class="notification-icon ${getNotificationColor(n.type)}">
+                            <i class="fas ${getNotificationIcon(n.type)}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">${n.title}</div>
+                            <div class="notification-text">${n.message}</div>
+                            <div class="notification-time">${n.time_ago}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Fetch notifications from backend
+            function updatePendingReportsBadge(count) {
+                const btn = document.getElementById('pendingReportsBtn');
+                const badge = document.getElementById('pendingReportsBadge');
+                const dropdownBadge = document.getElementById('dropdownPendingBadge');
+                if (btn && badge) {
+                    if (count > 0) {
+                        btn.style.visibility = 'visible';
+                        badge.style.display = 'flex';
+                        badge.textContent = count > 99 ? '99+' : count;
+                    } else {
+                        btn.style.visibility = 'hidden';
+                        badge.style.display = 'none';
+                    }
+                }
+                if (dropdownBadge) {
+                    if (count > 0) {
+                        dropdownBadge.style.display = 'inline-flex';
+                        dropdownBadge.textContent = count > 99 ? '99+' : count;
+                    } else {
+                        dropdownBadge.style.display = 'none';
+                    }
+                }
+            }
+
+            function fetchNotifications() {
+                fetch('{% url "get_notifications" %}')
+                    .then(r => r.json())
+                    .then(data => {
+                        notifications = data.notifications || [];
+                        unreadCount = data.unread_count || 0;
+                        updateBadge();
+                        renderNotifications();
+                        updatePendingReportsBadge(data.pending_count || 0);
+                    })
+                    .catch(err => console.log('[Notifications] Fetch error:', err));
+            }
+
+            // Handle notification click
+            window.handleNotificationClick = function(id, url) {
+                // Mark as read on backend
+                fetch(`/api/notifications/${id}/read/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCSRFToken() }
+                }).then(() => {
+                    // Update local state
+                    notifications = notifications.map(n => {
+                        if (n.id === id) { n.is_read = true; }
+                        return n;
+                    });
+                    unreadCount = Math.max(0, unreadCount - 1);
+                    updateBadge();
+                    renderNotifications();
+                });
+
+                // Navigate to URL
+                if (url) {
+                    window.location.href = url;
+                }
+            };
+
+            // Mark all as read
+            window.markAllAsRead = function() {
+                fetch('{% url "mark_all_notifications_read" %}', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCSRFToken() }
+                }).then(() => {
+                    notifications = notifications.map(n => ({ ...n, is_read: true }));
+                    unreadCount = 0;
+                    updateBadge();
+                    renderNotifications();
+                });
+            };
+
+            // Request browser notification permission
+            function requestNotificationPermission() {
+                if ('Notification' in window && window.Notification.permission === 'default') {
+                    window.Notification.requestPermission();
+                }
+            }
+
+            // Initialize
+            document.addEventListener('DOMContentLoaded', function() {
+                fetchNotifications();
+                requestNotificationPermission();
+
+                // Poll for new notifications every 3 seconds
+                setInterval(fetchNotifications, 30000);
+            });
+        })();
+    </script>
+
+    <!-- Dark Mode Script -->
+    <script>
+        // Dark Mode Toggle with localStorage persistence
+        (function() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const mobileDarkModeToggle = document.getElementById('mobileDarkModeToggle');
+            const darkModeIcon = document.getElementById('darkModeIcon');
+            const mobileDarkModeIcon = document.getElementById('mobileDarkModeIcon');
+
+            // Check for saved theme preference or default to light
+            function getThemePreference() {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    return savedTheme;
+                }
+                // Check system preference
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    return 'dark';
+                }
+                return 'light';
+            }
+
+            // Apply theme
+            function applyTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                updateIcons(theme);
+                updateChartTheme(theme);
+            }
+
+            // Update icons based on theme
+            function updateIcons(theme) {
+                const icon = theme === 'dark' ? 'fa-sun' : 'fa-moon';
+                const removeIcon = theme === 'dark' ? 'fa-moon' : 'fa-sun';
+
+                if (darkModeIcon) {
+                    darkModeIcon.classList.remove('fa-moon', 'fa-sun');
+                    darkModeIcon.classList.add(icon);
+                }
+                if (mobileDarkModeIcon) {
+                    mobileDarkModeIcon.classList.remove('fa-moon', 'fa-sun');
+                    mobileDarkModeIcon.classList.add(icon);
+                }
+            }
+
+            // Update Chart.js theme colors
+            function updateChartTheme(theme) {
+                if (typeof Chart === 'undefined') return;
+
+                const isDark = theme === 'dark';
+
+                // Theme colors
+                const colors = {
+                    text: isDark ? '#E8E8E8' : '#666666',
+                    grid: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    border: isDark ? '#2D3A4F' : '#E0E0E0',
+                    tooltipBg: isDark ? '#1E3A5F' : '#333333',
+                    tooltipText: '#FFFFFF'
+                };
+
+                // Update Chart.js defaults
+                Chart.defaults.color = colors.text;
+                Chart.defaults.borderColor = colors.border;
+
+                // Try to use AGNESSystem.updateAllChartsTheme if available
+                // Wrapped in rAF so canvas redraws don't compete with the CSS toggle animation
+                if (typeof window.AGNESSystem !== 'undefined' && typeof window.AGNESSystem.updateAllChartsTheme === 'function') {
+                    requestAnimationFrame(() => {
+                        window.AGNESSystem.updateAllChartsTheme();
+                        console.log('📊 Chart theme updated via AGNESSystem to:', theme);
+                    });
+                    return;
+                }
+
+                // Fallback: Update all existing chart instances using Object.values (Chart.js 4.x compatible)
+                if (Chart.instances) {
+                    requestAnimationFrame(() => {
+                    Object.values(Chart.instances).forEach(function(chart) {
+                        if (!chart || !chart.options) return;
+
+                        // Update scales (for bar/line charts)
+                        if (chart.options.scales) {
+                            if (chart.options.scales.x) {
+                                chart.options.scales.x.grid = chart.options.scales.x.grid || {};
+                                chart.options.scales.x.grid.color = colors.grid;
+                                chart.options.scales.x.ticks = chart.options.scales.x.ticks || {};
+                                chart.options.scales.x.ticks.color = colors.text;
+                            }
+                            if (chart.options.scales.y) {
+                                chart.options.scales.y.grid = chart.options.scales.y.grid || {};
+                                chart.options.scales.y.grid.color = colors.grid;
+                                chart.options.scales.y.ticks = chart.options.scales.y.ticks || {};
+                                chart.options.scales.y.ticks.color = colors.text;
+                            }
+                        }
+
+                        // Update legend
+                        if (chart.options.plugins) {
+                            chart.options.plugins.legend = chart.options.plugins.legend || {};
+                            chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
+                            chart.options.plugins.legend.labels.color = colors.text;
+
+                            // Update tooltip
+                            chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
+                            chart.options.plugins.tooltip.backgroundColor = colors.tooltipBg;
+                            chart.options.plugins.tooltip.titleColor = colors.tooltipText;
+                            chart.options.plugins.tooltip.bodyColor = colors.tooltipText;
+                        }
+
+                        chart.update('none');
+                    });
+                    }); // end requestAnimationFrame
+                }
+
+                console.log('📊 Chart theme updated to:', theme);
+            }
+
+            // Toggle theme
+            function toggleTheme() {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                // ── Animate the icon FIRST, before heavy chart updates block the render frame ──
+                if (darkModeIcon) {
+                    darkModeIcon.style.transform = 'rotate(360deg)';
+                    setTimeout(() => { darkModeIcon.style.transform = ''; }, 500);
+                }
+                if (mobileDarkModeIcon) {
+                    mobileDarkModeIcon.style.transform = 'rotate(360deg)';
+                    setTimeout(() => { mobileDarkModeIcon.style.transform = ''; }, 500);
+                }
+
+                // Defer theme/chart updates to the next animation frame so the
+                // spin transition has already started before Chart.js redraws.
+                requestAnimationFrame(() => { applyTheme(newTheme); });
+            }
+
+            // Apply saved theme on page load
+            applyTheme(getThemePreference());
+
+            // Event listeners
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', toggleTheme);
+            }
+            if (mobileDarkModeToggle) {
+                mobileDarkModeToggle.addEventListener('click', toggleTheme);
+            }
+
+            // Listen for system theme changes
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                    if (!localStorage.getItem('theme')) {
+                        applyTheme(e.matches ? 'dark' : 'light');
+                    }
+                });
+            }
+        })();
+    </script>
+
+    <!-- Session Timeout Warning -->
+    <div id="sessionTimeoutOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99999; align-items:flex-start; justify-content:center; padding-top:5px;">
+        <div style="background:white; border-radius:12px; padding:1.5rem 2rem; max-width:400px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <i class="fas fa-clock" style="font-size:2.5rem; color:#F59E0B; margin-bottom:0.75rem;"></i>
+            <h3 style="margin:0 0 0.5rem; font-size:1.1rem; color:#1F2937;">Session Expiring Soon</h3>
+            <p id="sessionTimeoutMsg" style="font-size:0.85rem; color:#6B7280; margin-bottom:1rem;">Your session will expire in <strong id="sessionCountdown">5:00</strong>. Any unsaved data may be lost.</p>
+            <div style="display:flex; gap:0.75rem; justify-content:center;">
+                <button onclick="extendSession()" style="padding:0.5rem 1.25rem; background:#003087; color:white; border:none; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">Stay Logged In</button>
+                <a href="{% url 'logout' %}" style="padding:0.5rem 1.25rem; background:#F3F4F6; color:#374151; border:1px solid #D1D5DB; border-radius:6px; font-size:0.85rem; font-weight:500; text-decoration:none;">Logout</a>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function() {
+        // Session timeout: 24 hours (86400s). Warn 5 minutes before expiry.
+        var SESSION_DURATION = 86400; // seconds
+        var WARN_BEFORE = 300; // 5 minutes before expiry
+        var lastActivity = Date.now();
+        var warningShown = false;
+        var countdownInterval = null;
+
+        // Track user activity (SESSION_SAVE_EVERY_REQUEST resets server session on each request)
+        ['click', 'keydown', 'scroll', 'mousemove', 'touchstart'].forEach(function(evt) {
+            document.addEventListener(evt, function() {
+                lastActivity = Date.now();
+                if (warningShown) {
+                    // User is active, dismiss warning
+                    hideWarning();
+                    extendSession();
+                }
+            }, { passive: true, once: false });
+        });
+
+        function checkTimeout() {
+            var idleSeconds = (Date.now() - lastActivity) / 1000;
+            var timeLeft = SESSION_DURATION - idleSeconds;
+
+            if (timeLeft <= 0) {
+                // Session likely expired, redirect to login
+                window.location.href = '{% url "login" %}';
+                return;
+            }
+
+            if (timeLeft <= WARN_BEFORE && !warningShown) {
+                showWarning(Math.floor(timeLeft));
+            }
+        }
+
+        function showWarning(secondsLeft) {
+            warningShown = true;
+            var overlay = document.getElementById('sessionTimeoutOverlay');
+            if (overlay) overlay.style.display = 'flex';
+
+            // Start countdown
+            var remaining = secondsLeft;
+            updateCountdown(remaining);
+            countdownInterval = setInterval(function() {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = '{% url "login" %}';
+                    return;
+                }
+                updateCountdown(remaining);
+            }, 1000);
+        }
+
+        function updateCountdown(seconds) {
+            var el = document.getElementById('sessionCountdown');
+            if (el) {
+                var m = Math.floor(seconds / 60);
+                var s = seconds % 60;
+                el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+            }
+        }
+
+        function hideWarning() {
+            warningShown = false;
+            if (countdownInterval) clearInterval(countdownInterval);
+            var overlay = document.getElementById('sessionTimeoutOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        // Extend session by making a lightweight request
+        window.extendSession = function() {
+            lastActivity = Date.now();
+            hideWarning();
+            // Ping server to reset SESSION_SAVE_EVERY_REQUEST
+            fetch('{% url "dashboard" %}', {
+                method: 'HEAD',
+                credentials: 'same-origin'
+            }).catch(function() {});
+        };
+
+        // Check every 30 seconds
+        setInterval(checkTimeout, 30000);
+    })();
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>

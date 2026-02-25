@@ -17,7 +17,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key-change-this-i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',') + ['*']
 
 # ==============================================================================
 # APPLICATION DEFINITION
@@ -35,8 +35,9 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
-    # 'leaflet',  # REMOVE THIS LINE
-    
+    'cloudinary',
+    'cloudinary_storage',
+
     # Local apps
     'accidents',
     'clustering',
@@ -70,6 +71,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
+                'accidents.context_processors.badge_counts',
             ],
         },
     },
@@ -99,6 +101,12 @@ if 'test' in sys.argv or 'test_coverage' in sys.argv:
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': ':memory:',
     }
+
+# Use DATABASE_URL if provided (Railway, Heroku, etc.)
+import dj_database_url
+_database_url = config('DATABASE_URL', default=None)
+if _database_url:
+    DATABASES['default'] = dj_database_url.config(default=_database_url, conn_max_age=600, ssl_require=True)
 
 # ==============================================================================
 # PASSWORD VALIDATION
@@ -155,6 +163,23 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ==============================================================================
+# CLOUDINARY MEDIA STORAGE (Production — free tier, persistent uploads)
+# Sign up free at https://cloudinary.com then set these env vars in Railway
+# ==============================================================================
+
+CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME', default='')
+CLOUDINARY_API_KEY     = config('CLOUDINARY_API_KEY', default='')
+CLOUDINARY_API_SECRET   = config('CLOUDINARY_API_SECRET', default='')
+
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+        'API_KEY':    CLOUDINARY_API_KEY,
+        'API_SECRET': CLOUDINARY_API_SECRET,
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # ==============================================================================
 # DEFAULT PRIMARY KEY FIELD TYPE
@@ -257,6 +282,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
 ]
+
+# CSRF trusted origins — add your Railway/custom domain here via env var
+# e.g. CSRF_TRUSTED_ORIGINS=https://agnes-app.up.railway.app,https://yourdomain.com
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='http://localhost:8000,http://127.0.0.1:8000'
+).split(',')
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -446,7 +478,8 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@pnp-caraga.go
 # ==============================================================================
 
 if not DEBUG:
-    # HTTPS settings
+    # HTTPS settings — Railway terminates SSL at the proxy layer
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True

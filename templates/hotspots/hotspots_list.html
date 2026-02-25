@@ -33,6 +33,11 @@
 
     /* ===== MODERN FLAT UI STYLING ===== */
 
+    .hotspots-list-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
     /* Hero Header */
     .page-hero {
         background: linear-gradient(135deg, var(--hotspot-primary) 0%, var(--hotspot-accent) 100%);
@@ -807,89 +812,117 @@
         width: 90%;
         max-width: 580px;
         max-height: 92vh;
-        overflow-y: auto;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         position: relative;
         animation: slideUp 0.4s ease;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* Scrollable area inside modal */
+    .modal-scroll-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 8px 0 0;
+        margin: 0 4px 0 0;
+    }
+
+    /* Custom Scrollbar - Hotspot theme */
+    .modal-scroll-area::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .modal-scroll-area::-webkit-scrollbar-track {
+        background: var(--scrollbar-track, #F3F4F6);
+        border-radius: 10px;
+    }
+
+    .modal-scroll-area::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb, var(--hotspot-primary));
+        border-radius: 10px;
+    }
+
+    .modal-scroll-area::-webkit-scrollbar-thumb:hover {
+        background: var(--scrollbar-thumb-hover, var(--hotspot-accent));
     }
 
     .modal-close {
         position: absolute;
-        top: 1rem;
-        right: 1rem;
-        background: white;
+        top: 0.625rem;
+        right: 0.625rem;
+        background: rgba(255,255,255,0.2);
         border: none;
-        font-size: 1.5rem;
-        width: 40px;
-        height: 40px;
+        font-size: 1.1rem;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         transition: all 0.2s ease;
         z-index: 10;
-        color: #6B7280;
+        color: white;
     }
 
     .modal-close:hover {
-        background: #F3F4F6;
-        color: #111827;
-        transform: rotate(90deg);
+        background: rgba(255,255,255,0.3);
+        color: white;
     }
 
     .modal-header {
         background: linear-gradient(135deg, var(--hotspot-primary) 0%, var(--hotspot-accent) 100%);
         color: white;
-        padding: 1.5rem 1.25rem 1.25rem;
+        padding: 0.875rem 1rem;
         border-radius: 12px 12px 0 0;
         position: relative;
+        flex-shrink: 0;
     }
 
     .modal-title {
-        font-size: 1.35rem;
+        font-size: 1.05rem;
         font-weight: 700;
-        margin: 0 0 0.75rem 0;
-        padding-right: 2.5rem;
+        margin: 0 0 0.4rem 0;
+        padding-right: 2rem;
     }
 
     .modal-badge {
-        padding: 0.375rem 0.875rem;
-        border-radius: 6px;
-        font-size: 0.813rem;
+        padding: 0.25rem 0.625rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
         font-weight: 700;
         text-transform: uppercase;
         display: inline-block;
     }
 
     .modal-body {
-        padding: 1.25rem;
+        padding: 1rem;
     }
 
     .modal-stat-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-        margin-bottom: 1.25rem;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
     }
 
     .modal-stat-card {
         background: #F9FAFB;
-        padding: 0.75rem;
-        border-radius: 8px;
+        padding: 0.5rem 0.625rem;
+        border-radius: 6px;
         border: 1px solid #E5E7EB;
     }
 
     .modal-stat-label {
         color: #6B7280;
-        font-size: 0.813rem;
-        margin-bottom: 0.375rem;
+        font-size: 0.7rem;
+        margin-bottom: 0.2rem;
         display: block;
     }
 
     .modal-stat-value {
-        font-size: 1.35rem;
+        font-size: 1.1rem;
         font-weight: 700;
         color: #111827;
     }
@@ -899,14 +932,14 @@
     }
 
     .modal-section {
-        margin-bottom: 1.25rem;
+        margin-bottom: 1rem;
     }
 
     .modal-section-title {
-        font-size: 0.9375rem;
+        font-size: 0.8rem;
         font-weight: 600;
         color: #111827;
-        margin-bottom: 0.625rem;
+        margin-bottom: 0.5rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -915,36 +948,36 @@
     .modal-municipalities {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 0.35rem;
     }
 
     .modal-municipality-tag {
         background: #E8F0FE;
         color: #003087;
-        padding: 0.375rem 0.75rem;
-        border-radius: 6px;
-        font-size: 0.813rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
         font-weight: 500;
     }
 
     .modal-severity {
         background: #F9FAFB;
-        padding: 1rem;
-        border-radius: 8px;
+        padding: 0.75rem;
+        border-radius: 6px;
         border: 1px solid #E5E7EB;
     }
 
     .modal-severity-label {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.625rem;
-        font-size: 0.9375rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
         color: #374151;
         font-weight: 500;
     }
 
     .modal-severity-score {
-        font-size: 1.5rem;
+        font-size: 1.1rem;
         font-weight: 700;
         color: var(--hotspot-primary);
     }
@@ -963,19 +996,20 @@
     }
 
     .modal-actions {
-        padding: 1rem 1.25rem;
+        padding: 0.75rem 1rem;
         background: #F9FAFB;
         border-top: 1px solid #E5E7EB;
         display: flex;
-        gap: 0.75rem;
+        gap: 0.5rem;
         border-radius: 0 0 12px 12px;
+        flex-shrink: 0;
     }
 
     .modal-btn {
         flex: 1;
-        padding: 0.75rem 1.25rem;
-        border-radius: 8px;
-        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -983,7 +1017,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
+        gap: 0.35rem;
     }
 
     .modal-btn-primary {
@@ -1010,21 +1044,187 @@
 
     /* Responsive Design */
     @media (max-width: 768px) {
+        .page-hero {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            gap: 0.5rem;
+        }
+
         .page-hero h1 {
-            font-size: 1.6rem;
+            font-size: 1rem;
+            gap: 8px;
+            margin-bottom: 2px;
+        }
+
+        .page-hero p {
+            font-size: 0.72rem;
+            opacity: 0.9;
+        }
+
+        .hero-badge {
+            font-size: 0.62rem;
+            padding: 2px 8px;
+        }
+
+        .hero-actions {
+            width: 100%;
+            gap: 6px;
+        }
+
+        .hero-actions .btn {
+            flex: 1;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.68rem;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        /* Summary stats: 4-column compact row */
+        .summary-cards {
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 5px !important;
+            margin-bottom: 10px !important;
+        }
+
+        .summary-card {
+            padding: 8px 4px !important;
+            border-radius: 6px !important;
+        }
+
+        .summary-card:hover { transform: none !important; }
+
+        .summary-card h3 {
+            font-size: 1.1rem !important;
+            margin-bottom: 2px !important;
+        }
+
+        .summary-card p {
+            font-size: 0.55rem !important;
+            margin: 0 !important;
+        }
+
+        /* Filters section compact */
+        .filters-section {
+            padding: 0.75rem !important;
+            margin-bottom: 10px !important;
+            border-radius: 8px !important;
+        }
+
+        .filters-header {
+            margin-bottom: 0.6rem !important;
+        }
+
+        .filters-header h3 {
+            font-size: 0.85rem !important;
+        }
+
+        .filters-header .btn {
+            padding: 0.2rem 0.55rem !important;
+            font-size: 0.68rem !important;
+        }
+
+        /* Search input */
+        #hotspotSearch {
+            padding: 0.28rem 0.6rem 0.28rem 1.9rem !important;
+            font-size: 0.72rem !important;
+            height: 32px !important;
+        }
+
+        .search-icon {
+            font-size: 0.7rem !important;
+            left: 0.6rem !important;
+        }
+
+        /* Search button — override inline style */
+        .filters-section button.btn-primary,
+        .filters-section .btn.btn-primary {
+            padding: 0 0.75rem !important;
+            font-size: 0.72rem !important;
+            height: 32px !important;
+            white-space: nowrap !important;
+        }
+
+        /* Filter grid: 2-col */
+        .filters-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.35rem !important;
+            margin-top: 0.5rem !important;
+        }
+
+        .filter-group label {
+            font-size: 0.62rem !important;
+            margin-bottom: 0.08rem !important;
+        }
+
+        .filters-section label {
+            font-size: 0.62rem !important;
+            margin-bottom: 0.08rem !important;
+        }
+
+        .filter-group select {
+            font-size: 0.7rem !important;
+            padding: 0.22rem 0.35rem !important;
+            height: 30px !important;
         }
 
         .hotspots-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hotspot-header {
+            padding: 0.6rem 0.75rem;
+        }
+
+        .hotspot-title {
+            font-size: 0.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .risk-badge {
+            font-size: 0.6rem;
+            padding: 0.18rem 0.45rem;
+        }
+
+        .hotspot-body {
+            padding: 0.6rem 0.75rem;
+        }
+
+        .hotspot-stat {
+            padding: 0.3rem 0;
+        }
+
+        .stat-label,
+        .stat-value {
+            font-size: 0.7rem;
+        }
+
+        .severity-label {
+            font-size: 0.68rem;
+        }
+
+        .severity-meter {
+            margin-top: 0.5rem;
+        }
+
+        .hotspot-actions {
+            padding: 0.5rem 0.75rem;
+            gap: 0.35rem;
+        }
+
+        .hotspot-actions .btn {
+            flex: 1;
+            padding: 0.28rem 0.4rem;
+            font-size: 0.68rem;
+            gap: 0.25rem;
+            justify-content: center;
         }
 
         .hotspots-header {
             flex-direction: column;
             align-items: flex-start;
-        }
-
-        .filters-grid {
-            grid-template-columns: 1fr;
         }
 
         .pagination-container {
@@ -1087,6 +1287,21 @@
 
         .modal-btn {
             padding: 0.75rem 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-hero h1 {
+            font-size: 1.1rem;
+        }
+
+        .hero-actions .btn {
+            padding: 0.3rem 0.5rem;
+            font-size: 0.68rem;
+        }
+
+        .hero-actions .btn span:first-child {
+            display: none;
         }
     }
 
@@ -1164,6 +1379,815 @@
         0%, 100% { transform: scale(1); opacity: 1; }
         50% { transform: scale(1.05); opacity: 0.9; }
     }
+
+    /* ===== DARK MODE STYLES ===== */
+    [data-theme="dark"] {
+        --text-primary: #E8E8E8;
+        --text-secondary: #B0B0B0;
+        --border-light: #2D3A4F;
+        --border-medium: #3D4A5F;
+        --bg-light: #1A1A2E;
+    }
+
+    [data-theme="dark"] .filters-section,
+    [data-theme="dark"] .summary-card,
+    [data-theme="dark"] .hotspot-card,
+    [data-theme="dark"] .provincial-panel,
+    [data-theme="dark"] .modal-content {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+        color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .filters-header h3,
+    [data-theme="dark"] .summary-card h3,
+    [data-theme="dark"] .hotspot-title,
+    [data-theme="dark"] .provincial-panel h3 {
+        color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .summary-card p,
+    [data-theme="dark"] .hotspot-meta,
+    [data-theme="dark"] .stat-value {
+        color: var(--text-secondary);
+    }
+
+    [data-theme="dark"] .search-input,
+    [data-theme="dark"] .filter-select,
+    [data-theme="dark"] select,
+    [data-theme="dark"] input[type="text"] {
+        background: #1A2332;
+        border-color: #2D3A4F;
+        color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .search-input:focus,
+    [data-theme="dark"] .filter-select:focus {
+        border-color: var(--hotspot-primary);
+        background: #1E2A3A;
+    }
+
+    [data-theme="dark"] .search-input::placeholder {
+        color: #666;
+    }
+
+    [data-theme="dark"] .btn-outline {
+        border-color: #3D4A5F;
+        color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .btn-outline:hover {
+        background: rgba(220, 20, 60, 0.15);
+        border-color: var(--hotspot-primary);
+        color: var(--hotspot-primary);
+    }
+
+    [data-theme="dark"] .hotspot-card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="dark"] .hotspot-card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    [data-theme="dark"] .hotspot-stats {
+        background: #1A2332;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .stat-item {
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .stat-label {
+        color: var(--text-secondary);
+    }
+
+    [data-theme="dark"] .stat-number {
+        color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .hotspot-location,
+    [data-theme="dark"] .hotspot-date {
+        color: var(--text-secondary);
+    }
+
+    [data-theme="dark"] .pagination-link {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+        color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .pagination-link:hover {
+        background: #2D3A4F;
+    }
+
+    [data-theme="dark"] .pagination-link.active {
+        background: var(--hotspot-primary);
+        color: white;
+    }
+
+    [data-theme="dark"] .provincial-stat-card {
+        background: #1A2332;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .clustering-modal .modal-content,
+    [data-theme="dark"] .modal-body {
+        background: #1E2A3A;
+    }
+
+    [data-theme="dark"] .modal-header {
+        border-bottom-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .modal-footer {
+        border-top-color: #2D3A4F;
+        background: #1A2332;
+    }
+
+    /* ===== COMPREHENSIVE MODAL DARK MODE ===== */
+    [data-theme="dark"] .hotspot-modal .modal-content {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .modal-title,
+    [data-theme="dark"] .modal-header h2,
+    [data-theme="dark"] .modal-header h3 {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .modal-badge {
+        background: rgba(220, 53, 69, 0.2) !important;
+        color: #FF6B7A !important;
+    }
+
+    [data-theme="dark"] .modal-stat-card {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .modal-stat-label {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .modal-stat-value {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .modal-section-title {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .modal-municipality-tag {
+        background: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    /* Modal severity section dark mode */
+    [data-theme="dark"] .modal-severity {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .modal-severity-label {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .modal-severity-score {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .modal-severity-bar {
+        background: #2D3A4F !important;
+    }
+
+    /* Modal actions/footer dark mode */
+    [data-theme="dark"] .modal-actions {
+        background: #1A2332 !important;
+        border-top-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .modal-btn-primary {
+        background: #4A90D9 !important;
+        border-color: #4A90D9 !important;
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .modal-btn-primary:hover {
+        background: #5BA3EC !important;
+    }
+
+    [data-theme="dark"] .modal-btn-secondary {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .modal-btn-secondary:hover {
+        background: #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .modal-close {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .modal-close:hover {
+        color: #FFFFFF !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Clustering modal dark mode - comprehensive overrides */
+    [data-theme="dark"] #clusteringModal > div:nth-child(2) {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] #clusteringModal [style*="background: white"],
+    [data-theme="dark"] #clusteringModal [style*="background:#fff"],
+    [data-theme="dark"] #clusteringModal [style*="background: #fff"] {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] #clusteringModal input,
+    [data-theme="dark"] #clusteringModal select {
+        background: #1A2332 !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #clusteringModal label {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #clusteringModal [style*="color: #333"],
+    [data-theme="dark"] #clusteringModal [style*="color:#333"],
+    [data-theme="dark"] #clusteringModal [style*="color: #555"],
+    [data-theme="dark"] #clusteringModal [style*="color:#555"],
+    [data-theme="dark"] #clusteringModal [style*="color: #666"],
+    [data-theme="dark"] #clusteringModal [style*="color:#666"] {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #clusteringModal [style*="color: #888"],
+    [data-theme="dark"] #clusteringModal [style*="color:#888"] {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] #clusteringModal p,
+    [data-theme="dark"] #clusteringModal span,
+    [data-theme="dark"] #clusteringModal div {
+        color: #E8E8E8 !important;
+    }
+
+    /* Clustering modal info box */
+    [data-theme="dark"] #clusteringModal [style*="background: #fff3e0"] {
+        background: rgba(255, 152, 0, 0.15) !important;
+    }
+
+    /* Clustering modal buttons */
+    [data-theme="dark"] #clusteringModal button[style*="background: #fff"],
+    [data-theme="dark"] #clusteringModal button[style*="background:#fff"] {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #clusteringModal [style*="border-top: 1px solid #eee"],
+    [data-theme="dark"] #clusteringModal [style*="border: 1px solid #ddd"] {
+        border-color: #3D4A5F !important;
+    }
+
+    /* Progress step dark mode */
+    [data-theme="dark"] #clStatusText {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #clSubText {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] #clusteringModal [style*="background: #e9ecef"] {
+        background: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] #clusteringModal [style*="border: 3px solid #e0e0e0"] {
+        border-color: #3D4A5F !important;
+    }
+
+    /* Results step text */
+    [data-theme="dark"] #clResultTitle {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #clResultSubtitle {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] #clResultStats {
+        background: transparent !important;
+    }
+
+    /* Result stats cards dark mode */
+    [data-theme="dark"] #clResultStats > div:nth-child(1) {
+        background: rgba(220, 53, 69, 0.2) !important;
+    }
+
+    [data-theme="dark"] #clResultStats > div:nth-child(1) > div:last-child {
+        color: #FF6B7A !important;
+    }
+
+    [data-theme="dark"] #clResultStats > div:nth-child(2) {
+        background: rgba(33, 150, 243, 0.2) !important;
+    }
+
+    [data-theme="dark"] #clResultStats > div:nth-child(2) > div:last-child {
+        color: #64B5F6 !important;
+    }
+
+    [data-theme="dark"] #clResultStats > div:nth-child(3) {
+        background: rgba(40, 167, 69, 0.2) !important;
+    }
+
+    [data-theme="dark"] #clResultStats > div:nth-child(3) > div:last-child {
+        color: #7FD99A !important;
+    }
+
+    [data-theme="dark"] #clResultStats span,
+    [data-theme="dark"] #clResultStats div[id^="clStat"] {
+        color: #FFFFFF !important;
+    }
+
+    /* Close button in result step */
+    [data-theme="dark"] #clusterStep3 button[style*="background: #fff"] {
+        background: #2D3A4F !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #clusterStep3 button[style*="background: #fff"]:hover {
+        background: #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .form-group label {
+        color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .form-group select,
+    [data-theme="dark"] .form-group input {
+        background: #1A2332;
+        border-color: #2D3A4F;
+        color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .empty-state {
+        color: var(--text-secondary);
+    }
+
+    [data-theme="dark"] .severity-badge {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="dark"] .export-dropdown-menu {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .export-dropdown-item {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .export-dropdown-item:hover {
+        background: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .loading-overlay {
+        background: rgba(13, 27, 42, 0.9);
+    }
+
+    /* Hotspot card grid in dark mode */
+    [data-theme="dark"] .hotspot-card {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .hotspot-card:hover {
+        background: #243447 !important;
+        border-color: #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .hotspot-card .hotspot-title {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .hotspot-card .hotspot-stats {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .hotspot-card .stat-number {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .hotspot-card .stat-label {
+        color: #B0B0B0 !important;
+    }
+
+    /* Table view in dark mode */
+    [data-theme="dark"] table tbody tr {
+        background: #1A2332 !important;
+    }
+
+    [data-theme="dark"] table tbody tr:nth-child(even) {
+        background: #1E2A3A !important;
+    }
+
+    [data-theme="dark"] table tbody tr:hover {
+        background: #243447 !important;
+    }
+
+    [data-theme="dark"] table tbody td {
+        color: #E8E8E8 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    /* Provincial panel */
+    [data-theme="dark"] .provincial-panel {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .provincial-stat-card {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .provincial-stat-card .stat-value {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .provincial-stat-card .stat-label {
+        color: #B0B0B0 !important;
+    }
+
+    /* ===== FILTER LABELS DARK MODE ===== */
+    [data-theme="dark"] .filter-group label,
+    [data-theme="dark"] .filters-grid label,
+    [data-theme="dark"] .filters-section label,
+    [data-theme="dark"] .search-section label {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .filter-group select,
+    [data-theme="dark"] .filters-grid select,
+    [data-theme="dark"] .search-input,
+    [data-theme="dark"] #hotspotSearch {
+        background: #1A2332 !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #hotspotSearch::placeholder {
+        color: #8899AA !important;
+    }
+
+    [data-theme="dark"] .search-icon {
+        color: #8899AA !important;
+    }
+
+    [data-theme="dark"] .filter-group select:hover,
+    [data-theme="dark"] .filters-grid select:hover,
+    [data-theme="dark"] #hotspotSearch:hover {
+        border-color: #DC143C !important;
+    }
+
+    [data-theme="dark"] .filter-group select:focus,
+    [data-theme="dark"] .filters-grid select:focus,
+    [data-theme="dark"] .search-input:focus,
+    [data-theme="dark"] #hotspotSearch:focus {
+        border-color: #DC143C !important;
+        background: #1E2A3A !important;
+        box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.15) !important;
+    }
+
+    [data-theme="dark"] .search-section h3,
+    [data-theme="dark"] .filters-header h3 {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .active-filters {
+        border-top-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .filter-tag {
+        background: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    /* ===== PAGINATION DARK MODE ===== */
+    [data-theme="dark"] .pagination-container {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .pagination-info {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] #pageInfo {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] #itemsPerPage {
+        background: #1A2332 !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .pagination-controls button {
+        background: #1A2332 !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .pagination-controls button:hover:not(:disabled) {
+        background: #2D3A4F !important;
+        border-color: #DC143C !important;
+    }
+
+    [data-theme="dark"] .pagination-controls button:disabled {
+        background: #151C28 !important;
+        color: #666 !important;
+    }
+
+    /* ===== VIEW TOGGLE DARK MODE ===== */
+    [data-theme="dark"] .view-toggle {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .view-option {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .view-option:hover:not(.active) {
+        color: #DC143C !important;
+        border-color: #DC143C !important;
+    }
+
+    [data-theme="dark"] .view-option.active {
+        background: linear-gradient(135deg, #DC143C 0%, #FF6B6B 100%) !important;
+        color: #FFFFFF !important;
+    }
+
+    /* ===== BUTTONS GENERAL DARK MODE ===== */
+    [data-theme="dark"] .btn,
+    [data-theme="dark"] button {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .btn-outline,
+    [data-theme="dark"] .btn-secondary {
+        background: #1A2332 !important;
+        border-color: #3D4A5F !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .btn-outline:hover,
+    [data-theme="dark"] .btn-secondary:hover {
+        background: #2D3A4F !important;
+        border-color: #DC143C !important;
+    }
+
+    /* ===== HERO BUTTONS DARK MODE ===== */
+    [data-theme="dark"] .btn-light,
+    [data-theme="dark"] .hero-actions .btn-light {
+        background: #2D3A4F !important;
+        color: #E8E8E8 !important;
+        border-color: #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .btn-light:hover,
+    [data-theme="dark"] .hero-actions .btn-light:hover {
+        background: #DC143C !important;
+        color: #FFFFFF !important;
+        border-color: #DC143C !important;
+    }
+
+    [data-theme="dark"] .btn-outline-light,
+    [data-theme="dark"] .hero-actions .btn-outline-light {
+        background: transparent !important;
+        color: #E8E8E8 !important;
+        border-color: #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .btn-outline-light:hover,
+    [data-theme="dark"] .hero-actions .btn-outline-light:hover {
+        background: #2D3A4F !important;
+        color: #FFFFFF !important;
+        border-color: #DC143C !important;
+    }
+
+    /* ===== HERO BADGE DARK MODE ===== */
+    [data-theme="dark"] .hero-badge {
+        background: rgba(220, 53, 69, 0.25) !important;
+        color: #FF8A8A !important;
+        border-color: rgba(220, 53, 69, 0.4) !important;
+    }
+
+    /* ===== RISK BADGES DARK MODE ===== */
+    [data-theme="dark"] .risk-badge {
+        border: 1px solid transparent !important;
+    }
+
+    [data-theme="dark"] .risk-badge.risk-critical {
+        background: rgba(220, 53, 69, 0.25) !important;
+        color: #FF6B7A !important;
+        border-color: rgba(220, 53, 69, 0.4) !important;
+    }
+
+    [data-theme="dark"] .risk-badge.risk-high {
+        background: rgba(255, 107, 53, 0.25) !important;
+        color: #FF9A7A !important;
+        border-color: rgba(255, 107, 53, 0.4) !important;
+    }
+
+    [data-theme="dark"] .risk-badge.risk-medium {
+        background: rgba(245, 158, 11, 0.25) !important;
+        color: #FFD966 !important;
+        border-color: rgba(245, 158, 11, 0.4) !important;
+    }
+
+    [data-theme="dark"] .risk-badge.risk-low {
+        background: rgba(16, 185, 129, 0.25) !important;
+        color: #7FD99A !important;
+        border-color: rgba(16, 185, 129, 0.4) !important;
+    }
+
+    /* ===== SEVERITY METER DARK MODE ===== */
+    [data-theme="dark"] .severity-meter {
+        background: transparent !important;
+    }
+
+    [data-theme="dark"] .severity-label {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .severity-label strong {
+        color: #60A5FA !important;
+    }
+
+    [data-theme="dark"] .severity-bar {
+        background: #2D3A4F !important;
+    }
+
+    /* ===== HOTSPOT CARD ACTIONS/FOOTER DARK MODE ===== */
+    [data-theme="dark"] .hotspot-actions {
+        background: transparent !important;
+        border-top-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .hotspot-actions .btn,
+    [data-theme="dark"] .hotspot-actions button {
+        background: #2D3A4F !important;
+        color: #E8E8E8 !important;
+        border-color: #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .hotspot-actions .btn:hover,
+    [data-theme="dark"] .hotspot-actions button:hover {
+        background: #DC143C !important;
+        color: #FFFFFF !important;
+        border-color: #DC143C !important;
+    }
+
+    [data-theme="dark"] .hotspot-actions .btn-primary {
+        background: #DC143C !important;
+        color: #FFFFFF !important;
+        border-color: #DC143C !important;
+    }
+
+    [data-theme="dark"] .hotspot-actions .btn-primary:hover {
+        background: #B01030 !important;
+    }
+
+    /* ===== TABLE ACTION BUTTONS DARK MODE ===== */
+    [data-theme="dark"] .table-actions {
+        background: transparent !important;
+    }
+
+    [data-theme="dark"] .table-action-btn {
+        background: #2D3A4F !important;
+        color: #E8E8E8 !important;
+        border: 1px solid #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.view {
+        background: rgba(74, 144, 217, 0.2) !important;
+        color: #8FC8FF !important;
+        border-color: rgba(74, 144, 217, 0.4) !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.view:hover {
+        background: #4A90D9 !important;
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.map {
+        background: rgba(40, 167, 69, 0.2) !important;
+        color: #7FD99A !important;
+        border-color: rgba(40, 167, 69, 0.4) !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.map:hover {
+        background: #28A745 !important;
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.details,
+    [data-theme="dark"] .table-action-btn.edit {
+        background: #4A90D9 !important;
+        color: #FFFFFF !important;
+        border-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .table-action-btn.details:hover,
+    [data-theme="dark"] .table-action-btn.edit:hover {
+        background: rgba(74, 144, 217, 0.2) !important;
+        color: #8FC8FF !important;
+    }
+
+    /* ===== SUMMARY CARDS DARK MODE ===== */
+    [data-theme="dark"] .summary-card {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .summary-card h3 {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .summary-card p,
+    [data-theme="dark"] .summary-card .value,
+    [data-theme="dark"] .summary-card .number {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .summary-card .label {
+        color: #B0B0B0 !important;
+    }
+
+    /* ===== CARD FOOTER DARK MODE ===== */
+    [data-theme="dark"] .hotspot-card .card-footer,
+    [data-theme="dark"] .card-footer {
+        background: #1A2332 !important;
+        border-top-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .card-footer .btn,
+    [data-theme="dark"] .card-footer button {
+        background: #2D3A4F !important;
+        color: #E8E8E8 !important;
+        border-color: #3D4A5F !important;
+    }
+
+    [data-theme="dark"] .card-footer .btn:hover,
+    [data-theme="dark"] .card-footer button:hover {
+        background: #DC143C !important;
+        color: #FFFFFF !important;
+    }
+
+    /* ===== EXPORT DROPDOWN DARK MODE ===== */
+    [data-theme="dark"] .export-dropdown-menu {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .export-dropdown-item {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .export-dropdown-item:hover {
+        background: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .export-dropdown-item span {
+        color: #E8E8E8 !important;
+    }
+
+    /* ===== INLINE STYLE OVERRIDES FOR BUTTONS ===== */
+    [data-theme="dark"] [style*="background: #fff"],
+    [data-theme="dark"] [style*="background:#fff"],
+    [data-theme="dark"] [style*="background: white"],
+    [data-theme="dark"] [style*="background:white"] {
+        background: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] [style*="color: #333"],
+    [data-theme="dark"] [style*="color:#333"],
+    [data-theme="dark"] [style*="color: #DC143C"] {
+        color: #E8E8E8 !important;
+    }
 </style>
 {% endblock %}
 
@@ -1179,6 +2203,7 @@
     </div>
 </div>
 
+<div class="hotspots-list-container">
 <!-- Hero Header -->
 <div class="page-hero">
     <div class="page-hero-content">
@@ -1190,14 +2215,38 @@
         <p>High-risk areas identified by AGNES clustering algorithm across Caraga Region</p>
     </div>
     <div class="hero-actions">
+        {% if user.profile.role == 'super_admin' or user.profile.role == 'admin' %}
+        <button class="btn btn-light" onclick="openClusteringModal()" style="background: #fff; color: #DC143C; font-weight: 600;">
+            <i class="fas fa-project-diagram"></i>
+            Run Clustering
+        </button>
+        {% endif %}
         <button class="btn btn-light" onclick="window.location.href='{% url 'map_view' %}'">
             <i class="fas fa-map-marked-alt"></i>
             View on Map
         </button>
-        <button class="btn btn-outline-light" onclick="exportHotspots()">
-            <i class="fas fa-download"></i>
-            Export Report
-        </button>
+        <!-- Export Dropdown -->
+        <div class="export-dropdown" style="position: relative;">
+            <button class="btn btn-outline-light" onclick="toggleExportDropdown()" id="exportDropdownBtn">
+                <i class="fas fa-download"></i>
+                Export
+                <i class="fas fa-chevron-down" style="font-size: 0.75rem; margin-left: 5px;"></i>
+            </button>
+            <div class="export-dropdown-menu" id="exportDropdownMenu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 200px; z-index: 1000; overflow: hidden;">
+                <a href="{% url 'export_hotspots_pdf' %}?{{ request.GET.urlencode }}" class="export-dropdown-item" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #333; text-decoration: none; transition: background 0.2s;">
+                    <i class="fas fa-file-pdf" style="color: #DC3545; width: 20px;"></i>
+                    <span>PDF Hotspot Report</span>
+                </a>
+                <a href="{% url 'export_accidents_excel' %}" class="export-dropdown-item" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #333; text-decoration: none; transition: background 0.2s;">
+                    <i class="fas fa-file-excel" style="color: #217346; width: 20px;"></i>
+                    <span>Excel Data Export</span>
+                </a>
+                <a href="{% url 'export_accidents_csv' %}" class="export-dropdown-item" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #333; text-decoration: none; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #28A745; width: 20px;"></i>
+                    <span>CSV Data Export</span>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1420,8 +2469,8 @@
     <div class="empty-state">
         <h3>No hotspots found</h3>
         <p>Try running the clustering algorithm or adjusting your filters.</p>
-        <button class="btn btn-primary" onclick="window.location.href='/admin/accidents/clusteringjob/'">
-            Run Clustering
+        <button class="btn btn-primary" onclick="openClusteringModal()">
+            <i class="fas fa-project-diagram"></i> Run Clustering
         </button>
     </div>
     {% endfor %}
@@ -1445,6 +2494,7 @@
             <span class="modal-badge risk-critical" id="modalBadge">CRITICAL RISK</span>
         </div>
 
+        <div class="modal-scroll-area">
         <div class="modal-body">
             <!-- Statistics Grid -->
             <div class="modal-stat-grid">
@@ -1494,19 +2544,21 @@
                 </div>
             </div>
         </div>
+        </div><!-- End modal-scroll-area -->
 
         <div class="modal-actions">
             <button class="modal-btn modal-btn-primary" id="modalViewDetails">
                 <i class="fas fa-info-circle"></i>
-                View Full Details
+                View Details
             </button>
             <button class="modal-btn modal-btn-secondary" id="modalViewMap">
                 <i class="fas fa-map"></i>
-                Show on Map
+                View Map
             </button>
         </div>
     </div>
 </div>
+</div><!-- /.hotspots-list-container -->
 {% endblock %}
 
 {% block extra_js %}
@@ -2204,6 +3256,35 @@
         window.location.href = `/map/?cluster_id=${clusterId}&source=${source}`;
     }
 
+    // Export Dropdown Toggle
+    function toggleExportDropdown() {
+        const menu = document.getElementById('exportDropdownMenu');
+        if (menu.style.display === 'none' || menu.style.display === '') {
+            menu.style.display = 'block';
+        } else {
+            menu.style.display = 'none';
+        }
+    }
+
+    // Close export dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const dropdown = document.querySelector('.export-dropdown');
+        const menu = document.getElementById('exportDropdownMenu');
+        if (dropdown && menu && !dropdown.contains(event.target)) {
+            menu.style.display = 'none';
+        }
+    });
+
+    // Add hover effect to export dropdown items
+    document.querySelectorAll('.export-dropdown-item').forEach(function(item) {
+        item.addEventListener('mouseenter', function() {
+            this.style.background = '#f5f5f5';
+        });
+        item.addEventListener('mouseleave', function() {
+            this.style.background = 'transparent';
+        });
+    });
+
     function exportHotspots() {
         const data = [
             {% for hotspot in hotspots %}
@@ -2291,5 +3372,263 @@
         link.click();
         document.body.removeChild(link);
     }
+
+    // ===== RUN CLUSTERING MODAL =====
+    var isClusteringProcessing = false;
+
+    // Warn user if they try to leave/refresh during clustering
+    window.addEventListener('beforeunload', function(e) {
+        if (isClusteringProcessing) {
+            e.preventDefault();
+            e.returnValue = 'Clustering is still in progress. Leaving now may result in incomplete data. Are you sure?';
+            return e.returnValue;
+        }
+    });
+
+    // Block Escape key during clustering
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && isClusteringProcessing) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+
+    function openClusteringModal() {
+        document.getElementById('clusteringModal').style.display = 'flex';
+        document.getElementById('clusterStep1').style.display = 'block';
+        document.getElementById('clusterStep2').style.display = 'none';
+        document.getElementById('clusterStep3').style.display = 'none';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeClusteringModal() {
+        if (isClusteringProcessing) return; // Block closing during processing
+        document.getElementById('clusteringModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    function startClustering() {
+        var linkage = document.getElementById('clLinkage').value;
+        var threshold = document.getElementById('clThreshold').value;
+        var minSize = document.getElementById('clMinSize').value;
+
+        // Lock processing - prevent interruption
+        isClusteringProcessing = true;
+
+        // Switch to progress step
+        document.getElementById('clusterStep1').style.display = 'none';
+        document.getElementById('clusterStep2').style.display = 'block';
+
+        var progressBar = document.getElementById('clProgressBar');
+        var statusText = document.getElementById('clStatusText');
+        var subText = document.getElementById('clSubText');
+
+        progressBar.style.width = '10%';
+        statusText.textContent = 'Preparing data...';
+        subText.textContent = 'Loading accident records with coordinates...';
+
+        // Animate progress
+        var stage = 0;
+        var progressInterval = setInterval(function() {
+            stage++;
+            if (stage === 1) {
+                progressBar.style.width = '25%';
+                statusText.textContent = 'Running AGNES algorithm...';
+                subText.textContent = 'Computing distance matrix and hierarchical clusters...';
+            } else if (stage === 2) {
+                progressBar.style.width = '50%';
+                subText.textContent = 'Applying ' + linkage + ' linkage with threshold ' + threshold + '...';
+            } else if (stage === 3) {
+                progressBar.style.width = '65%';
+                statusText.textContent = 'Saving hotspots...';
+                subText.textContent = 'Writing clusters to database...';
+            } else if (stage === 4) {
+                progressBar.style.width = '80%';
+                subText.textContent = 'Computing validation metrics...';
+            } else if (stage >= 5) {
+                progressBar.style.width = '90%';
+                subText.textContent = 'Almost done...';
+            }
+        }, 3000);
+
+        // AJAX call
+        fetch('{% url "run_clustering" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                linkage_method: linkage,
+                distance_threshold: parseFloat(threshold),
+                min_cluster_size: parseInt(minSize)
+            })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            setTimeout(function() { showClusteringResult(data); }, 400);
+        })
+        .catch(function(error) {
+            clearInterval(progressInterval);
+            showClusteringResult({ success: false, error: 'Network error: ' + error.message });
+        });
+    }
+
+    function showClusteringResult(data) {
+        // Unlock processing - allow closing modal again
+        isClusteringProcessing = false;
+
+        document.getElementById('clusterStep2').style.display = 'none';
+        document.getElementById('clusterStep3').style.display = 'block';
+
+        var icon = document.getElementById('clResultIcon');
+        var title = document.getElementById('clResultTitle');
+        var subtitle = document.getElementById('clResultSubtitle');
+        var statsBox = document.getElementById('clResultStats');
+
+        if (data.success) {
+            icon.innerHTML = '<i class="fas fa-check-circle" style="color: #2e7d32;"></i>';
+            title.textContent = 'Clustering Complete!';
+            title.style.color = '#2e7d32';
+            subtitle.textContent = data.clusters_found + ' hotspots detected from ' + data.total_accidents + ' accidents in ' + data.duration + 's';
+            statsBox.style.display = 'grid';
+            document.getElementById('clStatClusters').textContent = data.clusters_found;
+            document.getElementById('clStatAccidents').textContent = data.total_accidents;
+            document.getElementById('clStatQuality').textContent = data.validation_quality || 'N/A';
+        } else {
+            icon.innerHTML = '<i class="fas fa-times-circle" style="color: #c62828;"></i>';
+            title.textContent = 'Clustering Failed';
+            title.style.color = '#c62828';
+            subtitle.textContent = data.error || 'An unexpected error occurred.';
+            statsBox.style.display = 'none';
+        }
+    }
 </script>
+
+<!-- Run Clustering Modal -->
+<div id="clusteringModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; align-items: flex-start; justify-content: center; padding-top: 5px; animation: fadeIn 0.3s ease;">
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);" onclick="closeClusteringModal()"></div>
+    <div style="position: relative; background: white; border-radius: 12px; width: 90%; max-width: 480px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease;">
+
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #DC143C 0%, #FF6B35 100%); color: white; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+            <div>
+                <h2 style="margin: 0; font-size: 1rem; font-weight: 700;"><i class="fas fa-project-diagram" style="margin-right: 0.4rem;"></i>Run AGNES Clustering</h2>
+                <p style="margin: 0.15rem 0 0; font-size: 0.75rem; opacity: 0.85;">Detect accident hotspots</p>
+            </div>
+            <button onclick="closeClusteringModal()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Scrollable body -->
+        <div style="overflow-y: auto; flex: 1; padding: 1rem; -webkit-overflow-scrolling: touch;">
+
+            <!-- Step 1: Parameters -->
+            <div id="clusterStep1">
+                <div style="font-weight: 600; color: #333; margin-bottom: 0.6rem; font-size: 0.85rem;">
+                    <i class="fas fa-sliders-h"></i> Algorithm Parameters
+                </div>
+
+                <!-- Linkage Method -->
+                <div style="margin-bottom: 0.75rem;">
+                    <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #555; margin-bottom: 0.25rem;">Linkage Method</label>
+                    <select id="clLinkage" style="width: 100%; padding: 0.45rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.82rem; background: #fff;">
+                        <option value="complete" selected>Complete (recommended)</option>
+                        <option value="average">Average</option>
+                        <option value="single">Single</option>
+                    </select>
+                </div>
+
+                <!-- Distance Threshold -->
+                <div style="margin-bottom: 0.75rem;">
+                    <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #555; margin-bottom: 0.25rem;">Distance Threshold (decimal degrees)</label>
+                    <input type="number" id="clThreshold" value="0.05" min="0.01" max="1.0" step="0.01" style="width: 100%; padding: 0.45rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.82rem; box-sizing: border-box;">
+                    <div style="font-size: 0.7rem; color: #888; margin-top: 0.15rem;">~0.05 = 5km radius</div>
+                </div>
+
+                <!-- Min Cluster Size -->
+                <div style="margin-bottom: 0.75rem;">
+                    <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #555; margin-bottom: 0.25rem;">Minimum Cluster Size</label>
+                    <input type="number" id="clMinSize" value="3" min="2" max="50" step="1" style="width: 100%; padding: 0.45rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.82rem; box-sizing: border-box;">
+                    <div style="font-size: 0.7rem; color: #888; margin-top: 0.15rem;">Minimum accidents to form a hotspot</div>
+                </div>
+
+                <!-- Info box -->
+                <div style="padding: 0.5rem 0.65rem; background: #fff3e0; border-radius: 4px; margin-bottom: 0.85rem;">
+                    <div style="font-size: 0.75rem; color: #e65100; font-weight: 600;">
+                        <i class="fas fa-info-circle"></i> Note
+                    </div>
+                    <div style="font-size: 0.72rem; color: #666; margin-top: 0.15rem;">
+                        This will replace all existing hotspot clusters with new results. The process may take a moment for large datasets.
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; padding-top: 0.65rem; border-top: 1px solid #eee;">
+                    <button type="button" onclick="closeClusteringModal()" style="padding: 0.45rem 0.85rem; font-size: 0.82rem; border: 1px solid #ddd; background: #fff; border-radius: 6px; cursor: pointer; color: #555;">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="startClustering()" style="padding: 0.45rem 0.85rem; font-size: 0.82rem; border: none; background: #DC143C; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-play"></i> Run Clustering
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Progress -->
+            <div id="clusterStep2" style="display: none;">
+                <div style="text-align: center; padding: 1.25rem 0;">
+                    <div style="margin-bottom: 1rem;">
+                        <div style="width: 44px; height: 44px; border: 3px solid #e0e0e0; border-top: 3px solid #DC143C; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                    </div>
+                    <div id="clStatusText" style="font-size: 0.95rem; font-weight: 600; color: #333; margin-bottom: 0.35rem;">
+                        Preparing data...
+                    </div>
+                    <div id="clSubText" style="font-size: 0.8rem; color: #888;">
+                        Loading accident records...
+                    </div>
+                    <div style="margin: 1rem 0; background: #e9ecef; border-radius: 6px; height: 8px; overflow: hidden;">
+                        <div id="clProgressBar" style="height: 100%; background: linear-gradient(90deg, #DC143C, #FF6B35); border-radius: 6px; width: 0%; transition: width 0.5s ease;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Result -->
+            <div id="clusterStep3" style="display: none;">
+                <div style="text-align: center; padding: 0.75rem 0;">
+                    <div id="clResultIcon" style="font-size: 2.5rem; margin-bottom: 0.6rem;"></div>
+                    <div id="clResultTitle" style="font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem;"></div>
+                    <div id="clResultSubtitle" style="font-size: 0.8rem; color: #666; margin-bottom: 1rem;"></div>
+
+                    <div id="clResultStats" style="display: none; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem;">
+                        <div style="background: #fce4ec; border-radius: 6px; padding: 0.6rem;">
+                            <div id="clStatClusters" style="font-size: 1.2rem; font-weight: 700; color: #c62828;">0</div>
+                            <div style="font-size: 0.7rem; color: #e53935;">Hotspots</div>
+                        </div>
+                        <div style="background: #e3f2fd; border-radius: 6px; padding: 0.6rem;">
+                            <div id="clStatAccidents" style="font-size: 1.2rem; font-weight: 700; color: #1565c0;">0</div>
+                            <div style="font-size: 0.7rem; color: #2196f3;">Accidents</div>
+                        </div>
+                        <div style="background: #e8f5e9; border-radius: 6px; padding: 0.6rem;">
+                            <div id="clStatQuality" style="font-size: 1.2rem; font-weight: 700; color: #2e7d32;">N/A</div>
+                            <div style="font-size: 0.7rem; color: #4caf50;">Quality</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: center; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #eee;">
+                        <button type="button" onclick="closeClusteringModal()" style="padding: 0.45rem 0.85rem; font-size: 0.82rem; border: 1px solid #ddd; background: #fff; border-radius: 6px; cursor: pointer; color: #555;">
+                            Close
+                        </button>
+                        <button type="button" onclick="window.location.reload()" style="padding: 0.45rem 0.85rem; font-size: 0.82rem; border: none; background: #DC143C; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            <i class="fas fa-sync-alt"></i> Refresh Page
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 {% endblock %}

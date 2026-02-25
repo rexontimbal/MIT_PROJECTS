@@ -1,0 +1,619 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Approve Report - Admin Panel{% endblock %}
+
+{% block page_header %}
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">
+            <i class="fas fa-check-circle"></i> Approve &mdash; {% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %}
+        </h1>
+        <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+            {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
+            <a href="{% url 'admin_panel:dashboard' %}">Dashboard</a>
+            <span>/</span>
+            {% endif %}
+            <a href="{% url 'pending_reports' %}">Manage Reports</a>
+            <span>/</span>
+            <span>Approve Report</span>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .approval-container {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .report-preview {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #E5E7EB;
+    }
+
+    .report-id {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--pnp-blue);
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.65rem;
+        background: #FEF3C7;
+        color: #D97706;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.72rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .info-card {
+        background: #F9FAFB;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        border-left: 3px solid var(--pnp-blue);
+    }
+
+    .info-label {
+        font-size: 0.65rem;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.1rem;
+    }
+
+    .info-value {
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: #1F2937;
+    }
+
+    .description-section {
+        margin-bottom: 0.75rem;
+    }
+
+    .description-section h4 {
+        color: #374151;
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .description-text {
+        background: #F9FAFB;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        color: #374151;
+        font-size: 0.82rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+    }
+
+    .report-photos {
+        margin-bottom: 0.75rem;
+    }
+
+    .report-photos h4 {
+        font-size: 0.85rem;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .report-photos h4 i {
+        color: var(--pnp-blue);
+        margin-right: 0.3rem;
+    }
+
+    .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+
+    .photo-grid-item {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #E5E7EB;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .photo-grid-item:hover {
+        transform: scale(1.03);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .photo-grid-item img {
+        width: 100%;
+        height: 130px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .no-photos-msg {
+        text-align: center;
+        color: #9CA3AF;
+        font-size: 0.78rem;
+        padding: 0.75rem;
+        background: #F9FAFB;
+        border-radius: 6px;
+    }
+
+    .no-photos-msg i {
+        margin-right: 0.3rem;
+    }
+
+    /* Photo lightbox */
+    .photo-lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.85);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .photo-lightbox.active {
+        display: flex;
+    }
+
+    .photo-lightbox img {
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: 8px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    [data-theme="dark"] .report-photos h4 { color: #E5E7EB; }
+    [data-theme="dark"] .photo-grid-item { border-color: #334155; }
+    [data-theme="dark"] .no-photos-msg { background: #1E293B; color: #64748B; }
+
+    .casualties-section {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .casualty-card {
+        flex: 1;
+        padding: 0.5rem;
+        border-radius: 6px;
+        text-align: center;
+    }
+
+    .casualty-killed {
+        background: #FEE2E2;
+        border: 1px solid #FECACA;
+    }
+
+    .casualty-killed .casualty-count {
+        color: #DC2626;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .casualty-injured {
+        background: #FEF3C7;
+        border: 1px solid #FDE68A;
+    }
+
+    .casualty-injured .casualty-count {
+        color: #D97706;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .casualty-label {
+        font-size: 0.72rem;
+        color: #6B7280;
+        margin-top: 0.1rem;
+    }
+
+    .approval-warning {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+    }
+
+    .approval-warning h3 {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    .approval-warning p {
+        opacity: 0.9;
+        margin: 0;
+        font-size: 0.78rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn-cancel {
+        background: #6B7280;
+        color: white;
+        padding: 0.4rem 0.85rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background: #4B5563;
+        color: white;
+    }
+
+    .btn-approve {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        color: white;
+        padding: 0.4rem 0.85rem;
+        border-radius: 6px;
+        border: none;
+        font-weight: 600;
+        font-size: 0.8rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.2s;
+    }
+
+    .btn-approve:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Dark Theme */
+    [data-theme="dark"] .report-preview {
+        background: #1A2332;
+        border: 1px solid #2D3A4F;
+    }
+
+    [data-theme="dark"] .preview-header {
+        border-bottom-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .report-id {
+        color: #60A5FA;
+    }
+
+    [data-theme="dark"] .info-card {
+        background: #0F172A;
+        border-left-color: #60A5FA;
+    }
+
+    [data-theme="dark"] .info-value {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .description-section h4 {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .description-text {
+        background: #0F172A;
+        color: #D1D5DB;
+    }
+
+    [data-theme="dark"] .casualty-killed {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    [data-theme="dark"] .casualty-injured {
+        background: rgba(245, 158, 11, 0.15);
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .person-section {
+        margin-bottom: 0.75rem;
+    }
+
+    .person-section h4 {
+        color: #374151;
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .person-section .count-badge {
+        display: inline-flex;
+        padding: 0.1rem 0.4rem;
+        background: #EEF2FF;
+        color: #4338CA;
+        border-radius: 10px;
+        font-size: 0.62rem;
+        font-weight: 600;
+    }
+
+    .person-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+        background: #F9FAFB;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .person-table th {
+        background: #F3F4F6;
+        padding: 0.3rem 0.5rem;
+        text-align: left;
+        font-size: 0.6rem;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .person-table td {
+        padding: 0.3rem 0.5rem;
+        border-top: 1px solid #E5E7EB;
+        color: #1F2937;
+    }
+
+    [data-theme="dark"] .person-section h4 {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .person-section .count-badge {
+        background: rgba(99, 102, 241, 0.15);
+        color: #818CF8;
+    }
+
+    [data-theme="dark"] .person-table {
+        background: #0F172A;
+    }
+
+    [data-theme="dark"] .person-table th {
+        background: #0F172A;
+        color: #9CA3AF;
+    }
+
+    [data-theme="dark"] .person-table td {
+        border-top-color: #2D3A4F;
+        color: #E8E8E8;
+    }
+
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-cancel,
+        .btn-approve {
+            width: 100%;
+            justify-content: center;
+            padding: 0.35rem 0.7rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="approval-container">
+    <div class="report-preview">
+        <div class="preview-header">
+            <span class="report-id">{% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %}{% if report.municipal %} - {{ report.municipal }}{% endif %}</span>
+            <span class="status-badge">
+                <i class="fas fa-clock"></i> Pending Verification
+            </span>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-label">Reporter</div>
+                <div class="info-value">{{ report.reporter_name }}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Contact</div>
+                <div class="info-value">{{ report.reporter_contact }}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Incident Date</div>
+                <div class="info-value">{{ report.incident_date|date:"F d, Y" }}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Incident Time</div>
+                <div class="info-value">{{ report.incident_time|time:"g:i A" }}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Location</div>
+                <div class="info-value">{{ report.barangay }}, {{ report.municipal }}, {{ report.province }}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Street Address</div>
+                <div class="info-value">{{ report.street_address }}</div>
+            </div>
+            {% if report.offense %}
+            <div class="info-card">
+                <div class="info-label">Offense</div>
+                <div class="info-value">{{ report.offense }}</div>
+            </div>
+            {% endif %}
+            {% if report.offense_type %}
+            <div class="info-card">
+                <div class="info-label">Offense Type</div>
+                <div class="info-value">{{ report.offense_type }}</div>
+            </div>
+            {% endif %}
+            {% if report.stage_of_felony %}
+            <div class="info-card">
+                <div class="info-label">Stage of Felony</div>
+                <div class="info-value">{{ report.get_stage_of_felony_display }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="casualties-section">
+            <div class="casualty-card casualty-killed">
+                <div class="casualty-count">{{ report.casualties_killed }}</div>
+                <div class="casualty-label"><i class="fas fa-skull"></i> Fatalities</div>
+            </div>
+            <div class="casualty-card casualty-injured">
+                <div class="casualty-count">{{ report.casualties_injured }}</div>
+                <div class="casualty-label"><i class="fas fa-user-injured"></i> Injured</div>
+            </div>
+        </div>
+
+        {% if report.victims_data %}
+        <div class="person-section">
+            <h4><i class="fas fa-user-injured"></i> Victims <span class="count-badge">{{ report.victims_data|length }}</span></h4>
+            <table class="person-table">
+                <thead>
+                    <tr><th>Name</th><th>Age</th><th>Gender</th><th>Status</th><th>Nationality</th><th>Occupation</th></tr>
+                </thead>
+                <tbody>
+                    {% for v in report.victims_data %}
+                    <tr>
+                        <td>{{ v.name|default:"—" }}</td>
+                        <td>{{ v.age|default:"—" }}</td>
+                        <td>{{ v.gender|default:"—" }}</td>
+                        <td>{{ v.status|default:"—" }}</td>
+                        <td>{{ v.nationality|default:"FILIPINO" }}</td>
+                        <td>{{ v.occupation|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if report.suspects_data %}
+        <div class="person-section">
+            <h4><i class="fas fa-user-secret"></i> Suspects <span class="count-badge">{{ report.suspects_data|length }}</span></h4>
+            <table class="person-table">
+                <thead>
+                    <tr><th>Name</th><th>Age</th><th>Gender</th><th>Status</th><th>Nationality</th><th>Occupation</th></tr>
+                </thead>
+                <tbody>
+                    {% for s in report.suspects_data %}
+                    <tr>
+                        <td>{{ s.name|default:"—" }}</td>
+                        <td>{{ s.age|default:"—" }}</td>
+                        <td>{{ s.gender|default:"—" }}</td>
+                        <td>{{ s.status|default:"—" }}</td>
+                        <td>{{ s.nationality|default:"FILIPINO" }}</td>
+                        <td>{{ s.occupation|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <div class="description-section">
+            <h4><i class="fas fa-file-alt"></i> Incident Description</h4>
+            <div class="description-text">{{ report.incident_description }}</div>
+        </div>
+
+        <div class="report-photos">
+            <h4><i class="fas fa-camera"></i> Photos</h4>
+            {% if report.photo_1 or report.photo_2 or report.photo_3 %}
+            <div class="photo-grid">
+                {% if report.photo_1 %}
+                <div class="photo-grid-item" onclick="openLightbox('{{ report.photo_1.url }}')">
+                    <img src="{{ report.photo_1.url }}" alt="Photo 1">
+                </div>
+                {% endif %}
+                {% if report.photo_2 %}
+                <div class="photo-grid-item" onclick="openLightbox('{{ report.photo_2.url }}')">
+                    <img src="{{ report.photo_2.url }}" alt="Photo 2">
+                </div>
+                {% endif %}
+                {% if report.photo_3 %}
+                <div class="photo-grid-item" onclick="openLightbox('{{ report.photo_3.url }}')">
+                    <img src="{{ report.photo_3.url }}" alt="Photo 3">
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="no-photos-msg"><i class="fas fa-image"></i> No photos attached</div>
+            {% endif %}
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-label">Submitted By</div>
+                <div class="info-value">{{ report.reported_by.username }}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Submitted At</div>
+                <div class="info-value">{{ report.created_at|date:"M d, Y g:i A" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="approval-warning">
+        <h3><i class="fas fa-check-circle"></i> Approve This Report?</h3>
+        <p>Approving this report will add it to the official accident records database. This action cannot be undone.</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="action-buttons">
+            <a href="{% url 'pending_reports' %}?status=pending" class="btn-cancel">
+                <i class="fas fa-arrow-left"></i> Cancel
+            </a>
+            <button type="submit" class="btn-approve">
+                <i class="fas fa-check"></i> Approve Report
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Photo Lightbox -->
+<div class="photo-lightbox" id="photoLightbox" onclick="this.classList.remove('active')">
+    <img id="lightboxImg" src="" alt="Photo">
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openLightbox(url) {
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('photoLightbox').classList.add('active');
+}
+</script>
+{% endblock %}

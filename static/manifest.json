@@ -1,0 +1,28 @@
+{
+    "name": "AGNES Hotspot Detection System",
+    "short_name": "AGNES",
+    "description": "Traffic Accident Analysis & Hotspot Detection - PNP Caraga Region",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#003087",
+    "theme_color": "#003087",
+    "orientation": "any",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/static/images/pnp-logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/static/images/pnp-logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["government", "utilities"],
+    "lang": "en",
+    "dir": "ltr"
+}

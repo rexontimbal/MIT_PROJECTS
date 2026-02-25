@@ -1,17 +1,8 @@
 // ===== AGNES HOTSPOT DETECTION SYSTEM - Main JavaScript =====
 
-// Mobile Menu Toggle
+// Mobile Menu Toggle - handled in base.html (do not duplicate here)
+
 document.addEventListener('DOMContentLoaded', function() {
-    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-    const navbarMenu = document.querySelector('.navbar-menu');
-    
-    if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', function() {
-            navbarMenu.classList.toggle('active');
-            this.classList.toggle('active');
-        });
-    }
-    
     // Auto-hide alerts after 5 seconds
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
@@ -297,12 +288,27 @@ function convertToCSV(data) {
 // ===== CHART UTILITIES =====
 
 /**
+ * Get theme-aware chart colors
+ */
+function getChartColors() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return {
+        text: isDark ? '#E8E8E8' : '#666666',
+        grid: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+        tooltipBg: isDark ? '#1E3A5F' : '#333333',
+        tooltipText: '#FFFFFF'
+    };
+}
+
+/**
  * Create a bar chart
  */
 function createBarChart(canvasId, labels, data, label, backgroundColor) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return null;
-    
+
+    const colors = getChartColors();
+
     return new Chart(ctx, {
         type: 'bar',
         data: {
@@ -319,8 +325,24 @@ function createBarChart(canvasId, labels, data, label, backgroundColor) {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
+                x: {
+                    ticks: { color: colors.text },
+                    grid: { color: colors.grid }
+                },
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: { color: colors.text },
+                    grid: { color: colors.grid }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: colors.text }
+                },
+                tooltip: {
+                    backgroundColor: colors.tooltipBg,
+                    titleColor: colors.tooltipText,
+                    bodyColor: colors.tooltipText
                 }
             }
         }
@@ -333,7 +355,9 @@ function createBarChart(canvasId, labels, data, label, backgroundColor) {
 function createLineChart(canvasId, labels, data, label) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return null;
-    
+
+    const colors = getChartColors();
+
     return new Chart(ctx, {
         type: 'line',
         data: {
@@ -351,8 +375,24 @@ function createLineChart(canvasId, labels, data, label) {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
+                x: {
+                    ticks: { color: colors.text },
+                    grid: { color: colors.grid }
+                },
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: { color: colors.text },
+                    grid: { color: colors.grid }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: colors.text }
+                },
+                tooltip: {
+                    backgroundColor: colors.tooltipBg,
+                    titleColor: colors.tooltipText,
+                    bodyColor: colors.tooltipText
                 }
             }
         }
@@ -365,29 +405,87 @@ function createLineChart(canvasId, labels, data, label) {
 function createPieChart(canvasId, labels, data) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return null;
-    
-    const colors = [
+
+    const colors = getChartColors();
+
+    const chartColors = [
         'rgba(220, 20, 60, 0.8)',   // Red
         'rgba(0, 48, 135, 0.8)',    // Blue
         'rgba(255, 165, 0, 0.8)',   // Orange
         'rgba(40, 167, 69, 0.8)',   // Green
         'rgba(108, 117, 125, 0.8)'  // Gray
     ];
-    
+
     return new Chart(ctx, {
         type: 'pie',
         data: {
             labels: labels,
             datasets: [{
                 data: data,
-                backgroundColor: colors
+                backgroundColor: chartColors
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: colors.text }
+                },
+                tooltip: {
+                    backgroundColor: colors.tooltipBg,
+                    titleColor: colors.tooltipText,
+                    bodyColor: colors.tooltipText
+                }
+            }
         }
     });
+}
+
+/**
+ * Update all charts with current theme colors
+ */
+function updateAllChartsTheme() {
+    const colors = getChartColors();
+
+    // Update all Chart.js instances
+    if (typeof Chart !== 'undefined' && Chart.instances) {
+        Object.values(Chart.instances).forEach(chart => {
+            if (!chart || !chart.options) return;
+
+            // Update scales (for bar/line charts)
+            if (chart.options.scales) {
+                if (chart.options.scales.x) {
+                    chart.options.scales.x.ticks = chart.options.scales.x.ticks || {};
+                    chart.options.scales.x.ticks.color = colors.text;
+                    chart.options.scales.x.grid = chart.options.scales.x.grid || {};
+                    chart.options.scales.x.grid.color = colors.grid;
+                }
+                if (chart.options.scales.y) {
+                    chart.options.scales.y.ticks = chart.options.scales.y.ticks || {};
+                    chart.options.scales.y.ticks.color = colors.text;
+                    chart.options.scales.y.grid = chart.options.scales.y.grid || {};
+                    chart.options.scales.y.grid.color = colors.grid;
+                }
+            }
+
+            // Update legend labels
+            if (chart.options.plugins && chart.options.plugins.legend) {
+                chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
+                chart.options.plugins.legend.labels.color = colors.text;
+            }
+
+            // Update tooltip
+            if (chart.options.plugins && chart.options.plugins.tooltip) {
+                chart.options.plugins.tooltip.backgroundColor = colors.tooltipBg;
+                chart.options.plugins.tooltip.titleColor = colors.tooltipText;
+                chart.options.plugins.tooltip.bodyColor = colors.tooltipText;
+            }
+
+            // Apply updates
+            chart.update('none');
+        });
+    }
 }
 
 // ===== MAP UTILITIES =====
@@ -522,6 +620,8 @@ window.AGNESSystem = {
     createBarChart,
     createLineChart,
     createPieChart,
+    getChartColors,
+    updateAllChartsTheme,
     initializeMap,
     addAccidentMarker,
     addHotspotCircle,

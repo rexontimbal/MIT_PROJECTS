@@ -16,7 +16,7 @@ import json
 
 from .models import (
     UserProfile, AuditLog, ClusteringJob,
-    Accident, AccidentCluster, AccidentReport
+    Accident, AccidentCluster, AccidentReport, ReportActivityLog
 )
 from .auth_utils import log_user_action
 
@@ -792,6 +792,61 @@ def audit_logs(request):
     }
 
     return render(request, 'admin_panel/audit_logs.html', context)
+
+
+# ============================================================================
+# REPORT ACTIVITY LOGS
+# ============================================================================
+
+@login_required
+@user_passes_test(is_staff_or_superuser)
+def report_activity_logs(request):
+    """View all report activity logs with search and filters"""
+
+    # Filters
+    search_query = request.GET.get('search', '')
+    action_filter = request.GET.get('action', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    logs = ReportActivityLog.objects.select_related('report', 'actor__profile').all()
+
+    if search_query:
+        logs = logs.filter(
+            Q(actor_name__icontains=search_query) |
+            Q(details__icontains=search_query) |
+            Q(report__reporter_name__icontains=search_query) |
+            Q(report__municipal__icontains=search_query) |
+            Q(report__barangay__icontains=search_query)
+        )
+
+    if action_filter:
+        logs = logs.filter(action=action_filter)
+
+    if date_from:
+        logs = logs.filter(timestamp__gte=date_from)
+
+    if date_to:
+        logs = logs.filter(timestamp__lte=date_to)
+
+    logs = logs.order_by('-timestamp')
+
+    # Pagination
+    paginator = Paginator(logs, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'action_filter': action_filter,
+        'date_from': date_from,
+        'date_to': date_to,
+        'action_choices': ReportActivityLog.ACTION_CHOICES,
+        'total_count': logs.count(),
+    }
+
+    return render(request, 'admin_panel/report_activity_logs.html', context)
 
 
 # ============================================================================

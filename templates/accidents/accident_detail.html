@@ -92,9 +92,19 @@
         background: linear-gradient(90deg, var(--card-accent) 0%, var(--card-accent-light) 100%);
     }
 
-    .status-card.severity {
+    .status-card.severity-fatal {
         --card-accent: #DC143C;
         --card-accent-light: #ff6b6b;
+    }
+
+    .status-card.severity-injury {
+        --card-accent: #FFA500;
+        --card-accent-light: #ffd93d;
+    }
+
+    .status-card.severity-property {
+        --card-accent: #6C757D;
+        --card-accent-light: #9CA3AF;
     }
 
     .status-card.casualties {
@@ -105,6 +115,21 @@
     .status-card.hotspot {
         --card-accent: #003087;
         --card-accent-light: #0052CC;
+    }
+
+    .status-card.case-solved {
+        --card-accent: #059669;
+        --card-accent-light: #34D399;
+    }
+
+    .status-card.case-unsolved {
+        --card-accent: #DC2626;
+        --card-accent-light: #F87171;
+    }
+
+    .status-card.case-investigating {
+        --card-accent: #D97706;
+        --card-accent-light: #FBBF24;
     }
 
     .status-card:hover {
@@ -419,6 +444,124 @@
         border: 1px solid #e9ecef;
     }
 
+    /* Photo Evidence Section */
+    .photo-evidence-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+        margin-top: 10px;
+    }
+
+    .photo-evidence-item {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #e9ecef;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        aspect-ratio: 4/3;
+        background: #f1f3f5;
+    }
+
+    .photo-evidence-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(0, 48, 135, 0.2);
+        border-color: #003087;
+    }
+
+    .photo-evidence-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .photo-evidence-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        color: white;
+        padding: 20px 10px 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .photo-evidence-zoom {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(0,0,0,0.5);
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .photo-evidence-item:hover .photo-evidence-zoom {
+        opacity: 1;
+    }
+
+    .no-photos-message {
+        color: #999;
+        font-style: italic;
+        padding: 15px 0;
+    }
+
+    /* Photo Lightbox */
+    .photo-lightbox-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.9);
+        z-index: 99999;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .photo-lightbox-overlay.active {
+        display: flex;
+    }
+
+    .photo-lightbox-overlay img {
+        max-width: 90%;
+        max-height: 90vh;
+        border-radius: 8px;
+        box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+    }
+
+    .photo-lightbox-close {
+        position: absolute;
+        top: 20px;
+        right: 25px;
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        background: rgba(255,255,255,0.15);
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+    .photo-lightbox-close:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
     /* Enhanced Narrative Section */
     .narrative-box {
         background: #f8f9fa;
@@ -712,6 +855,298 @@
             font-size: 1.2rem;
         }
     }
+
+    /* ===== DARK THEME STYLES ===== */
+    [data-theme="dark"] .accident-detail-container {
+        background: transparent;
+    }
+
+    [data-theme="dark"] .accident-hero {
+        background: linear-gradient(135deg, #1E3A5F 0%, #0D1B2A 100%);
+    }
+
+    [data-theme="dark"] .status-card {
+        background: linear-gradient(135deg, #1E2A3A 0%, #1A2332 100%);
+        border-color: #2D3A4F;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="dark"] .status-card-title {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .status-card-value {
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .status-card-label {
+        color: #B0B0B0;
+    }
+
+    [data-theme="dark"] .info-section {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .info-section h2,
+    [data-theme="dark"] .section-title {
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .info-grid {
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .info-item {
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .info-label {
+        color: #A0A0A0;
+    }
+
+    [data-theme="dark"] .info-value {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .detail-card {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .detail-card-header {
+        background: #1E3A5F;
+        border-bottom-color: #2D3A4F;
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .detail-card-body {
+        background: #1E2A3A;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .nearby-accident-item {
+        background: #1A2332;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .nearby-accident-item:hover {
+        background: #243447;
+        border-color: #3D4A5F;
+    }
+
+    [data-theme="dark"] .nearby-title {
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .nearby-meta {
+        color: #B0B0B0;
+    }
+
+    [data-theme="dark"] .map-container {
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] .action-buttons .btn {
+        background: #1E2A3A;
+        border-color: #2D3A4F;
+        color: #E8E8E8;
+    }
+
+    [data-theme="dark"] .action-buttons .btn:hover {
+        background: #243447;
+        border-color: #4A90D9;
+    }
+
+    [data-theme="dark"] .breadcrumb {
+        color: #B0B0B0;
+    }
+
+    [data-theme="dark"] .breadcrumb a {
+        color: #6EB5FF;
+    }
+
+    [data-theme="dark"] table {
+        background: #1E2A3A;
+    }
+
+    [data-theme="dark"] th {
+        background: #1E3A5F;
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] td {
+        color: #E8E8E8;
+        border-color: #2D3A4F;
+    }
+
+    [data-theme="dark"] tr:nth-child(even) {
+        background: #1A2332;
+    }
+
+    [data-theme="dark"] tr:hover {
+        background: #243447;
+    }
+
+    [data-theme="dark"] .empty-state {
+        color: #888;
+    }
+
+    [data-theme="dark"] .loading-overlay {
+        background: rgba(13, 27, 42, 0.9);
+    }
+
+    /* ===== NARRATIVE SECTION DARK MODE ===== */
+    [data-theme="dark"] .narrative-box {
+        background: #1E2A3A !important;
+        border-left-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .narrative-header {
+        border-bottom-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .narrative-label {
+        color: #6EB5FF !important;
+    }
+
+    [data-theme="dark"] .narrative-date {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .narrative-content {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .narrative-footer {
+        border-top-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .narrative-tag {
+        background: #1E3A5F !important;
+        color: #FFFFFF !important;
+    }
+
+    /* ===== NEARBY ACCIDENTS DARK MODE ===== */
+    [data-theme="dark"] .nearby-stats {
+        background: linear-gradient(135deg, #1E2A3A 0%, #1A2332 100%) !important;
+        border-left-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .nearby-stats-content {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .nearby-stats-content i {
+        color: #6EB5FF !important;
+    }
+
+    [data-theme="dark"] .nearby-item {
+        background: linear-gradient(135deg, #1E2A3A 0%, #1A2332 100%) !important;
+        border-color: #2D3A4F !important;
+        border-left-color: #4A90D9 !important;
+    }
+
+    [data-theme="dark"] .nearby-item:hover {
+        background: linear-gradient(135deg, #243447 0%, #1E2A3A 100%) !important;
+        border-left-color: #DC143C !important;
+    }
+
+    [data-theme="dark"] .nearby-title {
+        color: #6EB5FF !important;
+    }
+
+    [data-theme="dark"] .nearby-details {
+        color: #B0B0B0 !important;
+    }
+
+    [data-theme="dark"] .nearby-detail-item {
+        background: #1A2332 !important;
+        border-color: #2D3A4F !important;
+        color: #E8E8E8 !important;
+    }
+
+    /* ===== VICTIM/SUSPECT DETAILS DARK MODE ===== */
+    [data-theme="dark"] .victim-card,
+    [data-theme="dark"] .suspect-card,
+    [data-theme="dark"] .person-card {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .victim-card .card-header,
+    [data-theme="dark"] .suspect-card .card-header,
+    [data-theme="dark"] .person-card .card-header {
+        background: #1E3A5F !important;
+        border-bottom-color: #2D3A4F !important;
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .victim-card .card-body,
+    [data-theme="dark"] .suspect-card .card-body,
+    [data-theme="dark"] .person-card .card-body {
+        background: #1E2A3A !important;
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .person-info,
+    [data-theme="dark"] .victim-info,
+    [data-theme="dark"] .suspect-info {
+        color: #E8E8E8 !important;
+    }
+
+    [data-theme="dark"] .person-label,
+    [data-theme="dark"] .info-label {
+        color: #B0B0B0 !important;
+    }
+
+    /* ===== INFO SECTIONS DARK MODE ===== */
+    [data-theme="dark"] .info-section,
+    [data-theme="dark"] .detail-section {
+        background: #1E2A3A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .info-section h2,
+    [data-theme="dark"] .detail-section h2,
+    [data-theme="dark"] .section-title {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .info-grid,
+    [data-theme="dark"] .detail-grid {
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .info-item,
+    [data-theme="dark"] .detail-item {
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .info-label,
+    [data-theme="dark"] .detail-label {
+        color: #A0A0A0 !important;
+    }
+
+    [data-theme="dark"] .info-value,
+    [data-theme="dark"] .detail-value {
+        color: #E8E8E8 !important;
+    }
+
+    /* Photo Evidence Dark Mode */
+    [data-theme="dark"] .photo-evidence-item {
+        border-color: #2D3A4F;
+        background: #1a2332;
+    }
+
+    [data-theme="dark"] .photo-evidence-item:hover {
+        border-color: #4A90D9;
+        box-shadow: 0 6px 16px rgba(74, 144, 217, 0.2);
+    }
+
+    [data-theme="dark"] .no-photos-message {
+        color: #777;
+    }
 </style>
 {% endblock %}
 
@@ -765,7 +1200,7 @@
     <!-- ENHANCED Status Cards - Modern UX Design -->
     <div class="status-cards">
         <!-- Severity Card -->
-        <div class="status-card severity">
+        <div class="status-card {% if accident.victim_killed %}severity-fatal{% elif accident.victim_injured %}severity-injury{% else %}severity-property{% endif %}">
             <div class="status-card-header">
                 <div class="status-card-icon">🚨</div>
                 <div class="status-card-title">
@@ -872,7 +1307,7 @@
         </div>
 
         <!-- Case Status Card -->
-        <div class="status-card severity">
+        <div class="status-card {% if accident.case_status == 'Solved' %}case-solved{% elif accident.case_status == 'Unsolved' %}case-unsolved{% else %}case-investigating{% endif %}" id="caseStatusCard">
             <div class="status-card-header">
                 <div class="status-card-icon">📋</div>
                 <div class="status-card-title">
@@ -880,16 +1315,20 @@
                     <p>Investigation Progress</p>
                 </div>
             </div>
-            
+
             <div class="status-card-value">
-                <span style="color: #003087; font-size: 1.4rem; font-weight: 700;">
+                <span class="status-card-badge" id="caseStatusDisplay"
+                    data-status="{{ accident.case_status|default:'Under Investigation' }}">
+                    {% if accident.case_status == 'Solved' %}<i class="fas fa-check-circle"></i>
+                    {% elif accident.case_status == 'Unsolved' %}<i class="fas fa-times-circle"></i>
+                    {% else %}<i class="fas fa-search"></i>{% endif %}
                     {{ accident.case_status|default:"Under Investigation" }}
                 </span>
             </div>
 
             <div class="stats-grid">
                 <div class="stat-item">
-                    <span class="stat-value">
+                    <span class="stat-value" id="caseResolvedDisplay">
                         {% if accident.case_solve_type %}Yes{% else %}No{% endif %}
                     </span>
                     <span class="stat-label">Resolved</span>
@@ -902,12 +1341,31 @@
                 </div>
             </div>
 
-            {% if accident.case_solve_type %}
-            <div class="status-card-details">
+            <div class="status-card-details" id="caseSolveTypeRow" {% if not accident.case_solve_type %}style="display:none;"{% endif %}>
                 <div class="status-card-detail">
                     <i class="fas fa-gavel"></i>
-                    <span>Resolution: {{ accident.case_solve_type }}</span>
+                    <span>Resolution: <span id="caseSolveTypeDisplay">{{ accident.case_solve_type }}</span></span>
                 </div>
+            </div>
+
+            {% if accident.case_status_updated_by %}
+            <div class="status-card-details" id="caseUpdatedByRow">
+                <div class="status-card-detail" style="font-size: 0.75rem; color: #9CA3AF;">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Updated by {{ accident.case_status_updated_by.get_full_name|default:accident.case_status_updated_by.username }} on {{ accident.case_status_updated_at|date:"M d, Y g:i A" }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' or user.profile.role == 'provincial_chief' or user.profile.role == 'station_commander' %}
+            <div style="margin-top: 0.75rem;">
+                <button type="button" onclick="openCaseStatusModal()" style="
+                    width: 100%; padding: 0.5rem; border: 1px solid #D1D5DB; background: #F9FAFB;
+                    border-radius: 6px; font-size: 0.8rem; font-weight: 500; color: #374151;
+                    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+                    transition: all 0.15s;">
+                    <i class="fas fa-edit"></i> Update Case Status
+                </button>
             </div>
             {% endif %}
         </div>
@@ -1024,6 +1482,24 @@
                 <span class="info-value" style="font-family: monospace; font-weight: 600;">{{ accident.vehicle_plate_no }}</span>
             </div>
             {% endif %}
+            {% if accident.vehicle_chassis_no %}
+            <div class="info-item">
+                <span class="info-label">Chassis Number</span>
+                <span class="info-value" style="font-family: monospace;">{{ accident.vehicle_chassis_no }}</span>
+            </div>
+            {% endif %}
+            {% if accident.vehicle_colorum %}
+            <div class="info-item">
+                <span class="info-label">Colorum</span>
+                <span class="info-value" style="color: #D97706; font-weight: 600;"><i class="fas fa-ban"></i> Yes (Unfranchised)</span>
+            </div>
+            {% endif %}
+            {% if accident.drug_involved %}
+            <div class="info-item">
+                <span class="info-label">Drug / Alcohol</span>
+                <span class="info-value" style="color: #DC2626; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Involved</span>
+            </div>
+            {% endif %}
         </div>
     </div>
     {% endif %}
@@ -1051,7 +1527,7 @@
             </div>
             
             <div class="narrative-content">
-                {{ accident.narrative|linebreaksbr }}
+                {{ formatted_narrative|linebreaksbr }}
             </div>
             
             {% if accident.offense or accident.offense_type %}
@@ -1075,6 +1551,46 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Photo Evidence Section -->
+    {% if accident.report and accident.report.photo_1 or accident.report and accident.report.photo_2 or accident.report and accident.report.photo_3 %}
+    <div class="info-section">
+        <div class="info-section-header">
+            <span class="info-section-icon"><i class="fas fa-camera"></i></span>
+            <h3>Photo Evidence</h3>
+        </div>
+
+        <div class="photo-evidence-grid">
+            {% if accident.report.photo_1 %}
+            <div class="photo-evidence-item" onclick="openPhotoLightbox('{{ accident.report.photo_1.url }}')">
+                <img src="{{ accident.report.photo_1.url }}" alt="Photo Evidence 1" loading="lazy">
+                <div class="photo-evidence-label"><i class="fas fa-image"></i> Photo 1</div>
+                <div class="photo-evidence-zoom"><i class="fas fa-search-plus"></i></div>
+            </div>
+            {% endif %}
+            {% if accident.report.photo_2 %}
+            <div class="photo-evidence-item" onclick="openPhotoLightbox('{{ accident.report.photo_2.url }}')">
+                <img src="{{ accident.report.photo_2.url }}" alt="Photo Evidence 2" loading="lazy">
+                <div class="photo-evidence-label"><i class="fas fa-image"></i> Photo 2</div>
+                <div class="photo-evidence-zoom"><i class="fas fa-search-plus"></i></div>
+            </div>
+            {% endif %}
+            {% if accident.report.photo_3 %}
+            <div class="photo-evidence-item" onclick="openPhotoLightbox('{{ accident.report.photo_3.url }}')">
+                <img src="{{ accident.report.photo_3.url }}" alt="Photo Evidence 3" loading="lazy">
+                <div class="photo-evidence-label"><i class="fas fa-image"></i> Photo 3</div>
+                <div class="photo-evidence-zoom"><i class="fas fa-search-plus"></i></div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Photo Lightbox Overlay -->
+    <div class="photo-lightbox-overlay" id="photoLightbox" onclick="closePhotoLightbox(event)">
+        <div class="photo-lightbox-close" onclick="closePhotoLightbox(event)"><i class="fas fa-times"></i></div>
+        <img id="lightboxImage" src="" alt="Photo Evidence">
+    </div>
 
     <!-- Police Information -->
     <div class="info-section">
@@ -1166,6 +1682,26 @@
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// Photo Lightbox functions
+function openPhotoLightbox(url) {
+    var overlay = document.getElementById('photoLightbox');
+    var img = document.getElementById('lightboxImage');
+    img.src = url;
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePhotoLightbox(e) {
+    if (e.target === document.getElementById('lightboxImage')) return;
+    var overlay = document.getElementById('photoLightbox');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closePhotoLightbox(e);
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize map with enhanced styling
     const lat = {{ accident.latitude }};
@@ -1589,8 +2125,9 @@ document.addEventListener('DOMContentLoaded', function() {
     right: 0;
     bottom: 0;
     z-index: 10000;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    padding-top: 5px;
 }
 
 .modal-overlay {
@@ -1757,6 +2294,111 @@ document.addEventListener('DOMContentLoaded', function() {
 .btn-primary:hover {
     background: linear-gradient(135deg, #5568d3 0%, #63397d 100%);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* ===== MODAL DARK MODE ===== */
+[data-theme="dark"] .modal-content {
+    background: #1E2A3A !important;
+    color: #E8E8E8 !important;
+    border: 1px solid #2D3A4F;
+}
+
+[data-theme="dark"] .modal-overlay {
+    background: rgba(0, 0, 0, 0.7) !important;
+}
+
+[data-theme="dark"] .modal-close {
+    color: #B0B0B0 !important;
+}
+
+[data-theme="dark"] .modal-close:hover {
+    color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .modal-header h2 {
+    color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .modal-body {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] .form-group label {
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] .form-control {
+    background: #1A2332 !important;
+    border-color: #3D4A5F !important;
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] .form-control:focus {
+    border-color: #4A90D9 !important;
+    background: #1E2A3A !important;
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: #888 !important;
+}
+
+/* Case Status Modal Dark Mode */
+[data-theme="dark"] #caseStatusModal {
+    background: #1A2332 !important;
+}
+[data-theme="dark"] #caseStatusModal h3 {
+    color: #F3F4F6 !important;
+}
+[data-theme="dark"] #caseStatusModal label {
+    color: #D1D5DB !important;
+}
+[data-theme="dark"] #caseStatusModal select {
+    background: #0F172A !important;
+    border-color: #3D4A5F !important;
+    color: #E8E8E8 !important;
+}
+[data-theme="dark"] #caseStatusCard button {
+    background: #1A2332 !important;
+    border-color: #3D4A5F !important;
+    color: #D1D5DB !important;
+}
+
+[data-theme="dark"] .edit-tabs {
+    border-bottom-color: #2D3A4F !important;
+}
+
+[data-theme="dark"] .edit-tab {
+    color: #B0B0B0 !important;
+}
+
+[data-theme="dark"] .edit-tab:hover {
+    color: #4A90D9 !important;
+    background: rgba(74, 144, 217, 0.1) !important;
+}
+
+[data-theme="dark"] .edit-tab.active {
+    color: #4A90D9 !important;
+    border-bottom-color: #4A90D9 !important;
+}
+
+[data-theme="dark"] .btn-outline {
+    background: #1A2332 !important;
+    border-color: #3D4A5F !important;
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] .btn-outline:hover {
+    background: #2D3A4F !important;
+}
+
+[data-theme="dark"] textarea.form-control {
+    background: #1A2332 !important;
+    color: #E8E8E8 !important;
+}
+
+[data-theme="dark"] select.form-control {
+    background: #1A2332 !important;
+    color: #E8E8E8 !important;
 }
 </style>
 
@@ -2062,6 +2704,159 @@ function closeEditModal() {
     document.body.style.overflow = 'auto';
     currentEditId = null;
 }
+</script>
+
+<!-- Case Status Update Modal -->
+<div id="caseStatusOverlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:10010; backdrop-filter:blur(2px);">
+    <div style="display:flex; justify-content:center; align-items:flex-start; padding-top:5px; height:100%;">
+        <div id="caseStatusModal" style="background:white; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.18); padding:1.5rem; max-width:420px; width:90%; animation:slideDown 0.2s ease;">
+            <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:#DBEAFE; color:#2563EB; display:flex; align-items:center; justify-content:center; font-size:1rem;">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <h3 style="margin:0; font-size:1.1rem; font-weight:700; color:#1F2937;">Update Case Status</h3>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; font-size:0.82rem; font-weight:600; color:#374151; margin-bottom:0.3rem;">Case Status</label>
+                <select id="caseStatusSelect" onchange="toggleSolveType()" style="width:100%; padding:0.5rem; border:1px solid #D1D5DB; border-radius:6px; font-size:0.875rem; background:white;">
+                    <option value="Under Investigation" {% if accident.case_status == 'Under Investigation' or not accident.case_status %}selected{% endif %}>Under Investigation</option>
+                    <option value="Solved" {% if accident.case_status == 'Solved' %}selected{% endif %}>Solved</option>
+                    <option value="Unsolved" {% if accident.case_status == 'Unsolved' %}selected{% endif %}>Unsolved</option>
+                </select>
+            </div>
+
+            <div id="solveTypeGroup" style="margin-bottom:1rem; {% if accident.case_status != 'Solved' %}display:none;{% endif %}">
+                <label style="display:block; font-size:0.82rem; font-weight:600; color:#374151; margin-bottom:0.3rem;">How was it solved?</label>
+                <select id="caseSolveTypeSelect" style="width:100%; padding:0.5rem; border:1px solid #D1D5DB; border-radius:6px; font-size:0.875rem; background:white;">
+                    <option value="">Select...</option>
+                    <option value="SOLVED (AMICABLY SETTLED)" {% if accident.case_solve_type == 'SOLVED (AMICABLY SETTLED)' %}selected{% endif %}>Amicably Settled</option>
+                    <option value="SOLVED (FILED IN COURT)" {% if accident.case_solve_type == 'SOLVED (FILED IN COURT)' %}selected{% endif %}>Filed in Court</option>
+                    <option value="SOLVED (CLEARED BY ARREST)" {% if accident.case_solve_type == 'SOLVED (CLEARED BY ARREST)' %}selected{% endif %}>Cleared by Arrest</option>
+                    <option value="SOLVED (CLEARED BY OTHER MEANS)" {% if accident.case_solve_type == 'SOLVED (CLEARED BY OTHER MEANS)' %}selected{% endif %}>Cleared by Other Means</option>
+                </select>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+                <button onclick="closeCaseStatusModal()" style="padding:0.45rem 1rem; border-radius:6px; border:1px solid #D1D5DB; background:white; color:#374151; font-size:0.82rem; font-weight:500; cursor:pointer;">Cancel</button>
+                <button id="caseStatusSaveBtn" onclick="saveCaseStatus()" style="padding:0.45rem 1rem; border-radius:6px; border:none; background:#2563EB; color:white; font-size:0.82rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.3rem;">
+                    <i class="fas fa-save"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openCaseStatusModal() {
+    document.getElementById('caseStatusOverlay').style.display = 'block';
+    toggleSolveType();
+}
+
+function closeCaseStatusModal() {
+    document.getElementById('caseStatusOverlay').style.display = 'none';
+}
+
+document.getElementById('caseStatusOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeCaseStatusModal();
+});
+
+function toggleSolveType() {
+    var status = document.getElementById('caseStatusSelect').value;
+    document.getElementById('solveTypeGroup').style.display = status === 'Solved' ? 'block' : 'none';
+}
+
+function saveCaseStatus() {
+    var status = document.getElementById('caseStatusSelect').value;
+    var solveType = document.getElementById('caseSolveTypeSelect').value;
+    var btn = document.getElementById('caseStatusSaveBtn');
+
+    if (status === 'Solved' && !solveType) {
+        alert('Please select how the case was solved.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    var csrfToken = '{{ csrf_token }}';
+
+    fetch('{% url "update_case_status" accident.pk %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            case_status: status,
+            case_solve_type: solveType
+        })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            // Update the card display
+            // Update badge text + icon
+            var display = document.getElementById('caseStatusDisplay');
+            var icon = '';
+            if (data.case_status === 'Solved') {
+                icon = '<i class="fas fa-check-circle"></i> ';
+            } else if (data.case_status === 'Unsolved') {
+                icon = '<i class="fas fa-times-circle"></i> ';
+            } else {
+                icon = '<i class="fas fa-search"></i> ';
+            }
+            display.innerHTML = icon + data.case_status;
+
+            // Update card accent class
+            var card = document.getElementById('caseStatusCard');
+            card.classList.remove('case-solved', 'case-unsolved', 'case-investigating');
+            if (data.case_status === 'Solved') {
+                card.classList.add('case-solved');
+            } else if (data.case_status === 'Unsolved') {
+                card.classList.add('case-unsolved');
+            } else {
+                card.classList.add('case-investigating');
+            }
+
+            document.getElementById('caseResolvedDisplay').textContent = data.case_solve_type ? 'Yes' : 'No';
+
+            var solveRow = document.getElementById('caseSolveTypeRow');
+            if (data.case_solve_type) {
+                document.getElementById('caseSolveTypeDisplay').textContent = data.case_solve_type;
+                solveRow.style.display = '';
+            } else {
+                solveRow.style.display = 'none';
+            }
+
+            // Update or create the "updated by" row
+            var updatedRow = document.getElementById('caseUpdatedByRow');
+            if (!updatedRow) {
+                updatedRow = document.createElement('div');
+                updatedRow.className = 'status-card-details';
+                updatedRow.id = 'caseUpdatedByRow';
+                solveRow.parentNode.insertBefore(updatedRow, solveRow.nextSibling);
+            }
+            updatedRow.innerHTML = '<div class="status-card-detail" style="font-size: 0.75rem; color: #9CA3AF;"><i class="fas fa-user-edit"></i> <span>Updated by ' + data.updated_by + ' on ' + data.updated_at + '</span></div>';
+
+            closeCaseStatusModal();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(function(err) {
+        alert('Network error. Please try again.');
+    })
+    .finally(function() {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save';
+    });
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeCaseStatusModal();
+});
 </script>
 
 {% endblock %}
