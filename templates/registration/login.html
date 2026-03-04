@@ -344,6 +344,12 @@
             position: relative;
         }
 
+        /* Hide browser's native password reveal button (Edge/Chrome) */
+        input::-ms-reveal,
+        input::-ms-clear {
+            display: none;
+        }
+
         .form-group input[type="text"],
         .form-group input[type="password"] {
             width: 100%;
@@ -383,6 +389,10 @@
             color: #003087;
         }
 
+        .input-wrapper input[type="password"] {
+            padding-right: 46px;
+        }
+
         .password-toggle {
             position: absolute;
             right: 16px;
@@ -392,6 +402,7 @@
             cursor: pointer;
             user-select: none;
             transition: color 0.2s;
+            z-index: 1;
         }
 
         .password-toggle:hover {
@@ -714,7 +725,7 @@
 
                 <div class="form-group">
                     <label for="username">
-                        <i class="fas fa-user"></i> Username / Badge Number
+                        Username / Badge Number
                     </label>
                     <div class="input-wrapper">
                         <i class="fas fa-user input-icon"></i>
@@ -733,7 +744,7 @@
 
                 <div class="form-group">
                     <label for="password">
-                        <i class="fas fa-lock"></i> Password
+                        Password
                     </label>
                     <div class="input-wrapper">
                         <i class="fas fa-lock input-icon"></i>
@@ -794,8 +805,13 @@
 
         // Display messages as popup notifications
         function showPopupNotification(message, type = 'info', duration = 5000) {
-            const container = document.createElement('div');
-            container.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10001; display: flex; flex-direction: column; gap: 12px;';
+            let container = document.querySelector('.login-notif-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'login-notif-container';
+                container.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10001; display: flex; flex-direction: column; gap: 12px; pointer-events: none;';
+                document.body.appendChild(container);
+            }
 
             const notification = document.createElement('div');
             const icons = {
@@ -812,35 +828,36 @@
                 info: 'rgba(59, 130, 246, 0.95)'
             };
 
+            const isMobile = window.innerWidth <= 768;
+
             notification.style.cssText = `
-                padding: 1.25rem 1.75rem;
-                border-radius: 12px;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                padding: ${isMobile ? '0.65rem 0.75rem' : '0.85rem 1.25rem'};
+                border-radius: ${isMobile ? '10px' : '12px'};
+                box-shadow: 0 ${isMobile ? '6px 24px' : '10px 40px'} rgba(0, 0, 0, ${isMobile ? '0.25' : '0.3'});
                 display: flex;
                 align-items: center;
-                gap: 1rem;
-                font-size: 1rem;
+                gap: ${isMobile ? '0.5rem' : '0.75rem'};
+                font-size: ${isMobile ? '0.82rem' : '0.95rem'};
                 font-weight: 500;
-                min-width: min(350px, 90vw);
-                max-width: 90vw;
+                white-space: ${isMobile ? 'normal' : 'nowrap'};
                 color: white;
                 background: ${colors[type] || colors.info};
                 border: 2px solid rgba(255, 255, 255, 0.3);
                 backdrop-filter: blur(10px);
+                pointer-events: auto;
                 opacity: 1;
                 transition: opacity 0.4s ease;
             `;
 
-            notification.innerHTML = `
-                <i class="fas ${icons[type] || icons.info}" style="font-size: 1.5rem; flex-shrink: 0;"></i>
-                <span style="flex: 1; line-height: 1.4;">${message}</span>
-            `;
-
-            if (!document.querySelector('div[style*="position: fixed"][style*="top: 20px"]')) {
-                document.body.appendChild(container);
-            } else {
-                container = document.querySelector('div[style*="position: fixed"][style*="top: 20px"]');
+            if (isMobile) {
+                container.style.cssText = 'position: fixed; top: 10px; left: 8px; right: 8px; transform: none; z-index: 10001; display: flex; flex-direction: column; gap: 12px; pointer-events: none;';
             }
+
+            notification.innerHTML = `
+                <i class="fas ${icons[type] || icons.info}" style="font-size: ${isMobile ? '1.15rem' : '1.35rem'}; flex-shrink: 0;"></i>
+                <span style="flex: 1; line-height: 1.35;">${message}</span>
+                <span onclick="this.parentElement.remove()" style="cursor:pointer; font-size:${isMobile ? '1.1rem' : '1.25rem'}; opacity:0.8; flex-shrink:0; pointer-events:auto;">&times;</span>
+            `;
 
             container.appendChild(notification);
 

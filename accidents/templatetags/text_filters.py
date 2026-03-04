@@ -2,6 +2,7 @@
 import re
 from django import template
 from django.template.defaultfilters import stringfilter
+from django.utils import timezone
 
 register = template.Library()
 
@@ -65,3 +66,32 @@ def format_time_display(time_str):
     time_str = re.sub(r'^(\d{1,2})(\d{2})$', r'\1:\2', time_str)  # 1030 -> 10:30
     
     return time_str
+
+
+@register.filter
+def accident_age_badge(created_at):
+    """
+    Return badge type based on accident age:
+    - 'new' if < 24 hours
+    - '1 day ago', '2 days ago', etc. if < 7 days
+    - '1 week ago' if 7-13 days
+    - '2 weeks ago' if 14-29 days
+    - '' (empty) if >= 30 days
+    """
+    if not created_at:
+        return ''
+
+    now = timezone.now()
+    diff = now - created_at
+    days = diff.days
+    hours = diff.total_seconds() / 3600
+
+    if hours < 24:
+        return 'new'
+    elif days < 7:
+        return f'{days} day{"s" if days != 1 else ""} ago'
+    elif days < 14:
+        return '1 week ago'
+    elif days < 30:
+        return '2 weeks ago'
+    return ''

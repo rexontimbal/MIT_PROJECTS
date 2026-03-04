@@ -453,79 +453,68 @@
         color: white;
     }
 
-    /* Pagination */
-    .pagination-container {
+    /* Pagination - Pill Style */
+    .mr-pagination {
         display: flex;
-        justify-content: center;
         align-items: center;
-        gap: 0.25rem;
-        margin-top: 0.75rem;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 1.5rem;
         flex-wrap: wrap;
     }
-
-    .pagination-container a,
-    .pagination-container span {
+    .mr-page-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 30px;
-        height: 30px;
-        padding: 0 0.4rem;
-        border-radius: 6px;
-        font-size: 0.78rem;
-        font-weight: 500;
+        min-width: 38px;
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        font-weight: 600;
         text-decoration: none;
-        transition: all 0.2s;
-    }
-
-    .pagination-container a {
-        background: white;
+        border: 1px solid #d1d5db;
+        background: #fff;
         color: #374151;
-        border: 1px solid #E5E7EB;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        white-space: nowrap;
     }
-
-    .pagination-container a:hover {
-        background: var(--primary-blue);
-        color: white;
-        border-color: var(--primary-blue);
+    .mr-page-btn:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+        color: #111827;
     }
-
-    .pagination-container .page-current {
-        background: var(--primary-blue);
-        color: white;
-        border: 1px solid var(--primary-blue);
-        font-weight: 700;
-    }
-
-    .pagination-container .page-disabled {
-        background: #F3F4F6;
-        color: #D1D5DB;
-        border: 1px solid #E5E7EB;
+    .mr-page-btn.mr-page-current {
+        background: #003087;
+        color: #fff;
+        border-color: #003087;
         cursor: default;
     }
-
-    .pagination-info {
-        text-align: center;
-        font-size: 0.8rem;
-        color: var(--text-light);
-        margin-top: 0.5rem;
+    .mr-page-btn.mr-page-current:hover {
+        background: #003087;
+        border-color: #003087;
+        color: #fff;
+    }
+    .mr-page-btn.mr-page-disabled {
+        opacity: 0.4;
+        pointer-events: none;
     }
 
-    [data-theme="dark"] .pagination-container a {
-        background: #1A2332;
+    [data-theme="dark"] .mr-page-btn {
+        background: #1E293B;
         border-color: #2D3A4F;
-        color: #E8E8E8;
+        color: #D1D5DB;
     }
-
-    [data-theme="dark"] .pagination-container a:hover {
-        background: var(--primary-blue);
-        border-color: var(--primary-blue);
+    [data-theme="dark"] .mr-page-btn:hover {
+        background: #2D3A4F;
+        border-color: #4B5563;
+        color: #F3F4F6;
     }
-
-    [data-theme="dark"] .pagination-container .page-disabled {
-        background: #0F172A;
-        border-color: #2D3A4F;
-        color: #4B5563;
+    [data-theme="dark"] .mr-page-btn.mr-page-current {
+        background: #003087;
+        color: #fff;
+        border-color: #003087;
     }
 
     .empty-state {
@@ -765,6 +754,16 @@
             padding: 0.4rem 0.7rem;
             font-size: 0.75rem;
         }
+
+        .mr-pagination {
+            gap: 4px;
+        }
+        .mr-page-btn {
+            min-width: 34px;
+            height: 34px;
+            padding: 0 10px;
+            font-size: 0.78rem;
+        }
     }
 </style>
 {% endblock %}
@@ -811,7 +810,9 @@
         </select>
     </div>
 
+    <div id="reportsListContainer">
     {% if reports %}
+
         {% for report in reports %}
         <div class="report-card status-{{ report.status }}" data-report-id="{{ report.pk }}">
             <div class="report-header">
@@ -925,34 +926,61 @@
         </div>
         {% endfor %}
 
-        {% if page_obj.paginator.num_pages > 1 %}
-        <div class="pagination-container">
+        <!-- Bottom Pagination -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="color: #6B7280; font-size: 0.85rem;">
+                <i class="fas fa-info-circle"></i>
+                Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ total_count }} report{{ total_count|pluralize }}
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem;">
+                <span style="color: #6B7280;">Show</span>
+                <select onchange="changePerPage(this.value)" style="padding: 0.3rem 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.82rem; color: #374151; cursor: pointer; background: white;">
+                    <option value="5" {% if per_page == '5' %}selected{% endif %}>5</option>
+                    <option value="10" {% if per_page == '10' %}selected{% endif %}>10</option>
+                    <option value="20" {% if per_page == '20' %}selected{% endif %}>20</option>
+                    <option value="50" {% if per_page == '50' %}selected{% endif %}>50</option>
+                </select>
+                <span style="color: #6B7280;">per page</span>
+            </div>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <div class="mr-pagination" style="margin-top: 0.5rem;">
             {% if page_obj.has_previous %}
-            <a href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&page=1" title="First"><i class="fas fa-angle-double-left"></i></a>
-            <a href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&page={{ page_obj.previous_page_number }}" title="Previous"><i class="fas fa-angle-left"></i></a>
+            <a class="mr-page-btn" href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&per_page={{ per_page }}&page={{ page_obj.previous_page_number }}">
+                <i class="fas fa-chevron-left"></i>
+            </a>
             {% else %}
-            <span class="page-disabled"><i class="fas fa-angle-double-left"></i></span>
-            <span class="page-disabled"><i class="fas fa-angle-left"></i></span>
+            <span class="mr-page-btn mr-page-disabled"><i class="fas fa-chevron-left"></i></span>
             {% endif %}
 
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                <span class="page-current">{{ num }}</span>
-                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <a href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&page={{ num }}">{{ num }}</a>
+            {% for pg in page_obj.paginator.page_range %}
+                {% if page_obj.paginator.num_pages <= 7 %}
+                    <a class="mr-page-btn {% if pg == page_obj.number %}mr-page-current{% endif %}" href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&per_page={{ per_page }}&page={{ pg }}">{{ pg }}</a>
+                {% else %}
+                    {% if pg == 1 or pg == page_obj.paginator.num_pages %}
+                        <a class="mr-page-btn {% if pg == page_obj.number %}mr-page-current{% endif %}" href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&per_page={{ per_page }}&page={{ pg }}">{{ pg }}</a>
+                    {% elif pg == page_obj.number or pg == page_obj.number|add:"-1" or pg == page_obj.number|add:"1" %}
+                        <a class="mr-page-btn {% if pg == page_obj.number %}mr-page-current{% endif %}" href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&per_page={{ per_page }}&page={{ pg }}">{{ pg }}</a>
+                    {% elif pg == 2 and page_obj.number > 4 %}
+                        <span class="mr-page-btn mr-page-disabled" style="border:none;background:none;cursor:default;">...</span>
+                    {% elif pg == page_obj.paginator.num_pages|add:"-1" and page_obj.number < page_obj.paginator.num_pages|add:"-3" %}
+                        <span class="mr-page-btn mr-page-disabled" style="border:none;background:none;cursor:default;">...</span>
+                    {% elif page_obj.number <= 4 and pg <= 5 %}
+                        <a class="mr-page-btn {% if pg == page_obj.number %}mr-page-current{% endif %}" href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&per_page={{ per_page }}&page={{ pg }}">{{ pg }}</a>
+                    {% elif page_obj.number >= page_obj.paginator.num_pages|add:"-3" and pg >= page_obj.paginator.num_pages|add:"-4" %}
+                        <a class="mr-page-btn {% if pg == page_obj.number %}mr-page-current{% endif %}" href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&per_page={{ per_page }}&page={{ pg }}">{{ pg }}</a>
+                    {% endif %}
                 {% endif %}
             {% endfor %}
 
             {% if page_obj.has_next %}
-            <a href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&page={{ page_obj.next_page_number }}" title="Next"><i class="fas fa-angle-right"></i></a>
-            <a href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&page={{ page_obj.paginator.num_pages }}" title="Last"><i class="fas fa-angle-double-right"></i></a>
+            <a class="mr-page-btn" href="?status={{ status_filter }}{% if period_filter != 'all' %}&period={{ period_filter }}{% endif %}&per_page={{ per_page }}&page={{ page_obj.next_page_number }}">
+                <i class="fas fa-chevron-right"></i>
+            </a>
             {% else %}
-            <span class="page-disabled"><i class="fas fa-angle-right"></i></span>
-            <span class="page-disabled"><i class="fas fa-angle-double-right"></i></span>
+            <span class="mr-page-btn mr-page-disabled"><i class="fas fa-chevron-right"></i></span>
             {% endif %}
-        </div>
-        <div class="pagination-info">
-            Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} reports
         </div>
         {% endif %}
 
@@ -966,6 +994,7 @@
             </a>
         </div>
     {% endif %}
+    </div><!-- /reportsListContainer -->
 </div>
 
 <!-- Cancel Confirmation Modal -->
@@ -1055,5 +1084,44 @@ document.addEventListener('keydown', function(e) {
         }
     }
 })();
+
+function changePerPage(value) {
+    var params = new URLSearchParams(window.location.search);
+    params.set('per_page', value);
+    params.delete('page');
+    var url = window.location.pathname + '?' + params.toString();
+
+    // Update URL without reload
+    history.replaceState(null, '', url);
+
+    var container = document.getElementById('reportsListContainer');
+    // Fade out smoothly
+    container.style.transition = 'opacity 0.15s ease';
+    container.style.opacity = '0.4';
+
+    fetch(url)
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContent = doc.getElementById('reportsListContainer');
+            if (newContent) {
+                container.innerHTML = newContent.innerHTML;
+            }
+            container.style.opacity = '1';
+        })
+        .catch(function() {
+            // Fallback: full reload
+            window.location.search = params.toString();
+        });
+}
+
+// Scroll to top on page navigation (next/prev)
+document.addEventListener('click', function(e) {
+    var link = e.target.closest('.page-btn[href]');
+    if (link) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+});
 </script>
 {% endblock %}

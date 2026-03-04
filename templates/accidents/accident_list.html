@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load text_filters %}
 
 {% block title %}Accident List - AGNES Hotspot System{% endblock %}
 
@@ -241,6 +242,39 @@
 
     .quick-search-btn.standalone {
         background: #10B981;
+    }
+
+    .quick-search-btn.case-investigating {
+        background: #f3f4f6;
+        color: #D97706;
+        border: 1.5px solid #e5e7eb;
+    }
+
+    .quick-search-btn.case-investigating.active {
+        background: #FEF3C7;
+        border-color: #F59E0B;
+    }
+
+    .quick-search-btn.case-solved {
+        background: #f3f4f6;
+        color: #059669;
+        border: 1.5px solid #e5e7eb;
+    }
+
+    .quick-search-btn.case-solved.active {
+        background: #D1FAE5;
+        border-color: #10B981;
+    }
+
+    .quick-search-btn.case-unsolved {
+        background: #f3f4f6;
+        color: #DC2626;
+        border: 1.5px solid #e5e7eb;
+    }
+
+    .quick-search-btn.case-unsolved.active {
+        background: #FEE2E2;
+        border-color: #EF4444;
     }
 
     .quick-search-btn:hover {
@@ -679,7 +713,7 @@
         transform: scale(1.02);
     }
 
-    /* Pagination - Modern Flat (matching hotspots exactly) */
+    /* Pagination - Modern Flat (matching hotspots) */
     .pagination-container {
         background: white;
         padding: 1rem 1.5rem;
@@ -693,22 +727,32 @@
         gap: 1rem;
         border: 1px solid #E5E7EB;
         border-top: 2px solid var(--primary-blue);
-        position: relative;
     }
 
     .pagination-info {
         color: #6B7280;
         font-size: 0.875rem;
-        flex: 1;
     }
 
     .pagination-controls {
         display: flex;
         gap: 0.5rem;
         align-items: center;
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
+    }
+
+    .pagination-controls .btn {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        color: #6B7280;
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .pagination-controls .btn:hover {
+        color: var(--primary-blue, #003087);
+        background: transparent;
+        border: none;
     }
 
     .pagination-controls button:disabled {
@@ -742,18 +786,109 @@
 
     .accident-card {
         background: white;
-        border-radius: 8px;
+        border-radius: 10px;
         border: 1px solid #E5E7EB;
-        border-left: 3px solid #003087;
-        overflow: hidden;
+        overflow: visible;
         transition: all 0.2s ease;
         position: relative;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
     .accident-card:hover {
         border-color: #D1D5DB;
-        border-left-color: #003087;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+    }
+
+    /* Card age badge — slanted ribbon at top-left corner */
+    /* Card age dot — small indicator inside header top-left */
+    .accident-card {
+        position: relative;
+    }
+    .accident-age-icon {
+        position: absolute;
+        top: 7px;
+        left: 7px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        cursor: default;
+        z-index: 3;
+        font-size: 0;
+        color: transparent;
+    }
+    .accident-age-icon.is-new {
+        background: #EF4444;
+        animation: pulse-new 2s ease-in-out infinite;
+    }
+    .accident-age-icon.is-recent {
+        background: rgba(255, 255, 255, 0.4);
+    }
+    @keyframes pulse-new {
+        0%, 100% { box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25); }
+        50% { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+    }
+    .accident-age-icon::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: calc(100% + 4px);
+        left: calc(100% + 4px);
+        background: #1F2937;
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 500;
+        padding: 3px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s;
+        z-index: 10;
+    }
+    .accident-age-icon:hover::after {
+        opacity: 1;
+    }
+
+    /* Table age badge — inline next to severity, always same line */
+    .accidents-table td[data-label="Severity"] {
+        white-space: nowrap;
+    }
+    .accident-age-badge-table {
+        display: inline-block;
+        font-size: 0.55rem;
+        font-weight: 600;
+        padding: 1px 5px;
+        border-radius: 3px;
+        margin-left: 0.35rem;
+        vertical-align: middle;
+        line-height: 1.3;
+        white-space: nowrap;
+    }
+    .accident-age-badge-table.is-new {
+        background: #EF4444;
+        color: white;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .accident-age-badge-table.is-recent {
+        background: #F3F4F6;
+        color: #6B7280;
+        border: 1px solid #E5E7EB;
+    }
+
+    [data-theme="dark"] .accident-age-icon.is-new {
+        background: #DC2626;
+    }
+    [data-theme="dark"] .accident-age-icon.is-recent {
+        background: rgba(255, 255, 255, 0.25);
+    }
+    [data-theme="dark"] .accident-age-badge-table.is-new {
+        background: #DC2626;
+    }
+    [data-theme="dark"] .accident-age-badge-table.is-recent {
+        background: #2D3A4F;
+        color: #9CA3AF;
+        border-color: #3D4A5F;
     }
 
     .card-header {
@@ -763,6 +898,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-radius: 9px 9px 0 0;
     }
 
     .severity-badge {
@@ -871,101 +1007,73 @@
 
     .card-actions {
         display: flex;
-        gap: 8px;
-        padding-top: 14px;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 10px;
         border-top: 1px solid #F3F4F6;
     }
 
     .card-action-btn {
-        flex: 1;
-        padding: 6px 10px;
-        border: 1px solid #E5E7EB;
-        background: white;
-        color: #374151;
-        border-radius: 4px;
-        font-weight: 500;
-        font-size: 0.75rem;
+        position: relative;
+        padding: 6px;
+        border: none;
+        background: transparent;
         cursor: pointer;
-        transition: all 0.15s ease;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 4px;
+        font-size: 0;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: background 0.15s;
+    }
+    .card-action-btn:hover {
+        background: #F3F4F6;
     }
 
     .card-action-btn i {
-        font-size: 0.75rem;
-        color: #6B7280;
+        font-size: 1rem;
+        color: #9CA3AF;
+        transition: color 0.15s ease;
     }
 
-    .card-action-btn:hover {
-        background: #F9FAFB;
-        border-color: #D1D5DB;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    .card-action-btn:hover i {
+        color: #003087;
     }
 
-    /* Card View Button - View */
-    .card-action-btn.btn-view {
-        background: #E3F2FD;
-        color: var(--primary-blue);
-        border-color: #BBDEFB;
-    }
-
-    .card-action-btn.btn-view i {
-        color: var(--primary-blue);
-    }
-
-    .card-action-btn.btn-view:hover {
-        background: var(--primary-blue);
+    /* Action button tooltip */
+    .card-action-btn::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%) scale(0.95);
+        background: #1F2937;
         color: white;
-        border-color: var(--primary-blue);
+        font-size: 0.65rem;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 5px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s, transform 0.15s;
+        z-index: 10;
+    }
+    .card-action-btn:hover::after {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
     }
 
-    .card-action-btn.btn-view:hover i {
-        color: white;
+    /* Dark mode card action buttons */
+    [data-theme="dark"] .card-action-btn:hover {
+        background: #2D3A4F;
     }
-
-    /* Card View Button - Map */
-    .card-action-btn.btn-map {
-        background: #E8F5E9;
-        color: var(--success-green);
-        border-color: #C8E6C9;
+    [data-theme="dark"] .card-action-btn i {
+        color: #7B8394;
     }
-
-    .card-action-btn.btn-map i {
-        color: var(--success-green);
-    }
-
-    .card-action-btn.btn-map:hover {
-        background: var(--success-green);
-        color: white;
-        border-color: var(--success-green);
-    }
-
-    .card-action-btn.btn-map:hover i {
-        color: white;
-    }
-
-    /* Card View Button - Edit (Solid Blue → Light Blue on hover) */
-    .card-action-btn.btn-edit {
-        background: var(--primary-blue);
-        color: white;
-        border-color: var(--primary-blue);
-    }
-
-    .card-action-btn.btn-edit i {
-        color: white;
-    }
-
-    .card-action-btn.btn-edit:hover {
-        background: #E3F2FD;
-        color: var(--primary-blue);
-        border-color: #BBDEFB;
-    }
-
-    .card-action-btn.btn-edit:hover i {
-        color: var(--primary-blue);
+    [data-theme="dark"] .card-action-btn:hover i {
+        color: #60A5FA;
     }
 
     /* Table View */
@@ -1048,44 +1156,38 @@
 
     .table-actions {
         display: flex;
-        gap: 5px;
+        gap: 6px;
     }
 
     .table-action-btn {
-        padding: 4px 10px;
+        padding: 5px 12px;
         border: none;
-        border-radius: 4px;
-        font-size: 0.75rem;
+        border-radius: 6px;
+        font-size: 0.72rem;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.15s ease;
         font-weight: 600;
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
+        color: white;
+    }
+
+    .table-action-btn:hover {
+        opacity: 0.88;
+        transform: translateY(-1px);
     }
 
     .table-action-btn.view {
-        background: #E3F2FD;
-        color: var(--primary-blue);
-    }
-
-    .table-action-btn.view:hover {
-        background: var(--primary-blue);
-        color: white;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 48, 135, 0.2);
+        background: #10B981;
     }
 
     .table-action-btn.map {
-        background: #E8F5E9;
-        color: var(--success-green);
+        background: #1E3A5F;
     }
 
-    .table-action-btn.map:hover {
-        background: var(--success-green);
-        color: white;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+    .table-action-btn.edit {
+        background: #3B82F6;
     }
 
     .text-center {
@@ -1110,12 +1212,7 @@
         color: #495057;
     }
 
-    /* Pagination */
-    .pagination-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 30px;
-    }
+    /* Pagination (page-link styles only — container defined above) */
 
     .pagination {
         display: flex;
@@ -1161,6 +1258,38 @@
         transform: none;
     }
 
+    /* Bottom Pagination - Pill Style */
+    .al-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        flex-wrap: wrap;
+    }
+
+    .al-page-btn {
+        padding: 0.35rem 0.7rem;
+        border-radius: 6px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        color: #374151;
+        font-size: 0.78rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+    }
+    .al-page-btn:hover { background: #F3F4F6; border-color: #D1D5DB; color: #374151; }
+    .al-page-btn.al-page-current { background: #003087; color: white; border-color: #003087; }
+    .al-page-btn.al-page-disabled { opacity: 0.4; pointer-events: none; }
+
+    [data-theme="dark"] .al-page-btn { background: #2D3A4F; border-color: #3D4F6B; color: #D1D5DB; }
+    [data-theme="dark"] .al-page-btn:hover { background: #374963; color: #D1D5DB; }
+    [data-theme="dark"] .al-page-btn.al-page-current { background: #3B82F6; border-color: #3B82F6; color: white; }
+
     /* Loading Animation - PNP Theme (Same as Hotspot) */
     .loading-overlay {
         position: fixed;
@@ -1173,7 +1302,7 @@
         display: none;
         align-items: center;
         justify-content: center;
-        z-index: 9999;
+        z-index: 10010;
     }
 
     .loading-overlay.active {
@@ -1244,7 +1373,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: 9999;
+        z-index: 10010;
         align-items: flex-start;
         justify-content: center;
         padding-top: 5px;
@@ -1576,6 +1705,10 @@
 
     /* Responsive */
     @media (max-width: 768px) {
+        .accident-age-badge-wrap {
+            width: 50px;
+            height: 50px;
+        }
         .page-hero h1 {
             font-size: 1.6rem;
         }
@@ -1621,8 +1754,8 @@
         }
 
         .card-action-btn {
-            font-size: 0.68rem;
-            padding: 5px 6px;
+            font-size: 0;
+            padding: 0;
         }
 
         .quick-filters {
@@ -1695,7 +1828,7 @@
         }
 
         .card-actions {
-            flex-direction: column;
+            flex-direction: row;
         }
     }
 
@@ -2263,14 +2396,56 @@
         .pagination {
             flex-wrap: wrap;
             justify-content: center;
-            gap: 0.25rem;
+            gap: 0.15rem;
         }
 
         .pagination a,
         .pagination span {
-            min-width: 36px;
-            min-height: 36px;
-            font-size: 0.8rem;
+            min-width: 28px;
+            min-height: 28px;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.3rem;
+        }
+
+        .pagination-container {
+            padding: 0.35rem 0.6rem !important;
+            gap: 0.4rem !important;
+            flex-wrap: nowrap !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            white-space: nowrap !important;
+        }
+
+        .pagination-info {
+            font-size: 0.62rem !important;
+            flex-shrink: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pagination-controls {
+            position: static !important;
+            transform: none !important;
+            flex-shrink: 0;
+            gap: 0.2rem !important;
+        }
+
+        .pagination-controls .btn {
+            padding: 0.15rem 0.35rem !important;
+            font-size: 0.6rem !important;
+        }
+
+        #pageInfo {
+            font-size: 0.62rem !important;
+            padding: 0 0.25rem !important;
+        }
+
+        #itemsPerPage {
+            padding: 0.18rem 0.25rem !important;
+            font-size: 0.62rem !important;
+            flex-shrink: 0;
+            width: auto !important;
         }
     }
 
@@ -2313,9 +2488,48 @@
 
         .card-actions button,
         .card-actions a {
-            flex: 1;
-            min-height: 36px;
-            font-size: 0.75rem;
+            flex: none;
+            min-height: auto;
+            font-size: 0;
+            padding: 0;
+            background: transparent;
+            border: none;
+        }
+
+        .pagination-container {
+            padding: 0.2rem 0.35rem !important;
+            gap: 0.2rem !important;
+        }
+
+        .pagination-info {
+            font-size: 0.5rem !important;
+        }
+
+        .pagination-controls .btn {
+            padding: 0.1rem 0.2rem !important;
+            font-size: 0.5rem !important;
+        }
+
+        #pageInfo {
+            font-size: 0.5rem !important;
+            padding: 0 0.15rem !important;
+        }
+
+        #itemsPerPage {
+            padding: 0.1rem 0.15rem !important;
+            font-size: 0.5rem !important;
+        }
+
+        .pagination {
+            gap: 0.1rem !important;
+        }
+
+        .pagination a,
+        .pagination span {
+            min-width: 24px !important;
+            min-height: 24px !important;
+            font-size: 0.5rem !important;
+            padding: 0.1rem 0.2rem !important;
         }
     }
 
@@ -2629,30 +2843,29 @@
     [data-theme="dark"] .accident-card {
         background: #1E2A3A !important;
         border-color: #2D3A4F !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
     }
 
     [data-theme="dark"] .accident-card:hover {
         background: #243447 !important;
         border-color: #3D4A5F !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
     }
 
     /* Severity indicators */
     [data-theme="dark"] .accident-card.fatal,
     [data-theme="dark"] tr.fatal {
         background: rgba(220, 53, 69, 0.15) !important;
-        border-left-color: #DC3545 !important;
     }
 
     [data-theme="dark"] .accident-card.injury,
     [data-theme="dark"] tr.injury {
         background: rgba(255, 193, 7, 0.15) !important;
-        border-left-color: #FFC107 !important;
     }
 
     [data-theme="dark"] .accident-card.property,
     [data-theme="dark"] tr.property {
         background: rgba(40, 167, 69, 0.15) !important;
-        border-left-color: #28A745 !important;
     }
 
     /* ===== BADGES DARK MODE ===== */
@@ -2688,78 +2901,14 @@
     }
 
     [data-theme="dark"] .card-action-btn {
-        background: #2D3A4F !important;
-        border-color: #3D4A5F !important;
-        color: #E8E8E8 !important;
+        background: transparent !important;
+        border: none !important;
     }
-
     [data-theme="dark"] .card-action-btn i {
-        color: #B0B0B0 !important;
+        color: #7B8394 !important;
     }
-
-    [data-theme="dark"] .card-action-btn:hover {
-        background: #3D4A5F !important;
-        border-color: #4A90D9 !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-view {
-        background: rgba(74, 144, 217, 0.2) !important;
-        color: #8FC8FF !important;
-        border-color: rgba(74, 144, 217, 0.4) !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-view i {
-        color: #8FC8FF !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-view:hover {
-        background: #4A90D9 !important;
-        color: #FFFFFF !important;
-        border-color: #4A90D9 !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-view:hover i {
-        color: #FFFFFF !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-map {
-        background: rgba(40, 167, 69, 0.2) !important;
-        color: #7FD99A !important;
-        border-color: rgba(40, 167, 69, 0.4) !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-map i {
-        color: #7FD99A !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-map:hover {
-        background: #28A745 !important;
-        color: #FFFFFF !important;
-        border-color: #28A745 !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-map:hover i {
-        color: #FFFFFF !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-edit {
-        background: #4A90D9 !important;
-        color: #FFFFFF !important;
-        border-color: #4A90D9 !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-edit i {
-        color: #FFFFFF !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-edit:hover {
-        background: rgba(74, 144, 217, 0.2) !important;
-        color: #8FC8FF !important;
-        border-color: rgba(74, 144, 217, 0.4) !important;
-    }
-
-    [data-theme="dark"] .card-action-btn.btn-edit:hover i {
-        color: #8FC8FF !important;
+    [data-theme="dark"] .card-action-btn:hover i {
+        color: #60A5FA !important;
     }
 
     /* Card body text in dark mode */
@@ -2801,45 +2950,21 @@
     }
 
     [data-theme="dark"] .table-action-btn {
-        background: #2D3A4F !important;
-        color: #E8E8E8 !important;
-        border: 1px solid #3D4A5F !important;
+        color: white !important;
+        border: none !important;
     }
 
     [data-theme="dark"] .table-action-btn.view {
-        background: rgba(74, 144, 217, 0.2) !important;
-        color: #8FC8FF !important;
-        border-color: rgba(74, 144, 217, 0.4) !important;
-    }
-
-    [data-theme="dark"] .table-action-btn.view:hover {
-        background: #4A90D9 !important;
-        color: #FFFFFF !important;
-        border-color: #4A90D9 !important;
+        background: #059669 !important;
     }
 
     [data-theme="dark"] .table-action-btn.map {
-        background: rgba(40, 167, 69, 0.2) !important;
-        color: #7FD99A !important;
-        border-color: rgba(40, 167, 69, 0.4) !important;
-    }
-
-    [data-theme="dark"] .table-action-btn.map:hover {
-        background: #28A745 !important;
-        color: #FFFFFF !important;
-        border-color: #28A745 !important;
+        background: #0F2942 !important;
+        border: 1px solid #2D3A4F !important;
     }
 
     [data-theme="dark"] .table-action-btn.edit {
-        background: #4A90D9 !important;
-        color: #FFFFFF !important;
-        border-color: #4A90D9 !important;
-    }
-
-    [data-theme="dark"] .table-action-btn.edit:hover {
-        background: rgba(74, 144, 217, 0.2) !important;
-        color: #8FC8FF !important;
-        border-color: rgba(74, 144, 217, 0.4) !important;
+        background: #2563EB !important;
     }
 
     /* ===== FILTER LABELS DARK MODE ===== */
@@ -2934,21 +3059,22 @@
 
     [data-theme="dark"] .pagination-controls button,
     [data-theme="dark"] .pagination-btn {
-        background: #1A2332 !important;
-        border-color: #3D4A5F !important;
-        color: #E8E8E8 !important;
+        background: transparent !important;
+        border: none !important;
+        color: #B0B0B0 !important;
     }
 
     [data-theme="dark"] .pagination-controls button:hover:not(:disabled),
     [data-theme="dark"] .pagination-btn:hover:not(:disabled) {
-        background: #2D3A4F !important;
-        border-color: #4A90D9 !important;
+        background: transparent !important;
+        border: none !important;
+        color: #4A90D9 !important;
     }
 
     [data-theme="dark"] .pagination-controls button:disabled,
     [data-theme="dark"] .pagination-btn:disabled {
-        background: #151C28 !important;
-        color: #666 !important;
+        background: transparent !important;
+        color: #555 !important;
     }
 
     /* ===== VIEW TOGGLE DARK MODE ===== */
@@ -3449,39 +3575,44 @@
             font-size: 0.7rem !important;
         }
 
-        /* ── Pagination ── */
+        /* ── Pagination (mini single line — matches hotspot list) ── */
         .pagination-container {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 0.5rem !important;
-            padding: 0.75rem 1rem !important;
-            position: relative !important;
+            flex-wrap: nowrap !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 0.4rem !important;
+            padding: 0.35rem 0.6rem !important;
+            white-space: nowrap !important;
         }
         .pagination-info {
-            text-align: center !important;
-            font-size: 0.75rem !important;
+            font-size: 0.62rem !important;
+            flex-shrink: 1 !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
         }
         .pagination-controls {
-            position: relative !important;
+            position: static !important;
             left: auto !important;
             transform: none !important;
             justify-content: center !important;
-            gap: 0.4rem !important;
-            flex-wrap: wrap !important;
-            font-size: 0.72rem !important;
+            gap: 0.2rem !important;
+            flex-shrink: 0 !important;
+            flex-wrap: nowrap !important;
         }
         .pagination-controls .btn {
-            padding: 0.3rem 0.75rem !important;
-            font-size: 0.72rem !important;
+            padding: 0.15rem 0.35rem !important;
+            font-size: 0.6rem !important;
         }
         #pageInfo {
-            font-size: 0.72rem !important;
-            padding: 0 0.5rem !important;
+            font-size: 0.62rem !important;
+            padding: 0 0.25rem !important;
         }
         #itemsPerPage {
-            width: 100% !important;
-            font-size: 0.75rem !important;
-            padding: 0.3rem 0.5rem !important;
+            width: auto !important;
+            font-size: 0.62rem !important;
+            padding: 0.18rem 0.25rem !important;
+            flex-shrink: 0 !important;
         }
 
         /* ── CARDS VIEW: compact ── */
@@ -3531,11 +3662,11 @@
             border-top: 1px solid #f3f4f6 !important;
         }
         .card-action-btn {
-            flex: 1 !important;
-            padding: 0.28rem 0.35rem !important;
-            font-size: 0.65rem !important;
-            justify-content: center !important;
-            border-radius: 5px !important;
+            flex: none !important;
+            padding: 0 !important;
+            font-size: 0 !important;
+            background: transparent !important;
+            border: none !important;
         }
 
         /* ── TABLE VIEW → mobile cards ── */
@@ -3614,27 +3745,23 @@
         /* Table action buttons — keep original colors, just resize */
         .accidents-table .table-actions { gap: 0.35rem !important; flex-wrap: nowrap; width: 100%; }
         .accidents-table .table-action-btn {
-            padding: 0.3rem 0.75rem !important;
-            font-size: 0.72rem !important;
-            border-radius: 5px !important;
+            padding: 4px 10px !important;
+            font-size: 0.68rem !important;
+            border-radius: 6px !important;
             flex: 1 !important;
             justify-content: center !important;
-            min-height: 30px !important;
+            min-height: 28px !important;
+            color: white !important;
+            border: none !important;
         }
         .accidents-table .table-action-btn.view {
-            background: #E3F2FD !important;
-            color: var(--primary-blue) !important;
-            border: 1px solid #BBDEFB !important;
+            background: #10B981 !important;
         }
         .accidents-table .table-action-btn.map {
-            background: #2E7D32 !important;
-            color: #ffffff !important;
-            border: 1px solid #1B5E20 !important;
+            background: #1E3A5F !important;
         }
         .accidents-table .table-action-btn.edit {
-            background: #FFF8E1 !important;
-            color: #F57F17 !important;
-            border: 1px solid #FFE082 !important;
+            background: #3B82F6 !important;
         }
     }
 </style>
@@ -3656,12 +3783,19 @@ function switchView(viewType) {
     options.forEach(opt => opt.classList.remove('active'));
     event.target.classList.add('active');
 
+    var bottomCards = document.getElementById('bottomPaginationCards');
+    var bottomTable = document.getElementById('bottomPaginationTable');
+
     if (viewType === 'cards') {
         cardsView.style.display = 'block';
         tableView.style.display = 'none';
+        if (bottomCards) bottomCards.style.display = '';
+        if (bottomTable) bottomTable.style.display = 'none';
     } else {
         cardsView.style.display = 'none';
         tableView.style.display = 'block';
+        if (bottomCards) bottomCards.style.display = 'none';
+        if (bottomTable) bottomTable.style.display = '';
     }
 }
 
@@ -3707,11 +3841,41 @@ function updatePageContent(url, pushState = true, forcedScrollPosition = null) {
                 currentTableView.innerHTML = newTableView.innerHTML;
             }
 
-            // Update pagination
+            // Update top pagination
             const newPagination = doc.querySelector('.pagination-container');
             const currentPagination = document.querySelector('.pagination-container');
             if (newPagination && currentPagination) {
                 currentPagination.innerHTML = newPagination.innerHTML;
+            }
+
+            // Update bottom pagination (cards + table)
+            const newBottomCards = doc.getElementById('bottomPaginationCards');
+            const curBottomCards = document.getElementById('bottomPaginationCards');
+            if (newBottomCards && curBottomCards) {
+                curBottomCards.innerHTML = newBottomCards.innerHTML;
+            } else if (newBottomCards && !curBottomCards) {
+                // Bottom pagination appeared (was hidden before due to single page)
+                const cardsView = document.getElementById('cardsView');
+                if (cardsView) cardsView.parentNode.insertBefore(newBottomCards, cardsView.nextSibling);
+            }
+            const newBottomTable = doc.getElementById('bottomPaginationTable');
+            const curBottomTable = document.getElementById('bottomPaginationTable');
+            if (newBottomTable && curBottomTable) {
+                curBottomTable.innerHTML = newBottomTable.innerHTML;
+            } else if (newBottomTable && !curBottomTable) {
+                const tableView = document.getElementById('tableView');
+                if (tableView) tableView.parentNode.insertBefore(newBottomTable, tableView.nextSibling);
+            }
+
+            // Sync bottom pagination visibility with current view
+            var isCardsView = document.getElementById('cardsView').style.display !== 'none';
+            if (curBottomCards || document.getElementById('bottomPaginationCards')) {
+                var bc = document.getElementById('bottomPaginationCards');
+                if (bc) bc.style.display = isCardsView ? '' : 'none';
+            }
+            if (curBottomTable || document.getElementById('bottomPaginationTable')) {
+                var bt = document.getElementById('bottomPaginationTable');
+                if (bt) bt.style.display = isCardsView ? 'none' : '';
             }
 
             // Update summary cards
@@ -3788,6 +3952,22 @@ function updatePageContent(url, pushState = true, forcedScrollPosition = null) {
 function quickSearch(keyword) {
     document.getElementById('hotspotSearch').value = keyword;
     performSearch();
+}
+
+// Case status filter - toggle behavior
+function filterCaseStatus(status) {
+    const currentUrl = new URL(window.location.href);
+    const current = currentUrl.searchParams.get('case_status');
+
+    // Toggle: click same button again to clear
+    if (current === status) {
+        currentUrl.searchParams.delete('case_status');
+    } else {
+        currentUrl.searchParams.set('case_status', status);
+    }
+
+    currentUrl.searchParams.delete('page');
+    updatePageContent(currentUrl.toString());
 }
 
 // Search function - Smooth update without reload
@@ -3910,6 +4090,11 @@ function updateActiveFilters() {
             icon: '<i class="fa-regular fa-calendar-days"></i>',
             label: 'To',
             getValue: () => urlParams.get('date_to') || null
+        },
+        'case_status': {
+            icon: '<i class="fas fa-folder-open"></i>',
+            label: 'Case',
+            getValue: () => urlParams.get('case_status') || null
         }
     };
 
@@ -3976,6 +4161,11 @@ function removeServerFilter(filterName) {
         document.getElementById('municipal').value = '';
     } else if (filterName === 'year') {
         document.getElementById('year').value = '';
+    } else if (filterName === 'case_status') {
+        // Remove active class from case status buttons
+        document.querySelectorAll('.case-investigating, .case-solved, .case-unsolved').forEach(btn => {
+            btn.classList.remove('active');
+        });
     }
 
     // Smooth update instead of reload
@@ -4598,6 +4788,11 @@ function clearAllFilters() {
     document.getElementById('date_from_display').value = '';
     document.getElementById('date_to_display').value = '';
 
+    // Clear case status button active states
+    document.querySelectorAll('.case-investigating, .case-solved, .case-unsolved').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
     console.log('🔍 Scroll AFTER clearing inputs:', window.pageYOffset || document.documentElement.scrollTop);
 
     // Update page content via AJAX (no page reload), passing saved scroll position
@@ -5080,6 +5275,20 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                     <i class="fas fa-circle-dot"></i> Standalone
                 </button>
             </div>
+
+            <!-- Case Status Filter -->
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                <span style="font-size: 0.7rem; font-weight: 600; color: #6B7280; display: flex; align-items: center; margin-right: 0.25rem;">Case:</span>
+                <button onclick="filterCaseStatus('Under Investigation')" class="quick-search-btn case-investigating{% if case_status_filter == 'Under Investigation' %} active{% endif %}">
+                    <i class="fas fa-search"></i> Under Investigation
+                </button>
+                <button onclick="filterCaseStatus('Solved')" class="quick-search-btn case-solved{% if case_status_filter == 'Solved' %} active{% endif %}">
+                    <i class="fas fa-check-circle"></i> Solved
+                </button>
+                <button onclick="filterCaseStatus('Unsolved')" class="quick-search-btn case-unsolved{% if case_status_filter == 'Unsolved' %} active{% endif %}">
+                    <i class="fas fa-times-circle"></i> Unsolved
+                </button>
+            </div>
         </div>
 
         <!-- Filter Grid -->
@@ -5190,6 +5399,7 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                     </span>
                     {% endif %}
                 </div>
+                {% if accident.report %}{% with accident.created_at|accident_age_badge as age_badge %}{% if age_badge %}<span class="accident-age-icon {% if age_badge == 'new' %}is-new{% else %}is-recent{% endif %}" data-tooltip="{% if age_badge == 'new' %}New report{% else %}{{ age_badge }}{% endif %}">!</span>{% endif %}{% endwith %}{% endif %}
 
                 <div class="card-body">
                     <div class="card-date">
@@ -5222,14 +5432,22 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                     </div>
 
                     <div class="card-actions">
-                        <button class="card-action-btn btn-view" onclick="event.stopPropagation(); viewAccident({{ accident.pk }})">
+                        <button class="card-action-btn btn-view" data-tooltip="View Details" onclick="event.stopPropagation(); viewAccident({{ accident.pk }})">
                             <i class="fas fa-eye"></i> View
                         </button>
-                        <button class="card-action-btn btn-map" onclick="event.stopPropagation(); viewOnMap({{ accident.latitude }}, {{ accident.longitude }}, {{ accident.pk }})">
+                        <button class="card-action-btn btn-map" data-tooltip="View on Map" onclick="event.stopPropagation(); viewOnMap({{ accident.latitude }}, {{ accident.longitude }}, {{ accident.pk }})">
                             <i class="fas fa-map"></i> Map
                         </button>
-                        {% if user.profile.role == 'super_admin' %}
-                        <button class="card-action-btn btn-edit" onclick="event.stopPropagation(); openEditModal({{ accident.pk }})">
+                        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
+                        <button class="card-action-btn btn-edit" data-tooltip="Edit Record" onclick="event.stopPropagation(); openEditModal({{ accident.pk }})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        {% elif user.profile.role == 'provincial_chief' and user.profile.province|upper == accident.province|upper %}
+                        <button class="card-action-btn btn-edit" data-tooltip="Edit Record" onclick="event.stopPropagation(); openEditModal({{ accident.pk }})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        {% elif user.profile.role == 'station_commander' and user.profile.station == accident.station %}
+                        <button class="card-action-btn btn-edit" data-tooltip="Edit Record" onclick="event.stopPropagation(); openEditModal({{ accident.pk }})">
                             <i class="fas fa-edit"></i> Edit
                         </button>
                         {% endif %}
@@ -5245,6 +5463,47 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
             {% endfor %}
         </div>
     </div>
+
+    <!-- Bottom Pagination (pill-style) -->
+    {% if accidents.has_other_pages %}
+    <div id="bottomPaginationCards" class="al-pagination" style="margin-top: 1rem;">
+        {% if accidents.has_previous %}
+        <a class="al-page-btn" href="javascript:void(0)" onclick="navigateToPage('{{ accidents.previous_page_number }}')">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% else %}
+        <span class="al-page-btn al-page-disabled"><i class="fas fa-chevron-left"></i></span>
+        {% endif %}
+
+        {% for pg in accidents.paginator.page_range %}
+            {% if accidents.paginator.num_pages <= 7 %}
+                <a class="al-page-btn {% if pg == accidents.number %}al-page-current{% endif %}" href="javascript:void(0)" onclick="navigateToPage('{{ pg }}')">{{ pg }}</a>
+            {% else %}
+                {% if pg == 1 or pg == accidents.paginator.num_pages %}
+                    <a class="al-page-btn {% if pg == accidents.number %}al-page-current{% endif %}" href="javascript:void(0)" onclick="navigateToPage('{{ pg }}')">{{ pg }}</a>
+                {% elif pg == accidents.number or pg == accidents.number|add:"-1" or pg == accidents.number|add:"1" %}
+                    <a class="al-page-btn {% if pg == accidents.number %}al-page-current{% endif %}" href="javascript:void(0)" onclick="navigateToPage('{{ pg }}')">{{ pg }}</a>
+                {% elif pg == 2 and accidents.number > 4 %}
+                    <span class="al-page-btn al-page-disabled" style="border:none;background:none;cursor:default;">...</span>
+                {% elif pg == accidents.paginator.num_pages|add:"-1" and accidents.number < accidents.paginator.num_pages|add:"-3" %}
+                    <span class="al-page-btn al-page-disabled" style="border:none;background:none;cursor:default;">...</span>
+                {% elif accidents.number <= 4 and pg <= 5 %}
+                    <a class="al-page-btn {% if pg == accidents.number %}al-page-current{% endif %}" href="javascript:void(0)" onclick="navigateToPage('{{ pg }}')">{{ pg }}</a>
+                {% elif accidents.number >= accidents.paginator.num_pages|add:"-3" and pg >= accidents.paginator.num_pages|add:"-4" %}
+                    <a class="al-page-btn {% if pg == accidents.number %}al-page-current{% endif %}" href="javascript:void(0)" onclick="navigateToPage('{{ pg }}')">{{ pg }}</a>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if accidents.has_next %}
+        <a class="al-page-btn" href="javascript:void(0)" onclick="navigateToPage('{{ accidents.next_page_number }}')">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% else %}
+        <span class="al-page-btn al-page-disabled"><i class="fas fa-chevron-right"></i></span>
+        {% endif %}
+    </div>
+    {% endif %}
 
     <!-- Table View -->
     <div id="tableView" class="accidents-table-container" style="display: none;">
@@ -5266,6 +5525,7 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                     <tr onclick="viewAccident({{ accident.pk }})">
                         <td data-label="Severity">
                             <span class="severity-dot {% if accident.victim_killed %}fatal{% elif accident.victim_injured %}injury{% else %}property{% endif %}"></span>
+                            {% if accident.report %}{% with accident.created_at|accident_age_badge as age_badge %}{% if age_badge %}<span class="accident-age-badge-table {% if age_badge == 'new' %}is-new{% else %}is-recent{% endif %}">{% if age_badge == 'new' %}New{% else %}{{ age_badge }}{% endif %}</span>{% endif %}{% endwith %}{% endif %}
                         </td>
                         <td data-label="Date">
                             <div style="font-weight: 600;">{{ accident.date_committed|date:"M d, Y" }}</div>
@@ -5311,7 +5571,15 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                                 <button class="table-action-btn map" onclick="viewOnMap({{ accident.latitude }}, {{ accident.longitude }})">
                                     <i class="fas fa-map"></i> Map
                                 </button>
-                                {% if user.profile.role == 'super_admin' %}
+                                {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
+                                <button class="table-action-btn edit" onclick="openEditModal({{ accident.pk }})">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                {% elif user.profile.role == 'provincial_chief' and user.profile.province|upper == accident.province|upper %}
+                                <button class="table-action-btn edit" onclick="openEditModal({{ accident.pk }})">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                {% elif user.profile.role == 'station_commander' and user.profile.station == accident.station %}
                                 <button class="table-action-btn edit" onclick="openEditModal({{ accident.pk }})">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
@@ -5335,10 +5603,51 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
         </div>
     </div>
 
+    <!-- Bottom Pagination (pill-style) for Table View -->
+    {% if accidents.has_other_pages %}
+    <div id="bottomPaginationTable" class="al-pagination" style="margin-top: 1rem; display: none;">
+        {% if accidents.has_previous %}
+        <a class="al-page-btn" href="javascript:void(0)" onclick="navigateToPage('{{ accidents.previous_page_number }}')">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% else %}
+        <span class="al-page-btn al-page-disabled"><i class="fas fa-chevron-left"></i></span>
+        {% endif %}
+
+        {% for pg in accidents.paginator.page_range %}
+            {% if accidents.paginator.num_pages <= 7 %}
+                <a class="al-page-btn {% if pg == accidents.number %}al-page-current{% endif %}" href="javascript:void(0)" onclick="navigateToPage('{{ pg }}')">{{ pg }}</a>
+            {% else %}
+                {% if pg == 1 or pg == accidents.paginator.num_pages %}
+                    <a class="al-page-btn {% if pg == accidents.number %}al-page-current{% endif %}" href="javascript:void(0)" onclick="navigateToPage('{{ pg }}')">{{ pg }}</a>
+                {% elif pg == accidents.number or pg == accidents.number|add:"-1" or pg == accidents.number|add:"1" %}
+                    <a class="al-page-btn {% if pg == accidents.number %}al-page-current{% endif %}" href="javascript:void(0)" onclick="navigateToPage('{{ pg }}')">{{ pg }}</a>
+                {% elif pg == 2 and accidents.number > 4 %}
+                    <span class="al-page-btn al-page-disabled" style="border:none;background:none;cursor:default;">...</span>
+                {% elif pg == accidents.paginator.num_pages|add:"-1" and accidents.number < accidents.paginator.num_pages|add:"-3" %}
+                    <span class="al-page-btn al-page-disabled" style="border:none;background:none;cursor:default;">...</span>
+                {% elif accidents.number <= 4 and pg <= 5 %}
+                    <a class="al-page-btn {% if pg == accidents.number %}al-page-current{% endif %}" href="javascript:void(0)" onclick="navigateToPage('{{ pg }}')">{{ pg }}</a>
+                {% elif accidents.number >= accidents.paginator.num_pages|add:"-3" and pg >= accidents.paginator.num_pages|add:"-4" %}
+                    <a class="al-page-btn {% if pg == accidents.number %}al-page-current{% endif %}" href="javascript:void(0)" onclick="navigateToPage('{{ pg }}')">{{ pg }}</a>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if accidents.has_next %}
+        <a class="al-page-btn" href="javascript:void(0)" onclick="navigateToPage('{{ accidents.next_page_number }}')">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% else %}
+        <span class="al-page-btn al-page-disabled"><i class="fas fa-chevron-right"></i></span>
+        {% endif %}
+    </div>
+    {% endif %}
+
 </div>
 
 <!-- Accident Details Modal -->
-<div id="accidentModal" class="accident-modal">
+<div id="accidentModal" class="accident-modal" style="z-index: 10010;">
     <div class="modal-overlay" onclick="closeAccidentModal()"></div>
     <div class="modal-content">
         <button class="modal-close" onclick="closeAccidentModal()">
@@ -5568,7 +5877,7 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
 </div>
 
 <!-- CSV Upload Modal -->
-<div id="uploadModal" class="accident-modal" style="display: none;">
+<div id="uploadModal" class="accident-modal" style="display: none; z-index: 10010;">
     <div class="modal-overlay" id="uploadModalOverlay" onclick="closeUploadModal()"></div>
     <div class="modal-content" style="max-width: 520px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
         <!-- Compact fixed header -->
@@ -5752,7 +6061,7 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
 </div>
 
 <!-- Edit Accident Modal -->
-<div id="editModal" class="accident-modal" style="display: none;">
+<div id="editModal" class="accident-modal" style="display: none; z-index: 10010;">
     <div class="modal-overlay" onclick="closeEditModal()"></div>
     <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
         <button class="modal-close" onclick="closeEditModal()">

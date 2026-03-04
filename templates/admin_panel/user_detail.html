@@ -418,24 +418,49 @@
                         <label class="form-label" for="unit">Unit/Office</label>
                         <select name="unit" id="unit" class="form-control">
                             <option value="">--- Select Unit ---</option>
-                            <option value="R1 - Regional Personnel and Records Management Division" {% if profile.unit == 'R1 - Regional Personnel and Records Management Division' %}selected{% endif %}>R1 - Regional Personnel and Records Management Division</option>
-                            <option value="R2 - Regional Intelligence Division" {% if profile.unit == 'R2 - Regional Intelligence Division' %}selected{% endif %}>R2 - Regional Intelligence Division</option>
-                            <option value="R3 - Regional Operation Management Division" {% if profile.unit == 'R3 - Regional Operation Management Division' %}selected{% endif %}>R3 - Regional Operation Management Division</option>
-                            <option value="R4 - Regional Logistics Research Development Division" {% if profile.unit == 'R4 - Regional Logistics Research Development Division' %}selected{% endif %}>R4 - Regional Logistics Research Development Division</option>
-                            <option value="R5 - Regional Community Affairs Development Division" {% if profile.unit == 'R5 - Regional Community Affairs Development Division' %}selected{% endif %}>R5 - Regional Community Affairs Development Division</option>
-                            <option value="R6 - Regional Comptrollership Division" {% if profile.unit == 'R6 - Regional Comptrollership Division' %}selected{% endif %}>R6 - Regional Comptrollership Division</option>
-                            <option value="R7 - Regional Investigation Detective Management Division" {% if profile.unit == 'R7 - Regional Investigation Detective Management Division' %}selected{% endif %}>R7 - Regional Investigation Detective Management Division</option>
-                            <option value="R8 - Regional Learning and Doctrine Development Division" {% if profile.unit == 'R8 - Regional Learning and Doctrine Development Division' %}selected{% endif %}>R8 - Regional Learning and Doctrine Development Division</option>
-                            <option value="R9 - Regional Plans and Strategy Management Division" {% if profile.unit == 'R9 - Regional Plans and Strategy Management Division' %}selected{% endif %}>R9 - Regional Plans and Strategy Management Division</option>
-                            <option value="Regional Headquarters Support Unit" {% if profile.unit == 'Regional Headquarters Support Unit' %}selected{% endif %}>Regional Headquarters Support Unit</option>
-                            <option value="Regional Information and Communication Technology Management Division" {% if profile.unit == 'Regional Information and Communication Technology Management Division' %}selected{% endif %}>Regional Information and Communication Technology Management Division</option>
-                            <option value="Regional Health Service" {% if profile.unit == 'Regional Health Service' %}selected{% endif %}>Regional Health Service</option>
-                            <option value="Public Information Office" {% if profile.unit == 'Public Information Office' %}selected{% endif %}>Public Information Office</option>
-                            <option value="Surigao del Norte Police Provincial Office" {% if profile.unit == 'Surigao del Norte Police Provincial Office' %}selected{% endif %}>Surigao del Norte Police Provincial Office</option>
-                            <option value="Surigao del Sur Police Provincial Office" {% if profile.unit == 'Surigao del Sur Police Provincial Office' %}selected{% endif %}>Surigao del Sur Police Provincial Office</option>
-                            <option value="Agusan del Norte Police Provincial Office" {% if profile.unit == 'Agusan del Norte Police Provincial Office' %}selected{% endif %}>Agusan del Norte Police Provincial Office</option>
-                            <option value="Agusan del Sur Police Provincial Office" {% if profile.unit == 'Agusan del Sur Police Provincial Office' %}selected{% endif %}>Agusan del Sur Police Provincial Office</option>
-                            <option value="Butuan City Police Office" {% if profile.unit == 'Butuan City Police Office' %}selected{% endif %}>Butuan City Police Office</option>
+                            <optgroup label="Directorial Staff (R1-R9)">
+                                <option value="R1 - Regional Personnel and Records Management Division" {% if profile.unit == 'R1 - Regional Personnel and Records Management Division' %}selected{% endif %}>R1 - RPRMD</option>
+                                <option value="R2 - Regional Intelligence Division" {% if profile.unit == 'R2 - Regional Intelligence Division' %}selected{% endif %}>R2 - RID</option>
+                                <option value="R3 - Regional Operation Management Division" {% if profile.unit == 'R3 - Regional Operation Management Division' %}selected{% endif %}>R3 - ROMD</option>
+                                <option value="R4 - Regional Logistics Research Development Division" {% if profile.unit == 'R4 - Regional Logistics Research Development Division' %}selected{% endif %}>R4 - RLRDD</option>
+                                <option value="R5 - Regional Community Affairs Development Division" {% if profile.unit == 'R5 - Regional Community Affairs Development Division' %}selected{% endif %}>R5 - RCADD</option>
+                                <option value="R6 - Regional Comptrollership Division" {% if profile.unit == 'R6 - Regional Comptrollership Division' %}selected{% endif %}>R6 - RCD</option>
+                                <option value="R7 - Regional Investigation Detective Management Division" {% if profile.unit == 'R7 - Regional Investigation Detective Management Division' %}selected{% endif %}>R7 - RIDMD</option>
+                                <option value="R8 - Regional Learning and Doctrine Development Division" {% if profile.unit == 'R8 - Regional Learning and Doctrine Development Division' %}selected{% endif %}>R8 - RLDDD</option>
+                                <option value="R9 - Regional Plans and Strategy Management Division" {% if profile.unit == 'R9 - Regional Plans and Strategy Management Division' %}selected{% endif %}>R9 - RPSMD</option>
+                            </optgroup>
+                            <optgroup label="Support Units/Offices">
+                                <option value="Regional Headquarters Support Unit" {% if profile.unit == 'Regional Headquarters Support Unit' %}selected{% endif %}>Regional HQ Support Unit</option>
+                                <option value="Regional Information and Communication Technology Management Division" {% if profile.unit == 'Regional Information and Communication Technology Management Division' %}selected{% endif %}>Regional ICTMD</option>
+                                <option value="Regional Health Service" {% if profile.unit == 'Regional Health Service' %}selected{% endif %}>Regional Health Service</option>
+                                <option value="Public Information Office" {% if profile.unit == 'Public Information Office' %}selected{% endif %}>Public Information Office</option>
+                            </optgroup>
+                            <optgroup label="Operational/Special Units">
+                                <option value="Regional Mobile Force Battalion" {% if profile.unit == 'Regional Mobile Force Battalion' %}selected{% endif %}>RMFB-13</option>
+                                <option value="Regional Drug Enforcement Unit" {% if profile.unit == 'Regional Drug Enforcement Unit' %}selected{% endif %}>RDEU</option>
+                                <option value="Regional Highway Patrol Unit" {% if profile.unit == 'Regional Highway Patrol Unit' %}selected{% endif %}>RHPU</option>
+                                <option value="Regional Maritime Unit" {% if profile.unit == 'Regional Maritime Unit' %}selected{% endif %}>RMU</option>
+                                <option value="Regional Criminal Investigation and Detection Unit" {% if profile.unit == 'Regional Criminal Investigation and Detection Unit' %}selected{% endif %}>RCIDU</option>
+                                <option value="Regional Forensic Unit" {% if profile.unit == 'Regional Forensic Unit' %}selected{% endif %}>RFU</option>
+                                <option value="Regional Special Operations Unit" {% if profile.unit == 'Regional Special Operations Unit' %}selected{% endif %}>RSOU</option>
+                                <option value="Women and Children Protection Center" {% if profile.unit == 'Women and Children Protection Center' %}selected{% endif %}>WCPC</option>
+                            </optgroup>
+                            <optgroup label="Administrative Services">
+                                <option value="Regional Internal Affairs Service" {% if profile.unit == 'Regional Internal Affairs Service' %}selected{% endif %}>RIAS</option>
+                                <option value="Regional Legal Service" {% if profile.unit == 'Regional Legal Service' %}selected{% endif %}>RLS</option>
+                                <option value="Regional Finance Service" {% if profile.unit == 'Regional Finance Service' %}selected{% endif %}>RFS</option>
+                                <option value="Regional Chaplain Service" {% if profile.unit == 'Regional Chaplain Service' %}selected{% endif %}>RChS</option>
+                                <option value="Regional Communications and Electronics Unit" {% if profile.unit == 'Regional Communications and Electronics Unit' %}selected{% endif %}>RCEU</option>
+                                <option value="Regional Personnel Holding and Accounting Unit" {% if profile.unit == 'Regional Personnel Holding and Accounting Unit' %}selected{% endif %}>RPHAU</option>
+                            </optgroup>
+                            <optgroup label="Provincial/City Police Offices">
+                                <option value="Agusan del Norte Police Provincial Office" {% if profile.unit == 'Agusan del Norte Police Provincial Office' %}selected{% endif %}>Agusan del Norte PPO</option>
+                                <option value="Agusan del Sur Police Provincial Office" {% if profile.unit == 'Agusan del Sur Police Provincial Office' %}selected{% endif %}>Agusan del Sur PPO</option>
+                                <option value="Surigao del Norte Police Provincial Office" {% if profile.unit == 'Surigao del Norte Police Provincial Office' %}selected{% endif %}>Surigao del Norte PPO</option>
+                                <option value="Surigao del Sur Police Provincial Office" {% if profile.unit == 'Surigao del Sur Police Provincial Office' %}selected{% endif %}>Surigao del Sur PPO</option>
+                                <option value="Dinagat Islands Police Provincial Office" {% if profile.unit == 'Dinagat Islands Police Provincial Office' %}selected{% endif %}>Dinagat Islands PPO</option>
+                                <option value="Butuan City Police Office" {% if profile.unit == 'Butuan City Police Office' %}selected{% endif %}>Butuan City Police Office</option>
+                            </optgroup>
                         </select>
                     </div>
                 </div>
@@ -663,11 +688,11 @@
 // Caraga Region Police Stations Database (Real PNP Data)
 const stationsByProvince = {
     'Agusan del Norte': ['Santiago MPS', 'Las Nieves MPS', 'Remedios T Romualdes MPS', 'Buenavista MPS', 'Jabonga MPS', 'Cabadbaran City PS', 'Tubay MPS', 'Kitcharao MPS', 'Magallanes MPS', 'Nasipit MPS', 'Carmen MPS'],
-    'Agusan del Sur': ['Bayugan CPS', 'Prosperidad MPS', 'San Francisco MPS', 'Rosario MPS', 'La Paz MPS', 'Bunawan MPS', 'Veruela MPS', 'Loreto MPS', 'Sibagat MPS', 'San Luis MPS', 'Esperanza MPS', 'Talacogon MPS', 'Sta Josefa MPS'],
+    'Agusan del Sur': ['Bayugan CPS', 'Prosperidad MPS', 'San Francisco MPS', 'Rosario MPS', 'La Paz MPS', 'Bunawan MPS', 'Veruela MPS', 'Loreto MPS', 'Sibagat MPS', 'San Luis MPS', 'Esperanza MPS', 'Talacogon MPS', 'Trento MPS', 'Sta Josefa MPS'],
     'Butuan City': ['Butuan City PS 1', 'Butuan City PS 2', 'Butuan City PS 3', 'Butuan City PS 4', 'Butuan City PS 5'],
-    'Dinagat Islands': ['San Jose MPS', 'Libjo MPS', 'Dinagat MPS', 'Loreto MPS', 'Basilisa MPS', 'Tubajon MPS'],
+    'Dinagat Islands': ['San Jose MPS', 'Libjo MPS', 'Dinagat MPS', 'Cagdianao MPS', 'Loreto MPS', 'Basilisa MPS', 'Tubajon MPS'],
     'Surigao del Norte': ['Placer MPS', 'Gen. Luna MPS', 'Sison MPS', 'Surigao City PS', 'Mainit MPS', 'Gigaquit MPS', 'Malimono MPS', 'Claver MPS', 'Bacuag MPS', 'Taganaan MPS', 'Dapa MPS', 'Alegria MPS', 'Del Carmen MPS', 'Sta. Monica MPS', 'Tubod MPS', 'San Isidro MPS', 'Burgos MPS', 'Socorro MPS', 'San Francisco MPS', 'Pilar MPS', 'San Benito MPS'],
-    'Surigao del Sur': ['Bislig City PS', 'Hinatuan MPS', 'Lingig MPS', 'Tago MPS', 'Lianga MPS', 'Tandag City PS', 'Barobo MPS', 'Cortes MPS', 'Lanuza MPS', 'Cantilan MPS', 'Tagbina MPS', 'Marihatag MPS', 'Carascal MPS', 'San Agustin MPS', 'Madrid MPS', 'Bayabas MPS', 'San Miguel MPS', 'Carmen MPS']
+    'Surigao del Sur': ['Bislig City PS', 'Hinatuan MPS', 'Lingig MPS', 'Tago MPS', 'Lianga MPS', 'Tandag City PS', 'Barobo MPS', 'Cortes MPS', 'Lanuza MPS', 'Cantilan MPS', 'Tagbina MPS', 'Marihatag MPS', 'Cagwait MPS', 'Carascal MPS', 'San Agustin MPS', 'Madrid MPS', 'Bayabas MPS', 'San Miguel MPS', 'Carmen MPS']
 };
 
 // Update stations dropdown

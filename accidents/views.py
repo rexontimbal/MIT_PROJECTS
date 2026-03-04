@@ -18,7 +18,7 @@ import json
 from datetime import timedelta
 from datetime import time as dt_time
 from django.contrib.auth.models import User
-from .models import Accident, AccidentCluster, AccidentReport, UserProfile, Notification, ReportActivityLog
+from .models import Accident, AccidentCluster, AccidentReport, UserProfile, Notification, ReportActivityLog, ClusteringJob
 from datetime import datetime
 from django.contrib.auth.views import LoginView
 from .auth_utils import pnp_login_required, log_user_action
@@ -316,7 +316,7 @@ def get_accidents_by_time_of_day():
 @pnp_login_required
 def accident_list(request):
     """List all accidents with filtering and statistics"""
-    accidents = Accident.objects.all().order_by('-date_committed')
+    accidents = Accident.objects.select_related('report').all().order_by('-created_at', '-date_committed')
     
     # Apply filters
     province = request.GET.get('province')
@@ -330,7 +330,8 @@ def accident_list(request):
     # Quick filters
     fatal_only = request.GET.get('fatal')
     injury_only = request.GET.get('injury')
-    no_hotspot = request.GET.get('no_hotspot')  # NEW
+    no_hotspot = request.GET.get('no_hotspot')
+    case_status = request.GET.get('case_status')
 
     if province:
         accidents = accidents.filter(province=province)
@@ -348,8 +349,10 @@ def accident_list(request):
         accidents = accidents.filter(victim_killed=True)
     if injury_only:
         accidents = accidents.filter(victim_injured=True)
-    if no_hotspot:  # NEW
-        accidents = accidents.filter(is_hotspot=False)  # NEW
+    if no_hotspot:
+        accidents = accidents.filter(is_hotspot=False)
+    if case_status:
+        accidents = accidents.filter(case_status=case_status)
     
     # Search filter
     if search:
@@ -532,9 +535,10 @@ def accident_list(request):
         'is_fatal_view': fatal_only,  # NEW
         'is_injury_view': injury_only,  # NEW
         'is_hotspot_view': is_hotspot,  # NEW
-        'is_standalone_view': no_hotspot,  # NEW
+        'is_standalone_view': no_hotspot,
+        'case_status_filter': case_status or '',
     }
-    
+
     return render(request, 'accidents/accident_list.html', context)
 
 @pnp_login_required
@@ -603,10 +607,22 @@ def accident_detail(request, pk):
     # Keep only top 5 nearest
     nearby_accidents = nearby_accidents[:5]
 
+    # Determine if user can edit/update this accident (role + jurisdiction)
+    can_edit_accident = False
+    if hasattr(request.user, 'profile'):
+        role = request.user.profile.role
+        if role in ['super_admin', 'regional_director']:
+            can_edit_accident = True
+        elif role == 'provincial_chief' and (accident.province or '').upper() == (request.user.profile.province or '').upper():
+            can_edit_accident = True
+        elif role == 'station_commander' and accident.station == request.user.profile.station:
+            can_edit_accident = True
+
     context = {
         'accident': accident,
         'nearby_accidents': nearby_accidents,
         'formatted_narrative': format_narrative(accident.narrative),
+        'can_edit_accident': can_edit_accident,
     }
 
     return render(request, 'accidents/accident_detail.html', context)
@@ -985,6 +1001,13 @@ def update_case_status(request, pk):
 
     accident = get_object_or_404(Accident, pk=pk)
 
+    # Jurisdiction check: users can only update cases in their area
+    profile = request.user.profile
+    if profile.role == 'provincial_chief' and (accident.province or '').upper() != (profile.province or '').upper():
+        return JsonResponse({'error': 'You can only update cases within your province'}, status=403)
+    elif profile.role == 'station_commander' and accident.station != profile.station:
+        return JsonResponse({'error': 'You can only update cases within your station'}, status=403)
+
     try:
         data = json_module.loads(request.body)
     except (json_module.JSONDecodeError, TypeError):
@@ -1021,14 +1044,25 @@ def update_case_status(request, pk):
 
 @pnp_login_required
 def accident_edit(request, pk):
-    """Edit accident - super_admin only"""
+    """Edit accident - admins with jurisdiction only"""
 
-    # Check if user is super_admin
-    if not (hasattr(request.user, 'profile') and request.user.profile.role == 'super_admin'):
-        messages.error(request, 'Permission denied. Only super admins can edit accidents.')
+    # Check if user has an admin role
+    if not hasattr(request.user, 'profile') or request.user.profile.role not in [
+        'super_admin', 'regional_director', 'provincial_chief', 'station_commander'
+    ]:
+        messages.error(request, 'Permission denied. You do not have permission to edit accidents.')
         return redirect('accident_list')
 
     accident = get_object_or_404(Accident, pk=pk)
+
+    # Jurisdiction check: users can only edit accidents in their area
+    profile = request.user.profile
+    if profile.role == 'provincial_chief' and (accident.province or '').upper() != (profile.province or '').upper():
+        messages.error(request, 'Permission denied. You can only edit accidents within your province.')
+        return redirect('accident_list')
+    elif profile.role == 'station_commander' and accident.station != profile.station:
+        messages.error(request, 'Permission denied. You can only edit accidents within your station.')
+        return redirect('accident_list')
 
     if request.method == 'POST':
         try:
@@ -1254,12 +1288,10 @@ def hotspot_detail(request, cluster_id):
     """Display detailed information about a specific hotspot"""
     hotspot = get_object_or_404(AccidentCluster, cluster_id=cluster_id)
     
-    # Get all accidents in this cluster (limit to recent 50 for performance)
+    # Get all accidents in this cluster
     accidents = Accident.objects.filter(cluster_id=cluster_id).order_by('-date_committed')
     total_count = accidents.count()
-    
-    # Limit to 50 most recent for display
-    accidents_display = accidents[:50]
+    accidents_display = list(accidents)
     
     # Statistics for this hotspot
     total_killed = accidents.filter(victim_killed=True).count()
@@ -1289,11 +1321,11 @@ def hotspot_detail(request, cluster_id):
     month_labels = [item['month'].strftime('%b %Y') for item in accidents_by_month]
     month_data = [item['count'] for item in accidents_by_month]
     
-    # Prepare accidents data for map - WITH DECIMAL TO FLOAT CONVERSION
-    accidents_for_map = accidents_display.values(
+    # Prepare ALL accidents data for map - WITH DECIMAL TO FLOAT CONVERSION
+    accidents_for_map = accidents.values(
         'id', 'latitude', 'longitude', 'incident_type',
-        'date_committed', 'barangay', 'municipal', 
-        'victim_count', 'victim_killed', 'victim_injured'  # ADDED victim_injured
+        'date_committed', 'barangay', 'municipal',
+        'victim_count', 'victim_killed', 'victim_injured'
     )
     
     # Convert dates and decimals for JSON
@@ -1331,7 +1363,254 @@ def hotspot_detail(request, cluster_id):
         })
     
     accidents_export_json = json.dumps(accidents_export)
-    
+
+    # ============================================
+    # DPWH-ALIGNED RECOMMENDATION ENGINE
+    # Analyze accident patterns to generate data-driven recommendations
+    # Based on DPWH Highway Safety Design Standards (DO 041-S2012),
+    # Road Safety Audit Manual, and iRAP framework
+    # ============================================
+    recommendations = []
+    if total_count > 0:
+        fatal_ratio = total_killed / total_count
+        injury_ratio = total_injured / total_count
+
+        # --- Pattern Analysis ---
+        # Incident type keywords (free-text field)
+        incident_types_raw = list(accidents.values_list('incident_type', flat=True))
+        incident_text = ' '.join([t.lower() for t in incident_types_raw if t])
+
+        hit_and_run_count = sum(1 for t in incident_types_raw if t and 'hit and run' in t.lower())
+        pedestrian_count = sum(1 for t in incident_types_raw if t and 'pedestrian' in t.lower())
+        reckless_count = sum(1 for t in incident_types_raw if t and 'reckless' in t.lower())
+        collision_count = sum(1 for t in incident_types_raw if t and ('collision' in t.lower() or 'crash' in t.lower()))
+
+        # Vehicle kind keywords
+        vehicle_kinds_raw = list(accidents.values_list('vehicle_kind', flat=True))
+        vehicle_text = ' '.join([v.lower() for v in vehicle_kinds_raw if v])
+
+        motorcycle_count = sum(1 for v in vehicle_kinds_raw if v and ('motorcycle' in v.lower() or 'motor cycle' in v.lower() or 'mc' in v.lower().split()))
+        truck_bus_count = sum(1 for v in vehicle_kinds_raw if v and ('truck' in v.lower() or 'bus' in v.lower() or 'trailer' in v.lower()))
+        bicycle_count = sum(1 for v in vehicle_kinds_raw if v and 'bicycle' in v.lower())
+
+        # Place type keywords
+        place_types_raw = list(accidents.values_list('type_of_place', flat=True))
+        place_text = ' '.join([p.lower() for p in place_types_raw if p])
+
+        intersection_count = sum(1 for p in place_types_raw if p and ('intersection' in p.lower() or 'junction' in p.lower()))
+        curve_count = sum(1 for p in place_types_raw if p and ('curve' in p.lower() or 'bend' in p.lower()))
+        highway_count = sum(1 for p in place_types_raw if p and ('highway' in p.lower() or 'national road' in p.lower()))
+
+        # Time analysis (night: 6PM-6AM)
+        night_accidents = accidents.filter(
+            Q(time_committed__hour__gte=18) | Q(time_committed__hour__lt=6)
+        ).exclude(time_committed__isnull=True).count()
+        timed_accidents = accidents.exclude(time_committed__isnull=True).count()
+        night_ratio = night_accidents / max(timed_accidents, 1)
+
+        # Drug & colorum
+        drug_count = accidents.filter(drug_involved=True).count()
+        colorum_count = accidents.filter(vehicle_colorum=True).count()
+
+        # --- Generate Recommendations ---
+
+        # 1. CRITICAL: High fatality rate → Geometric Improvements
+        if fatal_ratio >= 0.3:
+            recommendations.append({
+                'category': 'Geometric / Road Design Improvements',
+                'icon': 'fa-road',
+                'title': 'Road Realignment & Safety Zone Establishment',
+                'description': 'Conduct road safety audit for horizontal/vertical alignment deficiencies. Establish clear zones, widen shoulders, and improve sight distance. Consider road realignment at high-risk segments.',
+                'priority': 'CRITICAL',
+                'basis': f'{int(fatal_ratio * 100)}% fatality rate ({total_killed} of {total_count} accidents are fatal)',
+                'dpwh_ref': 'DPWH DO 041-S2012 Part 1 — Road Safety Design Manual',
+            })
+        elif fatal_ratio >= 0.1:
+            recommendations.append({
+                'category': 'Geometric / Road Design Improvements',
+                'icon': 'fa-road',
+                'title': 'Road Safety Assessment & Shoulder Improvement',
+                'description': 'Assess road cross-section adequacy. Improve paved shoulders and sight distance. Review vertical curve design for headlight visibility and drainage.',
+                'priority': 'HIGH',
+                'basis': f'{int(fatal_ratio * 100)}% fatality rate ({total_killed} fatal out of {total_count} accidents)',
+                'dpwh_ref': 'DPWH DO 041-S2012 Part 1 — Road Safety Design Manual',
+            })
+
+        # 2. Motorcycle-heavy hotspot → Roadside Safety
+        motorcycle_ratio = motorcycle_count / total_count
+        if motorcycle_ratio >= 0.4:
+            priority = 'CRITICAL' if fatal_ratio >= 0.2 else 'HIGH'
+            recommendations.append({
+                'category': 'Roadside Safety',
+                'icon': 'fa-motorcycle',
+                'title': 'Motorcycle Safety Barriers & Lane Separation',
+                'description': 'Install motorcycle-friendly guard rails and crash barriers. Assess need for motorcycle lanes or lane separation. Remove roadside hazards within the clear zone.',
+                'priority': priority,
+                'basis': f'{int(motorcycle_ratio * 100)}% of accidents involve motorcycles ({motorcycle_count} of {total_count})',
+                'dpwh_ref': 'DPWH DO 041-S2012 — Roadside Safety / iRAP Safety Barriers',
+            })
+
+        # 3. Truck/Bus involvement → Speed Management
+        truck_ratio = truck_bus_count / total_count
+        if truck_ratio >= 0.15:
+            priority = 'HIGH' if fatal_ratio >= 0.1 else 'MEDIUM'
+            recommendations.append({
+                'category': 'Speed Management',
+                'icon': 'fa-tachometer-alt',
+                'title': 'Heavy Vehicle Speed Control & Restriction',
+                'description': 'Install speed limit signs for heavy vehicles. Consider speed calming devices (rumble strips, raised crossings). Assess need for truck/bus restrictions during peak hours.',
+                'priority': priority,
+                'basis': f'{int(truck_ratio * 100)}% of accidents involve trucks/buses ({truck_bus_count} of {total_count})',
+                'dpwh_ref': 'DPWH DO 041-S2012 — Speed Management / RA 4136',
+            })
+
+        # 4. Pedestrian accidents → Pedestrian Facilities
+        if pedestrian_count > 0 or bicycle_count > 0:
+            ped_total = pedestrian_count + bicycle_count
+            has_fatal_ped = pedestrian_count > 0 and fatal_ratio > 0
+            priority = 'CRITICAL' if has_fatal_ped else 'HIGH'
+            recommendations.append({
+                'category': 'Pedestrian & Cyclist Facilities',
+                'icon': 'fa-walking',
+                'title': 'Pedestrian Crossings, Sidewalks & Refuge Islands',
+                'description': 'Install marked pedestrian crossings with warning signs. Provide sidewalks/footpaths and pedestrian refuge islands. Consider pedestrian fencing near high-traffic areas. Add bicycle lanes if cyclist involvement is detected.',
+                'priority': priority,
+                'basis': f'{ped_total} accident(s) involving pedestrians/cyclists',
+                'dpwh_ref': 'DPWH DO 041-S2012 — Pedestrian & Vulnerable Road User Facilities',
+            })
+
+        # 5. Night accidents → Lighting
+        if night_ratio >= 0.3:
+            recommendations.append({
+                'category': 'Lighting & Road Surface',
+                'icon': 'fa-lightbulb',
+                'title': 'Street Lighting Installation',
+                'description': 'Install or upgrade street lighting along this corridor. Prioritize lighting at curves, intersections, and pedestrian crossing areas. Improve reflective pavement markings for night visibility.',
+                'priority': 'HIGH',
+                'basis': f'{int(night_ratio * 100)}% of accidents occur at night ({night_accidents} of {timed_accidents} with recorded time)',
+                'dpwh_ref': 'DPWH DO 041-S2012 — Lighting & Surface / iRAP Street Lighting',
+            })
+
+        # 6. Intersection hotspot → Intersection Improvements
+        intersection_ratio = intersection_count / total_count
+        if intersection_ratio >= 0.2 or intersection_count >= 3:
+            priority = 'HIGH' if fatal_ratio >= 0.1 else 'MEDIUM'
+            recommendations.append({
+                'category': 'Intersection Improvements',
+                'icon': 'fa-project-diagram',
+                'title': 'Intersection Channelization & Traffic Signals',
+                'description': 'Assess intersection geometry for channelization improvements. Evaluate need for traffic signal installation, turn lanes, or roundabout conversion. Improve intersection delineation and warning signs.',
+                'priority': priority,
+                'basis': f'{intersection_count} accidents at intersections/junctions ({int(intersection_ratio * 100)}%)',
+                'dpwh_ref': 'DPWH DO 041-S2012 — Intersection Design / iRAP Intersection Treatment',
+            })
+
+        # 7. Curve/bend accidents → Signs & Delineation
+        curve_ratio = curve_count / total_count
+        if curve_ratio >= 0.15 or curve_count >= 2:
+            recommendations.append({
+                'category': 'Road Signs & Pavement Markings',
+                'icon': 'fa-exclamation-triangle',
+                'title': 'Curve Warning Signs & Chevron Delineation',
+                'description': 'Install advance curve warning signs and advisory speed plates. Provide chevron alignment signs (CAS) at appropriate spacing. Improve centerline and edge line markings through curves.',
+                'priority': 'HIGH',
+                'basis': f'{curve_count} accidents at curves/bends ({int(curve_ratio * 100)}%)',
+                'dpwh_ref': 'DPWH DO 041-S2012 Part 2 — Road Signs & Pavement Markings Manual / DO 013-08',
+            })
+
+        # 8. Hit and run → Traffic Management
+        hitrun_ratio = hit_and_run_count / total_count
+        if hitrun_ratio >= 0.15 or hit_and_run_count >= 3:
+            recommendations.append({
+                'category': 'Traffic Management',
+                'icon': 'fa-video',
+                'title': 'CCTV Surveillance & Monitoring System',
+                'description': 'Install CCTV cameras at critical points for incident documentation and deterrence. Consider automated plate recognition for hit-and-run prevention. Coordinate with LGU for traffic monitoring center integration.',
+                'priority': 'MEDIUM',
+                'basis': f'{hit_and_run_count} hit-and-run incidents ({int(hitrun_ratio * 100)}%)',
+                'dpwh_ref': 'Traffic Management — LGU/PNP-HPG Coordination',
+            })
+
+        # 9. Drug/alcohol involvement → Enforcement
+        drug_ratio = drug_count / total_count
+        if drug_ratio >= 0.05 or drug_count >= 2:
+            recommendations.append({
+                'category': 'Enforcement',
+                'icon': 'fa-ban',
+                'title': 'Anti-Drunk & Drugged Driving Checkpoints',
+                'description': 'Establish regular sobriety checkpoints in this area. Coordinate with PNP-HPG for enforcement of RA 10586 (Anti-Drunk and Drugged Driving Act of 2013). Deploy alcohol breath testing equipment.',
+                'priority': 'HIGH',
+                'basis': f'{drug_count} accident(s) with drug/alcohol involvement ({int(drug_ratio * 100)}%)',
+                'dpwh_ref': 'RA 10586 — Anti-Drunk and Drugged Driving Act of 2013',
+            })
+
+        # 10. Colorum vehicles → Enforcement
+        colorum_ratio = colorum_count / total_count
+        if colorum_ratio >= 0.05 or colorum_count >= 2:
+            recommendations.append({
+                'category': 'Enforcement',
+                'icon': 'fa-id-card',
+                'title': 'Vehicle Registration & Franchise Checkpoints',
+                'description': 'Conduct regular anti-colorum operations. Verify vehicle registration and franchise compliance. Coordinate with LTFRB for enforcement against unauthorized public transport.',
+                'priority': 'MEDIUM',
+                'basis': f'{colorum_count} accident(s) involving colorum (unfranchised) vehicles ({int(colorum_ratio * 100)}%)',
+                'dpwh_ref': 'RA 4136 — Land Transportation and Traffic Code',
+            })
+
+        # 11. Reckless driving dominant → Speed Management
+        reckless_ratio = reckless_count / total_count
+        if reckless_ratio >= 0.3:
+            recommendations.append({
+                'category': 'Speed Management',
+                'icon': 'fa-tachometer-alt',
+                'title': 'Speed Enforcement & Traffic Calming',
+                'description': 'Install speed limit regulatory signs. Deploy speed detection equipment. Consider traffic calming devices: rumble strips, raised pedestrian crossings, and central hatching.',
+                'priority': 'HIGH' if fatal_ratio >= 0.1 else 'MEDIUM',
+                'basis': f'{int(reckless_ratio * 100)}% of incidents involve reckless driving ({reckless_count} of {total_count})',
+                'dpwh_ref': 'DPWH DO 041-S2012 — Speed Management / RA 4136',
+            })
+
+        # 12. Highway corridor → Roadside Safety (always relevant for highways)
+        if highway_count >= 3 or highway_count / max(total_count, 1) >= 0.3:
+            if not any(r['category'] == 'Roadside Safety' for r in recommendations):
+                recommendations.append({
+                    'category': 'Roadside Safety',
+                    'icon': 'fa-shield-alt',
+                    'title': 'Guard Rails & Roadside Hazard Removal',
+                    'description': 'Install guard rails and crash barriers at hazardous sections. Remove or relocate fixed roadside hazards (poles, trees, structures) from the clear zone. Improve shoulder rumble strips.',
+                    'priority': 'HIGH',
+                    'basis': f'{highway_count} accidents on highway/national road segments',
+                    'dpwh_ref': 'DPWH DO 041-S2012 — Roadside Safety / iRAP Safety Barriers',
+                })
+
+        # ALWAYS INCLUDED: Road Signs & Pavement Markings assessment
+        if not any(r['category'] == 'Road Signs & Pavement Markings' for r in recommendations):
+            recommendations.append({
+                'category': 'Road Signs & Pavement Markings',
+                'icon': 'fa-sign',
+                'title': 'Signage Adequacy Assessment & Pavement Marking Renewal',
+                'description': 'Conduct comprehensive assessment of regulatory, warning, and guide signs. Renew faded pavement markings (centerline, edge lines, crosswalks). Install hazard markers and delineation posts at critical points.',
+                'priority': 'MEDIUM',
+                'basis': f'Standard assessment for hotspot with {total_count} recorded accidents',
+                'dpwh_ref': 'DPWH DO 041-S2012 Part 2 — Road Signs & Pavement Markings Manual / DO 013-08',
+            })
+
+        # ALWAYS INCLUDED: Multi-Agency Coordination (3E Approach)
+        municipalities_text = ', '.join(hotspot.municipalities) if hotspot.municipalities else 'local LGU'
+        recommendations.append({
+            'category': 'Multi-Agency Coordination',
+            'icon': 'fa-handshake',
+            'title': '3E Approach: Engineering, Enforcement & Education',
+            'description': f'Coordinate with {municipalities_text} LGU, DPWH District Engineering Office, PNP-HPG, and LTFRB for joint road safety action plan. Implement public awareness campaigns for motorists about this high-risk location.',
+            'priority': 'MEDIUM',
+            'basis': f'Multi-stakeholder approach for hotspot spanning {municipalities_text}',
+            'dpwh_ref': 'Philippine Road Safety Action Plan — 3E Framework',
+        })
+
+        # Sort by priority: CRITICAL first, then HIGH, then MEDIUM
+        priority_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2}
+        recommendations.sort(key=lambda r: priority_order.get(r['priority'], 3))
+
     context = {
         'hotspot': hotspot,
         'accidents': accidents_display,
@@ -1340,12 +1619,13 @@ def hotspot_detail(request, cluster_id):
         'total_killed': total_killed,
         'total_injured': total_injured,
         'date_span': date_span,
-        'month_labels': json.dumps(month_labels),  
-        'month_data': json.dumps(month_data),      
+        'month_labels': json.dumps(month_labels),
+        'month_data': json.dumps(month_data),
         'accidents_json': accidents_json,
         'accidents_export': accidents_export_json,
+        'recommendations': recommendations,
     }
-    
+
     return render(request, 'hotspots/hotspot_detail.html', context)
 
 
@@ -1479,8 +1759,15 @@ def my_reports(request):
     # Sort: latest activity first
     reports = reports.order_by('-updated_at')
 
-    # Pagination - 10 reports per page
-    paginator = Paginator(reports, 10)
+    # Pagination with configurable per-page (default 5)
+    per_page = request.GET.get('per_page', '5')
+    try:
+        per_page_int = int(per_page)
+        if per_page_int not in (5, 10, 20, 50):
+            per_page_int = 5
+    except (ValueError, TypeError):
+        per_page_int = 5
+    paginator = Paginator(reports, per_page_int)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
@@ -1490,6 +1777,8 @@ def my_reports(request):
         'period_filter': period_filter,
         'status_choices': AccidentReport.STATUS_CHOICES,
         'page_obj': page_obj,
+        'paginator': paginator,
+        'per_page': str(per_page_int),
         'total_count': total_count,
         'approved_count': approved_count,
         'pending_count': pending_count,
@@ -1820,11 +2109,27 @@ def pending_reports(request):
     pending_queryset = AccidentReport.objects.filter(status='pending')
     pending_count = get_reports_for_jurisdiction(request.user, pending_queryset).count()
 
+    # Pagination with configurable per-page (default 5)
+    total_report_count = len(reports) if isinstance(reports, list) else reports.count()
+    per_page = request.GET.get('per_page', '5')
+    try:
+        per_page_int = int(per_page)
+        if per_page_int not in (5, 10, 20, 50):
+            per_page_int = 5
+    except (ValueError, TypeError):
+        per_page_int = 5
+    paginator = Paginator(reports, per_page_int)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        'reports': reports,
+        'reports': page_obj,
         'status_filter': status_filter,
         'status_choices': AccidentReport.STATUS_CHOICES,
         'pending_count': pending_count,
+        'page_obj': page_obj,
+        'per_page': str(per_page_int),
+        'total_report_count': total_report_count,
         'user_role': request.user.profile.get_role_display() if hasattr(request.user, 'profile') else '',
     }
 
@@ -1979,6 +2284,8 @@ def reject_report(request, pk):
         messages.warning(request, 'This report has already been processed.')
         return redirect('pending_reports')
 
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     if request.method == 'POST':
         reason = request.POST.get('reason', '').strip()
         if not reason:
@@ -2011,6 +2318,9 @@ def reject_report(request, pk):
 
         # Clear dashboard cache so pending count updates immediately
         cache.delete('dashboard_data')
+
+        if is_ajax:
+            return JsonResponse({'success': True, 'message': f'Report #{report.pk} has been rejected.'})
 
         messages.success(request, f'Report #{report.pk} has been rejected.')
         return redirect('pending_reports')
@@ -3860,8 +4170,8 @@ def change_password_api(request):
 @require_http_methods(["POST"])
 def run_clustering_view(request):
     """Run AGNES clustering synchronously from the UI (no Celery needed)."""
-    if not (hasattr(request.user, 'profile') and request.user.profile.role in ('super_admin', 'admin')):
-        return JsonResponse({'success': False, 'error': 'Permission denied.'}, status=403)
+    if not (hasattr(request.user, 'profile') and request.user.profile.role in ('super_admin', 'regional_director')):
+        return JsonResponse({'success': False, 'error': 'Permission denied. Only Super Admin and Regional Director can run clustering.'}, status=403)
 
     try:
         data = json.loads(request.body) if request.body else {}

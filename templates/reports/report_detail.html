@@ -4,7 +4,11 @@
 {% block title %}{% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %} - AGNES{% endblock %}
 
 {% block breadcrumb_items %}
+{% if is_own_report %}
 <span> / <a href="{% url 'my_reports' %}">My Reports</a> / {% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %}</span>
+{% else %}
+<span> / <a href="{% url 'pending_reports' %}">Manage Reports</a> / {% if report.incident_type == 'OTHER' and report.incident_type_other %}{{ report.incident_type_other }}{% else %}{{ report.get_incident_type_display }}{% endif %}</span>
+{% endif %}
 {% endblock %}
 
 {% block extra_css %}
@@ -12,14 +16,14 @@
     .report-detail-container {
         max-width: 1400px;
         margin: 0 auto;
-        padding: 20px;
+        padding: 14px;
     }
 
     /* Two-column body grid */
     .detail-body-grid {
         display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: 20px;
+        grid-template-columns: 1fr 340px;
+        gap: 14px;
         align-items: start;
     }
 
@@ -48,20 +52,20 @@
     .sidebar-actions-card .btn-approve,
     .sidebar-actions-card .btn-reject,
     .sidebar-actions-card .btn-cancel-own {
-        height: 38px;
-        font-size: 0.85rem;
+        height: 32px;
+        font-size: 0.78rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 8px;
+        border-radius: 6px;
         font-weight: 600;
         cursor: pointer;
         text-decoration: none;
         border: none;
         outline: none;
-        gap: 0.4rem;
+        gap: 0.35rem;
         color: white;
-        transition: all 0.2s;
+        transition: background 0.15s;
     }
 
     .sidebar-actions-card .btn-approve { background: #10B981; }
@@ -77,231 +81,175 @@
         }
     }
 
-    /* Report Header Card - Modern Hero Style */
+    /* Report Header Card - Minimal Clean Style */
     .report-header-card {
-        background: linear-gradient(135deg, #003087 0%, #0052CC 50%, #1a6bff 100%);
-        border-radius: 16px;
-        padding: 1.5rem 1.75rem;
-        margin-bottom: 24px;
-        box-shadow: 0 8px 30px rgba(0, 48, 135, 0.25);
-        color: white;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .report-header-card::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -20%;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-
-    .report-header-card::after {
-        content: '';
-        position: absolute;
-        bottom: -30%;
-        left: -10%;
-        width: 200px;
-        height: 200px;
-        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-
-    .report-header-card.status-verified {
-        background: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
-        box-shadow: 0 8px 30px rgba(5, 150, 105, 0.25);
-    }
-
-    .report-header-card.status-rejected {
-        background: linear-gradient(135deg, #B91C1C 0%, #DC2626 50%, #EF4444 100%);
-        box-shadow: 0 8px 30px rgba(220, 38, 38, 0.25);
+        background: white;
+        border-radius: 10px;
+        padding: 0.85rem 1.1rem;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e8f0fe;
+        border-top: 3px solid #003087;
     }
 
     .report-header-card.status-pending {
-        background: linear-gradient(135deg, #003087 0%, #0052CC 50%, #1a6bff 100%);
+        border-top-color: #F59E0B;
+    }
+
+    .report-header-card.status-verified {
+        border-top-color: #10B981;
+    }
+
+    .report-header-card.status-rejected {
+        border-top-color: #EF4444;
+    }
+
+    .report-header-card.status-investigating {
+        border-top-color: #3B82F6;
     }
 
     .report-header-card.status-cancelled {
-        background: linear-gradient(135deg, #4B5563 0%, #6B7280 50%, #9CA3AF 100%);
-        box-shadow: 0 8px 30px rgba(75, 85, 99, 0.25);
-    }
-
-    .status-badge.status-cancelled {
-        background: rgba(255,255,255,0.2);
-        color: white;
+        border-top-color: #6B7280;
+        opacity: 0.9;
     }
 
     .report-title-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.75rem;
-        position: relative;
-        z-index: 1;
+        margin-bottom: 0.5rem;
     }
 
     .report-title {
-        color: white;
-        font-size: 1.5rem;
-        font-weight: 800;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        color: #1a365d;
+        font-size: 0.98rem;
+        font-weight: 700;
     }
 
     .status-badge {
-        padding: 6px 14px;
+        padding: 3px 10px;
         border-radius: 50px;
-        font-size: 0.8rem;
+        font-size: 0.68rem;
         font-weight: 700;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
+        gap: 4px;
+        white-space: nowrap;
     }
 
     .status-pending {
-        background: rgba(255,255,255,0.2);
-        color: white;
+        background: #FEF3C7;
+        color: #D97706;
     }
 
     .status-verified {
-        background: rgba(255,255,255,0.2);
-        color: white;
+        background: #D1FAE5;
+        color: #059669;
     }
 
     .status-rejected {
-        background: rgba(255,255,255,0.2);
-        color: white;
+        background: #FEE2E2;
+        color: #DC2626;
     }
 
     .status-investigating {
-        background: rgba(255,255,255,0.2);
-        color: white;
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+
+    .status-badge.status-cancelled {
+        background: #F3F4F6;
+        color: #6B7280;
     }
 
     .report-meta {
         display: flex;
-        gap: 1.25rem;
-        color: rgba(255,255,255,0.85);
-        font-size: 0.88rem;
+        gap: 0.75rem;
+        color: #6B7280;
+        font-size: 0.72rem;
         flex-wrap: wrap;
-        position: relative;
-        z-index: 1;
     }
 
     .report-meta span {
         display: flex;
         align-items: center;
-        gap: 6px;
-        background: rgba(255,255,255,0.1);
-        padding: 4px 12px;
-        border-radius: 8px;
+        gap: 5px;
     }
 
-    /* Info Section - Modern Card Design */
+    .report-meta i {
+        color: #9CA3AF;
+    }
+
+    /* Info Section - Clean Flat Design */
     .detail-section {
-        background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
-        padding: 24px;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 48, 135, 0.06), 0 1px 3px rgba(0,0,0,0.04);
-        margin-bottom: 20px;
+        background: white;
+        padding: 14px 16px;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        margin-bottom: 12px;
         border: 1px solid #e8f0fe;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .detail-section:hover {
-        box-shadow: 0 8px 30px rgba(0, 48, 135, 0.1), 0 2px 6px rgba(0,0,0,0.06);
-        transform: translateY(-2px);
     }
 
     .section-title {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 20px;
-        padding-bottom: 14px;
-        border-bottom: 2px solid #e8f0fe;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #eef2f7;
         color: #1a365d;
-        font-size: 1.15rem;
+        font-size: 0.88rem;
         font-weight: 700;
     }
 
     .section-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #003087 0%, #0052CC 100%);
+        background: #003087;
         color: white;
-        font-size: 0.95rem;
-        box-shadow: 0 4px 12px rgba(0, 48, 135, 0.25);
+        font-size: 0.7rem;
         flex-shrink: 0;
     }
 
     .section-title i:not(.section-icon i) {
-        font-size: 1.2rem;
+        font-size: 0.88rem;
         color: #003087;
     }
 
     .info-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 2px 16px;
     }
 
     .info-item {
         display: flex;
         flex-direction: column;
-        gap: 6px;
-        padding: 14px 16px;
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        transition: all 0.2s ease;
-        position: relative;
+        gap: 1px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f0f2f5;
     }
 
-    .info-item::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #003087, #0052CC);
-        border-radius: 12px 12px 0 0;
-        opacity: 0;
-        transition: opacity 0.2s ease;
-    }
-
-    .info-item:hover {
-        border-color: #c7d8f5;
-        box-shadow: 0 4px 12px rgba(0, 48, 135, 0.08);
-        transform: translateY(-1px);
-    }
-
-    .info-item:hover::before {
-        opacity: 1;
+    .info-item:last-child {
+        border-bottom: none;
     }
 
     .info-label {
         font-weight: 600;
-        color: #8b9cc0;
-        font-size: 0.72rem;
+        color: #94a3b8;
+        font-size: 0.63rem;
         text-transform: uppercase;
-        letter-spacing: 0.8px;
+        letter-spacing: 0.5px;
     }
 
     .info-value {
         font-weight: 600;
-        font-size: 0.95rem;
-        color: #1a365d;
+        font-size: 0.82rem;
+        color: #1e293b;
     }
 
     .info-value.highlight {
@@ -309,34 +257,22 @@
         font-weight: 700;
     }
 
-    /* Narrative Box - Modern */
+    /* Narrative Box - Clean */
     .description-box {
-        background: linear-gradient(135deg, #f8f9fb 0%, #eef2f7 100%);
-        padding: 24px;
-        border-radius: 12px;
-        border-left: 4px solid #003087;
-        line-height: 1.8;
-        font-size: 0.95rem;
+        background: #f8fafc;
+        padding: 12px 14px;
+        border-radius: 6px;
+        border-left: 3px solid #003087;
+        line-height: 1.7;
+        font-size: 0.82rem;
         color: #374151;
         white-space: pre-wrap;
-        position: relative;
-    }
-
-    .description-box::before {
-        content: '\201C';
-        position: absolute;
-        top: 8px;
-        left: 16px;
-        font-size: 3rem;
-        color: rgba(0, 48, 135, 0.1);
-        font-family: Georgia, serif;
-        line-height: 1;
     }
 
     .casualties-row {
         display: flex;
-        gap: 14px;
-        margin-bottom: 18px;
+        gap: 8px;
+        margin-bottom: 12px;
     }
 
     .casualty-box {
@@ -344,67 +280,59 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        padding: 14px 16px;
-        border-radius: 12px;
-        font-size: 0.95rem;
+        gap: 6px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 0.78rem;
         font-weight: 700;
-        transition: all 0.2s ease;
     }
 
     .casualty-killed {
-        background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+        background: #FEE2E2;
         color: #DC2626;
         border: 1px solid #FECACA;
-        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
     }
 
     .casualty-injured {
-        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+        background: #FEF3C7;
         color: #D97706;
         border: 1px solid #FDE68A;
-        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.1);
-    }
-
-    .casualty-box:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     .casualty-box i {
-        font-size: 1rem;
+        font-size: 0.78rem;
     }
 
     .location-map {
-        height: 300px;
+        height: 250px;
         border-radius: 8px;
-        margin-top: 12px;
+        margin-top: 10px;
         background: #E5E7EB;
-        border: 1px solid #e9ecef;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
     }
 
     .verification-info {
-        background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+        background: #D1FAE5;
         border: 1px solid #6EE7B7;
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        margin-top: 0.75rem;
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        margin-top: 0.5rem;
     }
 
     .verification-info.rejected {
-        background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+        background: #FEE2E2;
         border-color: #FCA5A5;
     }
 
     .verification-title {
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.78rem;
         color: #059669;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.15rem;
         display: flex;
         align-items: center;
-        gap: 0.35rem;
+        gap: 0.3rem;
     }
 
     .verification-info.rejected .verification-title {
@@ -412,7 +340,7 @@
     }
 
     .verification-details {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         color: #374151;
     }
 
@@ -423,31 +351,31 @@
     /* Processor role badges */
     .processor-role {
         display: inline-block;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.68rem;
+        padding: 0.15rem 0.4rem;
+        border-radius: 3px;
+        font-size: 0.62rem;
         font-weight: 600;
-        margin-left: 0.25rem;
+        margin-left: 0.2rem;
         vertical-align: middle;
     }
 
     .processor-role.processor-super_admin {
-        background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+        background: #7C3AED;
         color: white;
     }
 
     .processor-role.processor-regional_director {
-        background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+        background: #DC2626;
         color: white;
     }
 
     .processor-role.processor-provincial_chief {
-        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        background: #2563EB;
         color: white;
     }
 
     .processor-role.processor-station_commander {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        background: #059669;
         color: white;
     }
 
@@ -460,22 +388,21 @@
     .btn-back {
         background: #f8f9fa;
         color: var(--text-dark);
-        padding: 8px 16px;
-        border-radius: 8px;
+        padding: 6px 12px;
+        border-radius: 6px;
         text-decoration: none;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        transition: all 0.2s;
+        gap: 5px;
+        transition: background 0.15s;
         border: 1px solid #e9ecef;
     }
 
     .btn-back:hover {
         background: #e9ecef;
         color: var(--text-dark);
-        transform: translateY(-1px);
     }
 
     .admin-actions {
@@ -489,28 +416,28 @@
         color: white;
         border: none;
         outline: none;
-        padding: 0 16px;
-        border-radius: 8px;
+        padding: 0 12px;
+        border-radius: 6px;
         text-decoration: none;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         font-family: inherit;
         line-height: 1;
-        height: 36px;
+        height: 32px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        transition: all 0.2s;
+        gap: 5px;
+        transition: background 0.15s;
         box-sizing: border-box;
-        min-width: 90px;
+        min-width: 80px;
     }
 
     .btn-approve { background: #10B981; }
-    .btn-approve:hover { background: #059669; color: white; transform: translateY(-1px); }
+    .btn-approve:hover { background: #059669; color: white; }
     .btn-reject { background: #EF4444; }
-    .btn-reject:hover { background: #DC2626; color: white; transform: translateY(-1px); }
+    .btn-reject:hover { background: #DC2626; color: white; }
 
     /* Custom Confirm Popup */
     .confirm-overlay {
@@ -653,25 +580,24 @@
 
     .photo-gallery {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 12px;
-        margin-top: 10px;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 8px;
+        margin-top: 8px;
     }
 
     .photo-item {
         position: relative;
-        border-radius: 10px;
+        border-radius: 6px;
         overflow: hidden;
         aspect-ratio: 4/3;
         cursor: pointer;
-        transition: all 0.3s ease;
-        border: 2px solid #e9ecef;
+        transition: all 0.2s ease;
+        border: 1px solid #e2e8f0;
         background: #f1f3f5;
     }
 
     .photo-item:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 16px rgba(0, 48, 135, 0.2);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
         border-color: #003087;
     }
 
@@ -688,19 +614,19 @@
         right: 0;
         background: linear-gradient(transparent, rgba(0,0,0,0.7));
         color: white;
-        font-size: 0.75rem;
+        font-size: 0.68rem;
         font-weight: 600;
-        padding: 20px 10px 8px;
+        padding: 14px 8px 6px;
     }
 
     .no-photos {
         text-align: center;
-        padding: 20px;
+        padding: 14px;
         color: #6C757D;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         background: #f8f9fa;
-        border-radius: 8px;
-        border: 2px dashed #dee2e6;
+        border-radius: 6px;
+        border: 1px dashed #dee2e6;
     }
 
     .photo-lightbox {
@@ -724,29 +650,36 @@
     }
 
     /* Person table (victims/suspects) */
+    .person-table-wrapper {
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-top: 6px;
+    }
+
     .person-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.88rem;
-        margin-top: 8px;
+        font-size: 0.78rem;
     }
 
     .person-table th {
-        background: #F3F4F6;
-        padding: 10px 12px;
+        background: #f1f5f9;
+        padding: 7px 10px;
         text-align: left;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #6B7280;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #64748b;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-bottom: 2px solid #E5E7EB;
+        letter-spacing: 0.6px;
+        border-bottom: 1px solid #e2e8f0;
     }
 
     .person-table td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #E5E7EB;
-        color: #333;
+        padding: 7px 10px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #1a365d;
+        font-weight: 500;
     }
 
     .person-table tr:hover td {
@@ -760,24 +693,28 @@
     .person-count-badge {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        padding: 3px 10px;
+        gap: 3px;
+        padding: 2px 8px;
         background: #EEF2FF;
         color: #4338CA;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-left: 8px;
+        border-radius: 50px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        margin-left: 6px;
+    }
+
+    [data-theme="dark"] .person-table-wrapper {
+        border-color: #2D3A4F;
     }
 
     [data-theme="dark"] .person-table th {
-        background: #0F172A;
+        background: linear-gradient(135deg, #0F172A 0%, #1a2332 100%);
         color: #9CA3AF;
         border-bottom-color: #2D3A4F;
     }
 
     [data-theme="dark"] .person-table td {
-        border-bottom-color: #2D3A4F;
+        border-bottom-color: #1e293b;
         color: #E8E8E8;
     }
 
@@ -811,8 +748,7 @@
     }
 
     [data-theme="dark"] .info-item {
-        background: #0F172A;
-        border-color: #2D3A4F;
+        border-bottom-color: #1e293b;
     }
 
     [data-theme="dark"] .info-label {
@@ -871,67 +807,23 @@
     }
 
     /* Activity Timeline */
-    .activity-timeline {
-        margin-top: 0.75rem;
-        position: relative;
-        padding-left: 1.5rem;
-    }
-
-    .activity-timeline::before {
-        content: '';
-        position: absolute;
-        left: 0.55rem;
-        top: 0.25rem;
-        bottom: 0.25rem;
-        width: 2px;
-        background: #E5E7EB;
-        border-radius: 1px;
-    }
-
-    .activity-item {
-        position: relative;
-        padding: 0.4rem 0 0.6rem 0;
-    }
-
-    .activity-item:last-child {
-        padding-bottom: 0;
-    }
-
-    .activity-icon {
-        position: absolute;
-        left: -1.5rem;
-        top: 0.45rem;
-        width: 1.1rem;
-        height: 1.1rem;
+    /* Inline activity icon (in header) */
+    .activity-icon-inline {
+        width: 1.3rem;
+        height: 1.3rem;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.5rem;
+        font-size: 0.55rem;
         color: white;
-        z-index: 1;
+        flex-shrink: 0;
     }
-
-    .activity-icon.submitted { background: #3B82F6; }
-    .activity-icon.approved { background: #10B981; }
-    .activity-icon.rejected { background: #EF4444; }
-    .activity-icon.resubmitted { background: #F59E0B; }
-    .activity-icon.edited { background: #6366F1; }
-
-    .activity-content {
-        font-size: 0.78rem;
-        color: #374151;
-    }
-
-    .activity-content strong {
-        color: #1F2937;
-    }
-
-    .activity-timestamp {
-        font-size: 0.68rem;
-        color: #9CA3AF;
-        margin-top: 0.1rem;
-    }
+    .activity-icon-inline.submitted { background: #3B82F6; }
+    .activity-icon-inline.approved { background: #10B981; }
+    .activity-icon-inline.rejected { background: #EF4444; }
+    .activity-icon-inline.resubmitted { background: #F59E0B; }
+    .activity-icon-inline.edited { background: #6366F1; }
 
     .activity-details {
         font-size: 0.72rem;
@@ -943,54 +835,159 @@
         border-left: 2px solid #E5E7EB;
     }
 
-    .activity-hidden {
-        display: none;
-    }
-
-    .activity-timeline.expanded .activity-hidden {
-        display: block;
-    }
-
-    .activity-toggle-btn {
-        background: #F3F4F6;
+    .activity-filter-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: #003087;
         border: none;
         border-radius: 6px;
-        padding: 0.4rem 0;
-        font-size: 0.72rem;
-        font-weight: 500;
-        color: #6B7280;
+        padding: 0.3rem 0.65rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #fff;
         cursor: pointer;
         font-family: inherit;
+        transition: background 0.15s ease;
+        flex-shrink: 0;
+    }
+    .activity-filter-btn:hover {
+        background: #00236a;
+    }
+
+    /* Activity Log Modal */
+    .al-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+    .al-modal-overlay.show { opacity: 1; }
+
+    .al-modal {
+        background: #fff;
+        border-radius: 12px;
+        width: 95%;
+        max-width: 520px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        transform: translateY(20px);
+        transition: transform 0.25s ease;
+    }
+    .al-modal-overlay.show .al-modal { transform: translateY(0); }
+
+    .al-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid #E5E7EB;
+    }
+    .al-modal-header h3 {
+        font-size: 0.9rem;
+        color: #1F2937;
+        margin: 0;
+    }
+    .al-modal-close {
+        background: none;
+        border: none;
+        font-size: 1.3rem;
+        color: #9CA3AF;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0 0.2rem;
+    }
+    .al-modal-close:hover { color: #374151; }
+
+    .al-modal-body {
+        padding: 1rem;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #003087 transparent;
+    }
+    .al-modal-body::-webkit-scrollbar { width: 5px; }
+    .al-modal-body::-webkit-scrollbar-track { background: transparent; }
+    .al-modal-body::-webkit-scrollbar-thumb { background: #003087; border-radius: 3px; }
+
+    /* Modal timeline */
+    .al-timeline {
+        position: relative;
+        padding-left: 1.5rem;
+    }
+    .al-timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.55rem;
+        top: 0.25rem;
+        bottom: 0.25rem;
+        width: 2px;
+        background: #E5E7EB;
+        border-radius: 1px;
+    }
+
+    .al-item {
+        position: relative;
+        padding: 0.5rem 0 0.7rem 0;
+    }
+    .al-item:last-child { padding-bottom: 0; }
+
+    .al-icon {
+        position: absolute;
+        left: -1.5rem;
+        top: 0.55rem;
+        width: 1.1rem;
+        height: 1.1rem;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.3rem;
-        width: 100%;
-        transition: background 0.15s, color 0.15s;
+        font-size: 0.5rem;
+        color: white;
+        z-index: 1;
+    }
+    .al-icon.submitted { background: #3B82F6; }
+    .al-icon.approved { background: #10B981; }
+    .al-icon.rejected { background: #EF4444; }
+    .al-icon.resubmitted { background: #F59E0B; }
+    .al-icon.edited { background: #6366F1; }
+
+    .al-action { font-size: 0.8rem; color: #374151; }
+    .al-action strong { color: #1F2937; }
+    .al-time { font-size: 0.7rem; color: #9CA3AF; margin-top: 0.1rem; }
+    .al-details {
+        font-size: 0.74rem;
+        color: #6B7280;
+        margin-top: 0.25rem;
+        padding: 0.35rem 0.6rem;
+        background: #F9FAFB;
+        border-radius: 4px;
+        border-left: 2px solid #E5E7EB;
     }
 
-    .activity-toggle-btn:hover {
-        background: #E5E7EB;
-        color: #374151;
+    /* Dark mode */
+    [data-theme="dark"] .activity-icon-inline { opacity: 0.9; }
+    [data-theme="dark"] .activity-filter-btn {
+        background: #003087; color: #fff;
     }
-
-    [data-theme="dark"] .activity-toggle-btn {
-        background: #0F172A;
-        color: #9CA3AF;
+    [data-theme="dark"] .activity-filter-btn:hover {
+        background: #0041b8;
     }
-
-    [data-theme="dark"] .activity-toggle-btn:hover {
-        background: #1A2332;
-        color: #D1D5DB;
-    }
-
-    [data-theme="dark"] .activity-timeline::before {
-        background: #2D3A4F;
-    }
-
-    [data-theme="dark"] .activity-content {
-        color: #D1D5DB;
-    }
+    [data-theme="dark"] .al-modal { background: #1A2332; }
+    [data-theme="dark"] .al-modal-header { border-color: #2D3A4F; }
+    [data-theme="dark"] .al-modal-header h3 { color: #E8E8E8; }
+    [data-theme="dark"] .al-modal-close { color: #6B7280; }
+    [data-theme="dark"] .al-modal-close:hover { color: #D1D5DB; }
+    [data-theme="dark"] .al-timeline::before { background: #2D3A4F; }
+    [data-theme="dark"] .al-action { color: #D1D5DB; }
+    [data-theme="dark"] .al-action strong { color: #F3F4F6; }
+    [data-theme="dark"] .al-details { background: #0F172A; border-color: #2D3A4F; color: #9CA3AF; }
 
     [data-theme="dark"] .activity-content strong {
         color: #FFFFFF;
@@ -1032,20 +1029,16 @@
         color: #FFFFFF;
     }
 
-    [data-theme="dark"] .report-header-card.status-verified,
-    [data-theme="dark"] .report-header-card.status-rejected,
-    [data-theme="dark"] .report-header-card.status-pending,
-    [data-theme="dark"] .report-header-card.status-cancelled {
-        background: #1A2332;
-    }
-
-    [data-theme="dark"] .status-badge.status-cancelled {
-        background: #374151;
-        color: #9CA3AF;
+    [data-theme="dark"] .report-title {
+        color: #60A5FA;
     }
 
     [data-theme="dark"] .report-meta {
         color: #9CA3AF;
+    }
+
+    [data-theme="dark"] .report-meta i {
+        color: #6B7280;
     }
 
     [data-theme="dark"] .status-badge.status-pending {
@@ -1063,33 +1056,54 @@
         color: #F87171;
     }
 
+    [data-theme="dark"] .status-badge.status-cancelled {
+        background: #374151;
+        color: #9CA3AF;
+    }
+
+    [data-theme="dark"] .section-icon {
+        background: #1a4080;
+    }
+
     /* Mobile responsive */
     @media (max-width: 768px) {
         .report-detail-container {
-            padding: 10px;
+            padding: 8px;
         }
 
         .report-title {
-            font-size: 1.05rem;
+            font-size: 0.95rem;
         }
 
         .report-header-card {
-            padding: 1rem 1.15rem;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
         }
 
         .detail-section {
-            padding: 16px;
-            margin-bottom: 12px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
         }
 
         .section-title {
-            font-size: 0.95rem;
-            gap: 8px;
+            font-size: 0.82rem;
+            gap: 6px;
+        }
+
+        .section-icon {
+            width: 22px;
+            height: 22px;
+            font-size: 0.6rem;
         }
 
         .info-grid {
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 0 12px;
+        }
+
+        .info-item {
+            padding: 5px 0;
         }
 
         .action-buttons {
@@ -1097,8 +1111,8 @@
         }
 
         .btn-back {
-            padding: 6px 12px;
-            font-size: 0.8rem;
+            padding: 5px 10px;
+            font-size: 0.78rem;
         }
 
         .admin-actions {
@@ -1109,9 +1123,9 @@
         .btn-approve,
         .btn-reject {
             min-width: auto;
-            padding: 0 12px;
-            font-size: 0.8rem;
-            height: 34px;
+            padding: 0 10px;
+            font-size: 0.78rem;
+            height: 32px;
             flex: 1;
         }
 
@@ -1121,22 +1135,44 @@
         }
 
         .person-table {
-            font-size: 0.78rem;
+            font-size: 0.72rem;
         }
 
         .person-table th,
         .person-table td {
-            padding: 6px 8px;
+            padding: 5px 6px;
         }
 
         .photo-gallery {
             grid-template-columns: repeat(2, 1fr);
+        }
+
+        .casualties-row {
+            gap: 6px;
+        }
+
+        .casualty-box {
+            padding: 6px 8px;
+            font-size: 0.72rem;
+        }
+
+        .description-box {
+            padding: 10px;
+            font-size: 0.78rem;
         }
     }
 
     @media (max-width: 480px) {
         .info-grid {
             grid-template-columns: 1fr;
+        }
+
+        .report-meta {
+            gap: 6px;
+        }
+
+        .report-meta span {
+            font-size: 0.72rem;
         }
     }
 </style>
@@ -1163,44 +1199,39 @@
         </div>
 
         {% if activity_logs %}
-        <div style="margin-top: 0.75rem; padding-top: 0.6rem; border-top: 1px solid #E5E7EB;">
-            <div style="font-size: 0.75rem; font-weight: 600; color: #6B7280; margin-bottom: 0.3rem;">
-                <span><i class="fas fa-history"></i> Activity Log</span>
-            </div>
-            <div class="activity-timeline">
-                {% for log in activity_logs %}
-                <div class="activity-item {% if not forloop.first %}activity-hidden{% endif %}">
-                    <div class="activity-icon {{ log.action }}">
-                        {% if log.action == 'submitted' %}<i class="fas fa-paper-plane"></i>
-                        {% elif log.action == 'approved' %}<i class="fas fa-check"></i>
-                        {% elif log.action == 'rejected' %}<i class="fas fa-times"></i>
-                        {% elif log.action == 'resubmitted' %}<i class="fas fa-redo"></i>
-                        {% elif log.action == 'edited' %}<i class="fas fa-edit"></i>
-                        {% endif %}
-                    </div>
-                    <div class="activity-content">
-                        <strong>{{ log.get_action_display }}</strong> by {{ log.actor_name }}
-                        {% if log.actor_role %}
-                        <span class="processor-role processor-{{ log.actor.profile.role }}">{{ log.actor_role }}</span>
-                        {% endif %}
-                        <div class="activity-timestamp">{{ log.timestamp|date:"F d, Y" }} at {{ log.timestamp|time:"g:i A" }}</div>
-                        {% if log.details %}
-                        <div class="activity-details">{{ log.details }}</div>
-                        {% endif %}
-                    </div>
+        <div style="margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px solid #E5E7EB;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                {% with latest=activity_logs.0 %}
+                <div class="activity-icon-inline {{ latest.action }}">
+                    {% if latest.action == 'submitted' %}<i class="fas fa-paper-plane"></i>
+                    {% elif latest.action == 'approved' %}<i class="fas fa-check"></i>
+                    {% elif latest.action == 'rejected' %}<i class="fas fa-times"></i>
+                    {% elif latest.action == 'resubmitted' %}<i class="fas fa-redo"></i>
+                    {% elif latest.action == 'edited' %}<i class="fas fa-edit"></i>
+                    {% endif %}
                 </div>
-                {% endfor %}
-            </div>
-            {% if activity_logs|length > 1 %}
-            <div style="text-align: center; margin-top: 0.5rem;">
-                <button type="button" class="activity-toggle-btn" id="activityToggleBtn" onclick="toggleActivityLog()">
-                    <i class="fas fa-chevron-down" id="activityToggleIcon"></i> See all logs ({{ activity_logs|length }})
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 0.78rem; color: #374151;">
+                        <strong>{{ latest.get_action_display }}</strong> by {{ latest.actor_name }}
+                        {% if latest.actor_role %}
+                        <span class="processor-role processor-{{ latest.actor.profile.role }}">{{ latest.actor_role }}</span>
+                        {% endif %}
+                    </div>
+                    <div style="font-size: 0.68rem; color: #9CA3AF;">{{ latest.timestamp|date:"F d, Y" }} at {{ latest.timestamp|time:"g:i A" }}</div>
+                    {% if latest.details %}
+                    <div class="activity-details">{{ latest.details }}</div>
+                    {% endif %}
+                </div>
+                {% endwith %}
+                {% if activity_logs|length > 1 %}
+                <button type="button" class="activity-filter-btn" onclick="openActivityModal()" title="View all {{ activity_logs|length }} logs">
+                    <i class="fas fa-list-ul"></i> View All ({{ activity_logs|length }})
                 </button>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
         {% elif report.status == 'verified' and report.verified_by %}
-        <div class="verification-info">
+        <div class="verification-info" style="margin-top: 0.6rem;">
             <div class="verification-title">
                 <i class="fas fa-check-circle"></i> Report Approved
             </div>
@@ -1213,7 +1244,7 @@
             </div>
         </div>
         {% elif report.status == 'rejected' and report.verified_by %}
-        <div class="verification-info rejected">
+        <div class="verification-info rejected" style="margin-top: 0.6rem;">
             <div class="verification-title">
                 <i class="fas fa-times-circle"></i> Report Rejected
             </div>
@@ -1225,7 +1256,7 @@
                 <br>on {{ report.verified_at|date:"F d, Y" }} at {{ report.verified_at|time:"g:i A" }}
             </div>
             {% if report.rejection_reason %}
-            <div class="verification-details" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(220, 38, 38, 0.3);">
+            <div class="verification-details" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(220,38,38,0.3);">
                 <strong><i class="fas fa-comment-alt"></i> Reason:</strong><br>
                 {{ report.rejection_reason }}
             </div>
@@ -1239,7 +1270,7 @@
     <div class="detail-main">
     <!-- Incident Details -->
     <div class="detail-section">
-        <h3 class="section-title"><i class="fas fa-car-crash"></i> Incident Details</h3>
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-car-crash"></i></span> Incident Details</h3>
         <div class="info-grid">
             <div class="info-item">
                 <div class="info-label">Date of Incident</div>
@@ -1280,7 +1311,7 @@
 
     <!-- Location -->
     <div class="detail-section">
-        <h3 class="section-title"><i class="fas fa-map-marker-alt"></i> Location</h3>
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-map-marker-alt"></i></span> Location</h3>
         <div class="info-grid">
             <div class="info-item">
                 <div class="info-label">Province</div>
@@ -1307,7 +1338,7 @@
     <!-- Victim Information -->
     <div class="detail-section">
         <h3 class="section-title">
-            <i class="fas fa-user-injured"></i> Victim Information
+            <span class="section-icon"><i class="fas fa-user-injured"></i></span> Victim Information
             {% if report.victims_data %}<span class="person-count-badge">{{ report.victims_data|length }} victim{{ report.victims_data|length|pluralize }}</span>{% endif %}
         </h3>
         <div class="casualties-row">
@@ -1315,7 +1346,7 @@
             <span class="casualty-box casualty-injured"><i class="fas fa-user-injured"></i> {{ report.casualties_injured }} Injured</span>
         </div>
         {% if report.victims_data %}
-        <table class="person-table">
+        <div class="person-table-wrapper"><table class="person-table">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -1338,7 +1369,7 @@
                 </tr>
                 {% endfor %}
             </tbody>
-        </table>
+        </table></div>
         {% elif report.victim_name %}
         <div class="info-grid">
             <div class="info-item">
@@ -1368,11 +1399,11 @@
     <!-- Suspect/Driver Information -->
     <div class="detail-section">
         <h3 class="section-title">
-            <i class="fas fa-user-secret"></i> Suspect / Driver Information
+            <span class="section-icon"><i class="fas fa-user-secret"></i></span> Suspect / Driver Information
             {% if report.suspects_data %}<span class="person-count-badge">{{ report.suspects_data|length }} suspect{{ report.suspects_data|length|pluralize }}</span>{% endif %}
         </h3>
         {% if report.suspects_data %}
-        <table class="person-table">
+        <div class="person-table-wrapper"><table class="person-table">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -1395,7 +1426,7 @@
                 </tr>
                 {% endfor %}
             </tbody>
-        </table>
+        </table></div>
         {% elif report.suspect_name %}
         <div class="info-grid">
             <div class="info-item">
@@ -1420,7 +1451,7 @@
 
     <!-- Vehicle Information -->
     <div class="detail-section">
-        <h3 class="section-title"><i class="fas fa-car"></i> Vehicle Information</h3>
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-car"></i></span> Vehicle Information</h3>
         <div class="info-grid">
             <div class="info-item">
                 <div class="info-label">Vehicle Type</div>
@@ -1467,7 +1498,7 @@
 
     <!-- Narrative -->
     <div class="detail-section">
-        <h3 class="section-title"><i class="fas fa-file-alt"></i> Incident Narrative</h3>
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-file-alt"></i></span> Incident Narrative</h3>
         <div class="description-box">{{ report.incident_description|default:"No description provided." }}</div>
     </div>
     </div><!-- /detail-main -->
@@ -1477,11 +1508,17 @@
 
     <!-- Quick Actions -->
     <div class="sidebar-actions-card detail-section">
-        <h3 class="section-title"><i class="fas fa-bolt"></i> Actions</h3>
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-bolt"></i></span> Actions</h3>
         <div class="action-buttons">
+            {% if is_own_report %}
             <a href="{% url 'my_reports' %}" class="btn-back" style="justify-content: center;">
                 <i class="fas fa-arrow-left"></i> Back to My Reports
             </a>
+            {% else %}
+            <a href="{% url 'pending_reports' %}" class="btn-back" style="justify-content: center;">
+                <i class="fas fa-arrow-left"></i> Back to Reports
+            </a>
+            {% endif %}
             {% if can_edit %}
                 <a href="{% url 'edit_report' report.pk %}" class="btn-back" style="background: #3B82F6; border-color: #3B82F6; color: white; justify-content: center;">
                     <i class="fas fa-redo"></i> Edit &amp; Resubmit
@@ -1511,7 +1548,7 @@
 
     <!-- Photos -->
     <div class="detail-section">
-        <h3 class="section-title"><i class="fas fa-camera"></i> Photos</h3>
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-camera"></i></span> Photos</h3>
         {% if report.photo_1 or report.photo_2 or report.photo_3 %}
         <div class="photo-gallery">
             {% if report.photo_1 %}
@@ -1548,7 +1585,7 @@
 
     <!-- Reporter Information -->
     <div class="detail-section">
-        <h3 class="section-title"><i class="fas fa-user-tie"></i> Reporter Information</h3>
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-user-tie"></i></span> Reporter Information</h3>
         <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:12px;">
             <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#003087,#0052CC);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i class="fas fa-user" style="color:white;font-size:1rem;"></i>
@@ -1677,23 +1714,64 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 {% endif %}
 
-<script>
-function toggleActivityLog() {
-    var timeline = document.querySelector('.activity-timeline');
-    var btn = document.getElementById('activityToggleBtn');
-    var icon = document.getElementById('activityToggleIcon');
-    if (!timeline || !btn) return;
+<!-- Activity Log Modal -->
+{% if activity_logs and activity_logs|length > 1 %}
+<div class="al-modal-overlay" id="activityLogModal">
+    <div class="al-modal">
+        <div class="al-modal-header">
+            <h3><i class="fas fa-history"></i> Activity Log</h3>
+            <button type="button" class="al-modal-close" onclick="closeActivityModal()">&times;</button>
+        </div>
+        <div class="al-modal-body">
+            <div class="al-timeline">
+                {% for log in activity_logs %}
+                <div class="al-item">
+                    <div class="al-icon {{ log.action }}">
+                        {% if log.action == 'submitted' %}<i class="fas fa-paper-plane"></i>
+                        {% elif log.action == 'approved' %}<i class="fas fa-check"></i>
+                        {% elif log.action == 'rejected' %}<i class="fas fa-times"></i>
+                        {% elif log.action == 'resubmitted' %}<i class="fas fa-redo"></i>
+                        {% elif log.action == 'edited' %}<i class="fas fa-edit"></i>
+                        {% endif %}
+                    </div>
+                    <div class="al-content">
+                        <div class="al-action">
+                            <strong>{{ log.get_action_display }}</strong> by {{ log.actor_name }}
+                            {% if log.actor_role %}
+                            <span class="processor-role processor-{{ log.actor.profile.role }}">{{ log.actor_role }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="al-time">{{ log.timestamp|date:"F d, Y" }} at {{ log.timestamp|time:"g:i A" }}</div>
+                        {% if log.details %}
+                        <div class="al-details">{{ log.details }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
-    var isExpanded = timeline.classList.toggle('expanded');
-    if (isExpanded) {
-        icon.className = 'fas fa-chevron-up';
-        btn.innerHTML = '<i class="fas fa-chevron-up" id="activityToggleIcon"></i> Show less';
-    } else {
-        var count = document.querySelectorAll('.activity-item').length;
-        icon.className = 'fas fa-chevron-down';
-        btn.innerHTML = '<i class="fas fa-chevron-down" id="activityToggleIcon"></i> See all (' + count + ')';
-    }
+<script>
+function openActivityModal() {
+    var modal = document.getElementById('activityLogModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    requestAnimationFrame(function() { modal.classList.add('show'); });
 }
+
+function closeActivityModal() {
+    var modal = document.getElementById('activityLogModal');
+    if (!modal) return;
+    modal.classList.remove('show');
+    setTimeout(function() { modal.style.display = 'none'; }, 250);
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeActivityModal();
+});
 
 function openLightbox(url) {
     document.getElementById('lightboxImg').src = url;

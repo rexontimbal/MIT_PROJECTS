@@ -1366,6 +1366,22 @@ body {
     min-height: 500px;
 }
 
+.content-wrapper.content-card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    border: 1px solid #e2e8f0;
+    padding: 1.25rem;
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+[data-theme="dark"] .content-wrapper.content-card {
+    background: #1A2332;
+    border-color: #2D3A4F;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.2);
+}
+
 /* ===== CARDS ===== */
 .card {
     background-color: white;
@@ -1519,7 +1535,12 @@ body {
     .content-wrapper {
         padding: 0;
     }
-    
+
+    .content-wrapper.content-card {
+        padding: 0.75rem;
+        border-radius: 10px;
+    }
+
     .footer-container {
         grid-template-columns: 1fr;
     }
