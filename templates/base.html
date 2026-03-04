@@ -176,6 +176,7 @@
         }
 
         .nav-link {
+            position: relative;
             display: flex;
             align-items: center;
             gap: 0.4rem;
@@ -905,22 +906,31 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, var(--primary-blue) 0%, #001F3F 100%);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
             z-index: 1000;
             padding: 0;
             padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+
+        /* SVG curved notch background */
+        .mobile-nav-bg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 56px;
+            pointer-events: none;
         }
 
         .mobile-bottom-nav-container {
             display: flex;
             justify-content: space-around;
             align-items: center;
-            height: auto;
-            min-height: 64px;
-            padding: 6px 0 4px;
+            height: 54px;
             max-width: 500px;
             margin: 0 auto;
+            position: relative;
+            z-index: 2;
+            padding-top: 10px;
         }
 
         .mobile-nav-item {
@@ -929,26 +939,25 @@
             align-items: center;
             justify-content: center;
             flex: 1;
-            padding: 4px 2px 6px;
-            color: rgba(255,255,255,0.7);
+            padding: 0;
+            color: rgba(255,255,255,0.6);
             text-decoration: none;
-            transition: all 0.2s ease;
+            transition: color 0.2s ease;
             position: relative;
-            min-width: 56px;
         }
 
         .mobile-nav-item i {
-            font-size: 1.2rem;
-            margin-bottom: 4px;
-            transition: transform 0.2s ease;
+            font-size: 1.1rem;
+            margin-bottom: 2px;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
             flex-shrink: 0;
         }
 
         .mobile-nav-item span {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
             line-height: 1;
             white-space: nowrap;
         }
@@ -958,8 +967,8 @@
             color: white;
         }
 
-        .mobile-nav-item:hover i {
-            transform: scale(1.1);
+        .mobile-nav-item:active i {
+            transform: scale(0.88);
         }
 
         .mobile-nav-item.active {
@@ -969,15 +978,16 @@
         .mobile-nav-item.active::before {
             content: '';
             position: absolute;
-            top: 0;
+            bottom: -4px;
             left: 50%;
             transform: translateX(-50%);
-            width: 40px;
+            width: 16px;
             height: 3px;
             background: var(--accent-red);
-            border-radius: 0 0 3px 3px;
+            border-radius: 3px;
         }
 
+        /* Center Report FAB button */
         .mobile-nav-item.report-btn {
             position: relative;
         }
@@ -985,29 +995,42 @@
         .mobile-nav-item.report-btn i {
             background: var(--accent-red);
             color: white;
-            width: 44px;
-            height: 44px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
-            margin-bottom: 2px;
-            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.4);
+            font-size: 1.25rem;
+            margin-bottom: 1px;
+            box-shadow: 0 3px 12px rgba(220, 20, 60, 0.4);
             position: relative;
-            top: -10px;
+            top: -18px;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+        }
+
+        .mobile-nav-item.report-btn:active i {
+            transform: scale(0.9);
+            box-shadow: 0 2px 6px rgba(220, 20, 60, 0.3);
         }
 
         .mobile-nav-item.report-btn span {
-            position: relative;
-            top: -8px;
-            color: var(--accent-red);
-            font-weight: 600;
+            display: none;
         }
 
         /* Dark mode bottom nav */
-        [data-theme="dark"] .mobile-bottom-nav {
-            background: linear-gradient(135deg, #0D1B2A 0%, #1A1A2E 100%);
+        [data-theme="dark"] .mobile-bottom-nav .mobile-nav-bg path {
+            fill: #0D1B2A;
+        }
+
+        [data-theme="dark"] .mobile-nav-item {
+            color: rgba(255,255,255,0.5);
+        }
+
+        [data-theme="dark"] .mobile-nav-item:hover,
+        [data-theme="dark"] .mobile-nav-item:active,
+        [data-theme="dark"] .mobile-nav-item.active {
+            color: white;
         }
 
         /* Show on mobile */
@@ -1018,7 +1041,7 @@
 
             /* Add padding to body to prevent content being hidden behind bottom nav */
             body {
-                padding-bottom: 70px;
+                padding-bottom: 75px;
             }
 
             /* Hide footer on mobile when bottom nav is shown */
@@ -1153,6 +1176,51 @@
             padding: 0 4px;
         }
 
+        /* Unclustered accidents badge on Hotspots nav */
+        .nav-link .unclustered-badge {
+            position: absolute;
+            top: 2px;
+            right: -2px;
+            background: #EF4444;
+            color: white;
+            font-size: 0.55rem;
+            font-weight: 700;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 3px;
+            line-height: 1;
+            animation: unclusteredPulse 2.5s infinite;
+        }
+        .nav-link .unclustered-badge.hidden { display: none; }
+        @keyframes unclusteredPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+            50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+        }
+        /* Mobile bottom nav unclustered badge */
+        .mobile-nav-item .unclustered-badge-mobile {
+            position: absolute;
+            top: -2px;
+            right: 50%;
+            transform: translateX(calc(50% + 10px));
+            background: #EF4444;
+            color: white;
+            font-size: 0.5rem;
+            font-weight: 700;
+            min-width: 14px;
+            height: 14px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 2px;
+            line-height: 1;
+            animation: unclusteredPulse 2.5s infinite;
+        }
+        .mobile-nav-item .unclustered-badge-mobile.hidden { display: none; }
 
         .notifications-menu {
             position: absolute;
@@ -1514,16 +1582,15 @@
         }
 
         .popup-notification {
-            padding: 1rem 1.25rem;
+            padding: 0.85rem 1.25rem;
             border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
-            gap: 1rem;
-            font-size: 1rem;
+            gap: 0.75rem;
+            font-size: 0.95rem;
             font-weight: 500;
-            min-width: 350px;
-            max-width: 560px;
+            white-space: nowrap;
             opacity: 0;
             transform: translateY(-10px);
             transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -1587,7 +1654,37 @@
             flex: 1;
             font-weight: 500;
             line-height: 1.4;
-            word-break: break-word;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .notification-container {
+                top: 62px;
+                left: 8px;
+                right: 8px;
+                transform: none;
+                width: auto;
+            }
+            .popup-notification {
+                white-space: normal;
+                max-width: 100%;
+                font-size: 0.82rem;
+                padding: 0.65rem 0.75rem;
+                border-radius: 10px;
+                gap: 0.5rem;
+                box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+            }
+            .popup-notification-icon {
+                font-size: 1.15rem;
+            }
+            .popup-notification-content {
+                white-space: normal;
+                line-height: 1.35;
+            }
+            .popup-notification-close {
+                font-size: 1.1rem;
+                padding: 0 0.15rem;
+            }
         }
 
     </style>
@@ -1640,6 +1737,7 @@
                     <a href="{% url 'hotspots' %}" class="nav-link {% if request.resolver_match.url_name == 'hotspots' %}active{% endif %}" data-tooltip="Hotspots">
                         <span class="icon"><i class="fas fa-fire"></i></span>
                         <span class="text">Hotspots</span>
+                        {% if header_unclustered_count %}<span class="unclustered-badge">{{ header_unclustered_count }}</span>{% endif %}
                     </a>
                 </li>
 
@@ -1747,7 +1845,7 @@
             <div class="navbar-actions">
                 <!-- Pending Reports Indicator (admin roles only) -->
                 {% if user.profile.role in 'super_admin,regional_director,provincial_chief,station_commander' %}
-                <a href="{% url 'pending_reports' %}?status=pending" class="pending-reports-btn{% if header_pending_count %} has-pending{% endif %}{% if '/manage/pending-reports' in request.path %} is-active-page{% endif %}" id="pendingReportsBtn" title="Pending Reports — {{ header_pending_count|default:'0' }} awaiting review">
+                <a href="{% url 'pending_reports' %}?status=pending" class="pending-reports-btn{% if header_pending_count %} has-pending{% endif %}{% if '/manage/pending-reports' in request.path %} is-active-page{% endif %}" id="pendingReportsBtn" title="Pending Reports — {{ header_pending_count|default:'0' }} awaiting review" style="{% if not header_pending_count %}visibility: hidden;{% endif %}">
                     <i class="fas fa-clipboard-list"></i>
                     <span class="pending-reports-badge" id="pendingReportsBadge" style="{% if header_pending_count %}display: flex;{% else %}display: none;{% endif %}">{{ header_pending_count|default:"0" }}</span>
                 </a>
@@ -1910,7 +2008,7 @@
         {% endif %}
         
         <!-- Page Content -->
-        <div class="content-wrapper">
+        <div class="content-wrapper {% block wrapper_class %}content-card{% endblock %}">
             {% block content %}{% endblock %}
         </div>
     </main>
@@ -1946,6 +2044,10 @@
 
     <!-- Mobile Bottom Navigation (visible only on mobile) -->
     <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <!-- SVG curved notch background -->
+        <svg class="mobile-nav-bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 56" preserveAspectRatio="none">
+            <path d="M0,12 H195 Q205,12 210,16 Q220,28 230,36 Q240,42 250,42 Q260,42 270,36 Q280,28 290,16 Q295,12 305,12 H500 V56 H0 Z" fill="#003087"/>
+        </svg>
         <div class="mobile-bottom-nav-container">
             <a href="{% url 'dashboard' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                 <i class="fas fa-tachometer-alt"></i>
@@ -1966,6 +2068,7 @@
             <a href="{% url 'hotspots' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'hotspots' %}active{% endif %}">
                 <i class="fas fa-fire"></i>
                 <span>Hotspots</span>
+                {% if header_unclustered_count %}<span class="unclustered-badge-mobile">{{ header_unclustered_count }}</span>{% endif %}
             </a>
         </div>
     </nav>
@@ -2189,6 +2292,10 @@
                 }
             }
 
+            function isMobile() {
+                return window.innerWidth <= 768;
+            }
+
             // Handle scroll
             function handleScroll() {
                 const currentScrollY = window.scrollY;
@@ -2202,20 +2309,22 @@
                 // Scrolling up - show header immediately
                 if (currentScrollY < lastScrollY) {
                     showHeader();
-                    // Clear any pending hide timeout
                     if (scrollTimeout) {
                         clearTimeout(scrollTimeout);
                         scrollTimeout = null;
                     }
                 }
-                // Scrolling down - hide after delay
+                // Scrolling down - hide
                 else if (currentScrollY > lastScrollY && currentScrollY > 100) {
-                    // Clear existing timeout
                     if (scrollTimeout) {
                         clearTimeout(scrollTimeout);
                     }
-                    // Set new timeout to hide header
-                    scrollTimeout = setTimeout(hideHeader, 1500);
+                    // Mobile: hide immediately, Desktop: hide after delay
+                    if (isMobile()) {
+                        hideHeader();
+                    } else {
+                        scrollTimeout = setTimeout(hideHeader, 1500);
+                    }
                 }
 
                 lastScrollY = currentScrollY;
@@ -2493,10 +2602,12 @@
                 if (btn && badge) {
                     if (count > 0) {
                         btn.style.visibility = 'visible';
+                        btn.classList.add('has-pending');
                         badge.style.display = 'flex';
                         badge.textContent = count > 99 ? '99+' : count;
                     } else {
                         btn.style.visibility = 'hidden';
+                        btn.classList.remove('has-pending');
                         badge.style.display = 'none';
                     }
                 }

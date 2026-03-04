@@ -469,10 +469,10 @@
     .severity-high { background: #DC143C; }
 
     .hotspot-actions {
-        padding: 0.75rem 1rem;
+        padding: 0.5rem 0.75rem;
         background: #F9FAFB;
         display: flex;
-        gap: 0.5rem;
+        gap: 0.4rem;
         border-top: 1px solid #E5E7EB;
     }
 
@@ -515,8 +515,8 @@
     }
 
     .btn-sm {
-        padding: 0.5rem 1rem;
-        font-size: 0.8125rem;
+        padding: 0.3rem 0.7rem;
+        font-size: 0.72rem;
     }
 
     /* View Toggle - Mini Compact Design */
@@ -622,6 +622,21 @@
         align-items: center;
     }
 
+    .pagination-controls .btn {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        color: var(--text-secondary, #6B7280);
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .pagination-controls .btn:hover {
+        color: var(--hotspot-primary, #003087);
+        background: transparent;
+        border: none;
+    }
+
     .pagination-controls button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -642,6 +657,25 @@
         background: white;
         cursor: pointer;
     }
+
+    /* Ellipsis Pagination Buttons */
+    .hs-page-btn {
+        padding: 0.35rem 0.7rem;
+        border-radius: 6px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        color: #374151;
+        font-size: 0.78rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+    }
+    .hs-page-btn:hover { background: #F3F4F6; border-color: #D1D5DB; }
+    .hs-page-btn.active { background: var(--hotspot-primary); color: white; border-color: var(--hotspot-primary); }
+    .hs-page-btn.disabled { opacity: 0.4; pointer-events: none; }
 
     /* Loading & Empty States */
     .loading-spinner {
@@ -759,7 +793,7 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
-        gap: 0.5rem;
+        gap: 0.35rem;
     }
 
     .hotspot-card.view-list .severity-meter {
@@ -1210,16 +1244,22 @@
         }
 
         .hotspot-actions {
-            padding: 0.5rem 0.75rem;
-            gap: 0.35rem;
+            padding: 0.3rem 0.5rem !important;
+            gap: 0.25rem !important;
         }
 
-        .hotspot-actions .btn {
+        .hotspot-actions .btn,
+        .hotspot-actions .btn-sm,
+        .hotspot-actions .btn-primary,
+        .hotspot-actions .btn-outline {
             flex: 1;
-            padding: 0.28rem 0.4rem;
-            font-size: 0.68rem;
-            gap: 0.25rem;
+            padding: 0.18rem 0.3rem !important;
+            font-size: 0.6rem !important;
+            gap: 0.15rem !important;
             justify-content: center;
+            min-height: unset !important;
+            line-height: 1.2 !important;
+            border-radius: 4px !important;
         }
 
         .hotspots-header {
@@ -1228,12 +1268,42 @@
         }
 
         .pagination-container {
-            flex-direction: column;
-            align-items: stretch;
+            padding: 0.35rem 0.6rem !important;
+            gap: 0.4rem !important;
+            flex-wrap: nowrap !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            white-space: nowrap !important;
+        }
+
+        .pagination-info {
+            font-size: 0.62rem !important;
+            flex-shrink: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .pagination-controls {
-            justify-content: center;
+            flex-shrink: 0;
+            gap: 0.2rem !important;
+        }
+
+        .pagination-controls .btn {
+            padding: 0.15rem 0.35rem !important;
+            font-size: 0.6rem !important;
+        }
+
+        #pageInfo {
+            font-size: 0.62rem !important;
+            padding: 0 0.25rem !important;
+        }
+
+        #itemsPerPage {
+            padding: 0.18rem 0.25rem !important;
+            font-size: 0.62rem !important;
+            flex-shrink: 0;
+            width: auto !important;
         }
 
         .modal-content {
@@ -1303,6 +1373,45 @@
         .hero-actions .btn span:first-child {
             display: none;
         }
+
+        .hotspot-actions {
+            padding: 0.2rem 0.4rem !important;
+            gap: 0.2rem !important;
+        }
+
+        .hotspot-actions .btn,
+        .hotspot-actions .btn-sm,
+        .hotspot-actions .btn-primary,
+        .hotspot-actions .btn-outline {
+            padding: 0.15rem 0.25rem !important;
+            font-size: 0.55rem !important;
+            gap: 0.1rem !important;
+            border-radius: 3px !important;
+        }
+
+        .pagination-container {
+            padding: 0.2rem 0.35rem !important;
+            gap: 0.2rem !important;
+        }
+
+        .pagination-info {
+            font-size: 0.5rem !important;
+        }
+
+        .pagination-controls .btn {
+            padding: 0.1rem 0.2rem !important;
+            font-size: 0.5rem !important;
+        }
+
+        #pageInfo {
+            font-size: 0.5rem !important;
+            padding: 0 0.15rem !important;
+        }
+
+        #itemsPerPage {
+            padding: 0.1rem 0.15rem !important;
+            font-size: 0.5rem !important;
+        }
     }
 
     /* ===== SIMPLE LOADING SPINNER (Analytics Style) ===== */
@@ -1317,7 +1426,7 @@
         display: none;
         align-items: center;
         justify-content: center;
-        z-index: 9999;
+        z-index: 10010;
     }
 
     .loading-overlay.active {
@@ -1898,26 +2007,25 @@
         color: #E8E8E8 !important;
     }
 
-    [data-theme="dark"] #itemsPerPage {
+    [data-theme="dark"] #itemsPerPage,
+    [data-theme="dark"] #itemsPerPageBottom {
         background: #1A2332 !important;
         border-color: #3D4A5F !important;
         color: #E8E8E8 !important;
     }
 
-    [data-theme="dark"] .pagination-controls button {
-        background: #1A2332 !important;
-        border-color: #3D4A5F !important;
-        color: #E8E8E8 !important;
+    [data-theme="dark"] .hs-page-btn {
+        background: #2D3A4F;
+        border-color: #3D4F6B;
+        color: #D1D5DB;
     }
-
-    [data-theme="dark"] .pagination-controls button:hover:not(:disabled) {
-        background: #2D3A4F !important;
-        border-color: #DC143C !important;
+    [data-theme="dark"] .hs-page-btn:hover {
+        background: #374963;
     }
-
-    [data-theme="dark"] .pagination-controls button:disabled {
-        background: #151C28 !important;
-        color: #666 !important;
+    [data-theme="dark"] .hs-page-btn.active {
+        background: #DC143C;
+        border-color: #DC143C;
+        color: white;
     }
 
     /* ===== VIEW TOGGLE DARK MODE ===== */
@@ -2215,7 +2323,7 @@
         <p>High-risk areas identified by AGNES clustering algorithm across Caraga Region</p>
     </div>
     <div class="hero-actions">
-        {% if user.profile.role == 'super_admin' or user.profile.role == 'admin' %}
+        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
         <button class="btn btn-light" onclick="openClusteringModal()" style="background: #fff; color: #DC143C; font-weight: 600;">
             <i class="fas fa-project-diagram"></i>
             Run Clustering
@@ -2364,19 +2472,15 @@
         Showing <span id="showingStart">1</span>-<span id="showingEnd">12</span> of <span id="totalCount">{{ hotspots.count }}</span> hotspots
     </div>
     <div class="pagination-controls">
-        <button id="prevPage" onclick="changePage(-1)" class="btn btn-outline btn-sm" disabled>
-            ← Previous
-        </button>
-        <span id="pageInfo">Page 1</span>
-        <button id="nextPage" onclick="changePage(1)" class="btn btn-outline btn-sm">
-            Next →
-        </button>
+        <button class="btn" onclick="changePage(-1)" id="prevBtn" disabled>← Previous</button>
+        <span id="pageInfo">Page 1 of 1</span>
+        <button class="btn" onclick="changePage(1)" id="nextBtn">Next →</button>
     </div>
     <select id="itemsPerPage" onchange="changeItemsPerPage()">
         <option value="12">12 per page</option>
         <option value="24">24 per page</option>
         <option value="48">48 per page</option>
-        <option value="999999">Show all</option>
+        <option value="999999">All</option>
     </select>
 </div>
 
@@ -2469,15 +2573,20 @@
     <div class="empty-state">
         <h3>No hotspots found</h3>
         <p>Try running the clustering algorithm or adjusting your filters.</p>
+        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
         <button class="btn btn-primary" onclick="openClusteringModal()">
             <i class="fas fa-project-diagram"></i> Run Clustering
         </button>
+        {% endif %}
     </div>
     {% endfor %}
 </div>
 
+<!-- Bottom Pagination -->
+<div id="hsPaginationBottom" style="display: flex; align-items: center; justify-content: center; gap: 0.3rem; margin-top: 1rem; flex-wrap: wrap;"></div>
+
 <!-- Loading Overlay -->
-<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; justify-content: center; align-items: center;">
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 10010; justify-content: center; align-items: center;">
     <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
         <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
         <p style="margin: 0; color: #374151;">Loading hotspots...</p>
@@ -3182,6 +3291,24 @@
         applyClientSideFilters();
     }
 
+    function buildHsPageNumbers(current, total) {
+        if (total <= 7) {
+            var arr = [];
+            for (var i = 1; i <= total; i++) arr.push(i);
+            return arr;
+        }
+        var pages = [1];
+        if (current > 4) pages.push('...');
+        var start = Math.max(2, current - 1);
+        var end = Math.min(total - 1, current + 1);
+        if (current <= 4) { start = 2; end = Math.min(5, total - 1); }
+        if (current >= total - 3) { start = Math.max(total - 4, 2); end = total - 1; }
+        for (var p = start; p <= end; p++) pages.push(p);
+        if (current < total - 3) pages.push('...');
+        pages.push(total);
+        return pages;
+    }
+
     function updatePagination() {
         const cards = Array.from(document.getElementsByClassName('hotspot-card'));
         const searchVisibleCards = cards.filter(card => card.getAttribute('data-search-visible') !== 'false');
@@ -3199,34 +3326,53 @@
             }
         });
 
-        // Update pagination info with correct item ranges
         const showingStart = totalItems > 0 ? startIndex + 1 : 0;
         const showingEnd = Math.min(endIndex, totalItems);
 
+        // Update top pagination (original style: ← Previous | Page X of Y | Next →)
         document.getElementById('showingStart').textContent = showingStart;
         document.getElementById('showingEnd').textContent = showingEnd;
         document.getElementById('totalCount').textContent = totalItems;
-        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
+        document.getElementById('pageInfo').textContent = 'Page ' + currentPage + ' of ' + (totalPages || 1);
+        document.getElementById('prevBtn').disabled = (currentPage <= 1);
+        document.getElementById('nextBtn').disabled = (currentPage >= totalPages);
 
-        document.getElementById('prevPage').disabled = currentPage <= 1;
-        document.getElementById('nextPage').disabled = currentPage >= totalPages;
+        // Build bottom ellipsis pagination
+        var pagHtml = '';
+        if (totalPages > 1) {
+            pagHtml += '<button class="hs-page-btn' + (currentPage === 1 ? ' disabled' : '') + '" onclick="hsGoPage(' + (currentPage - 1) + ')"><i class="fas fa-chevron-left"></i></button>';
+
+            var pages = buildHsPageNumbers(currentPage, totalPages);
+            pages.forEach(function(p) {
+                if (p === '...') {
+                    pagHtml += '<span class="hs-page-btn disabled" style="border:none;background:none;cursor:default;">...</span>';
+                } else {
+                    pagHtml += '<button class="hs-page-btn' + (p === currentPage ? ' active' : '') + '" onclick="hsGoPage(' + p + ')">' + p + '</button>';
+                }
+            });
+
+            pagHtml += '<button class="hs-page-btn' + (currentPage === totalPages ? ' disabled' : '') + '" onclick="hsGoPage(' + (currentPage + 1) + ')"><i class="fas fa-chevron-right"></i></button>';
+        }
+        var pagDivBottom = document.getElementById('hsPaginationBottom');
+        if (pagDivBottom) pagDivBottom.innerHTML = pagHtml;
+
     }
 
-    function changePage(direction) {
+    function hsGoPage(page) {
         showLoading();
-
-        // Small delay to show loading animation
         setTimeout(() => {
-            currentPage += direction;
+            currentPage = page;
             updatePagination();
             hideLoading();
         }, 300);
     }
 
+    function changePage(direction) {
+        hsGoPage(currentPage + direction);
+    }
+
     function changeItemsPerPage() {
         showLoading();
-
-        // Small delay to show loading animation
         setTimeout(() => {
             itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
             currentPage = 1;
@@ -3508,7 +3654,7 @@
 </script>
 
 <!-- Run Clustering Modal -->
-<div id="clusteringModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; align-items: flex-start; justify-content: center; padding-top: 5px; animation: fadeIn 0.3s ease;">
+<div id="clusteringModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10010; align-items: flex-start; justify-content: center; padding-top: 5px; animation: fadeIn 0.3s ease;">
     <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);" onclick="closeClusteringModal()"></div>
     <div style="position: relative; background: white; border-radius: 12px; width: 90%; max-width: 480px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease;">
 

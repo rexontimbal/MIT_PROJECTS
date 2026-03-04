@@ -292,36 +292,270 @@
         color: #2E7D32;
     }
 
-    /* Recommendations Box */
-    .recommendations {
-        background: linear-gradient(135deg, #E8F0FE 0%, #F8F9FA 100%);
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin-top: 2rem;
+    /* Accident Table Pagination */
+    .acc-page-btn {
+        padding: 0.35rem 0.7rem;
+        border-radius: 6px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        color: #374151;
+        font-size: 0.78rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+    }
+    .acc-page-btn:hover { background: #F3F4F6; border-color: #D1D5DB; }
+    .acc-page-btn.active { background: #003087; color: white; border-color: #003087; }
+    .acc-page-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+    [data-theme="dark"] .acc-page-btn { background: #2D3A4F; border-color: #3D4F6B; color: #D1D5DB; }
+    [data-theme="dark"] .acc-page-btn:hover { background: #374963; }
+    [data-theme="dark"] .acc-page-btn.active { background: #3B82F6; border-color: #3B82F6; color: white; }
+    [data-theme="dark"] #accPerPage { background: #2D3A4F; border-color: #3D4F6B; color: #D1D5DB; }
+
+    /* DPWH Recommendations - Print only (hidden on screen) */
+    .rec-print-only {
+        display: none;
     }
 
-    .recommendations h3 {
-        color: var(--primary-blue);
-        margin: 0 0 1rem 0;
-        font-size: 1.125rem;
+    /* Recommendations Action Button */
+    .rec-action-btn {
+        background: #003087 !important;
+        color: white !important;
+        border: none !important;
+    }
+    .rec-action-btn:hover {
+        background: #002060 !important;
+    }
+    [data-theme="dark"] .rec-action-btn {
+        background: #1E3A5F !important;
+    }
+    [data-theme="dark"] .rec-action-btn:hover {
+        background: #2A4A70 !important;
+    }
+
+    /* Recommendations Modal Overlay */
+    .rec-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10020;
+        backdrop-filter: blur(3px);
+    }
+    .rec-modal-overlay.active {
         display: flex;
-        align-items: center;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 2vh;
+        animation: recFadeIn 0.15s ease;
+    }
+    @keyframes recFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes recSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .rec-modal {
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        width: 94%;
+        max-width: 640px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        animation: recSlideUp 0.2s ease;
+    }
+
+    .rec-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 1.2rem 1.4rem 0.6rem;
         gap: 0.5rem;
     }
 
-    .recommendations ul {
+    .rec-modal-title {
         margin: 0;
-        padding-left: 1.5rem;
-        line-height: 1.8;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1F2937;
+        line-height: 1.3;
     }
 
-    .recommendations li {
-        margin-bottom: 0.75rem;
-        color: var(--text-dark);
+    .rec-modal-sub {
+        margin: 0.15rem 0 0;
+        font-size: 0.72rem;
+        color: #6B7280;
     }
 
-    .recommendations li strong {
-        color: var(--primary-blue);
+    .rec-modal-close {
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        border: none;
+        background: #F3F4F6;
+        color: #6B7280;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.9rem;
+        transition: all 0.15s;
+    }
+    .rec-modal-close:hover { background: #E5E7EB; color: #1F2937; }
+
+    .rec-subtitle {
+        font-size: 0.75rem;
+        color: #6B7280;
+        line-height: 1.5;
+        padding: 0 1.4rem;
+    }
+
+    /* Filter pills */
+    .rec-filter-bar {
+        display: flex;
+        gap: 0.4rem;
+        padding: 0 1.4rem;
+        margin-bottom: 0.8rem;
+        flex-wrap: wrap;
+    }
+    .rec-filter-pill {
+        padding: 0.3rem 0.7rem;
+        border-radius: 16px;
+        border: 1px solid #E5E7EB;
+        background: #F9FAFB;
+        color: #6B7280;
+        font-size: 0.72rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .rec-filter-pill:hover { background: #EEF2FF; border-color: #C7D2FE; color: #003087; }
+    .rec-filter-pill.active { background: #003087; border-color: #003087; color: white; }
+
+    /* Scrollable body */
+    .rec-modal-body {
+        overflow-y: auto;
+        padding: 0 1.4rem 1.4rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+
+    /* Recommendation Cards */
+    .rec-card {
+        background: #F9FAFB;
+        border-radius: 10px;
+        padding: 0.9rem 1rem;
+        transition: box-shadow 0.15s;
+    }
+    .rec-card:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+    .rec-card.rec-hidden { display: none; }
+
+    .rec-card-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .rec-icon-wrap {
+        width: 32px; height: 32px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.85rem;
+        background: #EEF2FF;
+        color: #003087;
+    }
+    .rec-priority-critical .rec-icon-wrap { background: #FEF2F2; color: #DC2626; }
+    .rec-priority-high .rec-icon-wrap { background: #FFFBEB; color: #D97706; }
+    .rec-priority-medium .rec-icon-wrap { background: #EEF2FF; color: #3B82F6; }
+
+    .rec-card-info { flex: 1; min-width: 0; }
+
+    .rec-category-tag {
+        display: inline-block;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #6B7280;
+        margin-bottom: 0.1rem;
+    }
+
+    .rec-title {
+        margin: 0;
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: #1F2937;
+        line-height: 1.3;
+    }
+
+    .rec-priority-badge {
+        flex-shrink: 0;
+        padding: 0.18rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .rec-badge-critical { background: #FEE2E2; color: #DC2626; }
+    .rec-badge-high { background: #FEF3C7; color: #D97706; }
+    .rec-badge-medium { background: #DBEAFE; color: #2563EB; }
+
+    .rec-description {
+        font-size: 0.78rem;
+        color: #4B5563;
+        line-height: 1.55;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .rec-card-bottom {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+    }
+
+    .rec-basis {
+        font-size: 0.68rem;
+        color: #059669;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: #ECFDF5;
+        padding: 0.18rem 0.45rem;
+        border-radius: 4px;
+    }
+
+    .rec-ref {
+        font-size: 0.65rem;
+        color: #6B7280;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: #F3F4F6;
+        padding: 0.18rem 0.45rem;
+        border-radius: 4px;
+    }
+
+    @media (max-width: 600px) {
+        .rec-modal { width: 98%; max-height: 95vh; border-radius: 10px; }
+        .rec-modal-header { padding: 1rem 1rem 0.5rem; }
+        .rec-modal-body { padding: 0 1rem 1rem; }
+        .rec-filter-bar { padding: 0 1rem; }
+        .rec-subtitle { padding: 0 1rem; }
+        .rec-card-top { flex-wrap: wrap; }
+        .rec-priority-badge { order: -1; }
+        .rec-card-bottom { flex-direction: column; align-items: flex-start; }
     }
 
     /* Responsive Design */
@@ -437,17 +671,34 @@
             font-size: 8pt !important;
         }
 
-        .recommendations {
+        .rec-modal-overlay { display: none !important; }
+
+        .rec-print-only {
+            display: block !important;
             break-inside: avoid;
             page-break-inside: avoid;
             margin-top: 1rem !important;
             padding: 1rem !important;
+            background: #F3F4F6 !important;
         }
 
-        .recommendations ul {
-            font-size: 9pt !important;
-            line-height: 1.5 !important;
+        .rec-print-only .rec-card {
+            box-shadow: none !important;
+            border: 1px solid #D1D5DB !important;
+            padding: 0.6rem 0.8rem !important;
+            page-break-inside: avoid;
+            background: white !important;
         }
+
+        .rec-print-only .rec-cards { gap: 0.4rem !important; }
+
+        .rec-print-only .rec-description,
+        .rec-print-only .rec-basis,
+        .rec-print-only .rec-ref {
+            font-size: 8pt !important;
+        }
+
+        .rec-print-only .rec-title { font-size: 9pt !important; }
 
         /* Print header */
         .detail-header::before {
@@ -525,18 +776,44 @@
         color: #E8E8E8;
     }
 
-    [data-theme="dark"] .recommendations {
-        background: #1E2A3A;
-        border-color: #2D3A4F;
+    [data-theme="dark"] .rec-modal {
+        background: #1A2332;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
     }
 
-    [data-theme="dark"] .recommendations h3 {
-        color: #FFFFFF;
-    }
+    [data-theme="dark"] .rec-modal-title { color: #F3F4F6; }
+    [data-theme="dark"] .rec-modal-sub { color: #9CA3AF; }
+    [data-theme="dark"] .rec-modal-close { background: #2D3A4F; color: #9CA3AF; }
+    [data-theme="dark"] .rec-modal-close:hover { background: #374963; color: #F3F4F6; }
 
-    [data-theme="dark"] .recommendations li {
-        color: #E8E8E8;
-    }
+    [data-theme="dark"] .rec-subtitle { color: #9CA3AF; }
+
+    [data-theme="dark"] .rec-filter-pill { background: #2D3A4F; border-color: #3D4F6B; color: #D1D5DB; }
+    [data-theme="dark"] .rec-filter-pill:hover { background: #374963; border-color: #4A6080; color: #F3F4F6; }
+    [data-theme="dark"] .rec-filter-pill.active { background: #3B82F6; border-color: #3B82F6; color: white; }
+
+    [data-theme="dark"] .rec-card { background: #243447; }
+    [data-theme="dark"] .rec-card:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+
+    [data-theme="dark"] .rec-title { color: #F3F4F6; }
+    [data-theme="dark"] .rec-category-tag { color: #9CA3AF; }
+    [data-theme="dark"] .rec-description { color: #D1D5DB; }
+
+    [data-theme="dark"] .rec-icon-wrap { background: #2D3A4F; }
+    [data-theme="dark"] .rec-priority-critical .rec-icon-wrap { background: #4C1D1D; }
+    [data-theme="dark"] .rec-priority-high .rec-icon-wrap { background: #4C3A1D; }
+    [data-theme="dark"] .rec-priority-medium .rec-icon-wrap { background: #1E3A5F; }
+
+    [data-theme="dark"] .rec-basis { background: #064E3B; color: #6EE7B7; }
+    [data-theme="dark"] .rec-ref { background: #2D3A4F; color: #9CA3AF; }
+
+    [data-theme="dark"] .rec-badge-critical { background: #4C1D1D; color: #FCA5A5; }
+    [data-theme="dark"] .rec-badge-high { background: #4C3A1D; color: #FCD34D; }
+    [data-theme="dark"] .rec-badge-medium { background: #1E3A5F; color: #93C5FD; }
+
+    /* Print-only section dark mode (not needed but for completeness) */
+    [data-theme="dark"] .rec-print-only { background: #1E2A3A; }
+    [data-theme="dark"] .rec-print-only .rec-header h3 { color: #FFFFFF; }
 
     [data-theme="dark"] .accident-item,
     [data-theme="dark"] .list-item {
@@ -871,6 +1148,12 @@
                     <span>🖨️</span>
                     <span>Print Report</span>
                 </button>
+                {% if recommendations %}
+                <button onclick="openRecModal()" class="action-btn rec-action-btn">
+                    <span><i class="fas fa-clipboard-check"></i></span>
+                    <span>Recommendations ({{ recommendations|length }})</span>
+                </button>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -972,7 +1255,7 @@
         <div class="section-header">
             <h3 class="section-title">
                 <span>📋</span>
-                <span>Accidents in This Hotspot{% if showing_count < total_accidents %} (Showing {{ showing_count }} of {{ total_accidents }}){% else %} ({{ total_accidents }}){% endif %}</span>
+                <span>Accidents in This Hotspot (<span id="accPageInfo">{{ total_accidents }}</span>)</span>
             </h3>
             <a href="{% url 'hotspots' %}" class="action-btn" style="padding: 0.5rem 1rem; font-size: 0.813rem;">
                 <span>←</span>
@@ -1034,31 +1317,186 @@
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <!-- Recommendations -->
-    <div class="recommendations">
-        <h3>
-            <span>💡</span>
-            <span>Recommended Actions</span>
-        </h3>
-        <ul>
-            <li><strong>Increase Patrol Frequency:</strong> Deploy traffic enforcers during peak hours</li>
-            <li><strong>Infrastructure Review:</strong> Assess road conditions, signage, and lighting in this area</li>
-            <li><strong>Speed Enforcement:</strong> Install speed cameras or conduct regular speed checks</li>
-            <li><strong>Public Awareness:</strong> Inform motorists about this high-risk location</li>
-            <li><strong>Multi-Agency Coordination:</strong> Work with {{ hotspot.municipalities|join:" and " }} for joint road safety initiatives</li>
-        </ul>
+        <!-- Pagination Controls -->
+        <div id="accPaginationWrap" style="margin-top: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                <div id="accShowingText" style="color: #6B7280; font-size: 0.85rem;">
+                    <i class="fas fa-info-circle"></i> Showing 1-15 of {{ total_accidents }} accidents
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem;">
+                    <span style="color: #6B7280;">Show</span>
+                    <select id="accPerPage" onchange="accChangePerPage()" style="padding: 0.3rem 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.82rem; color: #374151; cursor: pointer; background: white;">
+                        <option value="15" selected>15</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                        <option value="all">All</option>
+                    </select>
+                    <span style="color: #6B7280;">per page</span>
+                </div>
+            </div>
+            <div id="accPagination" class="acc-pagination" style="display: flex; align-items: center; justify-content: center; gap: 0.3rem; margin-top: 0.75rem; flex-wrap: wrap;"></div>
+        </div>
     </div>
 
 </div>
+
+<!-- DPWH Recommendations Modal -->
+{% if recommendations %}
+<div class="rec-modal-overlay" id="recModalOverlay" onclick="if(event.target===this)closeRecModal()">
+    <div class="rec-modal">
+        <div class="rec-modal-header">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: #EEF2FF; color: #003087; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div>
+                    <h3 class="rec-modal-title">DPWH Road Safety Intervention Recommendations</h3>
+                    <p class="rec-modal-sub">{{ hotspot.primary_location }} — {{ total_accidents }} recorded incident{{ total_accidents|pluralize }}</p>
+                </div>
+            </div>
+            <button class="rec-modal-close" onclick="closeRecModal()" title="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <p class="rec-subtitle" style="margin: 0 0 1rem 0; padding: 0 0.2rem;">Aligned with DPWH Highway Safety Design Standards (DO 041-S2012) and iRAP framework.</p>
+
+        <!-- Priority Filter Pills (counts populated by JS) -->
+        <div class="rec-filter-bar" id="recFilterBar">
+            <button class="rec-filter-pill active" data-filter="all" onclick="filterRecs('all')">All ({{ recommendations|length }})</button>
+        </div>
+
+        <div class="rec-modal-body" id="recModalBody">
+            {% for rec in recommendations %}
+            <div class="rec-card rec-priority-{{ rec.priority|lower }}" data-priority="{{ rec.priority|lower }}">
+                <div class="rec-card-top">
+                    <div class="rec-icon-wrap">
+                        <i class="fas {{ rec.icon }}"></i>
+                    </div>
+                    <div class="rec-card-info">
+                        <span class="rec-category-tag">{{ rec.category }}</span>
+                        <h4 class="rec-title">{{ rec.title }}</h4>
+                    </div>
+                    <span class="rec-priority-badge rec-badge-{{ rec.priority|lower }}">{{ rec.priority }}</span>
+                </div>
+                <p class="rec-description">{{ rec.description }}</p>
+                <div class="rec-card-bottom">
+                    <span class="rec-basis"><i class="fas fa-chart-bar"></i> {{ rec.basis }}</span>
+                    <span class="rec-ref"><i class="fas fa-book"></i> {{ rec.dpwh_ref }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Print-only Recommendations (visible only when printing) -->
+<div class="recommendations rec-print-only">
+    <div class="rec-header">
+        <h3>
+            <span><i class="fas fa-clipboard-check"></i></span>
+            <span>DPWH Road Safety Intervention Recommendations</span>
+        </h3>
+        <p class="rec-subtitle">Based on accident pattern analysis of {{ total_accidents }} recorded incident{{ total_accidents|pluralize }}. Aligned with DPWH DO 041-S2012 and iRAP framework.</p>
+    </div>
+    {% if recommendations %}
+    <div class="rec-cards">
+        {% for rec in recommendations %}
+        <div class="rec-card rec-priority-{{ rec.priority|lower }}">
+            <div class="rec-card-top">
+                <div class="rec-icon-wrap">
+                    <i class="fas {{ rec.icon }}"></i>
+                </div>
+                <div class="rec-card-info">
+                    <span class="rec-category-tag">{{ rec.category }}</span>
+                    <h4 class="rec-title">{{ rec.title }}</h4>
+                </div>
+                <span class="rec-priority-badge rec-badge-{{ rec.priority|lower }}">{{ rec.priority }}</span>
+            </div>
+            <p class="rec-description">{{ rec.description }}</p>
+            <div class="rec-card-bottom">
+                <span class="rec-basis"><i class="fas fa-chart-bar"></i> {{ rec.basis }}</span>
+                <span class="rec-ref"><i class="fas fa-book"></i> {{ rec.dpwh_ref }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// ============================================
+// RECOMMENDATIONS MODAL
+// ============================================
+function openRecModal() {
+    var overlay = document.getElementById('recModalOverlay');
+    if (overlay) {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeRecModal() {
+    var overlay = document.getElementById('recModalOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+function filterRecs(priority) {
+    var cards = document.querySelectorAll('#recModalBody .rec-card');
+    cards.forEach(function(card) {
+        if (priority === 'all' || card.getAttribute('data-priority') === priority) {
+            card.classList.remove('rec-hidden');
+        } else {
+            card.classList.add('rec-hidden');
+        }
+    });
+    // Update active pill
+    document.querySelectorAll('.rec-filter-pill').forEach(function(pill) {
+        pill.classList.toggle('active', pill.getAttribute('data-filter') === priority);
+    });
+}
+
+// Build filter pills dynamically on load
+function initRecFilters() {
+    var bar = document.getElementById('recFilterBar');
+    if (!bar) return;
+    var cards = document.querySelectorAll('#recModalBody .rec-card');
+    var counts = { critical: 0, high: 0, medium: 0 };
+    cards.forEach(function(card) {
+        var p = card.getAttribute('data-priority');
+        if (counts[p] !== undefined) counts[p]++;
+    });
+    var labels = { critical: 'Critical', high: 'High', medium: 'Medium' };
+    var colors = { critical: '#DC2626', high: '#D97706', medium: '#3B82F6' };
+    ['critical', 'high', 'medium'].forEach(function(p) {
+        if (counts[p] > 0) {
+            var btn = document.createElement('button');
+            btn.className = 'rec-filter-pill';
+            btn.setAttribute('data-filter', p);
+            btn.onclick = function() { filterRecs(p); };
+            btn.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + colors[p] + ';margin-right:4px;"></span>' + labels[p] + ' (' + counts[p] + ')';
+            bar.appendChild(btn);
+        }
+    });
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeRecModal();
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Set date for print footer
     document.querySelector('.detail-container').setAttribute('data-date', new Date().toLocaleDateString('en-US', { dateStyle: 'full' }));
+
+    // Init recommendation filter pills
+    initRecFilters();
 
     // Initialize Trend Chart
     createTrendChart();
@@ -1072,29 +1510,69 @@ document.addEventListener('DOMContentLoaded', function() {
             maxZoom: 18
         }).addTo(map);
 
-        // Add hotspot boundary circle (lighter, in background)
-        const circle = L.circle([{{ hotspot.center_latitude }}, {{ hotspot.center_longitude }}], {
-            color: '#FFA500',
-            fillColor: '#FFA500',
-            fillOpacity: 0.15,
-            radius: {{ hotspot.accident_count }} * 30,
-            weight: 2,
-            opacity: 0.5
+        // Add hotspot boundary circle sized to cover all accidents
+        // Calculate radius from center to the farthest cluster bound corner
+        const centerLat = {{ hotspot.center_latitude }};
+        const centerLng = {{ hotspot.center_longitude }};
+        const corners = [
+            [{{ hotspot.min_latitude }}, {{ hotspot.min_longitude }}],
+            [{{ hotspot.min_latitude }}, {{ hotspot.max_longitude }}],
+            [{{ hotspot.max_latitude }}, {{ hotspot.min_longitude }}],
+            [{{ hotspot.max_latitude }}, {{ hotspot.max_longitude }}]
+        ];
+        let maxDist = 0;
+        corners.forEach(function(c) {
+            const d = map.distance([centerLat, centerLng], c);
+            if (d > maxDist) maxDist = d;
+        });
+        // Add 10% padding so edge markers aren't clipped
+        const circleRadius = maxDist * 1.1;
+
+        // Match main map color scheme by severity
+        const severity = {{ hotspot.severity_score|floatformat:1 }};
+        let hotspotColor;
+        if (severity >= 70) {
+            hotspotColor = '#DC143C'; // Critical - Red
+        } else if (severity >= 50) {
+            hotspotColor = '#FFA500'; // High - Orange
+        } else {
+            hotspotColor = '#28A745'; // Medium - Green
+        }
+
+        const riskLevel = severity >= 70 ? 'CRITICAL' : severity >= 50 ? 'HIGH' : 'MEDIUM';
+
+        const circle = L.circle([centerLat, centerLng], {
+            color: hotspotColor,
+            fillColor: hotspotColor,
+            fillOpacity: 0.2,
+            radius: circleRadius,
+            weight: 2
         }).addTo(map);
 
         circle.bindPopup(`
-            <div style="padding: 0.5rem;">
-                <strong>Hotspot #{{ hotspot.cluster_id }}</strong><br>
-                {{ hotspot.primary_location }}<br>
-                <strong>{{ hotspot.accident_count }}</strong> accidents<br>
-                Severity: <strong>{{ hotspot.severity_score|floatformat:1 }}</strong>/100
+            <div class="marker-popup" style="min-width: 220px;">
+                <div style="background: linear-gradient(135deg, ${hotspotColor}, ${hotspotColor}99); padding: 0.5rem 0.75rem; border-radius: 8px 8px 0 0; color: white; font-weight: 700; font-size: 0.85rem;">
+                    🔥 ${riskLevel} HOTSPOT
+                </div>
+                <div style="padding: 0.6rem 0.75rem; font-size: 0.8rem; line-height: 1.7;">
+                    <strong>📍 Location:</strong> {{ hotspot.primary_location }}<br>
+                    <strong>📊 Accidents:</strong> {{ hotspot.accident_count }}<br>
+                    <strong>👥 Casualties:</strong> {{ hotspot.total_casualties }}<br>
+                    <strong>⚡ Severity:</strong> {{ hotspot.severity_score|floatformat:1 }}/100<br>
+                    <strong>📏 Coverage:</strong> ${Math.round(circleRadius)}m radius
+                </div>
             </div>
-        `);
+        `, { maxWidth: 300 });
+
+        circle.on('mouseover', function() {
+            this.setStyle({ fillOpacity: 0.35, weight: 3 });
+        });
+        circle.on('mouseout', function() {
+            this.setStyle({ fillOpacity: 0.2, weight: 2 });
+        });
 
         // Add individual accident markers with color coding
         const accidents = {{ accidents_json|safe }};
-        const hotspotCenter = [{{ hotspot.center_latitude }}, {{ hotspot.center_longitude }}];
-        const circleRadius = {{ hotspot.accident_count }} * 30; // in meters
 
         const markers = L.markerClusterGroup({
             maxClusterRadius: 50,
@@ -1103,71 +1581,65 @@ document.addEventListener('DOMContentLoaded', function() {
             zoomToBoundsOnClick: true
         });
 
-        // Helper function to calculate distance between two points
-        function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371000; // Earth's radius in meters
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                     Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        let accidentsInCircle = 0;
         accidents.forEach(function(accident) {
-            // Calculate distance from accident to hotspot center
-            const distance = getDistance(
-                hotspotCenter[0], hotspotCenter[1],
-                accident.latitude, accident.longitude
-            );
+            // Match main map marker colors and icons
+            let markerColor = '#6C757D'; // Gray - Property damage
+            let markerSize = 12;
+            let markerIcon = 'fa-car-crash';
+            let severity = 'Property Damage';
 
-            // Only show accidents within the circle boundary
-            if (distance <= circleRadius) {
-                accidentsInCircle++;
-
-                // Determine marker color based on severity
-                let markerColor = '#3388ff'; // Default blue
-                let severity = 'Property Damage';
-
-                if (accident.victim_killed) {
-                    markerColor = '#DC143C'; // Red for fatal
-                    severity = 'Fatal';
-                } else if (accident.victim_injured) {
-                    markerColor = '#FFA500'; // Orange for injury
-                    severity = 'Injury';
-                }
-
-                // Create custom icon
-                const customIcon = L.divIcon({
-                    className: 'custom-marker',
-                    html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
-                    iconSize: [12, 12],
-                    iconAnchor: [6, 6]
-                });
-
-                const marker = L.marker([accident.latitude, accident.longitude], {
-                    icon: customIcon
-                });
-
-                marker.bindPopup(`
-                    <div style="padding: 0.5rem; min-width: 200px;">
-                        <strong style="color: ${markerColor};">${severity} Accident</strong><br>
-                        <strong>Date:</strong> ${accident.date_committed}<br>
-                        <strong>Location:</strong> ${accident.barangay}, ${accident.municipal}<br>
-                        <strong>Type:</strong> ${accident.incident_type}<br>
-                        <strong>Casualties:</strong> ${accident.victim_count}
-                    </div>
-                `);
-
-                markers.addLayer(marker);
+            if (accident.victim_killed) {
+                markerColor = '#DC143C'; // Red for fatal
+                markerSize = 14;
+                markerIcon = 'fa-skull-crossbones';
+                severity = 'Fatal';
+            } else if (accident.victim_injured) {
+                markerColor = '#FFA500'; // Orange for injury
+                markerSize = 13;
+                markerIcon = 'fa-user-injured';
+                severity = 'Injury';
             }
+
+            // Create custom icon matching main map style
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background-color: ${markerColor}; width: ${markerSize}px; height: ${markerSize}px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); cursor: pointer;"></div>`,
+                iconSize: [markerSize + 4, markerSize + 4],
+                iconAnchor: [(markerSize + 4) / 2, (markerSize + 4) / 2]
+            });
+
+            const marker = L.marker([accident.latitude, accident.longitude], {
+                icon: customIcon
+            });
+
+            marker.bindPopup(`
+                <div style="padding: 0.5rem; min-width: 200px;">
+                    <strong style="color: ${markerColor};">${severity} Accident</strong><br>
+                    <strong>Date:</strong> ${accident.date_committed}<br>
+                    <strong>Location:</strong> ${accident.barangay}, ${accident.municipal}<br>
+                    <strong>Type:</strong> ${accident.incident_type}<br>
+                    <strong>Casualties:</strong> ${accident.victim_count}
+                </div>
+            `);
+
+            markers.addLayer(marker);
         });
 
         map.addLayer(markers);
 
-        console.log('Map loaded successfully with ' + accidentsInCircle + ' accidents inside circle (out of ' + accidents.length + ' total)');
+        // Add "View in Main Map" control button inside the map
+        const ViewMapControl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function() {
+                const btn = L.DomUtil.create('div', 'leaflet-bar');
+                btn.innerHTML = '<a href="/map/?cluster_id={{ hotspot.cluster_id }}&source=detail" title="Open in Main Map" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:white;color:#003087;font-size:16px;text-decoration:none;border-radius:4px;"><i class="fas fa-map-marked-alt"></i></a>';
+                L.DomEvent.disableClickPropagation(btn);
+                return btn;
+            }
+        });
+        map.addControl(new ViewMapControl());
+
+        console.log('Map loaded successfully with ' + accidents.length + ' accidents');
     } catch (error) {
         console.error('Map initialization error:', error);
     }
@@ -1255,7 +1727,129 @@ function createTrendChart() {
     }
 }
 
-// Table Sorting Function
+// ============================================
+// ACCIDENT TABLE PAGINATION
+// ============================================
+let accCurrentPage = 1;
+let accPerPage = 15;
+let accAllRows = [];
+
+function initAccPagination() {
+    var tbody = document.getElementById('accidentsTableBody');
+    if (!tbody) return;
+    accAllRows = Array.from(tbody.querySelectorAll('tr'));
+    accRenderPage();
+}
+
+function accRenderPage() {
+    var tbody = document.getElementById('accidentsTableBody');
+    var total = accAllRows.length;
+    if (total === 0) return;
+
+    var showAll = (accPerPage === 'all');
+    var perPage = showAll ? total : accPerPage;
+    var totalPages = showAll ? 1 : Math.ceil(total / perPage);
+    if (accCurrentPage > totalPages) accCurrentPage = totalPages;
+
+    var start = (accCurrentPage - 1) * perPage;
+    var end = showAll ? total : Math.min(start + perPage, total);
+
+    // Show/hide rows
+    accAllRows.forEach(function(row, i) {
+        row.style.display = (i >= start && i < end) ? '' : 'none';
+    });
+
+    // Update info text
+    var infoEl = document.getElementById('accShowingText');
+    if (infoEl) {
+        infoEl.innerHTML = showAll
+            ? '<i class="fas fa-info-circle"></i> Showing all ' + total + ' accidents'
+            : '<i class="fas fa-info-circle"></i> Showing ' + (start + 1) + '-' + end + ' of ' + total + ' accidents';
+    }
+
+    // Update header count
+    var headerInfo = document.getElementById('accPageInfo');
+    if (headerInfo) {
+        headerInfo.textContent = total;
+    }
+
+    // Build pagination buttons HTML
+    var pagHtml = '';
+    if (totalPages > 1) {
+        // Prev
+        pagHtml += '<button class="acc-page-btn' + (accCurrentPage === 1 ? ' disabled' : '') + '" onclick="accGoPage(' + (accCurrentPage - 1) + ')"><i class="fas fa-chevron-left"></i></button>';
+
+        // Page numbers with ellipsis
+        var pages = buildPageNumbers(accCurrentPage, totalPages);
+        pages.forEach(function(p) {
+            if (p === '...') {
+                pagHtml += '<span class="acc-page-btn disabled" style="border:none;background:none;cursor:default;padding:0.35rem 0.4rem;">...</span>';
+            } else {
+                pagHtml += '<button class="acc-page-btn' + (p === accCurrentPage ? ' active' : '') + '" onclick="accGoPage(' + p + ')">' + p + '</button>';
+            }
+        });
+
+        // Next
+        pagHtml += '<button class="acc-page-btn' + (accCurrentPage === totalPages ? ' disabled' : '') + '" onclick="accGoPage(' + (accCurrentPage + 1) + ')"><i class="fas fa-chevron-right"></i></button>';
+    }
+
+    // Apply pagination
+    var pagDiv = document.getElementById('accPagination');
+    if (pagDiv) pagDiv.innerHTML = pagHtml;
+}
+
+// Build page numbers with ellipsis: [1, 2, 3, '...', 7, 8]
+function buildPageNumbers(current, total) {
+    if (total <= 7) {
+        var arr = [];
+        for (var i = 1; i <= total; i++) arr.push(i);
+        return arr;
+    }
+    var pages = [];
+    // Always show first page
+    pages.push(1);
+    // Left ellipsis
+    if (current > 4) {
+        pages.push('...');
+    }
+    // Middle pages around current
+    var start = Math.max(2, current - 1);
+    var end = Math.min(total - 1, current + 1);
+    // Extend range near edges
+    if (current <= 4) { start = 2; end = Math.min(5, total - 1); }
+    if (current >= total - 3) { start = Math.max(total - 4, 2); end = total - 1; }
+    for (var p = start; p <= end; p++) {
+        pages.push(p);
+    }
+    // Right ellipsis
+    if (current < total - 3) {
+        pages.push('...');
+    }
+    // Always show last page
+    pages.push(total);
+    return pages;
+}
+
+function accGoPage(page) {
+    accCurrentPage = page;
+    accRenderPage();
+    // Scroll to table
+    document.getElementById('accidentsTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function accChangePerPage() {
+    var val = document.getElementById('accPerPage').value;
+    accPerPage = val === 'all' ? 'all' : parseInt(val);
+    accCurrentPage = 1;
+    accRenderPage();
+}
+
+// Init on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initAccPagination();
+});
+
+// Table Sorting Function (re-paginate after sort)
 let sortDirection = {};
 
 function sortTable(columnIndex) {
@@ -1294,6 +1888,11 @@ function sortTable(columnIndex) {
 
     // Re-append sorted rows
     rows.forEach(row => tbody.appendChild(row));
+
+    // Refresh pagination with new row order
+    accAllRows = Array.from(tbody.querySelectorAll('tr'));
+    accCurrentPage = 1;
+    accRenderPage();
 
     // Visual feedback - update header arrows
     const headers = table.querySelectorAll('th');

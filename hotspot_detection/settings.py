@@ -35,8 +35,6 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
-    'cloudinary',
-    'cloudinary_storage',
 
     # Local apps
     'accidents',
@@ -103,10 +101,13 @@ if 'test' in sys.argv or 'test_coverage' in sys.argv:
     }
 
 # Use DATABASE_URL if provided (Railway, Heroku, etc.)
-import dj_database_url
 _database_url = config('DATABASE_URL', default=None)
 if _database_url:
-    DATABASES['default'] = dj_database_url.config(default=_database_url, conn_max_age=600, ssl_require=True)
+    try:
+        import dj_database_url
+        DATABASES['default'] = dj_database_url.config(default=_database_url, conn_max_age=600, ssl_require=True)
+    except ImportError:
+        pass  # dj-database-url not installed locally, using DB_* settings above
 
 # ==============================================================================
 # PASSWORD VALIDATION
@@ -174,6 +175,8 @@ CLOUDINARY_API_KEY     = config('CLOUDINARY_API_KEY', default='')
 CLOUDINARY_API_SECRET   = config('CLOUDINARY_API_SECRET', default='')
 
 if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    # Only active on Railway when env vars are set — ignored in local dev
+    INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
     CLOUDINARY_STORAGE = {
         'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
         'API_KEY':    CLOUDINARY_API_KEY,

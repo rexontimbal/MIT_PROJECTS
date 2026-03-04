@@ -1186,7 +1186,7 @@
             <a href="{% url 'map_view' %}?lat={{ accident.latitude }}&lng={{ accident.longitude }}&zoom=16&accident_id={{ accident.id }}&single=true&source=detail" class="btn-action btn-map">
                 <i class="fas fa-map-marked-alt"></i> View on Map
             </a>
-            {% if user.profile.role == 'super_admin' %}
+            {% if can_edit_accident %}
             <button onclick="openEditModal({{ accident.id }})" class="btn-action btn-edit">
                 <i class="fas fa-edit"></i> Edit Record
             </button>
@@ -1357,7 +1357,7 @@
             </div>
             {% endif %}
 
-            {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' or user.profile.role == 'provincial_chief' or user.profile.role == 'station_commander' %}
+            {% if can_edit_accident %}
             <div style="margin-top: 0.75rem;">
                 <button type="button" onclick="openCaseStatusModal()" style="
                     width: 100%; padding: 0.5rem; border: 1px solid #D1D5DB; background: #F9FAFB;
@@ -2124,7 +2124,7 @@ document.addEventListener('DOMContentLoaded', function() {
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 10000;
+    z-index: 10010;
     align-items: flex-start;
     justify-content: center;
     padding-top: 5px;

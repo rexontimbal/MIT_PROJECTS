@@ -677,7 +677,7 @@ class UserProfile(models.Model):
 
     UNIT_CHOICES = [
         ('', '--- Select Unit ---'),
-        # Regional Divisions
+        # Regional Directorial Staff Divisions (R1-R9)
         ('R1 - Regional Personnel and Records Management Division', 'R1 - Regional Personnel and Records Management Division'),
         ('R2 - Regional Intelligence Division', 'R2 - Regional Intelligence Division'),
         ('R3 - Regional Operation Management Division', 'R3 - Regional Operation Management Division'),
@@ -687,16 +687,33 @@ class UserProfile(models.Model):
         ('R7 - Regional Investigation Detective Management Division', 'R7 - Regional Investigation Detective Management Division'),
         ('R8 - Regional Learning and Doctrine Development Division', 'R8 - Regional Learning and Doctrine Development Division'),
         ('R9 - Regional Plans and Strategy Management Division', 'R9 - Regional Plans and Strategy Management Division'),
-        # Support Units
+        # Regional Support Units/Offices
         ('Regional Headquarters Support Unit', 'Regional Headquarters Support Unit'),
         ('Regional Information and Communication Technology Management Division', 'Regional Information and Communication Technology Management Division'),
         ('Regional Health Service', 'Regional Health Service'),
         ('Public Information Office', 'Public Information Office'),
+        # Operational/Special Units
+        ('Regional Mobile Force Battalion', 'Regional Mobile Force Battalion'),
+        ('Regional Drug Enforcement Unit', 'Regional Drug Enforcement Unit'),
+        ('Regional Highway Patrol Unit', 'Regional Highway Patrol Unit'),
+        ('Regional Maritime Unit', 'Regional Maritime Unit'),
+        ('Regional Criminal Investigation and Detection Unit', 'Regional Criminal Investigation and Detection Unit'),
+        ('Regional Forensic Unit', 'Regional Forensic Unit'),
+        ('Regional Special Operations Unit', 'Regional Special Operations Unit'),
+        ('Women and Children Protection Center', 'Women and Children Protection Center'),
+        # Administrative Support Services
+        ('Regional Internal Affairs Service', 'Regional Internal Affairs Service'),
+        ('Regional Legal Service', 'Regional Legal Service'),
+        ('Regional Finance Service', 'Regional Finance Service'),
+        ('Regional Chaplain Service', 'Regional Chaplain Service'),
+        ('Regional Communications and Electronics Unit', 'Regional Communications and Electronics Unit'),
+        ('Regional Personnel Holding and Accounting Unit', 'Regional Personnel Holding and Accounting Unit'),
         # Provincial/City Police Offices
         ('Surigao del Norte Police Provincial Office', 'Surigao del Norte Police Provincial Office'),
         ('Surigao del Sur Police Provincial Office', 'Surigao del Sur Police Provincial Office'),
         ('Agusan del Norte Police Provincial Office', 'Agusan del Norte Police Provincial Office'),
         ('Agusan del Sur Police Provincial Office', 'Agusan del Sur Police Provincial Office'),
+        ('Dinagat Islands Police Provincial Office', 'Dinagat Islands Police Provincial Office'),
         ('Butuan City Police Office', 'Butuan City Police Office'),
     ]
 
@@ -814,11 +831,11 @@ class UserProfile(models.Model):
         if self.role in ['super_admin', 'regional_director', 'data_encoder']:
             return True
         if self.role == 'provincial_chief':
-            return accident.province == self.province
+            return (accident.province or '').upper() == (self.province or '').upper()
         if self.role == 'station_commander':
-            return accident.station == self.station
+            return (accident.station or '') == (self.station or '')
         if self.role == 'traffic_officer':
-            return accident.station == self.station
+            return (accident.station or '') == (self.station or '')
         return False
 
     def is_account_locked(self):

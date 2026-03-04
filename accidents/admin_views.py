@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from datetime import timedelta
 import json
+import re
 
 from .models import (
     UserProfile, AuditLog, ClusteringJob,
@@ -153,8 +154,16 @@ def user_management(request):
     elif status_filter == 'inactive':
         users = users.filter(is_active=False)
 
-    # Pagination
-    paginator = Paginator(users, 20)  # 20 users per page
+    # Pagination with configurable per-page
+    per_page = request.GET.get('per_page', '10')
+    try:
+        per_page = int(per_page)
+        if per_page not in [10, 20, 50]:
+            per_page = 10
+    except (ValueError, TypeError):
+        per_page = 10
+
+    paginator = Paginator(users, per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -167,7 +176,9 @@ def user_management(request):
         'role_filter': role_filter,
         'status_filter': status_filter,
         'roles': roles,
+        'ranks': UserProfile.RANK_CHOICES,
         'total_count': users.count(),
+        'per_page': per_page,
     }
 
     return render(request, 'admin_panel/user_management.html', context)
@@ -424,6 +435,8 @@ def user_create(request):
     """Create new user"""
     import re
 
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -431,8 +444,23 @@ def user_create(request):
         email = request.POST.get('email', '')
         first_name = request.POST.get('first_name', '')
         last_name = request.POST.get('last_name', '')
-        badge_number = request.POST.get('badge_number', '')
+        badge_number = request.POST.get('badge_number', '').strip().upper()
         mobile_number = request.POST.get('mobile_number', '')
+
+        # Validate badge number format (4-8 alphanumeric characters)
+        badge_clean = re.sub(r'[^a-zA-Z0-9]', '', badge_number)
+        if len(badge_clean) < 4 or len(badge_clean) > 8:
+            error_msg = 'Badge number must be 4-8 alphanumeric characters.'
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': error_msg, 'field': 'badge_number'})
+            messages.error(request, error_msg)
+            context = {
+                'ranks': UserProfile.RANK_CHOICES,
+                'roles': UserProfile.ROLE_CHOICES,
+                'form_data': request.POST,
+            }
+            return render(request, 'admin_panel/user_create.html', context)
+        badge_number = badge_clean
 
         # Debug: Log if profile picture is in request
         has_picture = 'profile_picture' in request.FILES
@@ -444,7 +472,10 @@ def user_create(request):
 
         # Validate passwords match
         if password != confirm_password:
-            messages.error(request, 'Passwords do not match! Please try again.')
+            error_msg = 'Passwords do not match! Please try again.'
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': error_msg, 'field': 'confirm_password'})
+            messages.error(request, error_msg)
             context = {
                 'ranks': UserProfile.RANK_CHOICES,
                 'roles': UserProfile.ROLE_CHOICES,
@@ -454,7 +485,10 @@ def user_create(request):
 
         # Check if username already exists
         if User.objects.filter(username=username).exists():
-            messages.error(request, f'Username "{username}" already exists!')
+            error_msg = f'Username "{username}" already exists!'
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': error_msg, 'field': 'username'})
+            messages.error(request, error_msg)
             context = {
                 'ranks': UserProfile.RANK_CHOICES,
                 'roles': UserProfile.ROLE_CHOICES,
@@ -464,7 +498,10 @@ def user_create(request):
 
         # Check if badge_number already exists
         if UserProfile.objects.filter(badge_number=badge_number).exists():
-            messages.error(request, f'Badge/ID number "{badge_number}" already exists! Please use a unique badge number.')
+            error_msg = f'Badge/ID number "{badge_number}" already exists! Please use a unique badge number.'
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': error_msg, 'field': 'badge_number'})
+            messages.error(request, error_msg)
             # Return to form with preserved data and focus badge_number field
             context = {
                 'ranks': UserProfile.RANK_CHOICES,
@@ -476,7 +513,10 @@ def user_create(request):
 
         # Validate mobile number is present and complete
         if not mobile_number or mobile_number.strip() == '':
-            messages.error(request, 'Mobile number is required! Please enter a 10-digit number.')
+            error_msg = 'Mobile number is required! Please enter a 10-digit number.'
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': error_msg, 'field': 'mobile_number'})
+            messages.error(request, error_msg)
             context = {
                 'ranks': UserProfile.RANK_CHOICES,
                 'roles': UserProfile.ROLE_CHOICES,
@@ -487,7 +527,10 @@ def user_create(request):
 
         mobile_digits = re.sub(r'\D', '', mobile_number)
         if len(mobile_digits) != 10:
-            messages.error(request, 'Mobile number must be exactly 10 digits (e.g., 917 555 0123).')
+            error_msg = 'Mobile number must be exactly 10 digits (e.g., 917 555 0123).'
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': error_msg, 'field': 'mobile_number'})
+            messages.error(request, error_msg)
             context = {
                 'ranks': UserProfile.RANK_CHOICES,
                 'roles': UserProfile.ROLE_CHOICES,
@@ -572,8 +615,6 @@ def user_create(request):
                     user.is_superuser = False
                 user.save()
 
-                messages.success(request, f'User "{username}" created successfully!')
-
                 log_user_action(
                     request=request,
                     action='user_create',
@@ -581,11 +622,23 @@ def user_create(request):
                     severity='info'
                 )
 
+                if is_ajax:
+                    return JsonResponse({
+                        'success': True,
+                        'message': f'User "{username}" created successfully!',
+                        'user_id': user.id,
+                        'redirect_url': f'/admin-panel/users/{user.id}/'
+                    })
+
+                messages.success(request, f'User "{username}" created successfully!')
                 return redirect('admin_panel:user_detail', user_id=user.id)
 
         except Exception as e:
             # Catch any other errors and show a user-friendly message
-            messages.error(request, f'Error creating user: {str(e)}')
+            error_msg = f'Error creating user: {str(e)}'
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': error_msg})
+            messages.error(request, error_msg)
             print(f"DEBUG: User creation failed - {str(e)}")
             context = {
                 'ranks': UserProfile.RANK_CHOICES,

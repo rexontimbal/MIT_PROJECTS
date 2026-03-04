@@ -121,27 +121,6 @@
         </div>
     </div>
 
-    <!-- My Report Stats (for reporters) -->
-    {% if my_total > 0 %}
-    <div class="my-reports-bar">
-        <span class="my-reports-label"><i class="fas fa-file-alt"></i> My Reports</span>
-        <div class="my-reports-counts">
-            <a href="{% url 'my_reports' %}?status=all" class="my-reports-stat">
-                <span class="my-stat-num" style="color: var(--primary-blue);">{{ my_total }}</span> Total
-            </a>
-            <a href="{% url 'my_reports' %}?status=verified" class="my-reports-stat">
-                <span class="my-stat-num" style="color: #059669;">{{ my_approved }}</span> Approved
-            </a>
-            <a href="{% url 'my_reports' %}?status=pending" class="my-reports-stat">
-                <span class="my-stat-num" style="color: #D97706;">{{ my_pending }}</span> Pending
-            </a>
-            <a href="{% url 'my_reports' %}?status=rejected" class="my-reports-stat last">
-                <span class="my-stat-num" style="color: #DC2626;">{{ my_rejected }}</span> Rejected
-            </a>
-        </div>
-    </div>
-    {% endif %}
-
     <!-- Statistics Cards - Row 1 -->
     <div class="stats-grid">
         <div class="stat-card">
@@ -175,6 +154,37 @@
             </div>
         </div>
     </div>
+
+    <!-- My Report Stats (for reporters) -->
+    {% if my_total > 0 %}
+    <div class="my-reports-section">
+        <div class="my-reports-header">
+            <i class="fas fa-file-alt"></i> My Reports
+        </div>
+        <div class="my-reports-grid">
+            <a href="{% url 'my_reports' %}?status=all" class="my-report-card my-report-card--total">
+                <div class="my-report-card__icon"><i class="fas fa-layer-group"></i></div>
+                <div class="my-report-card__value">{{ my_total }}</div>
+                <div class="my-report-card__label">Total</div>
+            </a>
+            <a href="{% url 'my_reports' %}?status=verified" class="my-report-card my-report-card--approved">
+                <div class="my-report-card__icon"><i class="fas fa-check-circle"></i></div>
+                <div class="my-report-card__value">{{ my_approved }}</div>
+                <div class="my-report-card__label">Approved</div>
+            </a>
+            <a href="{% url 'my_reports' %}?status=pending" class="my-report-card my-report-card--pending">
+                <div class="my-report-card__icon"><i class="fas fa-clock"></i></div>
+                <div class="my-report-card__value">{{ my_pending }}</div>
+                <div class="my-report-card__label">Pending</div>
+            </a>
+            <a href="{% url 'my_reports' %}?status=rejected" class="my-report-card my-report-card--rejected">
+                <div class="my-report-card__icon"><i class="fas fa-times-circle"></i></div>
+                <div class="my-report-card__value">{{ my_rejected }}</div>
+                <div class="my-report-card__label">Rejected</div>
+            </a>
+        </div>
+    </div>
+    {% endif %}
 
 
     <!-- Charts Section -->
@@ -432,92 +442,136 @@
 {% block extra_css %}
 <style>
     /* My Reports Bar */
-    .my-reports-bar {
-        background: white;
-        border-radius: 10px;
-        padding: 1rem 1.25rem;
-        margin-bottom: 1.25rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border: 1px solid #E5E7EB;
-        display: flex;
-        align-items: center;
-        gap: 1.25rem;
-        flex-wrap: wrap;
+    /* ── My Reports Section ── */
+    .my-reports-section {
+        margin-bottom: 1.5rem;
     }
 
-    .my-reports-label {
-        font-size: 1rem;
+    .my-reports-header {
+        font-size: 1.05rem;
         font-weight: 700;
         color: #1F2937;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
-    .my-reports-label i {
+    .my-reports-header i {
         color: var(--primary-blue, #1A56DB);
-        margin-right: 0.4rem;
         font-size: 1.1rem;
     }
 
-    .my-reports-counts {
-        display: flex;
-        gap: 0;
-        flex: 1;
+    .my-reports-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
     }
 
-    .my-reports-stat {
-        flex: 1;
+    .my-report-card {
+        position: relative;
+        background: #fff;
+        border-radius: 14px;
+        padding: 1.25rem 1rem 1rem;
         text-align: center;
-        padding: 0.7rem 0.75rem;
-        background: #F9FAFB;
-        border: 1px solid #E5E7EB;
-        border-left: none;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #374151;
         text-decoration: none;
-        transition: background 0.15s;
+        color: #1F2937;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid #E5E7EB;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        overflow: hidden;
     }
 
-    .my-reports-stat:first-child {
-        border-left: 1px solid #E5E7EB;
-        border-radius: 8px 0 0 8px;
+    .my-report-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        border-radius: 14px 14px 0 0;
     }
 
-    .my-reports-stat.last {
-        border-radius: 0 8px 8px 0;
+    .my-report-card--total::before  { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+    .my-report-card--approved::before { background: linear-gradient(90deg, #10B981, #34D399); }
+    .my-report-card--pending::before  { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+    .my-report-card--rejected::before { background: linear-gradient(90deg, #EF4444, #F87171); }
+
+    .my-report-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
     }
 
-    .my-reports-stat:hover {
-        background: #EFF6FF;
+    .my-report-card__icon {
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.85;
     }
 
-    .my-stat-num {
-        font-size: 1.35rem;
-        font-weight: 700;
-        display: block;
-        margin-bottom: 0.1rem;
+    .my-report-card--total .my-report-card__icon  { color: #3B82F6; }
+    .my-report-card--approved .my-report-card__icon { color: #10B981; }
+    .my-report-card--pending .my-report-card__icon  { color: #F59E0B; }
+    .my-report-card--rejected .my-report-card__icon { color: #EF4444; }
+
+    .my-report-card__value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0.3rem;
     }
 
-    [data-theme="dark"] .my-reports-bar {
-        background: #1E2A3A;
-        border-color: #2D3A4F;
+    .my-report-card--total .my-report-card__value  { color: #3B82F6; }
+    .my-report-card--approved .my-report-card__value { color: #059669; }
+    .my-report-card--pending .my-report-card__value  { color: #D97706; }
+    .my-report-card--rejected .my-report-card__value { color: #DC2626; }
+
+    .my-report-card__label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
     }
 
-    [data-theme="dark"] .my-reports-label {
+    /* Dark mode */
+    [data-theme="dark"] .my-reports-header {
         color: #D1D5DB;
     }
 
-    [data-theme="dark"] .my-reports-label i {
+    [data-theme="dark"] .my-reports-header i {
         color: #60A5FA;
     }
 
-    [data-theme="dark"] .my-reports-stat {
-        background: #0F172A;
+    [data-theme="dark"] .my-report-card {
+        background: #1E2A3A;
         border-color: #2D3A4F;
         color: #D1D5DB;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
     }
 
-    [data-theme="dark"] .my-reports-stat:hover {
-        background: rgba(96, 165, 250, 0.1);
+    [data-theme="dark"] .my-report-card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="dark"] .my-report-card__label {
+        color: #9CA3AF;
+    }
+
+    /* Responsive: 2x2 grid on small screens */
+    @media (max-width: 600px) {
+        .my-reports-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .my-report-card {
+            padding: 1rem 0.75rem 0.85rem;
+            border-radius: 12px;
+        }
+
+        .my-report-card__icon { font-size: 1.2rem; margin-bottom: 0.35rem; }
+        .my-report-card__value { font-size: 1.45rem; }
+        .my-report-card__label { font-size: 0.72rem; }
     }
 
     /* Real-time Alert Banner Styles */
@@ -685,18 +739,32 @@
         gap: 1.25rem;
     }
 
+    /* ── Modern Card Wrapper ── */
+    .table-container .card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #E5E7EB;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        transition: box-shadow 0.25s ease;
+    }
+
+    .table-container .card:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+    }
+
     .table-container .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.8rem 1rem;
-        background: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
+        padding: 1rem 1.25rem;
+        background: #fff;
+        border-bottom: 1px solid #F3F4F6;
     }
 
     .header-actions {
         display: flex;
-        gap: 0.3rem;
+        gap: 0.35rem;
         align-items: center;
     }
 
@@ -708,32 +776,33 @@
     }
 
     .data-table thead {
-        background: #f8f9fa;
+        background: #F9FAFB;
     }
 
     .data-table th {
-        padding: 0.6rem 0.8rem;
+        padding: 0.5rem 0.75rem;
         text-align: left;
-        font-weight: 600;
-        color: #495057;
-        border-bottom: 2px solid #dee2e6;
-        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6B7280;
+        border-bottom: 1px solid #F3F4F6;
+        font-size: 0.65rem;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.5px;
     }
 
     .data-table td {
-        padding: 0.5rem 0.8rem;
-        border-bottom: 1px solid #e9ecef;
+        padding: 0.4rem 0.75rem;
+        border-bottom: 1px solid #F3F4F6;
         vertical-align: middle;
     }
 
     .data-table tbody tr {
-        height: 45px;
+        height: 40px;
+        transition: background 0.15s ease;
     }
 
     .data-table tbody tr:hover {
-        background-color: #f8f9fa;
+        background-color: #F9FAFB;
     }
 
     /* Compact Badges */
@@ -789,48 +858,42 @@
     }
 
     .table-container .btn-outline {
-        background: transparent;
-        color: #007bff;
-        border-color: #007bff;
+        background: #F9FAFB;
+        color: #4B5563;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s ease;
     }
 
     .table-container .btn-outline:hover {
-        background: #007bff;
+        background: #3B82F6;
         color: white;
+        border-color: #3B82F6;
     }
 
     .table-container .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.7rem;
+        padding: 0.3rem 0.65rem;
+        font-size: 0.72rem;
     }
 
     /* ===== ENHANCED FLAT & CLEAN STYLING ===== */
 
-    /* Recent Accidents - Clean Row Styling */
+    /* Recent Accidents - Clean Minimal Row Styling */
     .accident-row {
-        transition: all 0.3s ease;
-        border-left: 3px solid transparent;
+        transition: background 0.15s ease;
+        border-left: none;
     }
 
     .accident-row:hover {
-        background-color: #f8f9fa !important;
-        border-left-color: #0052CC;
-        transform: translateX(2px);
+        background-color: #F9FAFB !important;
     }
 
-    .accident-row.fatal {
-        border-left-color: #ff4757;
-        background-color: #fff5f6;
-    }
-
-    .accident-row.injury {
-        border-left-color: #ffa502;
-        background-color: #fff8f0;
-    }
-
+    .accident-row.fatal,
+    .accident-row.injury,
     .accident-row.property {
-        border-left-color: #70a1ff;
-        background-color: #f0f5ff;
+        background-color: transparent;
+        border-left: none;
     }
 
     /* DateTime Cell - Flat Clean Design */
@@ -841,13 +904,13 @@
     }
 
     .datetime-cell strong {
-        color: #2c3e50;
-        font-size: 0.8rem;
+        color: #374151;
+        font-size: 0.72rem;
     }
 
     .datetime-cell small {
-        color: #95a5a6;
-        font-size: 0.7rem;
+        color: #9CA3AF;
+        font-size: 0.64rem;
         font-weight: 500;
     }
 
@@ -859,105 +922,111 @@
     }
 
     .location-cell strong {
-        color: #2c3e50;
-        font-size: 0.8rem;
+        color: #374151;
+        font-size: 0.72rem;
         font-weight: 600;
     }
 
     .location-cell span {
-        color: #7f8c8d;
-        font-size: 0.7rem;
+        color: #9CA3AF;
+        font-size: 0.64rem;
     }
 
     /* Incident Type Badge */
     .incident-type {
-        color: #5f6368;
-        font-size: 0.75rem;
+        color: #6B7280;
+        font-size: 0.68rem;
         font-weight: 500;
     }
 
-    /* Casualty Indicator - Flat Modern Design */
+    /* Casualty Indicator - Mini Clean Design */
     .casualty-indicator {
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
-        padding: 0.35rem 0.65rem;
-        border-radius: 8px;
+        gap: 0.25rem;
+        padding: 0.2rem 0.45rem;
+        border-radius: 6px;
         font-weight: 600;
-        font-size: 0.75rem;
+        font-size: 0.68rem;
+        background: #F9FAFB;
+        color: #374151;
+        border: 1px solid #E5E7EB;
     }
 
     .casualty-indicator.fatal {
-        background: linear-gradient(135deg, #ffe5e5, #ffd0d0);
-        color: #c0392b;
-        border: 1px solid #ffb3b3;
+        background: #F9FAFB;
+        color: #DC2626;
+        border: 1px solid #E5E7EB;
     }
 
     .casualty-indicator.injury {
-        background: linear-gradient(135deg, #fff4e5, #ffe8cc);
-        color: #d68910;
-        border: 1px solid #ffd699;
+        background: #F9FAFB;
+        color: #D97706;
+        border: 1px solid #E5E7EB;
     }
 
     .casualty-indicator.property {
-        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-        color: #1565c0;
-        border: 1px solid #90caf9;
+        background: #F9FAFB;
+        color: #6B7280;
+        border: 1px solid #E5E7EB;
     }
 
     .casualty-count {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         font-weight: 700;
     }
 
     .casualty-icon {
-        font-size: 1rem;
+        font-size: 0.8rem;
     }
 
-    /* Status Badge - Clean Flat Colors */
+    /* Status Badge - Mini Clean */
     .status-badge {
         display: inline-block;
-        padding: 0.3rem 0.7rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.62rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.3px;
+        background: #F3F4F6;
+        color: #6B7280;
+        border: 1px solid #E5E7EB;
     }
 
     .status-investigated,
     .status-under_investigation {
-        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-        color: #2e7d32;
-        border: 1px solid #a5d6a7;
+        background: #F3F4F6;
+        color: #059669;
+        border: 1px solid #E5E7EB;
     }
 
     .status-pending {
-        background: linear-gradient(135deg, #fff9e6, #ffecb3);
-        color: #f57c00;
-        border: 1px solid #ffd54f;
+        background: #F3F4F6;
+        color: #D97706;
+        border: 1px solid #E5E7EB;
     }
 
     .status-closed {
-        background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
-        color: #424242;
-        border: 1px solid #9e9e9e;
+        background: #F3F4F6;
+        color: #4B5563;
+        border: 1px solid #E5E7EB;
     }
 
-    /* Action Buttons - Modern Flat Design */
+    /* Action Buttons - Mini Clean Design */
     .action-buttons {
         display: flex;
-        gap: 0.3rem;
+        gap: 0.25rem;
     }
 
     .btn-icon {
-        background: #f5f6fa;
-        border: 1px solid #dfe4ea;
+        background: #F9FAFB;
+        border: 1px solid #E5E7EB;
         border-radius: 6px;
-        padding: 0.35rem 0.5rem;
+        padding: 0.25rem 0.4rem;
         cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.3s ease;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -965,106 +1034,106 @@
 
     .btn-icon:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.08);
     }
 
     .view-btn:hover {
-        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-        border-color: #2196f3;
+        background: #EFF6FF;
+        border-color: #3B82F6;
     }
 
     .map-btn:hover {
-        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-        border-color: #4caf50;
+        background: #ECFDF5;
+        border-color: #10B981;
     }
 
     .analyze-btn:hover {
-        background: linear-gradient(135deg, #fff3e0, #ffe0b2);
-        border-color: #ff9800;
+        background: #FFF7ED;
+        border-color: #F59E0B;
     }
 
     /* Hotspot Row - Clean Design */
     .hotspot-row {
-        transition: all 0.3s ease;
+        transition: background 0.2s ease;
         border-left: 3px solid transparent;
     }
 
     .hotspot-row:hover {
-        background-color: #f8f9fa !important;
-        border-left-color: #ff6348;
-        transform: translateX(2px);
+        background-color: #FFF7ED !important;
+        border-left-color: #F59E0B;
     }
 
     .hotspot-row[data-severity] {
         position: relative;
     }
 
-    /* Hotspot Badge - Flat Modern */
+    /* Hotspot Badge - Mini */
     .hotspot-badge {
-        background: linear-gradient(135deg, #fff0f0, #ffe0e0);
-        color: #d32f2f;
-        padding: 0.3rem 0.7rem;
-        border-radius: 8px;
+        background: #F3F4F6;
+        color: #374151;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
         font-weight: 700;
-        font-size: 0.75rem;
-        border: 1px solid #ffcdd2;
+        font-size: 0.68rem;
+        border: 1px solid #E5E7EB;
         display: inline-block;
     }
 
-    /* Accident Count - Clean Display */
+    /* Accident Count - Mini Display */
     .accident-count {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.1rem;
+        gap: 0.05rem;
     }
 
     .accident-count strong {
-        font-size: 1.1rem;
-        color: #2c3e50;
+        font-size: 0.9rem;
+        color: #374151;
         font-weight: 700;
     }
 
     .accident-count small {
-        font-size: 0.65rem;
-        color: #95a5a6;
+        font-size: 0.58rem;
+        color: #9CA3AF;
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
 
-    /* Severity Meter - Flat Progress Bar */
+    /* Severity Meter - Clean Progress Bar */
     .severity-meter {
         width: 100%;
     }
 
     .severity-track {
-        background: #e9ecef;
-        border-radius: 8px;
-        height: 24px;
+        background: #F3F4F6;
+        border-radius: 20px;
+        height: 22px;
         overflow: hidden;
         position: relative;
-        border: 1px solid #dee2e6;
+        border: none;
     }
 
     .severity-progress {
-        background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #ffa502 80%, #ff4757 100%);
+        background: linear-gradient(90deg, #60A5FA 0%, #F59E0B 60%, #EF4444 100%);
         height: 100%;
         display: flex;
         align-items: center;
         justify-content: flex-end;
         padding-right: 0.5rem;
-        transition: all 0.5s ease;
+        transition: width 0.5s ease;
         position: relative;
+        border-radius: 20px;
     }
 
     .severity-value {
         color: white;
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         font-weight: 700;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.15);
     }
 
-    /* Risk Level Badges - Clean Flat Colors */
+    /* Risk Level Badges - Clean Colors */
     .risk-level {
         display: inline-block;
         padding: 0.35rem 0.75rem;
@@ -1076,27 +1145,27 @@
     }
 
     .risk-critical {
-        background: linear-gradient(135deg, #ffe5e5, #ffcccc);
-        color: #c0392b;
-        border: 1.5px solid #ff9999;
+        background: #FEF2F2;
+        color: #DC2626;
+        border: 1.5px solid #FECACA;
     }
 
     .risk-high {
-        background: linear-gradient(135deg, #fff4e5, #ffe8cc);
-        color: #d68910;
-        border: 1.5px solid #ffd699;
+        background: #FFF7ED;
+        color: #EA580C;
+        border: 1.5px solid #FED7AA;
     }
 
     .risk-medium {
-        background: linear-gradient(135deg, #fff9e6, #ffecb3);
-        color: #f39c12;
-        border: 1.5px solid #ffd54f;
+        background: #FFFBEB;
+        color: #D97706;
+        border: 1.5px solid #FDE68A;
     }
 
     .risk-low {
-        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-        color: #27ae60;
-        border: 1.5px solid #a5d6a7;
+        background: #ECFDF5;
+        color: #059669;
+        border: 1.5px solid #A7F3D0;
     }
 
     /* Empty State - Clean Design */
@@ -1106,28 +1175,27 @@
     }
 
     .empty-icon {
-        font-size: 3rem;
+        font-size: 2.5rem;
         display: block;
-        margin-bottom: 1rem;
-        opacity: 0.5;
+        margin-bottom: 0.75rem;
+        opacity: 0.4;
     }
 
     .empty-state p {
-        color: #95a5a6;
-        font-size: 0.9rem;
+        color: #9CA3AF;
+        font-size: 0.85rem;
         margin: 0;
+        font-weight: 500;
     }
 
-    /* Card Header Enhanced */
-    .table-container .card-header {
-        background: linear-gradient(135deg, #f8f9fa, #ffffff);
-        border-bottom: 2px solid #e9ecef;
-    }
-
+    /* Card Title Enhanced */
     .card-title {
-        color: #2c3e50;
+        color: #1F2937;
         font-weight: 700;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
     }
 
     /* Responsive */
@@ -1590,28 +1658,25 @@
 
         /* ══ RECENT ACCIDENTS CARD ══
            Row 1: Location (1fr) | Status (auto)
-           Row 2: Date+Time (1fr) | Casualties (auto)
-           Row 3: Actions (full width)
+           Row 2: Date+Time (1fr) | Casualties (auto) | Actions (auto)
         */
         #recentAccidentsTable tbody tr {
             display: grid !important;
-            grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+            grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, auto);
             grid-template-areas:
-                "acc-loc    acc-status"
-                "acc-dt     acc-cas"
-                "acc-act    acc-act";
-            row-gap: 0.15rem;
-            column-gap: 0.4rem;
+                "acc-loc    acc-loc     acc-status"
+                "acc-dt     acc-cas     acc-act";
+            row-gap: 0.1rem;
+            column-gap: 0.3rem;
             align-items: center;
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
             border: 1px solid #e5e7eb;
-            border-left: 3px solid #dee2e6;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            padding: 0.5rem 0.6rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border-radius: 6px;
+            margin-bottom: 0.35rem;
+            padding: 0.35rem 0.5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
             transform: none !important;
         }
 
@@ -1632,69 +1697,83 @@
         #recentAccidentsTable td[data-label="Status"]      { grid-area: acc-status; justify-content: flex-end; }
         #recentAccidentsTable td[data-label="Date & Time"] { grid-area: acc-dt; }
         #recentAccidentsTable td[data-label="Casualties"]  { grid-area: acc-cas;    justify-content: flex-end; }
-        #recentAccidentsTable td[data-label="Actions"]     {
-            grid-area: acc-act;
-            justify-content: flex-end;
-            padding-top: 0.3rem !important;
-            border-top: 1px solid #f3f4f6 !important;
-        }
+        #recentAccidentsTable td[data-label="Actions"]     { grid-area: acc-act;    justify-content: flex-end; }
         #recentAccidentsTable td.no-data { grid-column: 1 / -1; justify-content: center; }
 
+        /* Mini action buttons on mobile */
+        #recentAccidentsTable .action-buttons {
+            gap: 0.15rem !important;
+        }
+        #recentAccidentsTable .btn-icon {
+            padding: 0.15rem 0.25rem !important;
+            font-size: 0.65rem !important;
+            border-radius: 4px !important;
+        }
+
         /* Location cell */
-        #recentAccidentsTable .location-cell { gap: 0.05rem; }
+        #recentAccidentsTable .location-cell { gap: 0.02rem; }
         #recentAccidentsTable .location-cell strong {
-            font-size: 0.75rem !important;
-            line-height: 1.2;
+            font-size: 0.68rem !important;
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         #recentAccidentsTable .location-cell span {
-            font-size: 0.62rem !important;
+            font-size: 0.56rem !important;
             color: #9ca3af;
-            line-height: 1.2;
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Date+Time: inline */
         #recentAccidentsTable .datetime-cell {
             flex-direction: row !important;
-            gap: 0.25rem;
+            gap: 0.2rem;
             align-items: center;
         }
         #recentAccidentsTable .datetime-cell strong {
-            font-size: 0.65rem !important;
+            font-size: 0.58rem !important;
             font-weight: 500 !important;
-            color: #6b7280 !important;
+            color: #9ca3af !important;
         }
         #recentAccidentsTable .datetime-cell small {
-            font-size: 0.62rem !important;
+            font-size: 0.56rem !important;
             color: #9ca3af !important;
         }
 
-        /* Status badge: simple flat gray */
+        /* Status badge: mini flat */
         #recentAccidentsTable .status-badge {
-            font-size: 0.58rem !important;
-            padding: 0.1rem 0.4rem !important;
+            font-size: 0.52rem !important;
+            padding: 0.08rem 0.3rem !important;
             white-space: nowrap;
-            border-radius: 10px !important;
+            border-radius: 3px !important;
             background: #f3f4f6 !important;
-            color: #4b5563 !important;
+            color: #6b7280 !important;
             border: 1px solid #e5e7eb !important;
-            font-weight: 500 !important;
+            font-weight: 600 !important;
         }
 
-        /* Casualty indicator: compact, no background */
+        /* Casualty indicator: ultra compact */
         #recentAccidentsTable .casualty-indicator {
-            font-size: 0.62rem !important;
-            padding: 0.1rem 0.3rem !important;
-            gap: 0.15rem !important;
+            font-size: 0.56rem !important;
+            padding: 0 !important;
+            gap: 0.1rem !important;
             background: transparent !important;
             border: none !important;
         }
-        #recentAccidentsTable .casualty-count { font-size: 0.68rem !important; }
-        #recentAccidentsTable .casualty-icon  { font-size: 0.7rem !important; }
+        #recentAccidentsTable .casualty-count { font-size: 0.62rem !important; }
+        #recentAccidentsTable .casualty-icon  { font-size: 0.6rem !important; }
 
-        /* Severity left-border colors (useful indicator, kept subtle) */
-        #recentAccidentsTable .accident-row.fatal    { border-left-color: #ef4444 !important; }
-        #recentAccidentsTable .accident-row.injury   { border-left-color: #f59e0b !important; }
-        #recentAccidentsTable .accident-row.property { border-left-color: #6b7280 !important; }
+        /* No left border colors on mobile */
+        #recentAccidentsTable .accident-row.fatal,
+        #recentAccidentsTable .accident-row.injury,
+        #recentAccidentsTable .accident-row.property {
+            border-left: 1px solid #e5e7eb !important;
+            background: transparent !important;
+        }
 
         /* ══ TOP HOTSPOTS CARD ══
            Row 1: #Badge (auto) | Location (1fr)
@@ -2265,11 +2344,50 @@
     [data-theme="dark"] .table-container .card {
         background: #1E2A3A !important;
         border-color: #2D3A4F !important;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2) !important;
     }
 
     [data-theme="dark"] .table-container .card-header {
-        background: #1E3A5F !important;
+        background: #1E2A3A !important;
         border-bottom-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .card-title {
+        color: #F3F4F6 !important;
+    }
+
+    [data-theme="dark"] .table-container .btn-outline {
+        background: #0F172A !important;
+        color: #D1D5DB !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .table-container .btn-outline:hover {
+        background: #3B82F6 !important;
+        color: #fff !important;
+        border-color: #3B82F6 !important;
+    }
+
+    [data-theme="dark"] .data-table thead {
+        background: #0F172A !important;
+    }
+
+    [data-theme="dark"] .data-table th {
+        color: #9CA3AF !important;
+        border-bottom-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .data-table td {
+        border-bottom-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .btn-icon {
+        background: #0F172A !important;
+        border-color: #2D3A4F !important;
+    }
+
+    [data-theme="dark"] .btn-icon:hover {
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2) !important;
     }
 
     [data-theme="dark"] .table-container table {
@@ -2308,32 +2426,18 @@
         border-color: #2D3A4F !important;
     }
 
-    /* Fatal/Injury/Property row styling in dark mode */
-    [data-theme="dark"] .accident-row.fatal {
-        background: rgba(220, 53, 69, 0.15) !important;
-        border-left-color: #DC3545 !important;
-    }
-
-    [data-theme="dark"] .accident-row.injury {
-        background: rgba(255, 193, 7, 0.15) !important;
-        border-left-color: #FFC107 !important;
-    }
-
+    /* Fatal/Injury/Property row styling in dark mode — no colored bg/border */
+    [data-theme="dark"] .accident-row.fatal,
+    [data-theme="dark"] .accident-row.injury,
     [data-theme="dark"] .accident-row.property {
-        background: rgba(40, 167, 69, 0.15) !important;
-        border-left-color: #28A745 !important;
+        background: transparent !important;
+        border-left: none !important;
     }
 
-    [data-theme="dark"] .accident-row.fatal:hover {
-        background: rgba(220, 53, 69, 0.25) !important;
-    }
-
-    [data-theme="dark"] .accident-row.injury:hover {
-        background: rgba(255, 193, 7, 0.25) !important;
-    }
-
+    [data-theme="dark"] .accident-row.fatal:hover,
+    [data-theme="dark"] .accident-row.injury:hover,
     [data-theme="dark"] .accident-row.property:hover {
-        background: rgba(40, 167, 69, 0.25) !important;
+        background: #243447 !important;
     }
 
     /* Hotspot row badges in dark mode */
