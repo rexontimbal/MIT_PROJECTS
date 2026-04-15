@@ -34,3 +34,24 @@ cache/
 
 # IDE
 .vscode/
+
+# Logs
+logs/
+
+# Images (not needed for deployment)
+*.jpeg
+*.jpg
+*.png
+heirarchy.png
+accident1.jpeg
+
+# HTML reports
+validation_metrics.html
+
+# Node modules (Capacitor)
+mobile-app/node_modules/
+mobile-app/android/
+mobile-app/.gradle/
+
+# Docs folder
+docs/

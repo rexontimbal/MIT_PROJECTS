@@ -1,0 +1,290 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+    <div>
+        <h1 style="font-size:1.5rem; font-weight:700; color:var(--gray-900); margin:0;">
+            <i class="fas fa-sliders-h" style="color:var(--primary); margin-right:8px;"></i>System Settings
+        </h1>
+        <p style="color:var(--gray-500); font-size:0.85rem; margin:4px 0 0 0;">
+            Configure system-wide defaults and security settings. Display preferences can be overridden by individual users.
+        </p>
+    </div>
+</div>
+
+{% if messages %}
+{% for message in messages %}
+<div class="ss-toast ss-toast-{{ message.tags }}" id="ssToast">
+    <i class="fas {% if 'success' in message.tags %}fa-check-circle{% else %}fa-info-circle{% endif %}"></i>
+    <span>{{ message }}</span>
+</div>
+{% endfor %}
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    <div style="display:grid; gap:1rem; max-width:700px;">
+        {% for setting in settings_list %}
+        <div class="ss-card">
+            <div class="ss-card-header">
+                <div class="ss-icon-wrap">
+                    <i class="{{ setting.icon }}"></i>
+                </div>
+                <div>
+                    <div class="ss-card-title">{{ setting.label }}</div>
+                    <div class="ss-card-desc">{{ setting.description }}</div>
+                </div>
+            </div>
+
+            <div class="ss-options {% if setting.choices|length > 3 %}ss-options-wrap{% endif %}">
+                {% for value, label in setting.choices %}
+                <label class="ss-option-label {% if setting.choices|length > 3 %}ss-option-compact{% endif %}">
+                    <input type="radio" name="{{ setting.key }}" value="{{ value }}"
+                        {% if setting.current == value %}checked{% endif %}
+                        style="display:none;" onchange="ssSelectOption(this)">
+                    <div class="ss-option {% if setting.current == value %}ss-option-active{% endif %}">
+                        {% if value == 'cards' or value == 'grid' %}
+                        <i class="fas fa-th-large"></i>
+                        {% elif value == 'table' or value == 'list' %}
+                        <i class="fas fa-list"></i>
+                        {% elif setting.key == 'session_timeout' %}
+                        <i class="fas fa-clock"></i>
+                        {% elif setting.key == 'default_per_page' %}
+                        <i class="fas fa-list-ol"></i>
+                        {% endif %}
+                        <span>{{ label }}</span>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+
+            {% if setting.key == 'session_timeout' %}
+            <div class="ss-hint">
+                <i class="fas fa-shield-alt"></i>
+                Session timer resets on each page interaction. Users will be logged out after the selected period of inactivity.
+            </div>
+            {% endif %}
+            {% if setting.key == 'default_per_page' %}
+            <div class="ss-hint">
+                <i class="fas fa-info-circle"></i>
+                Applies to user management, audit logs, report activity, pending reports, and my reports. Users can still change per-page on each page individually.
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div style="margin-top:1.25rem;">
+        <button type="submit" class="ss-save-btn">
+            <i class="fas fa-save"></i> Save Settings
+        </button>
+    </div>
+</form>
+
+<style>
+    /* Setting Cards */
+    .ss-card {
+        background: var(--white, #fff);
+        border: 1px solid var(--gray-200, #E5E7EB);
+        border-radius: 10px;
+        padding: 1.25rem 1.5rem;
+    }
+    .ss-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+    .ss-icon-wrap {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: var(--primary-light, #EEF2FF);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .ss-icon-wrap i {
+        color: var(--primary, #003087);
+        font-size: 0.9rem;
+    }
+    .ss-card-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--gray-900, #111827);
+    }
+    .ss-card-desc {
+        font-size: 0.8rem;
+        color: var(--gray-500, #6B7280);
+    }
+
+    /* Options Row */
+    .ss-options {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .ss-options-wrap {
+        flex-wrap: wrap;
+    }
+    .ss-option-label {
+        flex: 1;
+        cursor: pointer;
+        min-width: 0;
+    }
+    .ss-option-label.ss-option-compact {
+        flex: 0 1 auto;
+        min-width: 110px;
+    }
+    .ss-option {
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: 2px solid var(--gray-200, #E5E7EB);
+        text-align: center;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--gray-600, #4B5563);
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .ss-option:hover {
+        border-color: var(--gray-300, #D1D5DB);
+        background: var(--gray-50, #F9FAFB);
+    }
+    .ss-option-active {
+        border-color: var(--primary, #003087) !important;
+        background: var(--primary-light, #EEF2FF) !important;
+        color: var(--primary, #003087) !important;
+    }
+    .ss-option-active::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: 0.7rem;
+        margin-left: 2px;
+    }
+
+    /* Hint */
+    .ss-hint {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 10px;
+        padding: 8px 12px;
+        background: #FFFBEB;
+        border: 1px solid #FDE68A;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        color: #92400E;
+    }
+    .ss-hint i {
+        color: #D97706;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+    }
+
+    /* Save Button */
+    .ss-save-btn {
+        padding: 10px 28px;
+        background: var(--primary, #003087);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .ss-save-btn:hover {
+        background: #00236b;
+        box-shadow: 0 2px 8px rgba(0,48,135,0.25);
+    }
+
+    /* Toast */
+    .ss-toast {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        max-width: 700px;
+        animation: ssSlideIn 0.3s ease;
+    }
+    .ss-toast-success {
+        background: #ECFDF5;
+        color: #065F46;
+        border: 1px solid #A7F3D0;
+    }
+    .ss-toast-success i { color: #059669; }
+    @keyframes ssSlideIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Dark mode */
+    [data-theme="dark"] .ss-card {
+        background: var(--card-bg, #1f2937);
+        border-color: #2D3A4F;
+    }
+    [data-theme="dark"] .ss-option {
+        border-color: #374151;
+        color: #D1D5DB;
+    }
+    [data-theme="dark"] .ss-option:hover {
+        background: #1E293B;
+        border-color: #4B5563;
+    }
+    [data-theme="dark"] .ss-option-active {
+        background: rgba(0,48,135,0.2) !important;
+        border-color: #3B82F6 !important;
+        color: #60A5FA !important;
+    }
+    [data-theme="dark"] .ss-hint {
+        background: #78350F;
+        border-color: #92400E;
+        color: #FDE68A;
+    }
+    [data-theme="dark"] .ss-hint i { color: #FBBF24; }
+    [data-theme="dark"] .ss-toast-success {
+        background: #064E3B;
+        color: #A7F3D0;
+        border-color: #065F46;
+    }
+</style>
+
+<script>
+function ssSelectOption(radio) {
+    // Deselect siblings
+    var name = radio.name;
+    radio.closest('form').querySelectorAll('[name="' + name + '"]').forEach(function(r) {
+        r.closest('label').querySelector('.ss-option').classList.remove('ss-option-active');
+    });
+    // Select current
+    radio.closest('label').querySelector('.ss-option').classList.add('ss-option-active');
+}
+
+// Auto-hide toast after 4 seconds
+var toast = document.getElementById('ssToast');
+if (toast) {
+    setTimeout(function() {
+        toast.style.transition = 'opacity 0.3s';
+        toast.style.opacity = '0';
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 4000);
+}
+</script>
+{% endblock %}

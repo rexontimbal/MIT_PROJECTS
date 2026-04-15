@@ -342,10 +342,14 @@
     .rec-modal-overlay {
         display: none;
         position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
         z-index: 10020;
-        backdrop-filter: blur(3px);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
     }
     .rec-modal-overlay.active {
         display: flex;
@@ -1140,6 +1144,10 @@
                     <span>🗺️</span>
                     <span>View on Map</span>
                 </button>
+                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination={{ hotspot.center_lat }},{{ hotspot.center_lng }}', '_blank')" class="action-btn">
+                    <span>🧭</span>
+                    <span>Get Directions</span>
+                </button>
                 <button onclick="exportAccidents()" class="action-btn">
                     <span>📥</span>
                     <span>Export CSV</span>
@@ -1503,11 +1511,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize Map
     try {
-        const map = L.map('hotspotMap').setView([{{ hotspot.center_latitude }}, {{ hotspot.center_longitude }}], 13);
+        const map = L.map('hotspotMap', {
+            zoomSnap: 0.5,
+            wheelDebounceTime: 80,
+            wheelPxPerZoomLevel: 120
+        }).setView([{{ hotspot.center_latitude }}, {{ hotspot.center_longitude }}], 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 18
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19,
+            updateWhenZooming: false,
+            updateWhenIdle: true,
+            keepBuffer: 4
         }).addTo(map);
 
         // Add hotspot boundary circle sized to cover all accidents

@@ -481,10 +481,16 @@
     .confirm-overlay {
         display: none;
         position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0, 0, 0, 0.4);
-        z-index: 10010;
-        backdrop-filter: blur(2px);
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        max-width: none !important;
+        margin: 0 !important;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 10015;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
     }
 
     .confirm-overlay.active {
@@ -822,6 +828,86 @@
         color: #E8E8E8;
     }
 
+    /* Re-sync Banner */
+    .resync-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        background: #FFFBEB;
+        border: 1px solid #F59E0B;
+        border-radius: 10px;
+        padding: 0.85rem 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .resync-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.875rem;
+        color: #92400E;
+    }
+
+    .resync-info i {
+        font-size: 1.25rem;
+        color: #D97706;
+        flex-shrink: 0;
+    }
+
+    .resync-info strong {
+        display: block;
+        font-size: 0.9rem;
+        color: #78350F;
+    }
+
+    .resync-info span {
+        font-size: 0.8rem;
+        color: #A16207;
+    }
+
+    .resync-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.55rem 1.1rem;
+        background: linear-gradient(135deg, #D97706, #B45309);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+
+    .resync-btn:hover {
+        background: linear-gradient(135deg, #B45309, #92400E);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(180, 83, 9, 0.3);
+    }
+
+    [data-theme="dark"] .resync-banner {
+        background: #1C1308;
+        border-color: #92400E;
+    }
+
+    [data-theme="dark"] .resync-info { color: #FCD34D; }
+    [data-theme="dark"] .resync-info strong { color: #FDE68A; }
+    [data-theme="dark"] .resync-info span { color: #F59E0B; }
+    [data-theme="dark"] .resync-info i { color: #F59E0B; }
+
+    @media (max-width: 768px) {
+        .resync-banner {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
+        .resync-info { justify-content: center; }
+        .resync-btn { justify-content: center; }
+    }
+
 </style>
 {% endblock %}
 
@@ -867,6 +953,25 @@
         </a>
     </div>
 </div>
+
+{% if unsynced_count > 0 and user.profile.role == 'super_admin' or unsynced_count > 0 and user.profile.role == 'regional_director' %}
+<!-- Re-sync Banner -->
+<div class="resync-banner" id="resyncBanner">
+    <div class="resync-info">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+            <strong>{{ unsynced_count }} verified report{{ unsynced_count|pluralize }} not synced</strong>
+            <span>These approved reports have no matching accident record. Re-sync to restore them.</span>
+        </div>
+    </div>
+    <form method="post" action="{% url 'resync_reports' %}" id="resyncForm">
+        {% csrf_token %}
+        <button type="button" class="resync-btn" onclick="confirmResync()">
+            <i class="fas fa-sync-alt"></i> Re-sync {{ unsynced_count }} Report{{ unsynced_count|pluralize }}
+        </button>
+    </form>
+</div>
+{% endif %}
 
 <!-- Bulk Action Bar -->
 <div class="bulk-bar" id="bulkBar">
@@ -1015,6 +1120,7 @@
         <select onchange="changePerPage(this.value)" style="padding: 0.3rem 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.82rem; color: #374151; cursor: pointer; background: white;">
             <option value="5" {% if per_page == '5' %}selected{% endif %}>5</option>
             <option value="10" {% if per_page == '10' %}selected{% endif %}>10</option>
+            <option value="15" {% if per_page == '15' %}selected{% endif %}>15</option>
             <option value="20" {% if per_page == '20' %}selected{% endif %}>20</option>
             <option value="50" {% if per_page == '50' %}selected{% endif %}>50</option>
         </select>
@@ -1117,6 +1223,19 @@
 </div>
 
 <script>
+function confirmResync() {
+    pendingFormId = 'resyncForm';
+    confirmCallback = null;
+    document.getElementById('confirmTitle').textContent = 'Re-sync verified reports?';
+    document.getElementById('confirmMsg').textContent = 'This will re-create accident records for all verified reports that are not currently linked. Existing data will not be affected.';
+    document.getElementById('confirmIcon').innerHTML = '<i class="fas fa-sync-alt"></i>';
+    document.getElementById('confirmIcon').style.background = '#FEF3C7';
+    document.getElementById('confirmIcon').style.color = '#D97706';
+    document.getElementById('confirmOkBtn').textContent = 'Re-sync';
+    document.getElementById('confirmOkBtn').style.background = '#D97706';
+    document.getElementById('confirmOverlay').classList.add('active');
+}
+
 let pendingFormId = null;
 let confirmCallback = null;
 

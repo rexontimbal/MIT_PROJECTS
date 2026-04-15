@@ -1,0 +1,24 @@
+{
+  "name": "agnes-mobile",
+  "version": "1.0.0",
+  "description": "AGNES - AI Based Hotspot Detection System (Mobile App)",
+  "main": "www/index.html",
+  "scripts": {
+    "cap:init": "npx cap init \"AGNES\" \"com.agnes.hotspot\" --web-dir www",
+    "cap:add": "npx cap add android",
+    "cap:sync": "npx cap sync android",
+    "cap:open": "npx cap open android",
+    "cap:build": "npx cap sync android && cd android && gradlew assembleDebug",
+    "setup": "npm install && npx cap add android && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/camera": "^6.0.0",
+    "@capacitor/geolocation": "^6.0.0",
+    "@capacitor/filesystem": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0"
+  }
+}

@@ -1,7 +1,525 @@
 {% extends 'base.html' %}
-{% block title %}Contact{% endblock %}
+{% load static %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block wrapper_class %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contact-hero {
+        background: linear-gradient(135deg, #001a4d 0%, #003087 50%, #00245e 100%);
+        color: white;
+        padding: 2.5rem 2rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .contact-hero::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+    }
+    .contact-hero-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.12);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        color: #60A5FA;
+        margin-bottom: 0.85rem;
+    }
+    .contact-hero h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0 0 0.35rem;
+    }
+    .contact-hero p {
+        font-size: 0.92rem;
+        color: rgba(255,255,255,0.75);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.55;
+    }
+
+    /* Emergency banner */
+    .emergency-banner {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(220,38,38,0.12);
+        border: 1px solid #FCA5A5;
+    }
+    .emergency-banner-left {
+        background: linear-gradient(135deg, #DC2626, #B91C1C);
+        color: white;
+        padding: 1.5rem 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-shrink: 0;
+    }
+    .emergency-banner-left i {
+        font-size: 2rem;
+        opacity: 0.9;
+    }
+    .emergency-banner-left h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0 0 0.15rem;
+    }
+    .emergency-banner-left p {
+        font-size: 0.78rem;
+        margin: 0;
+        opacity: 0.85;
+    }
+    .emergency-numbers {
+        display: flex;
+        flex: 1;
+        background: #FEF2F2;
+    }
+    .emergency-num {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem 1rem;
+        border-right: 1px solid #FECACA;
+        text-decoration: none;
+    }
+    .emergency-num:last-child { border-right: none; }
+    .emergency-num-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        margin-bottom: 0.45rem;
+    }
+    .emergency-num strong {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #1F2937;
+        letter-spacing: 0.02em;
+    }
+    .emergency-num span {
+        font-size: 0.72rem;
+        color: #6B7280;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-top: 0.15rem;
+    }
+
+    /* Section cards */
+    .contact-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.75rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        border: 1px solid #E5E7EB;
+    }
+    .contact-section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 1rem;
+    }
+    .contact-section-title i {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    .contact-section-title i.blue { background: #DBEAFE; color: #1D4ED8; }
+    .contact-section-title i.green { background: #D1FAE5; color: #059669; }
+    .contact-section-title i.purple { background: #EDE9FE; color: #7C3AED; }
+    .contact-section-title i.orange { background: #FEF3C7; color: #D97706; }
+    .contact-section-title i.red { background: #FEE2E2; color: #DC2626; }
+    .contact-section-title i.teal { background: #CCFBF1; color: #0D9488; }
+
+    .contact-section p {
+        font-size: 0.86rem;
+        color: #4B5563;
+        line-height: 1.65;
+        margin: 0 0 0.65rem;
+    }
+    .contact-section p:last-child { margin-bottom: 0; }
+
+    /* Two-column layout */
+    .contact-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    .contact-grid-2 .contact-section { margin-bottom: 0; }
+
+    /* Contact cards */
+    .contact-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 0.85rem;
+        margin-top: 0.5rem;
+    }
+    .contact-card {
+        display: flex;
+        gap: 0.85rem;
+        padding: 1.1rem;
+        border-radius: 10px;
+        background: #F9FAFB;
+        border: 1px solid #F3F4F6;
+    }
+    .contact-card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    .contact-card h4 {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 0.2rem;
+    }
+    .contact-card p {
+        font-size: 0.8rem;
+        color: #6B7280;
+        margin: 0;
+        line-height: 1.5;
+    }
+    .contact-card a {
+        color: #003087;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .contact-card a:hover { text-decoration: underline; }
+
+    /* Office directory table */
+    .office-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0.5rem;
+        font-size: 0.82rem;
+    }
+    .office-table th {
+        background: #F9FAFB;
+        padding: 0.55rem 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        color: #6B7280;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid #E5E7EB;
+    }
+    .office-table td {
+        padding: 0.65rem 0.75rem;
+        border-bottom: 1px solid #F3F4F6;
+        color: #4B5563;
+    }
+    .office-table tr:last-child td { border-bottom: none; }
+    .office-table td:first-child { font-weight: 600; color: #1F2937; }
+
+    /* Info tip */
+    .contact-tip {
+        display: flex;
+        gap: 0.65rem;
+        padding: 0.85rem 1rem;
+        border-radius: 10px;
+        margin-top: 0.75rem;
+        font-size: 0.82rem;
+        line-height: 1.55;
+    }
+    .contact-tip i { flex-shrink: 0; margin-top: 2px; font-size: 0.85rem; }
+    .contact-tip.info { background: #EFF6FF; color: #1E40AF; }
+    .contact-tip.info i { color: #2563EB; }
+    .contact-tip.warning { background: #FFFBEB; color: #92400E; }
+    .contact-tip.warning i { color: #D97706; }
+
+    /* Dark theme */
+    [data-theme="dark"] .contact-hero { background: linear-gradient(135deg, #0a0f1a 0%, #111827 50%, #0d1321 100%); }
+    [data-theme="dark"] .emergency-banner { border-color: #7F1D1D; }
+    [data-theme="dark"] .emergency-numbers { background: #1A2332; }
+    [data-theme="dark"] .emergency-num { border-right-color: #2D3A4F; }
+    [data-theme="dark"] .emergency-num strong { color: #E5E7EB; }
+    [data-theme="dark"] .emergency-num span { color: #9CA3AF; }
+    [data-theme="dark"] .contact-section { background: #1A2332; border-color: #2D3A4F; }
+    [data-theme="dark"] .contact-section-title { color: #E5E7EB; }
+    [data-theme="dark"] .contact-section p { color: #9CA3AF; }
+    [data-theme="dark"] .contact-card { background: #0F172A; border-color: #2D3A4F; }
+    [data-theme="dark"] .contact-card h4 { color: #E5E7EB; }
+    [data-theme="dark"] .contact-card p { color: #9CA3AF; }
+    [data-theme="dark"] .contact-card a { color: #60A5FA; }
+    [data-theme="dark"] .office-table th { background: #0F172A; border-bottom-color: #2D3A4F; color: #9CA3AF; }
+    [data-theme="dark"] .office-table td { border-bottom-color: #2D3A4F; color: #9CA3AF; }
+    [data-theme="dark"] .office-table td:first-child { color: #E5E7EB; }
+    [data-theme="dark"] .contact-tip.info { background: rgba(59,130,246,0.1); color: #93C5FD; }
+    [data-theme="dark"] .contact-tip.info i { color: #60A5FA; }
+    [data-theme="dark"] .contact-tip.warning { background: rgba(245,158,11,0.1); color: #FCD34D; }
+    [data-theme="dark"] .contact-tip.warning i { color: #FBBF24; }
+    [data-theme="dark"] .contact-section-title i.blue { background: rgba(59,130,246,0.15); color: #60A5FA; }
+    [data-theme="dark"] .contact-section-title i.green { background: rgba(16,185,129,0.15); color: #34D399; }
+    [data-theme="dark"] .contact-section-title i.purple { background: rgba(139,92,246,0.15); color: #A78BFA; }
+    [data-theme="dark"] .contact-section-title i.orange { background: rgba(245,158,11,0.15); color: #FBBF24; }
+    [data-theme="dark"] .contact-section-title i.red { background: rgba(239,68,68,0.15); color: #F87171; }
+    [data-theme="dark"] .contact-section-title i.teal { background: rgba(20,184,166,0.15); color: #2DD4BF; }
+
+    @media (max-width: 768px) {
+        .contact-hero { padding: 1.75rem 1.25rem; }
+        .contact-hero h1 { font-size: 1.4rem; }
+        .contact-section { padding: 1.25rem; }
+        .contact-grid-2 { grid-template-columns: 1fr; }
+        .emergency-banner { flex-direction: column; }
+        .emergency-banner-left { justify-content: center; text-align: center; padding: 1rem; }
+        .emergency-numbers { flex-wrap: wrap; }
+        .emergency-num { min-width: 50%; border-right: none; border-bottom: 1px solid #FECACA; }
+        .emergency-num:nth-child(odd) { border-right: 1px solid #FECACA; }
+        .contact-cards { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h2>Contact Us</h2>
-<p>PNP Caraga Region</p>
-<p>Emergency: 911 | Hotline: 117</p>
+
+<!-- Hero -->
+<div class="contact-hero">
+    <div class="contact-hero-icon">
+        <i class="fas fa-headset"></i>
+    </div>
+    <h1>Contact Us</h1>
+    <p>Get in touch with the PNP Caraga Region (PRO-13) for system support, accident reporting inquiries, or emergency assistance.</p>
+</div>
+
+<!-- Emergency Hotlines Banner -->
+<div class="emergency-banner">
+    <div class="emergency-banner-left">
+        <i class="fas fa-exclamation-circle"></i>
+        <div>
+            <h3>Emergency Hotlines</h3>
+            <p>For immediate assistance,<br>call these numbers 24/7</p>
+        </div>
+    </div>
+    <div class="emergency-numbers">
+        <div class="emergency-num">
+            <div class="emergency-num-icon" style="background:#FEE2E2; color:#DC2626;"><i class="fas fa-ambulance"></i></div>
+            <strong>911</strong>
+            <span>National Emergency</span>
+        </div>
+        <div class="emergency-num">
+            <div class="emergency-num-icon" style="background:#DBEAFE; color:#1D4ED8;"><i class="fas fa-shield-alt"></i></div>
+            <strong>117</strong>
+            <span>PNP Hotline</span>
+        </div>
+        <div class="emergency-num">
+            <div class="emergency-num-icon" style="background:#FEF3C7; color:#D97706;"><i class="fas fa-motorcycle"></i></div>
+            <strong>8723-0401</strong>
+            <span>Highway Patrol</span>
+        </div>
+        <div class="emergency-num">
+            <div class="emergency-num-icon" style="background:#D1FAE5; color:#059669;"><i class="fas fa-phone-alt"></i></div>
+            <strong>143</strong>
+            <span>Red Cross</span>
+        </div>
+    </div>
+</div>
+
+<!-- Two column: Regional Office + System Support -->
+<div class="contact-grid-2">
+
+    <!-- PNP PRO-13 Regional Office -->
+    <div class="contact-section">
+        <h2 class="contact-section-title">
+            <i class="fas fa-building blue"></i>
+            PNP PRO-13 Regional Office
+        </h2>
+        <div class="contact-cards" style="grid-template-columns: 1fr;">
+            <div class="contact-card">
+                <div class="contact-card-icon" style="background:#DBEAFE; color:#1D4ED8;"><i class="fas fa-map-marker-alt"></i></div>
+                <div>
+                    <h4>Office Address</h4>
+                    <p>Police Regional Office 13 (Caraga)<br>Camp Col. Rafael C. Rodriguez<br>Libertad, Butuan City 8600<br>Agusan del Norte, Philippines</p>
+                </div>
+            </div>
+            <div class="contact-card">
+                <div class="contact-card-icon" style="background:#D1FAE5; color:#059669;"><i class="fas fa-phone"></i></div>
+                <div>
+                    <h4>Telephone</h4>
+                    <p>(085) 342-5765<br>(085) 815-1964</p>
+                </div>
+            </div>
+            <div class="contact-card">
+                <div class="contact-card-icon" style="background:#EDE9FE; color:#7C3AED;"><i class="fas fa-envelope"></i></div>
+                <div>
+                    <h4>Email</h4>
+                    <p><a href="mailto:pro13@pnp.gov.ph">pro13@pnp.gov.ph</a></p>
+                </div>
+            </div>
+            <div class="contact-card">
+                <div class="contact-card-icon" style="background:#FEF3C7; color:#D97706;"><i class="fas fa-clock"></i></div>
+                <div>
+                    <h4>Office Hours</h4>
+                    <p>Monday &ndash; Friday: 8:00 AM &ndash; 5:00 PM<br>Emergency services available 24/7</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Support -->
+    <div class="contact-section">
+        <h2 class="contact-section-title">
+            <i class="fas fa-laptop-code green"></i>
+            AGNES System Support
+        </h2>
+        <p>For technical issues, account requests, or questions about the AGNES Hotspot Detection System, contact the system administration team:</p>
+        <div class="contact-cards" style="grid-template-columns: 1fr;">
+            <div class="contact-card">
+                <div class="contact-card-icon" style="background:#D1FAE5; color:#059669;"><i class="fas fa-user-cog"></i></div>
+                <div>
+                    <h4>System Administrator</h4>
+                    <p>PRO-13 IT / Regional Admin Office<br>For account creation, password resets, role assignments, and system configuration.</p>
+                </div>
+            </div>
+            <div class="contact-card">
+                <div class="contact-card-icon" style="background:#DBEAFE; color:#1D4ED8;"><i class="fas fa-bug"></i></div>
+                <div>
+                    <h4>Technical Issues</h4>
+                    <p>Report system errors, data discrepancies, or feature requests to the admin office or your station IT coordinator.</p>
+                </div>
+            </div>
+            <div class="contact-card">
+                <div class="contact-card-icon" style="background:#EDE9FE; color:#7C3AED;"><i class="fas fa-user-plus"></i></div>
+                <div>
+                    <h4>Account Requests</h4>
+                    <p>New user accounts must be requested through your Station Commander or Provincial Chief and created by a system administrator.</p>
+                </div>
+            </div>
+        </div>
+        <div class="contact-tip info">
+            <i class="fas fa-info-circle"></i>
+            <div>Before contacting support, try checking the <a href="{% url 'help' %}" style="color:inherit; font-weight:600; text-decoration:underline;">Help &amp; User Guide</a> for answers to common questions.</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Provincial Police Offices Directory -->
+<div class="contact-section">
+    <h2 class="contact-section-title">
+        <i class="fas fa-sitemap purple"></i>
+        Provincial Police Offices &mdash; Caraga Region
+    </h2>
+    <p>For accident reporting or local road safety concerns, contact your respective Provincial Police Office:</p>
+    <table class="office-table">
+        <thead>
+            <tr>
+                <th>Province</th>
+                <th>Office</th>
+                <th>Location</th>
+                <th>Contact</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><i class="fas fa-map-pin" style="color:#2563EB; margin-right:0.35rem; font-size:0.7rem;"></i> Agusan del Norte</td>
+                <td>ADNPPO</td>
+                <td>Butuan City</td>
+                <td>(085) 342-8232</td>
+            </tr>
+            <tr>
+                <td><i class="fas fa-map-pin" style="color:#059669; margin-right:0.35rem; font-size:0.7rem;"></i> Agusan del Sur</td>
+                <td>ADSPPO</td>
+                <td>Prosperidad, Agusan del Sur</td>
+                <td>(085) 839-3407</td>
+            </tr>
+            <tr>
+                <td><i class="fas fa-map-pin" style="color:#7C3AED; margin-right:0.35rem; font-size:0.7rem;"></i> Surigao del Norte</td>
+                <td>SDNPPO</td>
+                <td>Surigao City</td>
+                <td>(086) 826-1890</td>
+            </tr>
+            <tr>
+                <td><i class="fas fa-map-pin" style="color:#D97706; margin-right:0.35rem; font-size:0.7rem;"></i> Surigao del Sur</td>
+                <td>SDSPPO</td>
+                <td>Tandag City</td>
+                <td>(086) 211-3104</td>
+            </tr>
+            <tr>
+                <td><i class="fas fa-map-pin" style="color:#DC2626; margin-right:0.35rem; font-size:0.7rem;"></i> Dinagat Islands</td>
+                <td>DIPPO</td>
+                <td>San Jose, Dinagat Islands</td>
+                <td>(086) 213-4200</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="contact-tip warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>For ongoing road emergencies or accidents in progress, always call <strong>911</strong> or <strong>117</strong> first before using this system to file a report.</div>
+    </div>
+</div>
+
+<!-- Related Agencies -->
+<div class="contact-section">
+    <h2 class="contact-section-title">
+        <i class="fas fa-hands-helping teal"></i>
+        Related Agencies
+    </h2>
+    <p>Road safety is a collaborative effort. The following agencies work alongside PNP Caraga on accident prevention and response:</p>
+    <div class="contact-cards">
+        <div class="contact-card">
+            <div class="contact-card-icon" style="background:#FEF3C7; color:#D97706;"><i class="fas fa-hard-hat"></i></div>
+            <div>
+                <h4>DPWH Region 13</h4>
+                <p>Department of Public Works and Highways &mdash; Road infrastructure, safety improvements, and engineering countermeasures for identified hotspots.</p>
+            </div>
+        </div>
+        <div class="contact-card">
+            <div class="contact-card-icon" style="background:#DBEAFE; color:#1D4ED8;"><i class="fas fa-car"></i></div>
+            <div>
+                <h4>LTO Region 13</h4>
+                <p>Land Transportation Office &mdash; Driver licensing, vehicle registration, and enforcement of motor vehicle regulations.</p>
+            </div>
+        </div>
+        <div class="contact-card">
+            <div class="contact-card-icon" style="background:#D1FAE5; color:#059669;"><i class="fas fa-bus"></i></div>
+            <div>
+                <h4>LTFRB Region 13</h4>
+                <p>Land Transportation Franchising and Regulatory Board &mdash; Public utility vehicle regulation, route management, and passenger safety.</p>
+            </div>
+        </div>
+        <div class="contact-card">
+            <div class="contact-card-icon" style="background:#FEE2E2; color:#DC2626;"><i class="fas fa-first-aid"></i></div>
+            <div>
+                <h4>DOH Region 13</h4>
+                <p>Department of Health &mdash; Emergency medical response coordination, hospital referrals, and injury surveillance data.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

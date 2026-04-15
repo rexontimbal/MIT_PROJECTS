@@ -7,5 +7,5 @@ echo ========================================
 echo   AGNES PNP Server Starting...
 echo ========================================
 echo.
-python manage.py runserver
+python manage.py runserver 0.0.0.0:8000
 pause

@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Display Settings{% endblock %}
+
+{% block breadcrumb_items %}
+<span> / Display Settings</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ds-container {
+        max-width: 620px;
+        margin: 0 auto;
+        padding: 1.5rem 0;
+    }
+    .ds-header {
+        margin-bottom: 1.5rem;
+    }
+    .ds-header h2 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 4px 0;
+    }
+    .ds-header p {
+        color: #6B7280;
+        font-size: 0.85rem;
+        margin: 0;
+    }
+    .ds-card {
+        background: #fff;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .ds-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .ds-card-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: #EEF2FF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #003087;
+        font-size: 0.9rem;
+    }
+    .ds-card-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #1F2937;
+    }
+    .ds-card-desc {
+        font-size: 0.8rem;
+        color: #6B7280;
+    }
+    .ds-options {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .ds-option {
+        flex: 1;
+        cursor: pointer;
+    }
+    .ds-option input[type="radio"] {
+        display: none;
+    }
+    .ds-option-box {
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 2px solid #E5E7EB;
+        text-align: center;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #6B7280;
+        transition: all 0.15s;
+    }
+    .ds-option-box i {
+        margin-right: 5px;
+    }
+    .ds-option input[type="radio"]:checked + .ds-option-box {
+        border-color: #003087;
+        background: #EEF2FF;
+        color: #003087;
+        position: relative;
+    }
+    .ds-option input[type="radio"]:checked + .ds-option-box::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: 0.7rem;
+        margin-left: 6px;
+        display: inline-block;
+    }
+    .ds-option-box:hover {
+        border-color: #9CA3AF;
+    }
+    .ds-system-note {
+        font-size: 0.75rem;
+        color: #9CA3AF;
+        margin-top: 8px;
+        font-style: italic;
+    }
+    .ds-actions {
+        margin-top: 1.25rem;
+        display: flex;
+        gap: 10px;
+    }
+    .ds-btn-save {
+        padding: 10px 28px;
+        background: #003087;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .ds-btn-save:hover {
+        background: #00206B;
+    }
+    .ds-btn-back {
+        padding: 10px 20px;
+        background: #F3F4F6;
+        color: #374151;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .ds-btn-back:hover {
+        background: #E5E7EB;
+    }
+    .ds-alert {
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        background: #ECFDF5;
+        color: #065F46;
+        border: 1px solid #A7F3D0;
+    }
+
+    /* Dark mode */
+    [data-theme="dark"] .ds-header h2 { color: #E5E7EB; }
+    [data-theme="dark"] .ds-header p { color: #9CA3AF; }
+    [data-theme="dark"] .ds-card { background: #1F2937; border-color: #374151; }
+    [data-theme="dark"] .ds-card-icon { background: #374151; color: #60A5FA; }
+    [data-theme="dark"] .ds-card-title { color: #E5E7EB; }
+    [data-theme="dark"] .ds-card-desc { color: #9CA3AF; }
+    [data-theme="dark"] .ds-option-box { border-color: #374151; color: #9CA3AF; background: #111827; }
+    [data-theme="dark"] .ds-option input[type="radio"]:checked + .ds-option-box { border-color: #3B82F6; background: #1E3A5F; color: #60A5FA; position: relative; }
+    [data-theme="dark"] .ds-option-box:hover { border-color: #4B5563; }
+    [data-theme="dark"] .ds-system-note { color: #6B7280; }
+    [data-theme="dark"] .ds-btn-save { background: #2563EB; }
+    [data-theme="dark"] .ds-btn-save:hover { background: #1D4ED8; }
+    [data-theme="dark"] .ds-btn-back { background: #374151; color: #E5E7EB; border-color: #4B5563; }
+    [data-theme="dark"] .ds-btn-back:hover { background: #4B5563; }
+    [data-theme="dark"] .ds-alert { background: #064E3B; color: #A7F3D0; border-color: #065F46; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ds-container">
+    <div class="ds-header">
+        <h2><i class="fas fa-sliders-h" style="color:#003087; margin-right:8px;"></i>Display Settings</h2>
+        <p>Choose your preferred default view for each page. Select "System Default" to use the setting configured by the administrator.</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Accident Page View -->
+        <div class="ds-card">
+            <div class="ds-card-header">
+                <div class="ds-card-icon"><i class="fas fa-car-crash"></i></div>
+                <div>
+                    <div class="ds-card-title">Accident Page</div>
+                    <div class="ds-card-desc">Default view when opening the Accidents page</div>
+                </div>
+            </div>
+            <div class="ds-options">
+                <label class="ds-option">
+                    <input type="radio" name="pref_accident_view" value="" {% if not profile.pref_accident_view %}checked{% endif %}>
+                    <div class="ds-option-box"><i class="fas fa-globe"></i>System Default</div>
+                </label>
+                <label class="ds-option">
+                    <input type="radio" name="pref_accident_view" value="cards" {% if profile.pref_accident_view == 'cards' %}checked{% endif %}>
+                    <div class="ds-option-box"><i class="fas fa-th-large"></i>Cards View</div>
+                </label>
+                <label class="ds-option">
+                    <input type="radio" name="pref_accident_view" value="table" {% if profile.pref_accident_view == 'table' %}checked{% endif %}>
+                    <div class="ds-option-box"><i class="fas fa-list"></i>Table View</div>
+                </label>
+            </div>
+            <div class="ds-system-note">System default is currently set to: {{ sys_accident_default|title }} View</div>
+        </div>
+
+        <!-- Hotspot Page View -->
+        <div class="ds-card">
+            <div class="ds-card-header">
+                <div class="ds-card-icon"><i class="fas fa-fire"></i></div>
+                <div>
+                    <div class="ds-card-title">Hotspot Page</div>
+                    <div class="ds-card-desc">Default view when opening the Hotspots page</div>
+                </div>
+            </div>
+            <div class="ds-options">
+                <label class="ds-option">
+                    <input type="radio" name="pref_hotspot_view" value="" {% if not profile.pref_hotspot_view %}checked{% endif %}>
+                    <div class="ds-option-box"><i class="fas fa-globe"></i>System Default</div>
+                </label>
+                <label class="ds-option">
+                    <input type="radio" name="pref_hotspot_view" value="grid" {% if profile.pref_hotspot_view == 'grid' %}checked{% endif %}>
+                    <div class="ds-option-box"><i class="fas fa-th-large"></i>Grid View</div>
+                </label>
+                <label class="ds-option">
+                    <input type="radio" name="pref_hotspot_view" value="list" {% if profile.pref_hotspot_view == 'list' %}checked{% endif %}>
+                    <div class="ds-option-box"><i class="fas fa-list"></i>List View</div>
+                </label>
+            </div>
+            <div class="ds-system-note">System default is currently set to: {{ sys_hotspot_default|title }} View</div>
+        </div>
+
+        <div class="ds-actions">
+            <button type="submit" class="ds-btn-save">
+                <i class="fas fa-save" style="margin-right:6px;"></i>Save Settings
+            </button>
+            <a href="javascript:history.back()" class="ds-btn-back">
+                <i class="fas fa-arrow-left"></i>Back
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

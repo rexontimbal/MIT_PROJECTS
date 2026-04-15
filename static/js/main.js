@@ -494,14 +494,22 @@ function updateAllChartsTheme() {
  * Initialize Leaflet map
  */
 function initializeMap(mapId, center = [9.0, 125.5], zoom = 9) {
-    const map = L.map(mapId).setView(center, zoom);
-    
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 18
+    const map = L.map(mapId, {
+        zoomSnap: 0.5,
+        wheelDebounceTime: 80,
+        wheelPxPerZoomLevel: 120
+    }).setView(center, zoom);
+
+    // Add CartoDB Voyager tiles (reliable, no referrer policy issues)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19,
+        updateWhenZooming: false,
+        updateWhenIdle: true,
+        keepBuffer: 4
     }).addTo(map);
-    
+
     return map;
 }
 

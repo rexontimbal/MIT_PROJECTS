@@ -1,6 +1,18 @@
-{% extends 'admin_panel/base.html' %}
+{% extends base_template %}
 
-{% block title %}Create New User{% endblock %}
+{% block title %}{% if user.profile.role == 'station_commander' or user.profile.role == 'provincial_chief' %}Add Personnel{% else %}Create New User{% endif %}{% endblock %}
+
+{% block extra_css %}
+{% if base_template == 'base.html' %}
+{% include 'admin_panel/_admin_styles.html' %}
+{% endif %}
+{% endblock %}
+
+{% block breadcrumb_items %}
+{% if base_template == 'base.html' %}
+<span> / <a href="{% url 'admin_panel:users' %}">Manage Personnel</a> / Add</span>
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <style>
@@ -302,6 +314,10 @@
                 <div class="form-group">
                     <label class="form-label" for="username">Username <span style="color: #DC143C;">*</span></label>
                     <input type="text" name="username" id="username" class="form-control" value="{{ form_data.username|default:'' }}" required>
+                    <div class="email-suggest" id="usernameSuggest" style="display: none;">
+                        <span class="email-suggest-label">Suggested:</span>
+                        <button type="button" class="email-suggest-btn" id="usernameSuggestBtn" onclick="applyUsernameSuggestion()"></button>
+                    </div>
                     <small style="color: #9CA3AF;">Letters, digits, and @/./+/-/_ only.</small>
                 </div>
                 <div class="form-group">
@@ -326,14 +342,36 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <div class="checkbox-row">
-                    <input type="checkbox" name="must_change_password" id="must_change_password" checked>
-                    <label for="must_change_password">
-                        <i class="fas fa-lock" style="color: #003087;"></i>
-                        Require password change on first login
-                    </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <div class="checkbox-row">
+                        <input type="checkbox" name="must_change_password" id="must_change_password" checked>
+                        <label for="must_change_password">
+                            <i class="fas fa-lock" style="color: #003087;"></i>
+                            Require password change on first login
+                        </label>
+                    </div>
                 </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <div class="checkbox-row">
+                        <input type="checkbox" name="can_submit_reports" id="can_submit_reports" checked>
+                        <label for="can_submit_reports">
+                            <i class="fas fa-file-alt" style="color: #3B82F6;"></i>
+                            Allow access to report page
+                        </label>
+                    </div>
+                </div>
+                {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
+                <div class="form-group" style="margin-bottom: 0;">
+                    <div class="checkbox-row">
+                        <input type="checkbox" name="can_run_clustering" id="can_run_clustering">
+                        <label for="can_run_clustering">
+                            <i class="fas fa-project-diagram" style="color: #DC143C;"></i>
+                            Authorize to run clustering
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
             </div>
 
             <div class="form-group">
@@ -416,7 +454,17 @@
                     <label class="form-label" for="role">Role <span style="color: #DC143C;">*</span></label>
                     <select name="role" id="role" class="form-control" required>
                         {% for value, label in roles %}
-                        <option value="{{ value }}">{{ label }}</option>
+                            {% if user.profile.role == 'station_commander' %}
+                                {% if value == 'traffic_officer' or value == 'data_encoder' %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endif %}
+                            {% elif user.profile.role == 'provincial_chief' %}
+                                {% if value == 'station_commander' or value == 'traffic_officer' or value == 'data_encoder' %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endif %}
+                            {% else %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endif %}
                         {% endfor %}
                     </select>
                 </div>
@@ -442,13 +490,32 @@
             </div>
 
             <div class="form-row">
-                <div class="form-group">
+                <div class="form-group" id="station-group">
                     <label class="form-label" for="station">Station <span style="color: #DC143C;">*</span></label>
                     <select name="station" id="station" class="form-control" required>
                         <option value="">-- Select Province First --</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="office-group" style="display: none;">
+                    <label class="form-label" for="office">Office/Command <span style="color: #DC143C;">*</span></label>
+                    <!-- Provincial Chief: PPO dropdown -->
+                    <select name="office" id="office" class="form-control" disabled>
+                        <option value="">-- Select PPO --</option>
+                        <option value="Agusan del Norte PPO">Agusan del Norte PPO</option>
+                        <option value="Agusan del Sur PPO">Agusan del Sur PPO</option>
+                        <option value="Butuan City Police Office">Butuan City Police Office</option>
+                        <option value="Dinagat Islands PPO">Dinagat Islands PPO</option>
+                        <option value="Surigao del Norte PPO">Surigao del Norte PPO</option>
+                        <option value="Surigao del Sur PPO">Surigao del Sur PPO</option>
+                    </select>
+                </div>
+                <!-- Regional Director: auto-assigned PRO (read-only display) -->
+                <div class="form-group" id="pro-group" style="display: none;">
+                    <label class="form-label">Office/Command</label>
+                    <input type="text" class="form-control" value="Police Regional Office CARAGA" readonly style="background: #f3f4f6; cursor: not-allowed;">
+                    <input type="hidden" name="office_pro" id="office_pro" value="Police Regional Office CARAGA">
+                </div>
+                <div class="form-group" id="unit-group" style="display: none;">
                     <label class="form-label" for="unit">Unit/Office</label>
                     <select name="unit" id="unit" class="form-control">
                         <option value="">--- Select Unit ---</option>
@@ -486,14 +553,6 @@
                             <option value="Regional Chaplain Service">RChS</option>
                             <option value="Regional Communications and Electronics Unit">RCEU</option>
                             <option value="Regional Personnel Holding and Accounting Unit">RPHAU</option>
-                        </optgroup>
-                        <optgroup label="Provincial/City Police Offices">
-                            <option value="Agusan del Norte Police Provincial Office">Agusan del Norte PPO</option>
-                            <option value="Agusan del Sur Police Provincial Office">Agusan del Sur PPO</option>
-                            <option value="Surigao del Norte Police Provincial Office">Surigao del Norte PPO</option>
-                            <option value="Surigao del Sur Police Provincial Office">Surigao del Sur PPO</option>
-                            <option value="Dinagat Islands Police Provincial Office">Dinagat Islands PPO</option>
-                            <option value="Butuan City Police Office">Butuan City Police Office</option>
                         </optgroup>
                     </select>
                 </div>
@@ -643,6 +702,77 @@ function updateStations() {
     }
 }
 
+// Dynamic station/office field based on role
+const OFFICE_ROLES = ['provincial_chief', 'regional_director'];
+const PPO_MAP = {
+    'Agusan del Norte': 'Agusan del Norte PPO',
+    'Agusan del Sur': 'Agusan del Sur PPO',
+    'Butuan City': 'Butuan City Police Office',
+    'Dinagat Islands': 'Dinagat Islands PPO',
+    'Surigao del Norte': 'Surigao del Norte PPO',
+    'Surigao del Sur': 'Surigao del Sur PPO',
+};
+
+const UNIT_ROLES = ['super_admin', 'regional_director'];
+
+function toggleStationOffice() {
+    const roleSelect = document.getElementById('role');
+    const stationGroup = document.getElementById('station-group');
+    const officeGroup = document.getElementById('office-group');
+    const proGroup = document.getElementById('pro-group');
+    const unitGroup = document.getElementById('unit-group');
+    const stationSelect = document.getElementById('station');
+    const officeInput = document.getElementById('office');
+
+    // Show Unit field only for Super Admin and Regional Director
+    unitGroup.style.display = UNIT_ROLES.includes(roleSelect.value) ? '' : 'none';
+
+    if (roleSelect.value === 'regional_director') {
+        // Regional Director: auto-assigned to PRO, no selection needed
+        stationGroup.style.display = 'none';
+        stationSelect.disabled = true;
+        stationSelect.removeAttribute('required');
+        officeGroup.style.display = 'none';
+        officeInput.disabled = true;
+        officeInput.removeAttribute('required');
+        proGroup.style.display = '';
+    } else if (roleSelect.value === 'provincial_chief') {
+        // Provincial Chief: show PPO dropdown only
+        stationGroup.style.display = 'none';
+        stationSelect.disabled = true;
+        stationSelect.removeAttribute('required');
+        proGroup.style.display = 'none';
+        officeGroup.style.display = '';
+        officeInput.disabled = false;
+        officeInput.setAttribute('required', 'required');
+        // Auto-select PPO based on province
+        const prov = document.getElementById('province').value;
+        if (prov && PPO_MAP[prov]) {
+            officeInput.value = PPO_MAP[prov];
+        }
+    } else {
+        // Station-level roles: show station dropdown
+        stationGroup.style.display = '';
+        stationSelect.disabled = false;
+        stationSelect.setAttribute('required', 'required');
+        officeGroup.style.display = 'none';
+        officeInput.disabled = true;
+        officeInput.removeAttribute('required');
+        proGroup.style.display = 'none';
+    }
+}
+
+document.getElementById('role').addEventListener('change', toggleStationOffice);
+document.getElementById('province').addEventListener('change', function() {
+    const roleSelect = document.getElementById('role');
+    if (roleSelect.value === 'provincial_chief') {
+        const prov = this.value;
+        document.getElementById('office').value = PPO_MAP[prov] || '';
+    }
+});
+// Run on page load
+toggleStationOffice();
+
 // Form validation
 function validateForm() {
     const password = document.getElementById('password').value;
@@ -725,6 +855,43 @@ function applyEmailSuggestion() {
     document.getElementById('emailSuggest').style.display = 'none';
 }
 
+// =========================================
+// USERNAME AUTO-SUGGESTION
+// =========================================
+function updateUsernameSuggestion() {
+    const firstName = document.getElementById('first_name').value.trim().toLowerCase();
+    const lastName = document.getElementById('last_name').value.trim().toLowerCase();
+    const usernameInput = document.getElementById('username');
+    const suggestBox = document.getElementById('usernameSuggest');
+    const suggestBtn = document.getElementById('usernameSuggestBtn');
+
+    if (firstName && lastName) {
+        const cleanFirst = firstName.replace(/[^a-z]/g, '');
+        const cleanLast = lastName.replace(/[^a-z]/g, '');
+
+        if (cleanFirst && cleanLast) {
+            const suggested = cleanFirst + '.' + cleanLast;
+            suggestBtn.textContent = suggested;
+            suggestBtn.title = suggested;
+            suggestBox.style.display = 'flex';
+
+            if (!usernameInput.value.trim()) {
+                usernameInput.value = suggested;
+                suggestBox.style.display = 'none';
+            } else if (usernameInput.value.trim() === suggested) {
+                suggestBox.style.display = 'none';
+            }
+            return;
+        }
+    }
+    suggestBox.style.display = 'none';
+}
+
+function applyUsernameSuggestion() {
+    document.getElementById('username').value = document.getElementById('usernameSuggestBtn').textContent;
+    document.getElementById('usernameSuggest').style.display = 'none';
+}
+
 // Visual feedback for password matching
 document.addEventListener('DOMContentLoaded', function() {
     const password = document.getElementById('password');
@@ -753,11 +920,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // =========================================
     const capitalizeInputs = document.querySelectorAll('.capitalize-input');
     capitalizeInputs.forEach(input => {
-        // Capitalize on input + trigger email suggestion
+        // Capitalize on input + trigger username & email suggestion
         input.addEventListener('input', function() {
             if (this.value.length > 0) {
                 this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
             }
+            updateUsernameSuggestion();
             updateEmailSuggestion();
         });
 
@@ -765,6 +933,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (input.value.length > 0) {
             input.value = input.value.charAt(0).toUpperCase() + input.value.slice(1);
         }
+    });
+
+    // Show suggestion again if user clears/changes username
+    document.getElementById('username').addEventListener('input', function() {
+        updateUsernameSuggestion();
     });
 
     // Show suggestion again if user clears/changes email
@@ -1004,5 +1177,65 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+{% if user.profile.role == 'station_commander' %}
+// Auto-fill and lock province/station for Station Commander
+(function() {
+    const provinceSelect = document.getElementById('province');
+    const stationSelect = document.getElementById('station');
+    const cmdProvince = '{{ user.profile.province|escapejs }}';
+    const cmdStation = '{{ user.profile.station|escapejs }}';
+
+    if (cmdProvince) {
+        provinceSelect.value = cmdProvince;
+        updateStations();
+        if (cmdStation) {
+            stationSelect.value = cmdStation;
+        }
+        provinceSelect.disabled = true;
+        stationSelect.disabled = true;
+        // Add hidden inputs so disabled values still submit
+        const form = provinceSelect.closest('form');
+        const hiddenProv = document.createElement('input');
+        hiddenProv.type = 'hidden'; hiddenProv.name = 'province'; hiddenProv.value = cmdProvince;
+        const hiddenStn = document.createElement('input');
+        hiddenStn.type = 'hidden'; hiddenStn.name = 'station'; hiddenStn.value = cmdStation;
+        form.appendChild(hiddenProv);
+        form.appendChild(hiddenStn);
+    }
+})();
+{% elif user.profile.role == 'provincial_chief' %}
+// Auto-fill province and lock it for Provincial Chief (station remains selectable)
+(function() {
+    const provinceSelect = document.getElementById('province');
+    const chiefProvince = '{{ user.profile.province|escapejs }}';
+
+    if (chiefProvince) {
+        provinceSelect.value = chiefProvince;
+        updateStations();
+        provinceSelect.disabled = true;
+        // Add hidden input so disabled province still submits
+        const form = provinceSelect.closest('form');
+        const hiddenProv = document.createElement('input');
+        hiddenProv.type = 'hidden'; hiddenProv.name = 'province'; hiddenProv.value = chiefProvince;
+        form.appendChild(hiddenProv);
+    }
+})();
+{% elif user.profile.role == 'regional_director' %}
+// Auto-fill province to Agusan del Norte for Regional Director (Caraga Regional Office location)
+(function() {
+    const provinceSelect = document.getElementById('province');
+    const rdProvince = 'Agusan del Norte';
+
+    provinceSelect.value = rdProvince;
+    updateStations();
+    provinceSelect.disabled = true;
+    // Add hidden input so disabled province still submits
+    const form = provinceSelect.closest('form');
+    const hiddenProv = document.createElement('input');
+    hiddenProv.type = 'hidden'; hiddenProv.name = 'province'; hiddenProv.value = rdProvince;
+    form.appendChild(hiddenProv);
+})();
+{% endif %}
 </script>
 {% endblock %}

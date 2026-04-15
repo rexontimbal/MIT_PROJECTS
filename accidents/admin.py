@@ -188,8 +188,8 @@ class AccidentClusterAdmin(admin.ModelAdmin):
             label = 'MODERATE'
 
         return format_html(
-            '<span style="background: {}; color: white; padding: 4px 10px; border-radius: 3px; font-weight: bold; font-size: 11px;">{}: {:.1f}</span>',
-            color, label, obj.severity_score
+            '<span style="background: {}; color: white; padding: 4px 10px; border-radius: 3px; font-weight: bold; font-size: 11px;">{}: {}</span>',
+            color, label, f"{obj.severity_score:.1f}"
         )
     severity_badge.short_description = 'Severity'
 
@@ -446,8 +446,8 @@ class ClusterValidationMetricsAdmin(admin.ModelAdmin):
             color = '#dc3545'  # Poor: Red
 
         return format_html(
-            '<span style="color: {}; font-weight: bold;">{:.3f}</span> <span style="color: #6c757d; font-size: 10px;">(-1 to 1, higher better)</span>',
-            color, obj.silhouette_score
+            '<span style="color: {}; font-weight: bold;">{}</span> <span style="color: #6c757d; font-size: 10px;">(-1 to 1, higher better)</span>',
+            color, f"{obj.silhouette_score:.3f}"
         )
     silhouette_display.short_description = 'Silhouette Score'
     silhouette_display.admin_order_field = 'silhouette_score'
@@ -468,8 +468,8 @@ class ClusterValidationMetricsAdmin(admin.ModelAdmin):
             color = '#dc3545'  # Poor: Red
 
         return format_html(
-            '<span style="color: {}; font-weight: bold;">{:.3f}</span> <span style="color: #6c757d; font-size: 10px;">(0 to ∞, lower better)</span>',
-            color, obj.davies_bouldin_index
+            '<span style="color: {}; font-weight: bold;">{}</span> <span style="color: #6c757d; font-size: 10px;">(0 to ∞, lower better)</span>',
+            color, f"{obj.davies_bouldin_index:.3f}"
         )
     davies_bouldin_display.short_description = 'Davies-Bouldin Index'
     davies_bouldin_display.admin_order_field = 'davies_bouldin_index'
@@ -490,8 +490,8 @@ class ClusterValidationMetricsAdmin(admin.ModelAdmin):
             color = '#dc3545'  # Poor: Red
 
         return format_html(
-            '<span style="color: {}; font-weight: bold;">{:.2f}</span> <span style="color: #6c757d; font-size: 10px;">(0 to ∞, higher better)</span>',
-            color, obj.calinski_harabasz_score
+            '<span style="color: {}; font-weight: bold;">{}</span> <span style="color: #6c757d; font-size: 10px;">(0 to ∞, higher better)</span>',
+            color, f"{obj.calinski_harabasz_score:.2f}"
         )
     calinski_harabasz_display.short_description = 'Calinski-Harabasz Score'
     calinski_harabasz_display.admin_order_field = 'calinski_harabasz_score'

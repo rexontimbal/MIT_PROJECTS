@@ -655,7 +655,7 @@
     }
 
     .controls-body {
-        padding: 1.1rem;
+        padding: 0.7rem;
         /* Fill remaining panel height and scroll — max-height is now governed by parent */
         flex: 1;
         min-height: 0;
@@ -668,23 +668,104 @@
     }
 
     .control-section {
-        margin-bottom: 1.3rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 0.6rem;
+        border-radius: 8px;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        overflow: hidden;
     }
 
     .control-section:last-child {
         margin-bottom: 0;
+    }
+
+    .control-section h4.section-toggle {
+        margin: 0;
+        color: var(--primary-blue);
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0.65rem 0.8rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+        transition: background 0.15s;
         border-bottom: none;
     }
 
-    .control-section h4 {
-        margin: 0 0 0.9rem 0;
-        color: var(--primary-blue);
-        font-size: 0.85rem;
-        font-weight: 600;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid var(--light-blue);
+    .control-section h4.section-toggle:hover {
+        background: #EEF2FF;
+    }
+
+    .control-section h4.section-toggle .chevron-icon {
+        transition: transform 0.25s ease;
+        flex-shrink: 0;
+    }
+
+    .control-section.collapsed h4.section-toggle .chevron-icon {
+        transform: rotate(-90deg);
+    }
+
+    .control-section .section-content {
+        padding: 0.5rem 0.8rem 0.8rem;
+        border-top: 1px solid #E2E8F0;
+    }
+
+    .control-section.collapsed .section-content {
+        display: none;
+    }
+
+    /* 2-column filter row */
+    .filter-row-2col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+    }
+
+    .filter-row-2col .control-group {
+        margin-bottom: 0;
+    }
+
+    /* Date range side-by-side */
+    .date-range-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+    }
+
+    /* Layer toggles 2x2 grid */
+    .layer-toggles-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.25rem;
+    }
+
+    .intensity-sliders {
+        margin-top: 0.6rem;
+        padding-top: 0.6rem;
+        border-top: 1px solid #E2E8F0;
+    }
+
+    /* Clear all filters button */
+    .btn-clear-filters {
+        width: 100%;
+        margin-top: 0.6rem;
+        padding: 0.55rem;
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: #6B7280;
+        background: white;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-clear-filters:hover {
+        color: #DC2626;
+        border-color: #DC2626;
+        background: #FEF2F2;
     }
 
     .control-group {
@@ -744,15 +825,11 @@
     .layer-toggle {
         display: flex;
         align-items: center;
-        gap: 0.65rem;
-        padding: 0.65rem 0.75rem;
+        gap: 0.45rem;
+        padding: 0.45rem 0.5rem;
         cursor: pointer;
         border-radius: 6px;
         transition: background 0.2s;
-        margin-bottom: 0.4rem;
-    }
-
-    .layer-toggle:last-child {
         margin-bottom: 0;
     }
 
@@ -761,15 +838,16 @@
     }
 
     .layer-toggle input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
+        width: 15px;
+        height: 15px;
         cursor: pointer;
         margin: 0;
     }
 
     .layer-toggle span {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: var(--text-dark);
+        white-space: nowrap;
     }
 
     /* Enhanced Legend */
@@ -882,6 +960,7 @@
     flex-wrap: wrap;
     justify-content: center;
     max-width: 95%;
+    transition: left 0.35s ease, top 0.35s ease, transform 0.35s ease;
 }
 
 /* Badge separator dot between visible badges */
@@ -1038,6 +1117,134 @@
     background: rgba(255,255,255,0.3);
     color: white;
 }
+
+    /* ============================================================================
+       NOTIFICATION TOAST SYSTEM — top-right corner of the map
+       ============================================================================ */
+    .map-notification-container {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 1100;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: none;
+        max-width: 340px;
+        width: 100%;
+    }
+
+    .map-toast {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.55rem 0.85rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: white;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+        pointer-events: auto;
+        opacity: 0;
+        transform: translateX(30px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+    }
+
+    .map-toast.show {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .map-toast.hide {
+        opacity: 0;
+        transform: translateX(30px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    /* Type colors */
+    .map-toast-success {
+        background: linear-gradient(135deg, rgba(16,185,129,0.92), rgba(5,150,105,0.92));
+    }
+    .map-toast-info {
+        background: linear-gradient(135deg, rgba(59,130,246,0.92), rgba(37,99,235,0.92));
+    }
+    .map-toast-warning {
+        background: linear-gradient(135deg, rgba(245,158,11,0.92), rgba(217,119,6,0.92));
+        color: #1a1a1a;
+    }
+    .map-toast-error {
+        background: linear-gradient(135deg, rgba(239,68,68,0.92), rgba(220,38,38,0.92));
+    }
+
+    .map-toast-icon {
+        flex-shrink: 0;
+        font-size: 0.95rem;
+    }
+
+    .map-toast-msg {
+        flex: 1;
+        line-height: 1.35;
+    }
+
+    .map-toast-close {
+        flex-shrink: 0;
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: inherit;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+    .map-toast-close:hover {
+        background: rgba(255,255,255,0.35);
+    }
+
+    /* Dark theme */
+    [data-theme="dark"] .map-toast {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+        .map-notification-container {
+            top: 10px;
+            right: 10px;
+            left: 10px;
+            max-width: none;
+        }
+        .map-toast {
+            font-size: 0.75rem;
+            padding: 0.45rem 0.7rem;
+        }
+    }
+
+    /* ============================================================================
+       BADGE POSITION MODES — shift left when search bar is open
+       ============================================================================ */
+    .filter-badges-container.search-open {
+        left: 80px;
+        transform: translateX(0);
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    @media (max-width: 768px) {
+        .filter-badges-container.search-open {
+            left: 50%;
+            transform: translateX(-50%);
+            justify-content: center;
+        }
+    }
 
     @keyframes pulse {
         0% { transform: scale(1); opacity: 1; }
@@ -2747,6 +2954,76 @@ body.fullscreen-mode .search-history {
 [data-theme="dark"] [style*="color:#3"] {
     color: #E8E8E8 !important;
 }
+
+/* ============================================================================
+   CUSTOM CONFIRM MODAL — replaces browser confirm() dialogs
+   ============================================================================ */
+.map-confirm-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10015;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+.map-confirm-overlay.active {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 120px;
+    animation: fadeIn 0.15s ease;
+}
+.map-confirm-box {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    padding: 1.5rem 1.8rem;
+    max-width: 420px;
+    width: 90%;
+    animation: slideDown 0.2s ease;
+}
+.map-confirm-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
+}
+.map-confirm-icon {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.95rem;
+}
+.map-confirm-title {
+    font-weight: 700; font-size: 1rem; color: #1F2937; margin: 0;
+}
+.map-confirm-msg {
+    font-size: 0.82rem; color: #6B7280; line-height: 1.5; margin-bottom: 1.2rem;
+}
+.map-confirm-actions {
+    display: flex; justify-content: flex-end; gap: 0.5rem;
+}
+.map-confirm-cancel {
+    padding: 0.4rem 1rem; border-radius: 6px; border: 1px solid #D1D5DB;
+    background: white; color: #374151; font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+}
+.map-confirm-cancel:hover { background: #F3F4F6; }
+.map-confirm-ok {
+    padding: 0.4rem 1rem; border-radius: 6px; border: none;
+    color: white; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;
+    transition: all 0.15s;
+}
+
+[data-theme="dark"] .map-confirm-box { background: #1A2332; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+[data-theme="dark"] .map-confirm-title { color: #F3F4F6; }
+[data-theme="dark"] .map-confirm-msg { color: #9CA3AF; }
+[data-theme="dark"] .map-confirm-cancel { background: #2D3A4F; border-color: #3D4F6B; color: #D1D5DB; }
+[data-theme="dark"] .map-confirm-cancel:hover { background: #374963; }
 </style>
 {% endblock %}
 
@@ -2839,12 +3116,6 @@ body.fullscreen-mode .search-history {
                 <button class="tag-btn" onclick="quickSearch('car')">🚗 Car</button>
                 <button class="tag-btn" onclick="quickSearch('pick-up')">🚙 Pick-up</button>
             </div>
-        </div>
-
-        <!-- Search Active Banner -->
-        <div class="search-active-banner" id="searchActiveBanner">
-            <span>🔍 Search Active: <strong id="searchBannerText">""</strong></span>
-            <button class="close-banner" onclick="clearSearchFromBanner()">×</button>
         </div>
 
         <!-- Fullscreen/Maximize Button -->
@@ -3018,159 +3289,177 @@ body.fullscreen-mode .search-history {
             </div>
             
             <div class="controls-body">
-                <!-- Time-Based Filters -->
-                <div class="control-section">
-                    <h4>📅 Time-Based Filtering</h4>
-                    
-                    <div class="control-group">
-                        <label for="timeRange">Time Period</label>
-                        <select id="timeRange" onchange="applyTimeFilter()">
-                            <option value="all">All Time</option>
-                            <option value="current_year">Current Year</option>
-                            <option value="last_year">Last Year</option>
-                            <option value="last_6_months">Last 6 Months</option>
-                            <option value="last_3_months">Last 3 Months</option>
-                            <option value="last_month">Last Month</option>
-                            <option value="custom">Custom Range</option>
-                        </select>
-                    </div>
+                <!-- Section 1: Time & Date -->
+                <div class="control-section collapsible-section">
+                    <h4 class="section-toggle" onclick="toggleSection(this)">
+                        <span>📅 Time & Date</span>
+                        <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </h4>
+                    <div class="section-content">
+                        <div class="control-group">
+                            <label for="timeRange">Time Period</label>
+                            <select id="timeRange" onchange="applyTimeFilter()">
+                                <option value="all">All Time</option>
+                                <option value="current_year">Current Year</option>
+                                <option value="last_year">Last Year</option>
+                                <option value="last_6_months">Last 6 Months</option>
+                                <option value="last_3_months">Last 3 Months</option>
+                                <option value="last_month">Last Month</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
 
-                    <div class="control-group" id="customDateRange" style="display: none;">
-                        <label for="startDate">From Date</label>
-                        <input type="date" id="startDate" onchange="updateCustomRange()">
-                        <label for="endDate" style="margin-top: 0.5rem;">To Date</label>
-                        <input type="date" id="endDate" onchange="updateCustomRange()">
-                    </div>
+                        <div class="control-group" id="customDateRange" style="display: none;">
+                            <div class="date-range-row">
+                                <div class="date-field">
+                                    <label for="startDate">From</label>
+                                    <input type="date" id="startDate" onchange="updateCustomRange()">
+                                </div>
+                                <div class="date-field">
+                                    <label for="endDate">To</label>
+                                    <input type="date" id="endDate" onchange="updateCustomRange()">
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="control-group">
-                        <label for="timeOfDay">Time of Day</label>
-                        <select id="timeOfDay" onchange="applyTimeFilter()">
-                            <option value="all">All Day</option>
-                            <option value="morning">Morning (6AM-12PM)</option>
-                            <option value="afternoon">Afternoon (12PM-6PM)</option>
-                            <option value="evening">Evening (6PM-12AM)</option>
-                            <option value="night">Night (12AM-6AM)</option>
-                        </select>
-                    </div>
-                </div>
+                        <div class="control-group">
+                            <label for="yearFilter">Year</label>
+                            <select id="yearFilter" onchange="applyFilters()">
+                                <option value="">All Years</option>
+                                {% for year in years %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% empty %}
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                                <option value="2021">2021</option>
+                                <option value="2020">2020</option>
+                                <option value="2019">2019</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                <!-- Data Filters -->
-                <div class="control-section">
-                    <h4>🔍 Data Filters</h4>
-
-                    <div class="control-group">
-                        <label for="provinceFilter">Province</label>
-                        <select id="provinceFilter" onchange="applyFilters()">
-                            <option value="">All Provinces</option>
-                            {% for province in provinces %}
-                            <option value="{{ province }}">{{ province }}</option>
-                            {% empty %}
-                            <!-- Fallback options if no provinces in database -->
-                            <option value="AGUSAN DEL NORTE">Agusan del Norte</option>
-                            <option value="AGUSAN DEL SUR">Agusan del Sur</option>
-                            <option value="SURIGAO DEL NORTE">Surigao del Norte</option>
-                            <option value="SURIGAO DEL SUR">Surigao del Sur</option>
-                            <option value="DINAGAT ISLANDS">Dinagat Islands</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="control-group">
-                        <label for="yearFilter">Year</label>
-                        <select id="yearFilter" onchange="applyFilters()">
-                            <option value="">All Years</option>
-                            {% for year in years %}
-                            <option value="{{ year }}">{{ year }}</option>
-                            {% empty %}
-                            <option value="2024">2024</option>
-                            <option value="2023">2023</option>
-                            <option value="2022">2022</option>
-                            <option value="2021">2021</option>
-                            <option value="2020">2020</option>
-                            <option value="2019">2019</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="control-group">
-                        <label for="incidentTypeFilter">Incident Type</label>
-                        <select id="incidentTypeFilter" onchange="applyFilters()">
-                            <option value="">All Types</option>
-                            <option value="FATAL">Fatal Accidents</option>
-                            <option value="INJURY">Injury Accidents</option>
-                            <option value="PROPERTY">Property Damage Only</option>
-                        </select>
-                    </div>
-
-                    <div class="control-group">
-                        <label for="dayOfWeekFilter">Day of Week</label>
-                        <select id="dayOfWeekFilter" onchange="applyFilters()">
-                            <option value="">All Days</option>
-                            <option value="1">Monday</option>
-                            <option value="2">Tuesday</option>
-                            <option value="3">Wednesday</option>
-                            <option value="4">Thursday</option>
-                            <option value="5">Friday</option>
-                            <option value="6">Saturday</option>
-                            <option value="0">Sunday</option>
-                        </select>
-                    </div>
-
-                    <div class="control-group">
-                        <label for="severityFilter">Minimum Severity</label>
-                        <select id="severityFilter" onchange="applyFilters()">
-                            <option value="0">All Severities</option>
-                            <option value="30">Medium (30+)</option>
-                            <option value="50">High (50+)</option>
-                            <option value="70">Critical (70+)</option>
-                        </select>
-                    </div>
-
-                    <div class="control-group">
-                        <button class="btn btn-outline" style="width: 100%;" onclick="clearAllFilters()">
-                            🗑️ Clear All Filters
-                        </button>
+                        <div class="filter-row-2col">
+                            <div class="control-group">
+                                <label for="timeOfDay">Time of Day</label>
+                                <select id="timeOfDay" onchange="applyTimeFilter()">
+                                    <option value="all">All Day</option>
+                                    <option value="morning">Morning (6-12)</option>
+                                    <option value="afternoon">Afternoon (12-6)</option>
+                                    <option value="evening">Evening (6-12)</option>
+                                    <option value="night">Night (12-6)</option>
+                                </select>
+                            </div>
+                            <div class="control-group">
+                                <label for="dayOfWeekFilter">Day of Week</label>
+                                <select id="dayOfWeekFilter" onchange="applyFilters()">
+                                    <option value="">All Days</option>
+                                    <option value="1">Monday</option>
+                                    <option value="2">Tuesday</option>
+                                    <option value="3">Wednesday</option>
+                                    <option value="4">Thursday</option>
+                                    <option value="5">Friday</option>
+                                    <option value="6">Saturday</option>
+                                    <option value="0">Sunday</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Map Layers -->
-                <div class="control-section">
-                    <h4>🗂️ Map Layers & Visualization</h4>
-                    
-                    <label class="layer-toggle">
-                        <input type="checkbox" id="showAccidents" checked onchange="toggleLayer('accidents')">
-                        <span>📍 Accident Markers</span>
-                    </label>
+                <!-- Section 2: Location & Classification -->
+                <div class="control-section collapsible-section">
+                    <h4 class="section-toggle" onclick="toggleSection(this)">
+                        <span>🔍 Location & Classification</span>
+                        <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </h4>
+                    <div class="section-content">
+                        <div class="control-group">
+                            <label for="provinceFilter">Province</label>
+                            <select id="provinceFilter" onchange="applyFilters()">
+                                <option value="">All Provinces</option>
+                                {% for province in provinces %}
+                                <option value="{{ province }}">{{ province }}</option>
+                                {% empty %}
+                                <option value="AGUSAN DEL NORTE">Agusan del Norte</option>
+                                <option value="AGUSAN DEL SUR">Agusan del Sur</option>
+                                <option value="SURIGAO DEL NORTE">Surigao del Norte</option>
+                                <option value="SURIGAO DEL SUR">Surigao del Sur</option>
+                                <option value="DINAGAT ISLANDS">Dinagat Islands</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                    <label class="layer-toggle">
-                        <input type="checkbox" id="showHotspots" checked onchange="toggleLayer('hotspots')">
-                        <span>🔴 Hotspot Areas</span>
-                    </label>
-
-                    <label class="layer-toggle">
-                        <input type="checkbox" id="showClusters" onchange="toggleLayer('clusters')">
-                        <span>📊 Cluster Markers</span>
-                    </label>
-
-                    <label class="layer-toggle">
-                        <input type="checkbox" id="showHeatmap" onchange="toggleLayer('heatmap')">
-                        <span>🔥 Heatmap Layer</span>
-                    </label>
-
-                    <div class="control-group" style="margin-top: 1rem;">
-                        <label for="clusterIntensity">
-                            Cluster Intensity: <span id="clusterIntensityValue">50</span>%
-                        </label>
-                        <input type="range" id="clusterIntensity" min="1" max="100" value="50" 
-                            oninput="updateClusterIntensityLive(this.value)" 
-                            onchange="updateClusterIntensity()">
-                    </div>
-
-                    <div class="control-group">
-                        <label for="heatmapIntensity">Heatmap Intensity</label>
-                        <input type="range" id="heatmapIntensity" min="1" max="100" value="25" onchange="updateHeatmapIntensity()">
+                        <div class="filter-row-2col">
+                            <div class="control-group">
+                                <label for="incidentTypeFilter">Incident Type</label>
+                                <select id="incidentTypeFilter" onchange="applyFilters()">
+                                    <option value="">All Types</option>
+                                    <option value="FATAL">Fatal</option>
+                                    <option value="INJURY">Injury</option>
+                                    <option value="PROPERTY">Property</option>
+                                </select>
+                            </div>
+                            <div class="control-group">
+                                <label for="severityFilter">Min. Severity</label>
+                                <select id="severityFilter" onchange="applyFilters()">
+                                    <option value="0">All</option>
+                                    <option value="30">Medium (30+)</option>
+                                    <option value="50">High (50+)</option>
+                                    <option value="70">Critical (70+)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Section 3: Map Layers -->
+                <div class="control-section collapsible-section">
+                    <h4 class="section-toggle" onclick="toggleSection(this)">
+                        <span>🗂️ Map Layers</span>
+                        <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </h4>
+                    <div class="section-content">
+                        <div class="layer-toggles-grid">
+                            <label class="layer-toggle">
+                                <input type="checkbox" id="showAccidents" checked onchange="toggleLayer('accidents')">
+                                <span>📍 Accidents</span>
+                            </label>
+                            <label class="layer-toggle">
+                                <input type="checkbox" id="showHotspots" checked onchange="toggleLayer('hotspots')">
+                                <span>🔴 Hotspots</span>
+                            </label>
+                            <label class="layer-toggle">
+                                <input type="checkbox" id="showClusters" onchange="toggleLayer('clusters')">
+                                <span>📊 Clusters</span>
+                            </label>
+                            <label class="layer-toggle">
+                                <input type="checkbox" id="showHeatmap" onchange="toggleLayer('heatmap')">
+                                <span>🔥 Heatmap</span>
+                            </label>
+                        </div>
+
+                        <div class="intensity-sliders">
+                            <div class="control-group">
+                                <label for="clusterIntensity">
+                                    Cluster Intensity: <span id="clusterIntensityValue">50</span>%
+                                </label>
+                                <input type="range" id="clusterIntensity" min="1" max="100" value="50"
+                                    oninput="updateClusterIntensityLive(this.value)"
+                                    onchange="updateClusterIntensity()">
+                            </div>
+                            <div class="control-group">
+                                <label for="heatmapIntensity">Heatmap Intensity</label>
+                                <input type="range" id="heatmapIntensity" min="1" max="100" value="25" onchange="updateHeatmapIntensity()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clear All Filters -->
+                <button class="btn-clear-filters" onclick="clearAllFilters()">
+                    🗑️ Clear All Filters
+                </button>
             </div>
             <!-- Resize handle -->
             <div class="panel-resize-handle" data-panel="mapControls" data-dir="bottom" title="Drag to resize"></div>
@@ -3253,6 +3542,21 @@ body.fullscreen-mode .search-history {
         </div>
         <div class="spinner"></div>
         <div class="spinner-inner"></div>
+    </div>
+</div>
+
+<!-- Custom Confirm Modal -->
+<div class="map-confirm-overlay" id="mapConfirmOverlay" onclick="if(event.target===this)hideMapConfirm()">
+    <div class="map-confirm-box">
+        <div class="map-confirm-header">
+            <div class="map-confirm-icon" id="mapConfirmIcon"></div>
+            <div class="map-confirm-title" id="mapConfirmTitle"></div>
+        </div>
+        <div class="map-confirm-msg" id="mapConfirmMsg"></div>
+        <div class="map-confirm-actions">
+            <button class="map-confirm-cancel" onclick="hideMapConfirm()">Cancel</button>
+            <button class="map-confirm-ok" id="mapConfirmOkBtn" onclick="executeMapConfirm()">Confirm</button>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -3500,13 +3804,24 @@ function validateData() {
 function initializeEnhancedMap() {
     try {
         // Center on Caraga Region, zoom 8 so all provinces visible
-        map = L.map('mainMap').setView([9.0, 125.5], 8);
+        map = L.map('mainMap', {
+            zoomSnap: 0.5,
+            zoomDelta: 0.5,
+            wheelDebounceTime: 80,
+            wheelPxPerZoomLevel: 120,
+            fadeAnimation: true,
+            zoomAnimation: true
+        }).setView([9.0, 125.5], 8);
 
-        // Create street (vector) layer
-        streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 18,
-            minZoom: 7
+        // Create street (vector) layer — CartoDB Voyager (reliable, no referrer policy issues)
+        streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19,
+            minZoom: 7,
+            updateWhenZooming: false,
+            updateWhenIdle: true,
+            keepBuffer: 4
         });
 
         // Create Mapbox satellite layer
@@ -4008,13 +4323,6 @@ function applyAllFilters() {
 
         hideLoading();
         console.log('✅ All filters applied successfully');
-
-        const visibleCount = activeMarkers.length;
-        if (visibleCount === 0) {
-            showNotification('No accidents match your filters', 'info');
-        } else {
-            showNotification(`Showing ${visibleCount} accidents with current filters`, 'success');
-        }
     }, 100);
 }
 
@@ -4063,6 +4371,9 @@ function filterAndDisplayMarkers() {
     pulseHotspotCircles();
 
     updateAllStatistics();
+
+    // Single unified notification for filter results
+    showFilterResultsBanner();
 }
 
 // Center and zoom map to show filtered accidents with smooth animation
@@ -4155,75 +4466,25 @@ function showFilterAppliedEffect() {
         flashOverlay.style.opacity = '0';
     }, 400);
 
-    // Show center results banner
-    showFilterResultsBanner();
-
     console.log('✨ Filter applied visual effect shown');
 }
 
-// Show a compact small toast notification for filter results
+// Flag to suppress auto-notification when a manual notification is shown instead
+let _suppressFilterBanner = false;
+
+// Show a compact toast notification for filter results (unified with showNotification)
 function showFilterResultsBanner() {
-    // Get or create the results banner
-    let resultsBanner = document.getElementById('filterResultsBanner');
+    if (_suppressFilterBanner) { _suppressFilterBanner = false; return; }
 
-    if (!resultsBanner) {
-        resultsBanner = document.createElement('div');
-        resultsBanner.id = 'filterResultsBanner';
-        resultsBanner.style.cssText = `
-            position: absolute;
-            top: 75px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-15px);
-            background: linear-gradient(135deg, #003087, #1E5FAA);
-            color: white;
-            padding: 10px 18px;
-            border-radius: 30px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            box-shadow: 0 4px 20px rgba(0, 48, 135, 0.5);
-            z-index: 850;
-            opacity: 0;
-            transition: all 0.3s ease;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            white-space: nowrap;
-        `;
-        document.getElementById('mainMap').appendChild(resultsBanner);
-    }
-
-    // Build compact results
     const accidentCount = activeMarkers.length;
     const visibleHotspots = hotspotCircles.filter(item => item.accidents && item.accidents.length > 0).length;
 
-    let bannerHTML = '';
-
     if (accidentCount === 0) {
-        bannerHTML = `
-            <i class="fas fa-exclamation-circle"></i>
-            <span>No results found</span>
-        `;
+        showNotification('No results found', 'info');
     } else {
-        bannerHTML = `
-            <i class="fas fa-check-circle"></i>
-            <span><strong>${accidentCount.toLocaleString()}</strong> accident${accidentCount !== 1 ? 's' : ''}${visibleHotspots > 0 ? ` • ${visibleHotspots} hotspot${visibleHotspots !== 1 ? 's' : ''}` : ''}</span>
-        `;
+        const hotspotText = visibleHotspots > 0 ? ` \u2022 ${visibleHotspots} hotspot${visibleHotspots !== 1 ? 's' : ''}` : '';
+        showNotification(`${accidentCount.toLocaleString()} accident${accidentCount !== 1 ? 's' : ''}${hotspotText}`, 'success');
     }
-
-    resultsBanner.innerHTML = bannerHTML;
-
-    // Show with slide down animation
-    setTimeout(() => {
-        resultsBanner.style.opacity = '1';
-        resultsBanner.style.transform = 'translateX(-50%) translateY(0)';
-    }, 100);
-
-    // Hide after 2 seconds
-    setTimeout(() => {
-        resultsBanner.style.opacity = '0';
-        resultsBanner.style.transform = 'translateX(-50%) translateY(-15px)';
-    }, 2000);
 }
 
 // Pulse animation for hotspot circles when filters are applied
@@ -5364,6 +5625,11 @@ function applyTimeFilter() {
     applyAllFilters();
 }
 
+function toggleSection(headerEl) {
+    const section = headerEl.closest('.collapsible-section');
+    if (section) section.classList.toggle('collapsed');
+}
+
 function updateCustomRange() {
     if (document.getElementById('timeRange').value === 'custom') {
         applyAllFilters();
@@ -5446,73 +5712,6 @@ function updateTimeFilterBadge() {
     console.log('🕒 Filter badge updated:', { text, shouldShow, filterParts });
 }
 
-// Update the active filters summary badge (shows Year, Incident Type, Day of Week filters)
-function updateActiveFiltersBadge() {
-    const badge = document.getElementById('activeFiltersBadge');
-    const textElement = document.getElementById('activeFiltersText');
-    if (!badge || !textElement) return;
-
-    const filterParts = [];
-
-    // Year filter
-    if (currentFilters.year && currentFilters.year !== '') {
-        filterParts.push(`📅 ${currentFilters.year}`);
-    }
-
-    // Incident Type filter
-    if (currentFilters.incidentType && currentFilters.incidentType !== '') {
-        const typeLabels = { 'FATAL': '💀 Fatal', 'INJURY': '🚑 Injury', 'PROPERTY': '🚗 Property' };
-        filterParts.push(typeLabels[currentFilters.incidentType] || currentFilters.incidentType);
-    }
-
-    // Day of Week filter
-    if (currentFilters.dayOfWeek && currentFilters.dayOfWeek !== '') {
-        const dayLabels = { '0': 'Sun', '1': 'Mon', '2': 'Tue', '3': 'Wed', '4': 'Thu', '5': 'Fri', '6': 'Sat' };
-        filterParts.push(`📆 ${dayLabels[currentFilters.dayOfWeek]}`);
-    }
-
-    if (filterParts.length > 0) {
-        textElement.textContent = `🎯 ${filterParts.join(' • ')}`;
-        badge.classList.add('show');
-    } else {
-        badge.classList.remove('show');
-    }
-
-    setTimeout(updateBadgePositions, 10);
-    console.log('🔍 Active filters badge updated:', filterParts);
-}
-
-// Clear only the advanced filters (Year, Incident Type, Day of Week) - called when closing the badge
-function clearAdvancedFilters() {
-    console.log('🗑️ Clearing advanced filters (Year, Incident Type, Day of Week)...');
-
-    // Reset Year filter
-    const yearFilter = document.getElementById('yearFilter');
-    if (yearFilter) yearFilter.value = '';
-
-    // Reset Incident Type filter
-    const incidentTypeFilter = document.getElementById('incidentTypeFilter');
-    if (incidentTypeFilter) incidentTypeFilter.value = '';
-
-    // Reset Day of Week filter
-    const dayOfWeekFilter = document.getElementById('dayOfWeekFilter');
-    if (dayOfWeekFilter) dayOfWeekFilter.value = '';
-
-    // Update currentFilters object
-    currentFilters.year = '';
-    currentFilters.incidentType = '';
-    currentFilters.dayOfWeek = '';
-
-    // Hide the badge
-    const badge = document.getElementById('activeFiltersBadge');
-    if (badge) badge.classList.remove('show');
-
-    // Re-apply filters to update the map
-    applyAllFilters();
-
-    console.log('✅ Advanced filters cleared');
-}
-
 function applyFilters() {
     applyAllFilters();
     // Auto-show statistics panel when filters are applied
@@ -5586,9 +5785,6 @@ function clearAllFilters() {
             searchBanner.classList.remove('show');
         }
     }
-
-    const activeFiltersBadge = document.getElementById('activeFiltersBadge');
-    if (activeFiltersBadge) activeFiltersBadge.classList.remove('show');
 
     updateBadgePositions();
     applyAllFilters();
@@ -5785,27 +5981,7 @@ function updateClusterIntensityLive(value) {
 }
 
 function showClusterIntensityFeedback(intensity) {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        background: var(--primary-blue);
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        z-index: 10000;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        animation: slideIn 0.3s ease;
-    `;
-    notification.textContent = `🎯 Cluster Intensity: ${intensity}%`;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 1500);
+    showNotification(`Cluster Intensity: ${intensity}%`, 'info');
 }
 
 // ============================================================================
@@ -6064,12 +6240,14 @@ function toggleSearchBar() {
         setTimeout(() => {
             container.classList.add('active');
             btn.classList.add('active');
-            adjustBannerPositions(true); // Move banners below search bar
+            adjustBannerPositions(true); // Move banners left
         }, 10);
 
+        // Recalculate max-width after search bar transition completes (0.4s)
         setTimeout(() => {
             if (input) input.focus();
-        }, 400);
+            adjustBannerPositions(true);
+        }, 450);
     } else {
         closeSearchBar();
     }
@@ -6077,25 +6255,31 @@ function toggleSearchBar() {
 
 // Helper function to adjust banner positions when search bar toggles
 function adjustBannerPositions(searchBarActive) {
-    const timeFilterBadge = document.getElementById('timeFilterBadge');
-    const searchActiveBanner = document.getElementById('searchActiveBanner');
+    const container = document.getElementById('filterBadgesContainer');
+    if (!container) return;
 
     if (searchBarActive) {
-        // Move banners below search bar
-        if (timeFilterBadge) {
-            timeFilterBadge.classList.add('below-search');
-        }
-        if (searchActiveBanner) {
-            searchActiveBanner.classList.add('below-search');
+        // Search bar visible → shift badges to the left, keep same top as centered
+        container.classList.add('search-open');
+        container.style.top = '15px';
+
+        // Calculate max-width so badges don't overlap the search bar
+        const searchBar = document.getElementById('mapSearchContainer');
+        if (searchBar && searchBar.classList.contains('active')) {
+            const searchRect = searchBar.getBoundingClientRect();
+            const mapContainer = container.closest('.map-container');
+            const mapLeft = mapContainer ? mapContainer.getBoundingClientRect().left : 0;
+            // Available width = search bar left edge - badge container left (80px) - gap
+            const availableWidth = searchRect.left - mapLeft - 80 - 20;
+            container.style.maxWidth = Math.max(availableWidth, 180) + 'px';
+        } else {
+            container.style.maxWidth = '';
         }
     } else {
-        // Move banners back to top
-        if (timeFilterBadge) {
-            timeFilterBadge.classList.remove('below-search');
-        }
-        if (searchActiveBanner) {
-            searchActiveBanner.classList.remove('below-search');
-        }
+        // Search bar hidden → centre badges at the top
+        container.classList.remove('search-open');
+        container.style.top = '15px';
+        container.style.maxWidth = '95%';
     }
 }
 
@@ -6186,6 +6370,7 @@ function performSearch() {
     }
     
     currentFilters.searchQuery = query;
+    _suppressFilterBanner = true;
     applyAllFilters();
     updateTimeFilterBadge();
     updateAllStatistics();
@@ -6248,6 +6433,7 @@ function performSearch() {
                 duration: 1.5
             });
             
+            showNotification(`Found ${activeMarkers.length} result${activeMarkers.length !== 1 ? 's' : ''} for "${query}"`, 'success');
             console.log('🗺️ Map adjusted to show', activeMarkers.length, 'search results');
         } else {
             showNotification('No results found for your search with current filters', 'error');
@@ -6648,12 +6834,56 @@ function removeFromHistory(index) {
 }
 
 function clearSearchHistory() {
-    if (confirm('Are you sure you want to clear all search history?')) {
-        searchHistory = [];
-        localStorage.removeItem('accidentSearchHistory');
-        updateHistoryDisplay();
-        showNotification('Search history cleared', 'success');
-    }
+    showMapConfirm({
+        title: 'Clear search history?',
+        message: 'This will remove all your recent search entries. This action cannot be undone.',
+        icon: '🗑️',
+        iconBg: '#FEE2E2',
+        iconColor: '#DC2626',
+        btnText: 'Clear All',
+        btnColor: '#DC2626',
+        btnHoverColor: '#B91C1C',
+        onConfirm: function() {
+            searchHistory = [];
+            localStorage.removeItem('accidentSearchHistory');
+            updateHistoryDisplay();
+            showNotification('Search history cleared', 'success');
+        }
+    });
+}
+
+// ============================================================================
+// CUSTOM CONFIRM MODAL
+// ============================================================================
+let _mapConfirmCallback = null;
+
+function showMapConfirm(opts) {
+    document.getElementById('mapConfirmTitle').textContent = opts.title || 'Confirm';
+    document.getElementById('mapConfirmMsg').textContent = opts.message || '';
+
+    const icon = document.getElementById('mapConfirmIcon');
+    icon.textContent = opts.icon || '⚠️';
+    icon.style.background = opts.iconBg || '#FEF3C7';
+    icon.style.color = opts.iconColor || '#D97706';
+
+    const okBtn = document.getElementById('mapConfirmOkBtn');
+    okBtn.textContent = opts.btnText || 'Confirm';
+    okBtn.style.background = opts.btnColor || '#DC2626';
+    okBtn.onmouseenter = function() { this.style.background = opts.btnHoverColor || '#B91C1C'; };
+    okBtn.onmouseleave = function() { this.style.background = opts.btnColor || '#DC2626'; };
+
+    _mapConfirmCallback = opts.onConfirm || null;
+    document.getElementById('mapConfirmOverlay').classList.add('active');
+}
+
+function hideMapConfirm() {
+    document.getElementById('mapConfirmOverlay').classList.remove('active');
+    _mapConfirmCallback = null;
+}
+
+function executeMapConfirm() {
+    if (_mapConfirmCallback) _mapConfirmCallback();
+    hideMapConfirm();
 }
 
 // ============================================================================
@@ -6694,10 +6924,11 @@ function clearTimeFilterBadge() {
     }
     
     updateBadgePositions();
+    _suppressFilterBanner = true;
     applyAllFilters();
-    
+
     showNotification('All filters cleared - Showing all data', 'success');
-    
+
     console.log('✅ ALL filters cleared from badge');
 }
 
@@ -6710,18 +6941,19 @@ function clearSearchFromBanner() {
     }
     
     currentFilters.searchQuery = '';
+    _suppressFilterBanner = true;
     applyAllFilters();
-    
+
     const banner = document.getElementById('searchActiveBanner');
     if (banner) {
         banner.classList.remove('show');
     }
-    
+
     closeSearchInfo();
     updateBadgePositions();
-    
+
     showNotification('Search cleared', 'success');
-    
+
     console.log('✅ Search banner cleared');
 }
 
@@ -6734,14 +6966,15 @@ function clearSearchFilter() {
     }
     
     currentFilters.searchQuery = '';
+    _suppressFilterBanner = true;
     applyAllFilters();
     closeSearchInfo();
-    
+
     const banner = document.getElementById('searchActiveBanner');
     if (banner) {
         banner.classList.remove('show');
     }
-    
+
     updateBadgePositions();
     showNotification('Search cleared - View reset to all data', 'success');
     
@@ -6807,8 +7040,47 @@ function toggleFullscreen() {
 // ============================================================================
 
 function showNotification(message, type = 'info') {
-    // Notifications disabled - function kept for compatibility
-    return;
+    // Get or create the notification container (anchored inside the map)
+    let container = document.getElementById('mapNotificationContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'mapNotificationContainer';
+        container.className = 'map-notification-container';
+        const mapContainer = document.querySelector('.map-container');
+        if (mapContainer) {
+            mapContainer.appendChild(container);
+        } else {
+            document.body.appendChild(container);
+        }
+    }
+
+    // Clear any existing toasts so only one shows at a time
+    container.querySelectorAll('.map-toast').forEach(old => old.remove());
+
+    // Icon per type
+    const icons = { success: '✅', info: 'ℹ️', warning: '⚠️', error: '❌' };
+    const icon = icons[type] || icons.info;
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `map-toast map-toast-${type}`;
+    toast.innerHTML = `
+        <span class="map-toast-icon">${icon}</span>
+        <span class="map-toast-msg">${message}</span>
+        <button class="map-toast-close" onclick="this.parentElement.classList.add('hide')">&times;</button>
+    `;
+
+    container.appendChild(toast);
+
+    // Trigger entrance animation on next frame
+    requestAnimationFrame(() => toast.classList.add('show'));
+
+    // Auto-dismiss after 3.5s
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 350);
+    }, 3500);
 }
 
 // ============================================================================
@@ -6886,10 +7158,12 @@ document.head.appendChild(style);
 // ============================================================================
 
 function updateBadgePositions() {
-    // Badges are now in a flex container (.filter-badges-container)
-    // They automatically arrange horizontally when visible
-    // This function is kept for compatibility but no manual positioning needed
-    console.log('📍 Badge positions updated (flex container handles layout)');
+    // Sync badge position with current search bar visibility
+    const searchContainer = document.getElementById('mapSearchContainer');
+    const isSearchOpen = searchContainer &&
+        searchContainer.style.display !== 'none' &&
+        searchContainer.classList.contains('active');
+    adjustBannerPositions(isSearchOpen);
 }
 
 // ============================================================================
@@ -7451,5 +7725,13 @@ function syncLegendHandle() {
 }
 
 window.addEventListener('resize', syncLegendHandle);
+
+// Recalculate badge max-width on resize when search bar is open
+window.addEventListener('resize', function() {
+    const searchContainer = document.getElementById('mapSearchContainer');
+    if (searchContainer && searchContainer.classList.contains('active')) {
+        adjustBannerPositions(true);
+    }
+});
 </script>
 {% endblock %}

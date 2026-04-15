@@ -14,7 +14,6 @@ class AccidentReportForm(forms.ModelForm):
             'vehicle_kind', 'vehicle_kind_other', 'vehicle_make', 'vehicle_make_other', 'vehicle_model', 'vehicle_model_other', 'vehicle_plate_no', 'vehicle_chassis_no', 'vehicle_colorum',
             'drug_involved',
             'incident_description',
-            'photo_1', 'photo_2', 'photo_3',
         ]
 
         widgets = {
@@ -67,10 +66,6 @@ class AccidentReportForm(forms.ModelForm):
                 'class': 'form-control', 'rows': 4,
                 'placeholder': 'Provide a detailed narrative of the accident including sequence of events, circumstances, and relevant details...'
             }),
-            # Photos
-            'photo_1': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
-            'photo_2': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
-            'photo_3': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
         }
 
     def clean(self):

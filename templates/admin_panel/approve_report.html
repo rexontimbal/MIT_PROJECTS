@@ -550,7 +550,15 @@
 
         <div class="report-photos">
             <h4><i class="fas fa-camera"></i> Photos</h4>
-            {% if report.photo_1 or report.photo_2 or report.photo_3 %}
+            {% if report.photos.all %}
+            <div class="photo-grid">
+                {% for photo in report.photos.all %}
+                <div class="photo-grid-item" onclick="openLightbox('{{ photo.image.url }}')">
+                    <img src="{{ photo.image.url }}" alt="Photo {{ forloop.counter }}">
+                </div>
+                {% endfor %}
+            </div>
+            {% elif report.photo_1 or report.photo_2 or report.photo_3 %}
             <div class="photo-grid">
                 {% if report.photo_1 %}
                 <div class="photo-grid-item" onclick="openLightbox('{{ report.photo_1.url }}')">

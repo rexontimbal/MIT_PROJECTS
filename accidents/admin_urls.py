@@ -24,8 +24,15 @@ urlpatterns = [
     # Report Activity Logs
     path('report-activity/', admin_views.report_activity_logs, name='report_activity_logs'),
 
+    # Display Settings
+    path('settings/', admin_views.system_settings, name='system_settings'),
+
     # System Monitoring
     path('system/', admin_views.system_monitoring, name='system_monitoring'),
+
+    # Maintenance Tools
+    path('system/clear-cache/', admin_views.clear_cache, name='clear_cache'),
+    path('system/database-backup/', admin_views.database_backup, name='database_backup'),
 
     # AJAX Endpoints
     path('api/user-stats/', admin_views.get_user_stats, name='api_user_stats'),

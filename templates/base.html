@@ -40,8 +40,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=2.2">
-    
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=2.3">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}?v=1.0">
+
     {% block extra_css %}{% endblock %}
     
     <style>
@@ -1177,10 +1178,10 @@
         }
 
         /* Unclustered accidents badge on Hotspots nav */
-        .nav-link .unclustered-badge {
+        .hotspot-nav-badge {
             position: absolute;
-            top: 2px;
-            right: -2px;
+            top: -7px;
+            right: -10px;
             background: #EF4444;
             color: white;
             font-size: 0.55rem;
@@ -1193,34 +1194,17 @@
             justify-content: center;
             padding: 0 3px;
             line-height: 1;
-            animation: unclusteredPulse 2.5s infinite;
+            animation: hotspot-badge-pulse 2.5s infinite;
+            z-index: 5;
+            pointer-events: none;
         }
-        .nav-link .unclustered-badge.hidden { display: none; }
-        @keyframes unclusteredPulse {
+        .navbar-menu li {
+            overflow: visible;
+        }
+        @keyframes hotspot-badge-pulse {
             0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
             50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
         }
-        /* Mobile bottom nav unclustered badge */
-        .mobile-nav-item .unclustered-badge-mobile {
-            position: absolute;
-            top: -2px;
-            right: 50%;
-            transform: translateX(calc(50% + 10px));
-            background: #EF4444;
-            color: white;
-            font-size: 0.5rem;
-            font-weight: 700;
-            min-width: 14px;
-            height: 14px;
-            border-radius: 7px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 2px;
-            line-height: 1;
-            animation: unclusteredPulse 2.5s infinite;
-        }
-        .mobile-nav-item .unclustered-badge-mobile.hidden { display: none; }
 
         .notifications-menu {
             position: absolute;
@@ -1705,7 +1689,7 @@
             <div class="navbar-brand">
                 <img src="{% static 'images/pnp-logo.png' %}" alt="PNP Logo" class="navbar-logo">
                 <div class="navbar-title">
-                    <h1>AGNES Hotspot Detection System</h1>
+                    <h1>AI Based Hotspot Detection System</h1>
                     <p>Philippine National Police - Caraga Region</p>
                 </div>
             </div>
@@ -1735,9 +1719,8 @@
 
                 <li>
                     <a href="{% url 'hotspots' %}" class="nav-link {% if request.resolver_match.url_name == 'hotspots' %}active{% endif %}" data-tooltip="Hotspots">
-                        <span class="icon"><i class="fas fa-fire"></i></span>
+                        <span class="icon" style="position: relative;"><i class="fas fa-fire"></i><span class="hotspot-nav-badge" id="hotspotNavBadge" style="{% if header_unclustered_count %}display: flex;{% else %}display: none;{% endif %}">{{ header_unclustered_count|default:"0" }}</span></span>
                         <span class="text">Hotspots</span>
-                        {% if header_unclustered_count %}<span class="unclustered-badge">{{ header_unclustered_count }}</span>{% endif %}
                     </a>
                 </li>
 
@@ -1752,6 +1735,7 @@
                 <li class="mobile-only-item" style="display:none;">
                     <div class="mobile-menu-divider"></div>
                 </li>
+                {% if can_submit_reports %}
                 <li class="mobile-only-item" style="display:none;">
                     <div class="mobile-menu-section-label">Quick Actions</div>
                 </li>
@@ -1761,6 +1745,7 @@
                         Report Accident
                     </a>
                 </li>
+                {% endif %}
                 <li class="mobile-only-item" style="display:none;">
                     <div class="mobile-menu-divider"></div>
                 </li>
@@ -1797,6 +1782,14 @@
                     <a href="{% url 'admin_panel:dashboard' %}" class="mobile-menu-link">
                         <i class="fas fa-cog"></i>
                         Admin Panel
+                    </a>
+                </li>
+                {% endif %}
+                {% if user.profile.role == 'station_commander' or user.profile.role == 'provincial_chief' %}
+                <li class="mobile-only-item" style="display:none;">
+                    <a href="{% url 'admin_panel:users' %}" class="mobile-menu-link">
+                        <i class="fas fa-users-cog"></i>
+                        Manage Personnel
                     </a>
                 </li>
                 {% endif %}
@@ -1881,10 +1874,12 @@
                     <i class="fas fa-moon" id="darkModeIcon"></i>
                 </button>
 
+                {% if can_submit_reports %}
                 <a href="{% url 'report_accident' %}" class="quick-action-btn">
                     <i class="fas fa-plus-circle"></i>
                     <span class="text">Report Accident</span>
                 </a>
+                {% endif %}
 
                 <!-- User Profile Dropdown -->
                 <div class="user-profile-dropdown" id="userProfileDropdown">
@@ -1938,6 +1933,13 @@
                         <a href="{% url 'admin_panel:dashboard' %}" class="dropdown-item">
                             <i class="fas fa-cog"></i>
                             <span>Admin Panel</span>
+                        </a>
+                        {% endif %}
+
+                        {% if user.profile.role == 'station_commander' or user.profile.role == 'provincial_chief' %}
+                        <a href="{% url 'admin_panel:users' %}" class="dropdown-item">
+                            <i class="fas fa-users-cog"></i>
+                            <span>Manage Personnel</span>
                         </a>
                         {% endif %}
 
@@ -2015,29 +2017,80 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-section">
-                <h3>AGNES Hotspot Detection System</h3>
-                <p>Philippine National Police - Caraga Region</p>
-                <p>Traffic Accident Analysis & Reporting Platform</p>
+        <div class="footer-top">
+            <div class="footer-container">
+                <div class="footer-section footer-brand">
+                    <div class="footer-logo-row">
+                        <div class="footer-logo-icon">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <div>
+                            <h3>AGNES</h3>
+                            <span class="footer-tagline">Accident Geocoding &amp; Network Evaluation System</span>
+                        </div>
+                    </div>
+                    <p class="footer-desc">A data-driven hotspot detection platform for the Philippine National Police &mdash; Caraga Region. Helping identify high-risk road segments to save lives through targeted interventions.</p>
+                    <div class="footer-badges">
+                        <span class="footer-badge"><i class="fas fa-shield-alt"></i> PNP PRO-13</span>
+                        <span class="footer-badge"><i class="fas fa-road"></i> Road Safety</span>
+                        <span class="footer-badge"><i class="fas fa-chart-line"></i> Data-Driven</span>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4><i class="fas fa-link"></i> Quick Links</h4>
+                    <ul>
+                        <li><a href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a href="{% url 'accident_list' %}"><i class="fas fa-car-crash"></i> Accident Records</a></li>
+                        <li><a href="{% url 'hotspots' %}"><i class="fas fa-fire"></i> Hotspot Map</a></li>
+                        <li><a href="{% url 'my_reports' %}"><i class="fas fa-file-alt"></i> My Reports</a></li>
+                        <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About AGNES</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4><i class="fas fa-phone-alt"></i> Emergency &amp; Contacts</h4>
+                    <div class="footer-contacts">
+                        <div class="footer-contact-item">
+                            <div class="footer-contact-icon emergency"><i class="fas fa-ambulance"></i></div>
+                            <div>
+                                <strong>Emergency Hotline</strong>
+                                <span>911</span>
+                            </div>
+                        </div>
+                        <div class="footer-contact-item">
+                            <div class="footer-contact-icon pnp"><i class="fas fa-shield-alt"></i></div>
+                            <div>
+                                <strong>PNP Hotline</strong>
+                                <span>117</span>
+                            </div>
+                        </div>
+                        <div class="footer-contact-item">
+                            <div class="footer-contact-icon hpg"><i class="fas fa-motorcycle"></i></div>
+                            <div>
+                                <strong>Highway Patrol Group</strong>
+                                <span>(02) 8723-0401</span>
+                            </div>
+                        </div>
+                        <div class="footer-contact-item">
+                            <div class="footer-contact-icon mmda"><i class="fas fa-traffic-light"></i></div>
+                            <div>
+                                <strong>Road Crash Reporting</strong>
+                                <span>Text 2286</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="footer-section">
-                <h4>Quick Links</h4>
-                <ul>
-                    <li><a href="{% url 'about' %}">About</a></li>
-                    <li><a href="{% url 'help' %}">Help & Support</a></li>
-                    <li><a href="{% url 'contact' %}">Contact Us</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Emergency Contacts</h4>
-                <p><i class="fas fa-phone"></i> PNP Hotline: 117</p>
-                <p><i class="fas fa-exclamation-triangle"></i> Emergency: 911</p>
-            </div>
-            <div class="footer-section">
-                <h4>System Info</h4>
-                <p>Version 1.0</p>
-                <p>© 2024 PNP Caraga Region</p>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-container" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0.5rem;">
+                <p>&copy; {% now "Y" %} Philippine National Police &mdash; Police Regional Office 13 (Caraga). All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="{% url 'help' %}">Help &amp; Support</a>
+                    <span class="footer-dot"></span>
+                    <a href="{% url 'contact' %}">Contact Us</a>
+                    <span class="footer-dot"></span>
+                    <span>AGNES v1.0</span>
+                </div>
             </div>
         </div>
     </footer>
@@ -2057,18 +2110,19 @@
                 <i class="fas fa-car-crash"></i>
                 <span>Accidents</span>
             </a>
+            {% if can_submit_reports %}
             <a href="{% url 'report_accident' %}" class="mobile-nav-item report-btn">
                 <i class="fas fa-plus"></i>
                 <span>Report</span>
             </a>
+            {% endif %}
             <a href="{% url 'map_view' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'map_view' %}active{% endif %}">
                 <i class="fas fa-map-marked-alt"></i>
                 <span>Map</span>
             </a>
             <a href="{% url 'hotspots' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'hotspots' %}active{% endif %}">
-                <i class="fas fa-fire"></i>
+                <span style="position: relative; display: inline-block;"><i class="fas fa-fire"></i><span class="hotspot-nav-badge" id="hotspotNavBadgeMobile" style="{% if header_unclustered_count %}display: flex;{% else %}display: none;{% endif %}">{{ header_unclustered_count|default:"0" }}</span></span>
                 <span>Hotspots</span>
-                {% if header_unclustered_count %}<span class="unclustered-badge-mobile">{{ header_unclustered_count }}</span>{% endif %}
             </a>
         </div>
     </nav>
@@ -2621,6 +2675,33 @@
                 }
             }
 
+            function updateHotspotNavBadge(count) {
+                // On hotspots page, update the Run Clustering button badge instead of nav badge
+                var clusterBtnBadge = document.getElementById('clusteringBtnBadge');
+                if (clusterBtnBadge) {
+                    if (count > 0) {
+                        clusterBtnBadge.style.display = 'flex';
+                        clusterBtnBadge.textContent = count > 99 ? '99+' : count;
+                    } else {
+                        clusterBtnBadge.style.display = 'none';
+                    }
+                    return; // Don't show nav badge on hotspots page
+                }
+
+                var badge = document.getElementById('hotspotNavBadge');
+                var badgeMobile = document.getElementById('hotspotNavBadgeMobile');
+                [badge, badgeMobile].forEach(function(b) {
+                    if (b) {
+                        if (count > 0) {
+                            b.style.display = 'flex';
+                            b.textContent = count > 99 ? '99+' : count;
+                        } else {
+                            b.style.display = 'none';
+                        }
+                    }
+                });
+            }
+
             function fetchNotifications() {
                 fetch('{% url "get_notifications" %}')
                     .then(r => r.json())
@@ -2630,6 +2711,7 @@
                         updateBadge();
                         renderNotifications();
                         updatePendingReportsBadge(data.pending_count || 0);
+                        updateHotspotNavBadge(data.unclustered_count || 0);
                     })
                     .catch(err => console.log('[Notifications] Fetch error:', err));
             }

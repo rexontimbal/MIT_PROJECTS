@@ -47,8 +47,10 @@ class UsernameOrBadgeBackend(ModelBackend):
                 User().set_password(password)
                 return None
 
-        # Check if password is correct
+        # Check if password is correct and account is active
         if user and user.check_password(password):
+            if not user.is_active:
+                return None
             return user
 
         return None

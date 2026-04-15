@@ -1,0 +1,559 @@
+/* =============================================
+   AGNES Mobile Responsive Overrides
+   =============================================
+   This file provides mobile-specific fixes for all pages.
+   Loaded after main.css in both base.html and admin_panel/base.html.
+   Breakpoints: 768px (tablet), 480px (phone), 375px (small phone)
+   ============================================= */
+
+/* =============================================
+   1. GLOBAL: Grids, Forms, Flex Layouts
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* Force any inline 2-column grid to stack */
+    [style*="grid-template-columns: 1fr 1fr"],
+    [style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Common form row patterns */
+    .form-row,
+    .cm-row {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+    }
+
+    /* Admin page header: stack title + actions */
+    .admin-page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+    }
+
+    .admin-page-header .admin-page-actions,
+    .admin-page-header [style*="display: flex"][style*="gap"] {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    /* Stats grids: 2 columns on tablet */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+    }
+
+    /* Generic inline flex rows with gap — stack them */
+    .filter-row,
+    .action-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Stats grids: single column on phones */
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Reduce card padding globally */
+    .admin-card {
+        padding: 0.75rem !important;
+    }
+
+    .admin-card-header {
+        margin-bottom: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .admin-card-title {
+        font-size: 0.9rem !important;
+    }
+
+    .admin-page-title {
+        font-size: 1.15rem !important;
+    }
+}
+
+/* =============================================
+   2. TABLES: Responsive horizontal scroll
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* Wrap all tables in scrollable container behavior */
+    table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+
+    table thead,
+    table tbody,
+    table tr {
+        display: table;
+        width: 100%;
+        table-layout: auto;
+    }
+
+    table th,
+    table td {
+        font-size: 0.78rem !important;
+        padding: 0.5rem 0.65rem !important;
+    }
+
+    /* Hint that table is scrollable */
+    .table-responsive::after {
+        content: '← Scroll →';
+        display: block;
+        text-align: center;
+        font-size: 0.7rem;
+        color: #9CA3AF;
+        padding: 0.35rem 0;
+    }
+}
+
+/* =============================================
+   3. MODALS: Fit within mobile viewport
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* Generic modal content */
+    .modal-content,
+    .confirm-box,
+    [class*="modal"] > [style*="max-width"] {
+        max-width: 95vw !important;
+        margin: 0.5rem auto !important;
+    }
+
+    /* Create user modal (user_management.html) */
+    .create-modal-content {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        max-height: 90vh !important;
+        margin: 1rem auto !important;
+    }
+
+    .create-modal-body {
+        padding: 1rem !important;
+    }
+
+    /* Clustering modal, confirm modals */
+    .confirm-overlay .confirm-box {
+        width: 92vw !important;
+        max-width: 92vw !important;
+        padding: 1.25rem !important;
+    }
+
+    /* Center notification */
+    .center-notification {
+        max-width: calc(100vw - 2rem) !important;
+        left: 1rem !important;
+        right: 1rem !important;
+        transform: none !important;
+        font-size: 0.85rem !important;
+    }
+}
+
+/* =============================================
+   4. DROPDOWNS: Prevent overflow on mobile
+   ============================================= */
+
+@media (max-width: 768px) {
+    .dropdown-menu,
+    [class*="dropdown-menu"] {
+        min-width: auto !important;
+        max-width: calc(100vw - 2rem) !important;
+        right: 0.5rem !important;
+    }
+
+    /* Export dropdown */
+    .export-dropdown-menu {
+        min-width: 160px !important;
+        max-width: calc(100vw - 2rem) !important;
+    }
+
+    /* Notification dropdown (admin_panel/base.html) */
+    .notification-dropdown {
+        min-width: auto !important;
+        max-width: calc(100vw - 2rem) !important;
+        left: 0.5rem !important;
+        right: 0.5rem !important;
+        width: auto !important;
+    }
+}
+
+/* =============================================
+   5. DASHBOARD: Chart grids and stat cards
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* Charts grid — stack */
+    [style*="minmax(550px"],
+    [style*="minmax(500px"],
+    [style*="minmax(450px"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Dashboard stat values */
+    .stat-value,
+    [class*="stat"] [class*="value"] {
+        font-size: 1.5rem !important;
+    }
+
+    /* Chart containers — limit height on mobile */
+    canvas {
+        max-height: 280px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    canvas {
+        max-height: 220px !important;
+    }
+}
+
+/* =============================================
+   6. ANALYTICS PAGE
+   ============================================= */
+
+@media (max-width: 768px) {
+    .analytics-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .insight-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .comparison-section {
+        grid-template-columns: 1fr !important;
+    }
+
+    .stats-overview {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-overview {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* =============================================
+   7. ACCIDENT LIST: Cards and filters
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* Filter section — stack */
+    .filter-grid,
+    [class*="filter"] [style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Accident cards — full width */
+    .accident-card,
+    .hotspot-card {
+        margin: 0 !important;
+    }
+
+    /* Map popups */
+    .leaflet-popup-content {
+        min-width: auto !important;
+        max-width: 260px !important;
+        font-size: 0.82rem !important;
+    }
+
+    .marker-popup {
+        min-width: auto !important;
+        max-width: 250px !important;
+    }
+}
+
+/* =============================================
+   8. REPORTS: Form and detail pages
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* Report form — full width fields */
+    .report-form .form-row,
+    .report-form [style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Report detail — metadata grid */
+    .report-detail-grid,
+    [class*="detail"] [style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* =============================================
+   9. USER MANAGEMENT: Table and detail page
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* User detail: main + sidebar stack vertically */
+    [style*="display: grid"][style*="260px"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* User detail form grids */
+    .create-user-form .form-row,
+    .create-user-form [style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Sidebar cards (Account Info, Report Access, Clustering Access) */
+    .admin-card [style*="display: flex"][style*="flex-direction: column"] {
+        font-size: 0.85rem;
+    }
+
+    /* Quick-create modal checkbox grid */
+    .cm-checkbox-row label {
+        font-size: 0.72rem;
+    }
+}
+
+/* =============================================
+   10. HOTSPOTS: List and detail pages
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* Hotspot grid cards */
+    .hotspot-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Hotspot detail: map + info side by side → stack */
+    .hotspot-detail-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Hero section */
+    .hero-actions {
+        flex-wrap: wrap;
+        gap: 0.5rem !important;
+    }
+
+    .hero-actions .btn {
+        flex: 1;
+        min-width: 0;
+        text-align: center;
+        justify-content: center;
+    }
+}
+
+/* =============================================
+   11. ADMIN PANEL: Pending reports, audit logs,
+       system monitoring
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* Pending reports table */
+    .reports-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* System monitoring grids */
+    .monitoring-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Audit log filters */
+    .audit-filters {
+        flex-direction: column !important;
+    }
+
+    .audit-filters select,
+    .audit-filters input {
+        width: 100% !important;
+    }
+}
+
+/* =============================================
+   12. PROFILE & ACCOUNT PAGES
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* Profile page layout */
+    .profile-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Change password form */
+    .password-form {
+        max-width: 100% !important;
+    }
+}
+
+/* =============================================
+   13. INFO PAGES: About, Contact, Help
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* Team grid, feature grid, etc. */
+    .team-grid,
+    .feature-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Contact form + info side by side → stack */
+    .contact-layout {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* =============================================
+   14. PWA BANNERS
+   ============================================= */
+
+@media (max-width: 768px) {
+    .pwa-banner,
+    #pwaUpdateBanner,
+    [class*="pwa"] [style*="max-width"] {
+        max-width: calc(100vw - 2rem) !important;
+        left: 1rem !important;
+        right: 1rem !important;
+    }
+}
+
+/* =============================================
+   15. LOGIN PAGE: Ensure mobile fit
+   ============================================= */
+
+@media (max-width: 480px) {
+    .login-card,
+    .login-form-container {
+        padding: 1.25rem !important;
+        margin: 0.5rem !important;
+    }
+}
+
+/* =============================================
+   16. BUTTONS & TOUCH TARGETS
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* Minimum touch target size (44px per WCAG) */
+    .btn,
+    button,
+    a.btn,
+    [role="button"] {
+        min-height: 40px;
+    }
+
+    /* Button groups: wrap on mobile */
+    .btn-group,
+    [style*="display: flex"][style*="gap"] > .btn:first-child {
+        flex-wrap: wrap;
+    }
+
+    /* Action buttons in table rows */
+    td .btn,
+    td a.btn {
+        padding: 0.3rem 0.5rem !important;
+        font-size: 0.72rem !important;
+        min-height: 32px;
+    }
+}
+
+/* =============================================
+   17. FLEX ROW !important OVERRIDES
+   Some templates use flex-direction: row !important
+   which prevents mobile stacking. Override here.
+   ============================================= */
+
+@media (max-width: 480px) {
+    [style*="flex-direction: row !important"] {
+        flex-direction: column !important;
+    }
+}
+
+/* =============================================
+   18. SMALL PHONE (375px and below)
+   ============================================= */
+
+@media (max-width: 375px) {
+    body {
+        font-size: 0.85rem;
+    }
+
+    .navbar-title h1 {
+        font-size: 0.8rem !important;
+    }
+
+    .navbar-title p {
+        display: none !important;
+    }
+
+    .admin-page-title {
+        font-size: 1rem !important;
+    }
+
+    /* Tighter padding */
+    .main-content,
+    .admin-main {
+        padding: 0.5rem !important;
+    }
+
+    .admin-card {
+        padding: 0.65rem !important;
+    }
+
+    /* Checkbox labels in modals */
+    .cm-checkbox-row label,
+    .checkbox-row label {
+        font-size: 0.7rem !important;
+    }
+}
+
+/* =============================================
+   19. LANDSCAPE PHONE
+   ============================================= */
+
+@media (max-width: 768px) and (orientation: landscape) {
+    .navbar {
+        height: auto !important;
+        min-height: 50px !important;
+    }
+
+    body {
+        padding-top: 50px !important;
+    }
+
+    .navbar-logo {
+        height: 35px !important;
+        width: 35px !important;
+    }
+
+    /* Modal: limit height */
+    .create-modal-content,
+    .modal-content,
+    .confirm-box {
+        max-height: 85vh !important;
+        overflow-y: auto !important;
+    }
+}
+
+/* =============================================
+   20. SAFE AREA (notch phones)
+   ============================================= */
+
+@supports (padding-top: env(safe-area-inset-top)) {
+    .navbar {
+        padding-top: env(safe-area-inset-top);
+    }
+
+    body {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .footer {
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+}

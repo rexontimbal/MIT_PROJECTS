@@ -59,8 +59,8 @@ def pnp_login_required(view_func):
         profile = request.user.profile
         profile.refresh_from_db()
 
-        # Check if account is active
-        if not profile.is_active:
+        # Check if account is active (user.is_active is what admin toggles)
+        if not request.user.is_active:
             messages.error(request, 'Your account has been deactivated. Please contact administrator.')
             return redirect('login')
 

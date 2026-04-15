@@ -1,6 +1,522 @@
 {% extends 'base.html' %}
-{% block title %}About{% endblock %}
+{% load static %}
+
+{% block title %}About AGNES{% endblock %}
+
+{% block wrapper_class %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-hero {
+        background: linear-gradient(135deg, #001a4d 0%, #003087 50%, #00245e 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .about-hero::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+    }
+    .about-hero-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.12);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #60A5FA;
+        margin-bottom: 1rem;
+    }
+    .about-hero h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+        letter-spacing: 0.03em;
+    }
+    .about-hero-full {
+        font-size: 1rem;
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 0.75rem;
+        font-weight: 400;
+    }
+    .about-hero p {
+        font-size: 0.95rem;
+        color: rgba(255,255,255,0.8);
+        max-width: 680px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+    .about-hero-badges {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1.25rem;
+    }
+    .about-hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.85);
+        border: 1px solid rgba(255,255,255,0.15);
+    }
+    .about-hero-badge i { font-size: 0.65rem; color: #60A5FA; }
+
+    /* Section cards */
+    .about-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.75rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        border: 1px solid #E5E7EB;
+    }
+    .about-section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 1rem;
+    }
+    .about-section-title i {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    .about-section-title i.blue { background: #DBEAFE; color: #1D4ED8; }
+    .about-section-title i.green { background: #D1FAE5; color: #059669; }
+    .about-section-title i.purple { background: #EDE9FE; color: #7C3AED; }
+    .about-section-title i.orange { background: #FEF3C7; color: #D97706; }
+    .about-section-title i.red { background: #FEE2E2; color: #DC2626; }
+    .about-section-title i.teal { background: #CCFBF1; color: #0D9488; }
+
+    .about-section p {
+        font-size: 0.88rem;
+        color: #4B5563;
+        line-height: 1.65;
+        margin: 0 0 0.75rem;
+    }
+    .about-section p:last-child { margin-bottom: 0; }
+
+    /* Algorithm steps */
+    .algo-steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .algo-step {
+        padding: 1.25rem;
+        border-radius: 10px;
+        background: #F9FAFB;
+        border: 1px solid #F3F4F6;
+        text-align: center;
+    }
+    .algo-step-num {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #003087;
+        color: white;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.6rem;
+    }
+    .algo-step h4 {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 0.35rem;
+    }
+    .algo-step p {
+        font-size: 0.78rem;
+        color: #6B7280;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    /* Feature grid */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+    .feature-item {
+        display: flex;
+        gap: 0.75rem;
+        padding: 1rem;
+        border-radius: 10px;
+        background: #F9FAFB;
+        border: 1px solid #F3F4F6;
+    }
+    .feature-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .feature-icon.blue { background: #DBEAFE; color: #2563EB; }
+    .feature-icon.green { background: #D1FAE5; color: #059669; }
+    .feature-icon.purple { background: #EDE9FE; color: #7C3AED; }
+    .feature-icon.orange { background: #FEF3C7; color: #D97706; }
+    .feature-icon.red { background: #FEE2E2; color: #DC2626; }
+    .feature-icon.teal { background: #CCFBF1; color: #0D9488; }
+    .feature-item h4 {
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 0.2rem;
+    }
+    .feature-item p {
+        font-size: 0.78rem;
+        color: #6B7280;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    /* Two-column layout */
+    .about-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    .about-grid-2 .about-section { margin-bottom: 0; }
+
+    /* Stakeholders */
+    .stakeholder-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        margin-top: 0.5rem;
+    }
+    .stakeholder-item {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: 8px;
+        background: #F9FAFB;
+        border: 1px solid #F3F4F6;
+    }
+    .stakeholder-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+    .stakeholder-item strong {
+        font-size: 0.82rem;
+        color: #1F2937;
+        display: block;
+    }
+    .stakeholder-item span {
+        font-size: 0.75rem;
+        color: #6B7280;
+    }
+
+    /* Version info */
+    .about-version {
+        text-align: center;
+        padding: 1.25rem;
+        color: #9CA3AF;
+        font-size: 0.8rem;
+    }
+    .about-version strong { color: #6B7280; }
+
+    /* Dark theme */
+    [data-theme="dark"] .about-hero { background: linear-gradient(135deg, #0a0f1a 0%, #111827 50%, #0d1321 100%); }
+    [data-theme="dark"] .about-section { background: #1A2332; border-color: #2D3A4F; }
+    [data-theme="dark"] .about-section-title { color: #E5E7EB; }
+    [data-theme="dark"] .about-section p { color: #9CA3AF; }
+    [data-theme="dark"] .algo-step { background: #0F172A; border-color: #2D3A4F; }
+    [data-theme="dark"] .algo-step h4 { color: #E5E7EB; }
+    [data-theme="dark"] .algo-step p { color: #9CA3AF; }
+    [data-theme="dark"] .feature-item { background: #0F172A; border-color: #2D3A4F; }
+    [data-theme="dark"] .feature-item h4 { color: #E5E7EB; }
+    [data-theme="dark"] .feature-item p { color: #9CA3AF; }
+    [data-theme="dark"] .stakeholder-item { background: #0F172A; border-color: #2D3A4F; }
+    [data-theme="dark"] .stakeholder-item strong { color: #E5E7EB; }
+    [data-theme="dark"] .stakeholder-item span { color: #9CA3AF; }
+    [data-theme="dark"] .about-section-title i.blue { background: rgba(59,130,246,0.15); color: #60A5FA; }
+    [data-theme="dark"] .about-section-title i.green { background: rgba(16,185,129,0.15); color: #34D399; }
+    [data-theme="dark"] .about-section-title i.purple { background: rgba(139,92,246,0.15); color: #A78BFA; }
+    [data-theme="dark"] .about-section-title i.orange { background: rgba(245,158,11,0.15); color: #FBBF24; }
+    [data-theme="dark"] .about-section-title i.red { background: rgba(239,68,68,0.15); color: #F87171; }
+    [data-theme="dark"] .about-section-title i.teal { background: rgba(20,184,166,0.15); color: #2DD4BF; }
+    [data-theme="dark"] .feature-icon.blue { background: rgba(59,130,246,0.15); color: #60A5FA; }
+    [data-theme="dark"] .feature-icon.green { background: rgba(16,185,129,0.15); color: #34D399; }
+    [data-theme="dark"] .feature-icon.purple { background: rgba(139,92,246,0.15); color: #A78BFA; }
+    [data-theme="dark"] .feature-icon.orange { background: rgba(245,158,11,0.15); color: #FBBF24; }
+    [data-theme="dark"] .feature-icon.red { background: rgba(239,68,68,0.15); color: #F87171; }
+    [data-theme="dark"] .feature-icon.teal { background: rgba(20,184,166,0.15); color: #2DD4BF; }
+    [data-theme="dark"] .stakeholder-icon { opacity: 0.9; }
+
+    @media (max-width: 768px) {
+        .about-hero { padding: 2rem 1.25rem; }
+        .about-hero h1 { font-size: 1.5rem; }
+        .about-section { padding: 1.25rem; }
+        .about-grid-2 { grid-template-columns: 1fr; }
+        .algo-steps { grid-template-columns: 1fr 1fr; }
+        .feature-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h2>About AGNES Hotspot Detection System</h2>
-<p>This system uses AGNES clustering algorithm to detect accident hotspots in Caraga Region.</p>
+
+<!-- Hero -->
+<div class="about-hero">
+    <div class="about-hero-icon">
+        <i class="fas fa-map-marked-alt"></i>
+    </div>
+    <h1>AGNES</h1>
+    <div class="about-hero-full">Agglomerative Nesting for Accident Hotspot Detection</div>
+    <p>A data-driven road accident hotspot detection system built for the Philippine National Police &mdash; Caraga Region (PRO-13). AGNES identifies high-risk road segments through spatial clustering of geocoded accident records, enabling targeted road safety interventions.</p>
+    <div class="about-hero-badges">
+        <span class="about-hero-badge"><i class="fas fa-shield-alt"></i> PNP PRO-13 Caraga</span>
+        <span class="about-hero-badge"><i class="fas fa-map-marker-alt"></i> Geospatial Analysis</span>
+        <span class="about-hero-badge"><i class="fas fa-project-diagram"></i> Hierarchical Clustering</span>
+        <span class="about-hero-badge"><i class="fas fa-chart-line"></i> Data-Driven Decisions</span>
+    </div>
+</div>
+
+<!-- What is AGNES -->
+<div class="about-section">
+    <h2 class="about-section-title">
+        <i class="fas fa-question-circle blue"></i>
+        What is the AGNES Hotspot Detection System?
+    </h2>
+    <p>The AGNES Hotspot Detection System is a web-based geospatial platform designed to assist the Philippine National Police (PNP) Caraga Region in identifying, analyzing, and responding to road accident hotspots across the region's provinces: Agusan del Norte, Agusan del Sur, Surigao del Norte, Surigao del Sur, and Dinagat Islands.</p>
+    <p>By collecting and geocoding accident reports from police stations throughout the region, the system applies the AGNES (Agglomerative Nesting) hierarchical clustering algorithm to group nearby accidents into spatial clusters. These clusters are then ranked by severity, frequency, and casualty count to reveal which road segments pose the greatest risk to public safety.</p>
+    <p>The system transforms raw accident data into actionable intelligence, enabling PNP leadership and local government units to prioritize road safety interventions where they are needed most.</p>
+</div>
+
+<!-- The AGNES Algorithm -->
+<div class="about-section">
+    <h2 class="about-section-title">
+        <i class="fas fa-project-diagram purple"></i>
+        The AGNES Algorithm
+    </h2>
+    <p>AGNES (Agglomerative Nesting) is a bottom-up hierarchical clustering method widely used in spatial data analysis. Unlike partitioning methods such as K-Means, AGNES does not require the number of clusters to be specified in advance &mdash; making it ideal for accident hotspot detection where the number and size of clusters are unknown.</p>
+    <p>The algorithm uses geographic coordinates (latitude and longitude) of accident locations and a configurable distance threshold to determine which accidents are spatially related. It produces a hierarchy of clusters (dendrogram) that can be cut at different levels to reveal hotspots of varying granularity.</p>
+
+    <div class="algo-steps">
+        <div class="algo-step">
+            <div class="algo-step-num">1</div>
+            <h4>Geocode Accidents</h4>
+            <p>Each accident report is geocoded using its recorded address, producing a latitude/longitude coordinate for spatial analysis.</p>
+        </div>
+        <div class="algo-step">
+            <div class="algo-step-num">2</div>
+            <h4>Compute Distances</h4>
+            <p>The Haversine formula calculates the great-circle distance between every pair of accident points, accounting for Earth's curvature.</p>
+        </div>
+        <div class="algo-step">
+            <div class="algo-step-num">3</div>
+            <h4>Merge Nearest Pairs</h4>
+            <p>The two closest clusters are iteratively merged based on the selected linkage method (Ward, Complete, Average, or Single) until no more merges are possible within the distance threshold.</p>
+        </div>
+        <div class="algo-step">
+            <div class="algo-step-num">4</div>
+            <h4>Form Hotspots</h4>
+            <p>Resulting clusters that meet the minimum size requirement are identified as accident hotspots. Each hotspot is ranked by total accidents, fatalities, and severity score.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Two column: Key Features + Stakeholders -->
+<div class="about-grid-2">
+
+    <!-- Key Features -->
+    <div class="about-section">
+        <h2 class="about-section-title">
+            <i class="fas fa-th-large green"></i>
+            Key Features
+        </h2>
+        <div class="feature-grid" style="grid-template-columns: 1fr;">
+            <div class="feature-item">
+                <div class="feature-icon blue"><i class="fas fa-map-marked-alt"></i></div>
+                <div>
+                    <h4>Interactive Hotspot Map</h4>
+                    <p>Visualize accident hotspots on an interactive map with severity-based color coding, cluster boundaries, and drill-down detail views.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon green"><i class="fas fa-file-alt"></i></div>
+                <div>
+                    <h4>Accident Report Management</h4>
+                    <p>Multi-level report submission, review, and approval workflow aligned with the PNP chain of command from station to regional level.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon purple"><i class="fas fa-chart-bar"></i></div>
+                <div>
+                    <h4>Analytics Dashboard</h4>
+                    <p>Real-time statistics on accident trends, severity breakdown, monthly patterns, top provinces, and clustering job results.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon orange"><i class="fas fa-sliders-h"></i></div>
+                <div>
+                    <h4>Configurable Clustering</h4>
+                    <p>Adjustable distance threshold, minimum cluster size, and linkage method to fine-tune hotspot detection for different analysis needs.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon red"><i class="fas fa-tools"></i></div>
+                <div>
+                    <h4>DPWH-Aligned Recommendations</h4>
+                    <p>Data-driven road safety intervention recommendations for each hotspot, formatted for submission to the Department of Public Works and Highways.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon teal"><i class="fas fa-user-shield"></i></div>
+                <div>
+                    <h4>Role-Based Access Control</h4>
+                    <p>Hierarchical user roles from Traffic Officer to Regional Director, ensuring data security and proper chain-of-command workflows.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stakeholders & Purpose -->
+    <div class="about-section">
+        <h2 class="about-section-title">
+            <i class="fas fa-users orange"></i>
+            Who Uses This System?
+        </h2>
+        <p>AGNES serves the PNP Caraga Region's road safety mission through a role-based hierarchy:</p>
+        <div class="stakeholder-list">
+            <div class="stakeholder-item">
+                <div class="stakeholder-icon" style="background:#EDE9FE; color:#7C3AED;"><i class="fas fa-star"></i></div>
+                <div>
+                    <strong>Regional Director</strong>
+                    <span>Oversees all regional accident data, approves reports, and directs safety interventions across PRO-13.</span>
+                </div>
+            </div>
+            <div class="stakeholder-item">
+                <div class="stakeholder-icon" style="background:#DBEAFE; color:#2563EB;"><i class="fas fa-flag"></i></div>
+                <div>
+                    <strong>Provincial Chief</strong>
+                    <span>Reviews and approves accident reports for the province and coordinates with LGUs on hotspot areas.</span>
+                </div>
+            </div>
+            <div class="stakeholder-item">
+                <div class="stakeholder-icon" style="background:#D1FAE5; color:#059669;"><i class="fas fa-building"></i></div>
+                <div>
+                    <strong>Station Commander</strong>
+                    <span>Manages station-level reports and monitors local accident patterns within the station's jurisdiction.</span>
+                </div>
+            </div>
+            <div class="stakeholder-item">
+                <div class="stakeholder-icon" style="background:#FEF3C7; color:#D97706;"><i class="fas fa-motorcycle"></i></div>
+                <div>
+                    <strong>Traffic Officer</strong>
+                    <span>Records accident details at the scene and submits reports for review through the chain of command.</span>
+                </div>
+            </div>
+            <div class="stakeholder-item">
+                <div class="stakeholder-icon" style="background:#FEE2E2; color:#DC2626;"><i class="fas fa-keyboard"></i></div>
+                <div>
+                    <strong>Data Encoder</strong>
+                    <span>Digitizes paper-based accident records (ACIR/INQUEST forms) into the system for spatial analysis.</span>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="about-section-title" style="margin-top: 1.5rem;">
+            <i class="fas fa-bullseye red"></i>
+            System Objectives
+        </h2>
+        <p>The system was developed to address the following objectives:</p>
+        <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.85rem; color: #4B5563; line-height: 1.8;">
+            <li>Automate the identification of accident hotspots using spatial clustering</li>
+            <li>Provide a centralized, digital accident reporting workflow for PNP Caraga</li>
+            <li>Enable evidence-based road safety planning and resource allocation</li>
+            <li>Generate data-driven recommendations aligned with DPWH safety standards</li>
+            <li>Support the Philippine Road Safety Action Plan through localized data analysis</li>
+        </ul>
+    </div>
+
+</div>
+
+<!-- How Hotspots Are Determined -->
+<div class="about-section">
+    <h2 class="about-section-title">
+        <i class="fas fa-fire-alt teal"></i>
+        How Hotspots Are Determined
+    </h2>
+    <p>A hotspot is a geographic cluster of road accidents that indicates a persistently dangerous road segment or intersection. The system determines hotspots through the following criteria:</p>
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-icon red"><i class="fas fa-map-pin"></i></div>
+            <div>
+                <h4>Spatial Proximity</h4>
+                <p>Accidents within the configured distance threshold (e.g., 500 meters) are grouped together. Closer accidents have a stronger association.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon orange"><i class="fas fa-layer-group"></i></div>
+            <div>
+                <h4>Minimum Cluster Size</h4>
+                <p>Only clusters meeting the minimum number of accidents (e.g., 3 or more) are classified as hotspots, filtering out isolated incidents.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon purple"><i class="fas fa-sort-amount-down"></i></div>
+            <div>
+                <h4>Severity Scoring</h4>
+                <p>Hotspots are ranked using a weighted severity score: fatalities carry the highest weight, followed by injuries, then property-damage-only incidents.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon blue"><i class="fas fa-exclamation-triangle"></i></div>
+            <div>
+                <h4>Risk Classification</h4>
+                <p>Each hotspot is classified as Critical, High, Medium, or Low risk based on its severity score, guiding the urgency of intervention.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Version -->
+<div class="about-version">
+    <strong>AGNES Hotspot Detection System</strong> &mdash; Version 1.0<br>
+    Developed for the Philippine National Police &mdash; Police Regional Office 13 (Caraga Region)
+</div>
+
 {% endblock %}

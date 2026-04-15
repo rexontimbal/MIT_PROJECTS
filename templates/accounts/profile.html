@@ -446,13 +446,15 @@
                 <div class="profile-field-label"><i class="fas fa-briefcase"></i> Role</div>
                 <div class="profile-field-value"><span class="role-badge">{{ user.profile.get_role_display }}</span></div>
             </div>
+            {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
             <div class="profile-field">
                 <div class="profile-field-label"><i class="fas fa-users"></i> Unit</div>
                 <div class="profile-field-value">{{ user.profile.unit|default:"—" }}</div>
             </div>
+            {% endif %}
             <div class="profile-field">
-                <div class="profile-field-label"><i class="fas fa-building"></i> Station</div>
-                <div class="profile-field-value">{{ user.profile.station|default:"—" }}</div>
+                <div class="profile-field-label"><i class="fas fa-building"></i> {{ user.profile.assignment_label }}</div>
+                <div class="profile-field-value">{{ user.profile.assignment_display|default:"—" }}</div>
             </div>
             <div class="profile-field">
                 <div class="profile-field-label"><i class="fas fa-map-marker-alt"></i> Province</div>

@@ -40,9 +40,11 @@
         <p style="color: #666; margin: 0;">Real-time accident monitoring and hotspot detection | <span id="currentDateTime">{{ current_time|date:"F d, Y - h:i A" }}</span></p>
     </div>
     <div class="dashboard-actions">
+        {% if can_submit_reports %}
         <button class="btn dash-btn dash-btn-primary" onclick="window.location.href='{% url 'report_accident' %}'">
             <span>🚨</span> Report Accident
         </button>
+        {% endif %}
         <button class="btn dash-btn dash-btn-outline" onclick="window.location.href='{% url 'hotspots' %}'">
             <span>🗺️</span> View Hotspots
         </button>

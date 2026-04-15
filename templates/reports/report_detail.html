@@ -443,10 +443,14 @@
     .confirm-overlay {
         display: none;
         position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0, 0, 0, 0.4);
-        z-index: 10010;
-        backdrop-filter: blur(2px);
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 10015;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
     }
 
     .confirm-overlay.active {
@@ -859,9 +863,14 @@
     .al-modal-overlay {
         display: none;
         position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 9999;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.6);
+        z-index: 10015;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
         align-items: center;
         justify-content: center;
         opacity: 0;
@@ -1449,9 +1458,9 @@
         {% endif %}
     </div>
 
-    <!-- Vehicle Information -->
+    <!-- Vehicle Information (Suspect/Driver) -->
     <div class="detail-section">
-        <h3 class="section-title"><span class="section-icon"><i class="fas fa-car"></i></span> Vehicle Information</h3>
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-car"></i></span> Vehicle Information (Suspect/Driver)</h3>
         <div class="info-grid">
             <div class="info-item">
                 <div class="info-label">Vehicle Type</div>
@@ -1531,9 +1540,9 @@
                     <i class="fas fa-check"></i> Approve Report
                 </button>
             </form>
-            <a href="{% url 'reject_report' report.pk %}" class="btn-reject">
+            <button type="button" class="btn-reject" onclick="showRejectModal()">
                 <i class="fas fa-times"></i> Reject Report
-            </a>
+            </button>
             {% endif %}
             {% if can_cancel %}
             <form id="cancelOwnForm" method="post" action="{% url 'cancel_report' report.pk %}" style="margin: 0;">
@@ -1543,13 +1552,32 @@
                 </button>
             </form>
             {% endif %}
+            {% if report.status == 'verified' %}
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+                <a href="{% url 'download_report_pdf' report.pk %}" target="_blank" class="btn-back" style="flex: 1; justify-content: center; background: #059669; border-color: #059669; color: white;">
+                    <i class="fas fa-print"></i> Print Report
+                </a>
+                <a href="{% url 'download_report_pdf' report.pk %}?dl=1" class="btn-back" style="flex: 1; justify-content: center; background: #DC2626; border-color: #DC2626; color: white;">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
 
     <!-- Photos -->
     <div class="detail-section">
         <h3 class="section-title"><span class="section-icon"><i class="fas fa-camera"></i></span> Photos</h3>
-        {% if report.photo_1 or report.photo_2 or report.photo_3 %}
+        {% if report.photos.all %}
+        <div class="photo-gallery">
+            {% for photo in report.photos.all %}
+            <div class="photo-item" onclick="openLightbox('{{ photo.image.url }}')">
+                <img src="{{ photo.image.url }}" alt="Accident Photo {{ forloop.counter }}">
+                <span class="photo-label">Photo {{ forloop.counter }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% elif report.photo_1 or report.photo_2 or report.photo_3 %}
         <div class="photo-gallery">
             {% if report.photo_1 %}
             <div class="photo-item" onclick="openLightbox('{{ report.photo_1.url }}')">
@@ -1642,7 +1670,124 @@
 <script>
 function showConfirm() { document.getElementById('confirmOverlay').classList.add('active'); }
 function hideConfirm() { document.getElementById('confirmOverlay').classList.remove('active'); }
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') hideConfirm(); });
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { hideConfirm(); hideRejectModal(); }
+});
+</script>
+
+<!-- Reject Report Modal -->
+<div class="confirm-overlay" id="rejectOverlay" onclick="if(event.target===this)hideRejectModal()">
+    <div class="confirm-box" style="max-width: 420px;">
+        <div class="confirm-box-header">
+            <div class="confirm-box-icon" style="background: #FEE2E2; color: #DC2626;">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="confirm-box-title">Reject Report?</div>
+        </div>
+        <div class="confirm-box-msg">Select a reason or provide a custom one. The reporter will be notified.</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.8rem;">
+            <button type="button" class="reject-pill" onclick="setRejectReason(this)">Duplicate report - this incident has already been recorded.</button>
+            <button type="button" class="reject-pill" onclick="setRejectReason(this)">Incomplete or missing information.</button>
+            <button type="button" class="reject-pill" onclick="setRejectReason(this)">Unable to verify the incident details.</button>
+            <button type="button" class="reject-pill" onclick="setRejectReason(this)">Location details are inaccurate or invalid.</button>
+        </div>
+        <textarea id="rejectReasonInput" placeholder="Reason for rejection..." rows="3" style="width: 100%; border: 1px solid #D1D5DB; border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.82rem; font-family: inherit; resize: vertical; min-height: 60px; box-sizing: border-box;"></textarea>
+        <div class="confirm-box-actions" style="margin-top: 0.8rem;">
+            <button class="confirm-btn-cancel" onclick="hideRejectModal()">Cancel</button>
+            <button class="confirm-btn-ok" style="background: #EF4444;" onclick="submitReject()" id="rejectSubmitBtn">
+                <i class="fas fa-times-circle"></i> Reject Report
+            </button>
+        </div>
+    </div>
+</div>
+<style>
+    .reject-pill {
+        padding: 0.35rem 0.7rem;
+        border-radius: 16px;
+        border: 1px solid #E5E7EB;
+        background: #F9FAFB;
+        color: #374151;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: inherit;
+        line-height: 1.4;
+    }
+    .reject-pill:hover {
+        background: #FEE2E2;
+        border-color: #FECACA;
+        color: #DC2626;
+    }
+    .reject-pill.selected {
+        background: #FEE2E2;
+        border-color: #F87171;
+        color: #DC2626;
+        font-weight: 500;
+    }
+</style>
+<script>
+function showRejectModal() {
+    document.getElementById('rejectReasonInput').value = '';
+    document.querySelectorAll('.reject-pill').forEach(function(p) { p.classList.remove('selected'); });
+    document.getElementById('rejectOverlay').classList.add('active');
+    document.getElementById('rejectReasonInput').focus();
+}
+function hideRejectModal() {
+    document.getElementById('rejectOverlay').classList.remove('active');
+}
+function setRejectReason(btn) {
+    document.querySelectorAll('.reject-pill').forEach(function(p) { p.classList.remove('selected'); });
+    btn.classList.add('selected');
+    document.getElementById('rejectReasonInput').value = btn.textContent.trim();
+}
+function submitReject() {
+    var reason = document.getElementById('rejectReasonInput').value.trim();
+    if (!reason) {
+        document.getElementById('rejectReasonInput').style.borderColor = '#EF4444';
+        document.getElementById('rejectReasonInput').setAttribute('placeholder', 'Please provide a reason for rejection...');
+        document.getElementById('rejectReasonInput').focus();
+        return;
+    }
+    var submitBtn = document.getElementById('rejectSubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rejecting...';
+
+    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (!csrfToken) {
+        var meta = document.cookie.match(/csrftoken=([^;]+)/);
+        csrfToken = meta ? meta[1] : '';
+    }
+
+    var formData = new FormData();
+    formData.append('reason', reason);
+    formData.append('csrfmiddlewaretoken', csrfToken);
+
+    fetch('{% url "reject_report" report.pk %}', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken,
+        },
+        credentials: 'same-origin',
+        body: formData
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            hideRejectModal();
+            location.reload();
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-times-circle"></i> Reject Report';
+            alert(data.message || 'Failed to reject report.');
+        }
+    })
+    .catch(function(err) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-times-circle"></i> Reject Report';
+        alert('An error occurred. Please try again.');
+    });
+}
 </script>
 {% endif %}
 
@@ -1679,25 +1824,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const lat = {{ report.latitude }};
     const lng = {{ report.longitude }};
 
+    const tileOpts = { maxZoom: 19, updateWhenZooming: false, updateWhenIdle: true, keepBuffer: 4 };
+
     const map = L.map('locationMap', {
         fullscreenControl: true,
-        fullscreenControlOptions: { position: 'topright' }
+        fullscreenControlOptions: { position: 'topright' },
+        zoomSnap: 0.5,
+        wheelDebounceTime: 80,
+        wheelPxPerZoomLevel: 120
     }).setView([lat, lng], 16);
 
-    const detailedStreet = L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19
-    });
+    const detailedStreet = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', Object.assign({
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd'
+    }, tileOpts));
 
-    const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19
-    });
+    const streetMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', Object.assign({
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd'
+    }, tileOpts));
 
-    const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '&copy; Esri',
-        maxZoom: 19
-    });
+    const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', Object.assign({
+        attribution: '&copy; Esri'
+    }, tileOpts));
 
     detailedStreet.addTo(map);
 

@@ -50,6 +50,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'accidents.middleware.SessionTimeoutMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -290,8 +291,10 @@ CORS_ALLOWED_ORIGINS = [
 # e.g. CSRF_TRUSTED_ORIGINS=https://agnes-app.up.railway.app,https://yourdomain.com
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='http://localhost:8000,http://127.0.0.1:8000'
+    default='http://localhost:8000,http://127.0.0.1:8000,http://localhost,http://10.0.2.2:8000'
 ).split(',')
+# Note: http://localhost is Capacitor's WebView origin
+# http://10.0.2.2:8000 is Android emulator → host machine
 
 CORS_ALLOW_METHODS = [
     'DELETE',

@@ -1,6 +1,570 @@
 {% extends 'base.html' %}
-{% block title %}Help{% endblock %}
+{% load static %}
+
+{% block title %}Help & Support{% endblock %}
+
+{% block wrapper_class %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .help-hero {
+        background: linear-gradient(135deg, #001a4d 0%, #003087 50%, #00245e 100%);
+        color: white;
+        padding: 2.5rem 2rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .help-hero::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+    }
+    .help-hero-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.12);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        color: #60A5FA;
+        margin-bottom: 0.85rem;
+    }
+    .help-hero h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0 0 0.35rem;
+    }
+    .help-hero p {
+        font-size: 0.92rem;
+        color: rgba(255,255,255,0.75);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.55;
+    }
+
+    /* Quick nav */
+    .help-quicknav {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.65rem;
+        margin-bottom: 1.5rem;
+    }
+    .help-quicknav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 0.85rem;
+        border-radius: 10px;
+        background: white;
+        border: 1px solid #E5E7EB;
+        text-decoration: none;
+        color: #374151;
+        font-size: 0.82rem;
+        font-weight: 600;
+        transition: all 0.15s;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .help-quicknav-item:hover {
+        border-color: #003087;
+        color: #003087;
+        box-shadow: 0 2px 8px rgba(0,48,135,0.1);
+        text-decoration: none;
+    }
+    .help-quicknav-item i {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    /* Section cards */
+    .help-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.75rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        border: 1px solid #E5E7EB;
+    }
+    .help-section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 1rem;
+    }
+    .help-section-title i {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    .help-section-title i.blue { background: #DBEAFE; color: #1D4ED8; }
+    .help-section-title i.green { background: #D1FAE5; color: #059669; }
+    .help-section-title i.purple { background: #EDE9FE; color: #7C3AED; }
+    .help-section-title i.orange { background: #FEF3C7; color: #D97706; }
+    .help-section-title i.red { background: #FEE2E2; color: #DC2626; }
+    .help-section-title i.teal { background: #CCFBF1; color: #0D9488; }
+
+    .help-section p, .help-section li {
+        font-size: 0.86rem;
+        color: #4B5563;
+        line-height: 1.65;
+    }
+    .help-section p { margin: 0 0 0.65rem; }
+    .help-section p:last-child { margin-bottom: 0; }
+
+    /* Step lists */
+    .help-steps {
+        counter-reset: helpstep;
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0;
+    }
+    .help-steps li {
+        counter-increment: helpstep;
+        display: flex;
+        gap: 0.75rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #F3F4F6;
+    }
+    .help-steps li:last-child { border-bottom: none; }
+    .help-steps li::before {
+        content: counter(helpstep);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #003087;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+    .help-steps li strong { color: #1F2937; }
+
+    /* Subsection headings */
+    .help-sub {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 1.25rem 0 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .help-sub:first-of-type { margin-top: 0.25rem; }
+    .help-sub i { font-size: 0.8rem; color: #003087; }
+
+    /* Info/tip boxes */
+    .help-tip {
+        display: flex;
+        gap: 0.65rem;
+        padding: 0.85rem 1rem;
+        border-radius: 10px;
+        margin-top: 0.75rem;
+        font-size: 0.82rem;
+        line-height: 1.55;
+    }
+    .help-tip i { flex-shrink: 0; margin-top: 2px; font-size: 0.85rem; }
+    .help-tip.info { background: #EFF6FF; color: #1E40AF; }
+    .help-tip.info i { color: #2563EB; }
+    .help-tip.warning { background: #FFFBEB; color: #92400E; }
+    .help-tip.warning i { color: #D97706; }
+    .help-tip.success { background: #ECFDF5; color: #065F46; }
+    .help-tip.success i { color: #059669; }
+
+    /* Role table */
+    .role-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0.5rem;
+        font-size: 0.82rem;
+    }
+    .role-table th {
+        background: #F9FAFB;
+        padding: 0.55rem 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        color: #6B7280;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid #E5E7EB;
+    }
+    .role-table td {
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid #F3F4F6;
+        color: #4B5563;
+    }
+    .role-table tr:last-child td { border-bottom: none; }
+    .role-table td:first-child { font-weight: 600; color: #1F2937; white-space: nowrap; }
+
+    /* FAQ */
+    .faq-item { margin-bottom: 0.85rem; }
+    .faq-item:last-child { margin-bottom: 0; }
+    .faq-q {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 0.3rem;
+        display: flex;
+        align-items: baseline;
+        gap: 0.4rem;
+    }
+    .faq-q i { color: #003087; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px; }
+    .faq-a {
+        font-size: 0.84rem;
+        color: #4B5563;
+        line-height: 1.6;
+        margin: 0;
+        padding-left: 1.15rem;
+    }
+
+    /* Two-column layout */
+    .help-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    .help-grid-2 .help-section { margin-bottom: 0; }
+
+    /* Dark theme */
+    [data-theme="dark"] .help-hero { background: linear-gradient(135deg, #0a0f1a 0%, #111827 50%, #0d1321 100%); }
+    [data-theme="dark"] .help-quicknav-item { background: #1A2332; border-color: #2D3A4F; color: #D1D5DB; }
+    [data-theme="dark"] .help-quicknav-item:hover { border-color: #60A5FA; color: #60A5FA; }
+    [data-theme="dark"] .help-section { background: #1A2332; border-color: #2D3A4F; }
+    [data-theme="dark"] .help-section-title { color: #E5E7EB; }
+    [data-theme="dark"] .help-section p, [data-theme="dark"] .help-section li { color: #9CA3AF; }
+    [data-theme="dark"] .help-steps li { border-bottom-color: #2D3A4F; }
+    [data-theme="dark"] .help-steps li strong { color: #E5E7EB; }
+    [data-theme="dark"] .help-sub { color: #E5E7EB; }
+    [data-theme="dark"] .help-sub i { color: #60A5FA; }
+    [data-theme="dark"] .help-tip.info { background: rgba(59,130,246,0.1); color: #93C5FD; }
+    [data-theme="dark"] .help-tip.info i { color: #60A5FA; }
+    [data-theme="dark"] .help-tip.warning { background: rgba(245,158,11,0.1); color: #FCD34D; }
+    [data-theme="dark"] .help-tip.warning i { color: #FBBF24; }
+    [data-theme="dark"] .help-tip.success { background: rgba(16,185,129,0.1); color: #6EE7B7; }
+    [data-theme="dark"] .help-tip.success i { color: #34D399; }
+    [data-theme="dark"] .role-table th { background: #0F172A; border-bottom-color: #2D3A4F; color: #9CA3AF; }
+    [data-theme="dark"] .role-table td { border-bottom-color: #2D3A4F; color: #9CA3AF; }
+    [data-theme="dark"] .role-table td:first-child { color: #E5E7EB; }
+    [data-theme="dark"] .faq-q { color: #E5E7EB; }
+    [data-theme="dark"] .faq-q i { color: #60A5FA; }
+    [data-theme="dark"] .faq-a { color: #9CA3AF; }
+    [data-theme="dark"] .help-section-title i.blue { background: rgba(59,130,246,0.15); color: #60A5FA; }
+    [data-theme="dark"] .help-section-title i.green { background: rgba(16,185,129,0.15); color: #34D399; }
+    [data-theme="dark"] .help-section-title i.purple { background: rgba(139,92,246,0.15); color: #A78BFA; }
+    [data-theme="dark"] .help-section-title i.orange { background: rgba(245,158,11,0.15); color: #FBBF24; }
+    [data-theme="dark"] .help-section-title i.red { background: rgba(239,68,68,0.15); color: #F87171; }
+    [data-theme="dark"] .help-section-title i.teal { background: rgba(20,184,166,0.15); color: #2DD4BF; }
+
+    @media (max-width: 768px) {
+        .help-hero { padding: 1.75rem 1.25rem; }
+        .help-hero h1 { font-size: 1.4rem; }
+        .help-section { padding: 1.25rem; }
+        .help-grid-2 { grid-template-columns: 1fr; }
+        .help-quicknav { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h2>Help & Support</h2>
-<p>Need help? Contact PNP Caraga.</p>
+
+<!-- Hero -->
+<div class="help-hero">
+    <div class="help-hero-icon">
+        <i class="fas fa-life-ring"></i>
+    </div>
+    <h1>Help &amp; User Guide</h1>
+    <p>Learn how to use the AGNES Hotspot Detection System. This guide covers navigation, reporting, hotspot analysis, and everything you need to get started.</p>
+</div>
+
+<!-- Quick Navigation -->
+<div class="help-quicknav">
+    <a href="#getting-started" class="help-quicknav-item">
+        <i style="background:#DBEAFE; color:#1D4ED8;"><span class="fas fa-rocket"></span></i>
+        Getting Started
+    </a>
+    <a href="#navigation" class="help-quicknav-item">
+        <i style="background:#D1FAE5; color:#059669;"><span class="fas fa-compass"></span></i>
+        Navigation
+    </a>
+    <a href="#reporting" class="help-quicknav-item">
+        <i style="background:#EDE9FE; color:#7C3AED;"><span class="fas fa-file-alt"></span></i>
+        Reporting
+    </a>
+    <a href="#hotspots" class="help-quicknav-item">
+        <i style="background:#FEE2E2; color:#DC2626;"><span class="fas fa-fire"></span></i>
+        Hotspots
+    </a>
+    <a href="#roles" class="help-quicknav-item">
+        <i style="background:#FEF3C7; color:#D97706;"><span class="fas fa-user-shield"></span></i>
+        User Roles
+    </a>
+    <a href="#faq" class="help-quicknav-item">
+        <i style="background:#CCFBF1; color:#0D9488;"><span class="fas fa-question-circle"></span></i>
+        FAQ
+    </a>
+</div>
+
+<!-- Getting Started -->
+<div class="help-section" id="getting-started">
+    <h2 class="help-section-title">
+        <i class="fas fa-rocket blue"></i>
+        Getting Started
+    </h2>
+    <p>After logging in with your PNP credentials, you will land on the <strong>Dashboard</strong>. The dashboard provides an overview of accident statistics, recent reports, and hotspot summaries for your area of responsibility.</p>
+    <p>Your access level depends on your assigned role. Traffic Officers and Data Encoders can submit and manage reports, while Station Commanders, Provincial Chiefs, and Regional Directors have additional review, approval, and administrative capabilities.</p>
+
+    <div class="help-tip info">
+        <i class="fas fa-info-circle"></i>
+        <div>Your account is created by a system administrator. If you do not have login credentials, contact your station commander or the regional admin office.</div>
+    </div>
+</div>
+
+<!-- Navigation Guide -->
+<div class="help-section" id="navigation">
+    <h2 class="help-section-title">
+        <i class="fas fa-compass green"></i>
+        Navigating the System
+    </h2>
+    <p>The left sidebar (or bottom navigation on mobile) provides access to all main sections of the system:</p>
+
+    <div class="help-sub"><i class="fas fa-tachometer-alt"></i> Dashboard</div>
+    <p>Your home page. Displays summary statistics including total accidents, fatalities, injuries, active hotspots, and recent report activity. The data shown is scoped to your area of responsibility.</p>
+
+    <div class="help-sub"><i class="fas fa-car-crash"></i> Accident Records</div>
+    <p>Browse all accident records in the system. Use the search bar to find specific records by location, incident type, or vehicle kind. Records can be filtered and sorted by date, severity, or province.</p>
+
+    <div class="help-sub"><i class="fas fa-map"></i> Map View</div>
+    <p>An interactive map displaying all geocoded accident locations. Click on individual markers to view accident details. Use the map controls to zoom, pan, and toggle different data layers.</p>
+
+    <div class="help-sub"><i class="fas fa-fire"></i> Hotspots</div>
+    <p>View detected accident hotspot clusters. Each hotspot shows its location, total accidents, severity score, and risk classification. Click on a hotspot to see detailed analysis, accident breakdown, and DPWH-aligned safety recommendations.</p>
+
+    <div class="help-sub"><i class="fas fa-chart-line"></i> Analytics</div>
+    <p>In-depth charts and statistics on accident trends, monthly patterns, incident type distribution, vehicle involvement, and provincial comparisons. Use date filters to analyze specific time periods.</p>
+
+    <div class="help-tip info">
+        <i class="fas fa-lightbulb"></i>
+        <div>On desktop, hover over the collapsed sidebar icons to see tooltips. Click the menu icon in the header to expand the sidebar for full labels.</div>
+    </div>
+</div>
+
+<!-- Reporting -->
+<div class="help-section" id="reporting">
+    <h2 class="help-section-title">
+        <i class="fas fa-file-alt purple"></i>
+        Submitting an Accident Report
+    </h2>
+    <p>To create a new accident report, click the <strong>"Report Accident"</strong> button (the + icon in the navigation or header). Follow these steps:</p>
+
+    <ol class="help-steps">
+        <li><strong>Fill in accident details</strong> &mdash; Enter the date, time, location (province, municipality, barangay), and street or road name where the accident occurred.</li>
+        <li><strong>Describe the incident</strong> &mdash; Select or describe the incident type (e.g., collision, hit and run), the vehicle kind(s) involved, and whether the offense was criminal or non-criminal.</li>
+        <li><strong>Enter casualty information</strong> &mdash; Record the number of persons killed, injured, and the total damage to property if applicable.</li>
+        <li><strong>Add photos (optional)</strong> &mdash; Upload scene photos. After uploading, you can crop and adjust the image to focus on the relevant area.</li>
+        <li><strong>Set location on map</strong> &mdash; Pin the exact accident location on the map. This geocoded coordinate is used for hotspot clustering analysis.</li>
+        <li><strong>Review and submit</strong> &mdash; Check all information for accuracy, then click Submit. The report enters the approval workflow and will be reviewed by your station commander.</li>
+    </ol>
+
+    <div class="help-tip warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>Ensure the map pin is placed accurately. The geocoded location directly affects hotspot detection results. Drag the pin to the exact spot on the road where the accident occurred.</div>
+    </div>
+
+    <div class="help-sub"><i class="fas fa-tasks"></i> Report Workflow</div>
+    <p>After submission, a report follows this approval chain:</p>
+    <ol class="help-steps">
+        <li><strong>Submitted</strong> &mdash; The report is pending review by the Station Commander.</li>
+        <li><strong>Station Review</strong> &mdash; The Station Commander reviews the report and either approves it (forwarding to the Provincial Chief) or rejects it with feedback.</li>
+        <li><strong>Provincial Review</strong> &mdash; The Provincial Chief reviews and either approves (forwarding to the Regional Director) or rejects it.</li>
+        <li><strong>Regional Approval</strong> &mdash; The Regional Director gives final approval. Once approved, the accident data is included in hotspot clustering analysis.</li>
+    </ol>
+
+    <div class="help-tip info">
+        <i class="fas fa-redo"></i>
+        <div>If your report is rejected, you will receive a notification with the reason. You can edit and resubmit the report from your <strong>My Reports</strong> page.</div>
+    </div>
+</div>
+
+<!-- Hotspots & Clustering -->
+<div class="help-section" id="hotspots">
+    <h2 class="help-section-title">
+        <i class="fas fa-fire red"></i>
+        Understanding Hotspots
+    </h2>
+    <p>Hotspots are geographic clusters of road accidents identified by the AGNES algorithm. The system groups nearby accidents based on their geocoded coordinates and a configurable distance threshold.</p>
+
+    <div class="help-sub"><i class="fas fa-list-ol"></i> Hotspot List</div>
+    <p>The Hotspots page displays all detected clusters ranked by severity. Each entry shows the cluster location, total accident count, fatalities, injuries, and a color-coded risk badge (Critical, High, Medium, or Low).</p>
+
+    <div class="help-sub"><i class="fas fa-search-location"></i> Hotspot Detail</div>
+    <p>Click on any hotspot to view its detailed analysis page, which includes:</p>
+    <ul style="margin: 0.25rem 0 0; padding-left: 1.25rem; font-size: 0.85rem; color: #4B5563; line-height: 1.8;">
+        <li><strong>Cluster Map</strong> &mdash; All accidents in the cluster plotted on a map with the hotspot boundary</li>
+        <li><strong>Statistics</strong> &mdash; Total accidents, killed, injured, severity score, and date range</li>
+        <li><strong>Accident Table</strong> &mdash; Complete list of all accidents in the cluster with individual details</li>
+        <li><strong>Pattern Analysis</strong> &mdash; Breakdown by incident type, vehicle kind, time of day, and other factors</li>
+        <li><strong>DPWH Recommendations</strong> &mdash; Data-driven road safety intervention recommendations based on the accident patterns detected in the cluster</li>
+    </ul>
+
+    <div class="help-sub"><i class="fas fa-cogs"></i> Clustering Parameters</div>
+    <p>Administrators can configure the clustering algorithm with these parameters:</p>
+    <ul style="margin: 0.25rem 0 0; padding-left: 1.25rem; font-size: 0.85rem; color: #4B5563; line-height: 1.8;">
+        <li><strong>Distance Threshold</strong> &mdash; Maximum distance (in meters) between accidents to be considered part of the same cluster. Lower values produce tighter, more localized hotspots.</li>
+        <li><strong>Minimum Cluster Size</strong> &mdash; The minimum number of accidents required to form a hotspot. Higher values filter out minor clusters.</li>
+        <li><strong>Linkage Method</strong> &mdash; The method used to measure distance between clusters (Ward, Complete, Average, or Single). Ward linkage tends to produce compact, evenly-sized clusters.</li>
+    </ul>
+
+    <div class="help-tip success">
+        <i class="fas fa-check-circle"></i>
+        <div>Hotspot results are updated each time a new clustering job is run by the system administrator. Check the dashboard for the date of the most recent clustering run.</div>
+    </div>
+</div>
+
+<!-- Two column: Roles + FAQ -->
+<div class="help-grid-2">
+
+    <!-- User Roles -->
+    <div class="help-section" id="roles">
+        <h2 class="help-section-title">
+            <i class="fas fa-user-shield orange"></i>
+            User Roles &amp; Permissions
+        </h2>
+        <p>Each user is assigned a role that determines their access level within the system:</p>
+        <table class="role-table">
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Permissions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><i class="fas fa-star" style="color:#7C3AED; margin-right:0.3rem; font-size:0.7rem;"></i> Super Admin</td>
+                    <td>Full system access. Manage users, run clustering, configure system settings, view all data across the region.</td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-flag" style="color:#DC2626; margin-right:0.3rem; font-size:0.7rem;"></i> Regional Director</td>
+                    <td>Final report approval. View all regional data, hotspots, and analytics. Cannot manage system settings.</td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-shield-alt" style="color:#2563EB; margin-right:0.3rem; font-size:0.7rem;"></i> Provincial Chief</td>
+                    <td>Review and approve/reject reports for the province. View provincial data and hotspots.</td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-building" style="color:#059669; margin-right:0.3rem; font-size:0.7rem;"></i> Station Commander</td>
+                    <td>Review and approve/reject station-level reports. View station data and submit reports.</td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-motorcycle" style="color:#D97706; margin-right:0.3rem; font-size:0.7rem;"></i> Traffic Officer</td>
+                    <td>Submit accident reports. View own reports and their approval status. View hotspots and analytics.</td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-keyboard" style="color:#6B7280; margin-right:0.3rem; font-size:0.7rem;"></i> Data Encoder</td>
+                    <td>Digitize and submit accident reports from paper records. View own reports.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- FAQ -->
+    <div class="help-section" id="faq">
+        <h2 class="help-section-title">
+            <i class="fas fa-question-circle teal"></i>
+            Frequently Asked Questions
+        </h2>
+
+        <div class="faq-item">
+            <div class="faq-q"><i class="fas fa-chevron-right"></i> How do I change my password?</div>
+            <p class="faq-a">Go to your Profile page by clicking your avatar in the top-right corner, then select "Profile." Use the change password section to update your credentials.</p>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q"><i class="fas fa-chevron-right"></i> Why was my report rejected?</div>
+            <p class="faq-a">Check your notifications or the report detail page for the reviewer's feedback. Common reasons include incomplete information, inaccurate location pin, or missing required fields. Edit and resubmit the corrected report.</p>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q"><i class="fas fa-chevron-right"></i> How often are hotspots updated?</div>
+            <p class="faq-a">Hotspots are recalculated each time a system administrator runs a new clustering job. This is typically done after a batch of new reports are approved.</p>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q"><i class="fas fa-chevron-right"></i> Can I edit a submitted report?</div>
+            <p class="faq-a">You can only edit a report that has been rejected and returned to you. Once a report is approved at any level, it can no longer be modified by the submitter.</p>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q"><i class="fas fa-chevron-right"></i> What does the severity score mean?</div>
+            <p class="faq-a">The severity score is a weighted calculation: fatalities are weighted highest, followed by injuries, then property damage incidents. Higher scores indicate more dangerous hotspots requiring urgent intervention.</p>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q"><i class="fas fa-chevron-right"></i> I can't see data from other provinces. Why?</div>
+            <p class="faq-a">Data visibility is role-based. Traffic Officers and Station Commanders see data for their assigned station. Provincial Chiefs see their province. Only Regional Directors and Super Admins see all regional data.</p>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q"><i class="fas fa-chevron-right"></i> How do I switch between dark and light mode?</div>
+            <p class="faq-a">Click the moon/sun icon in the top navigation bar to toggle between dark and light themes. Your preference is saved automatically.</p>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q"><i class="fas fa-chevron-right"></i> Who do I contact for technical issues?</div>
+            <p class="faq-a">For system issues or account problems, contact the PRO-13 Regional IT/Admin office or your designated system administrator.</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- Keyboard Shortcuts / Tips -->
+<div class="help-section">
+    <h2 class="help-section-title">
+        <i class="fas fa-keyboard teal"></i>
+        Tips &amp; Shortcuts
+    </h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem;">
+        <div class="help-tip info" style="margin:0;">
+            <i class="fas fa-search"></i>
+            <div><strong>Quick Search</strong> &mdash; Use the search bar on the Accident Records page to find records by location, incident type, or vehicle kind.</div>
+        </div>
+        <div class="help-tip info" style="margin:0;">
+            <i class="fas fa-expand"></i>
+            <div><strong>Fullscreen Map</strong> &mdash; Click the fullscreen button on any map to expand it for better visibility.</div>
+        </div>
+        <div class="help-tip info" style="margin:0;">
+            <i class="fas fa-bell"></i>
+            <div><strong>Notifications</strong> &mdash; Check the bell icon in the header for report status updates and system alerts.</div>
+        </div>
+        <div class="help-tip info" style="margin:0;">
+            <i class="fas fa-print"></i>
+            <div><strong>Print Reports</strong> &mdash; Use your browser's print function (Ctrl+P) on report detail or hotspot pages for formatted printouts.</div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

@@ -1186,6 +1186,9 @@
             <a href="{% url 'map_view' %}?lat={{ accident.latitude }}&lng={{ accident.longitude }}&zoom=16&accident_id={{ accident.id }}&single=true&source=detail" class="btn-action btn-map">
                 <i class="fas fa-map-marked-alt"></i> View on Map
             </a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination={{ accident.latitude }},{{ accident.longitude }}" target="_blank" class="btn-action" style="background: #1a73e8; color: white;">
+                <i class="fas fa-directions"></i> Get Directions
+            </a>
             {% if can_edit_accident %}
             <button onclick="openEditModal({{ accident.id }})" class="btn-action btn-edit">
                 <i class="fas fa-edit"></i> Edit Record
@@ -1451,7 +1454,7 @@
         </div>
     </div>
 
-    <!-- Enhanced Vehicle Information -->
+    <!-- Enhanced Vehicle Information (Suspect/Driver) -->
     {% if accident.vehicle_kind %}
     <div class="info-section">
         <div class="info-section-header">
@@ -1553,7 +1556,24 @@
     {% endif %}
 
     <!-- Photo Evidence Section -->
-    {% if accident.report and accident.report.photo_1 or accident.report and accident.report.photo_2 or accident.report and accident.report.photo_3 %}
+    {% if accident.report and accident.report.photos.all %}
+    <div class="info-section">
+        <div class="info-section-header">
+            <span class="info-section-icon"><i class="fas fa-camera"></i></span>
+            <h3>Photo Evidence</h3>
+        </div>
+
+        <div class="photo-evidence-grid">
+            {% for photo in accident.report.photos.all %}
+            <div class="photo-evidence-item" onclick="openPhotoLightbox('{{ photo.image.url }}')">
+                <img src="{{ photo.image.url }}" alt="Photo Evidence {{ forloop.counter }}" loading="lazy">
+                <div class="photo-evidence-label"><i class="fas fa-image"></i> Photo {{ forloop.counter }}</div>
+                <div class="photo-evidence-zoom"><i class="fas fa-search-plus"></i></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% elif accident.report and accident.report.photo_1 or accident.report and accident.report.photo_2 or accident.report and accident.report.photo_3 %}
     <div class="info-section">
         <div class="info-section-header">
             <span class="info-section-icon"><i class="fas fa-camera"></i></span>
@@ -1709,13 +1729,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const map = L.map('accidentMap', {
         zoomControl: true,
-        scrollWheelZoom: true
+        scrollWheelZoom: true,
+        zoomSnap: 0.5,
+        wheelDebounceTime: 80,
+        wheelPxPerZoomLevel: 120
     }).setView([lat, lng], 15);
-    
-    // Enhanced tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
+
+    // CartoDB Voyager tile layer (reliable, no referrer issues)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19,
+        updateWhenZooming: false,
+        updateWhenIdle: true,
+        keepBuffer: 4
     }).addTo(map);
     
     // Determine marker color and icon based on severity
@@ -2001,7 +2028,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     <!-- Vehicle Tab -->
                     <div id="vehicleTab" class="edit-tab-panel">
-                        <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem;">Vehicle Information</h3>
+                        <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem;">Vehicle Information (Suspect/Driver)</h3>
                         <div class="form-group">
                             <label for="editVehicleKind">Vehicle Kind/Type</label>
                             <select id="editVehicleKind" name="vehicle_kind" class="form-control">
@@ -2134,10 +2161,11 @@ document.addEventListener('DOMContentLoaded', function() {
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 .modal-content {

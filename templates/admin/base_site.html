@@ -1,0 +1,47 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    #nav-back-links {
+        display: inline-flex;
+        gap: 6px;
+        margin-left: 10px;
+    }
+    #nav-back-links a {
+        padding: 3px 10px;
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+        border-radius: 3px;
+        text-decoration: none;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        transition: background 0.15s;
+    }
+    #nav-back-links a:hover {
+        background: rgba(255,255,255,0.3);
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<div id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></div>
+{% if user.is_anonymous %}
+  {% include "admin/color_theme_toggle.html" %}
+{% endif %}
+{% endblock %}
+
+{% block userlinks %}
+{{ block.super }}
+<span id="nav-back-links">
+    <a href="/admin-panel/">Admin Panel</a>
+    <a href="/">Dashboard</a>
+</span>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

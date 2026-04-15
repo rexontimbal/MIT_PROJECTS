@@ -9,6 +9,31 @@
 
 {% block extra_css %}
 <style>
+    /* Badge on Run Clustering button */
+    .clustering-btn-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #fff;
+        color: #DC143C;
+        font-size: 0.6rem;
+        font-weight: 700;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+        line-height: 1;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+        animation: clusterBadgePulse 2.5s infinite;
+    }
+    @keyframes clusterBadgePulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
     /* ===== COHESIVE COLOR SCHEME FOR HOTSPOTS ===== */
     :root {
         /* Primary Colors - Danger/Warning Theme */
@@ -2323,10 +2348,11 @@
         <p>High-risk areas identified by AGNES clustering algorithm across Caraga Region</p>
     </div>
     <div class="hero-actions">
-        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
-        <button class="btn btn-light" onclick="openClusteringModal()" style="background: #fff; color: #DC143C; font-weight: 600;">
+        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' or user.profile.can_run_clustering %}
+        <button class="btn btn-light" onclick="openClusteringModal()" style="background: #fff; color: #DC143C; font-weight: 600; position: relative;">
             <i class="fas fa-project-diagram"></i>
             Run Clustering
+            {% if header_unclustered_count %}<span class="clustering-btn-badge" id="clusteringBtnBadge">{{ header_unclustered_count }}</span>{% endif %}
         </button>
         {% endif %}
         <button class="btn btn-light" onclick="window.location.href='{% url 'map_view' %}'">
@@ -2486,14 +2512,14 @@
 
 <!-- View Toggle (Mini) -->
 <div class="view-toggle">
-    <div class="view-option active" onclick="switchView('grid')">📊 Grid View</div>
-    <div class="view-option" onclick="switchView('list')">📋 List View</div>
+    <div class="view-option {% if hotspot_default_view != 'list' %}active{% endif %}" onclick="switchView('grid')">📊 Grid View</div>
+    <div class="view-option {% if hotspot_default_view == 'list' %}active{% endif %}" onclick="switchView('list')">📋 List View</div>
 </div>
 
 <!-- Hotspots Grid -->
-<div class="hotspots-grid" id="hotspotsContainer">
+<div class="hotspots-grid {% if hotspot_default_view == 'list' %}view-list{% endif %}" id="hotspotsContainer">
     {% for hotspot in hotspots %}
-    <div class="hotspot-card"
+    <div class="hotspot-card {% if hotspot_default_view == 'list' %}view-list{% endif %}"
         data-severity="{{ hotspot.severity_score }}"
         data-accidents="{{ hotspot.accident_count }}"
         data-casualties="{{ hotspot.total_casualties }}"
@@ -2573,7 +2599,7 @@
     <div class="empty-state">
         <h3>No hotspots found</h3>
         <p>Try running the clustering algorithm or adjusting your filters.</p>
-        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
+        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' or user.profile.can_run_clustering %}
         <button class="btn btn-primary" onclick="openClusteringModal()">
             <i class="fas fa-project-diagram"></i> Run Clustering
         </button>
@@ -2663,6 +2689,10 @@
             <button class="modal-btn modal-btn-secondary" id="modalViewMap">
                 <i class="fas fa-map"></i>
                 View Map
+            </button>
+            <button class="modal-btn modal-btn-secondary" id="modalGetDirections" style="background: #1a73e8; color: white; border-color: #1a73e8;">
+                <i class="fas fa-directions"></i>
+                Get Directions
             </button>
         </div>
     </div>
@@ -2756,6 +2786,12 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
+        // Hide nav badge on hotspots page — count shows on Run Clustering button instead
+        var navBadge = document.getElementById('hotspotNavBadge');
+        var navBadgeMobile = document.getElementById('hotspotNavBadgeMobile');
+        if (navBadge) navBadge.style.display = 'none';
+        if (navBadgeMobile) navBadgeMobile.style.display = 'none';
+
         initializeHotspotCards();
         updatePagination();
         updateActiveFilters();
@@ -2886,6 +2922,11 @@
 
         viewMapBtn.onclick = function() {
             window.location.href = `/map/?cluster_id=${data.cluster}&source=list`;
+        };
+
+        const directionsBtn = document.getElementById('modalGetDirections');
+        directionsBtn.onclick = function() {
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${data.lat},${data.lng}`, '_blank');
         };
     }
 
@@ -3387,7 +3428,7 @@
         const options = document.querySelectorAll('.view-option');
 
         options.forEach(opt => opt.classList.remove('active'));
-        event.target.classList.add('active');
+        if (event && event.target) event.target.classList.add('active');
 
         container.className = 'hotspots-grid';
         if (viewType === 'list') {
@@ -3554,7 +3595,6 @@
     }
 
     function startClustering() {
-        var linkage = document.getElementById('clLinkage').value;
         var threshold = document.getElementById('clThreshold').value;
         var minSize = document.getElementById('clMinSize').value;
 
@@ -3583,7 +3623,7 @@
                 subText.textContent = 'Computing distance matrix and hierarchical clusters...';
             } else if (stage === 2) {
                 progressBar.style.width = '50%';
-                subText.textContent = 'Applying ' + linkage + ' linkage with threshold ' + threshold + '...';
+                subText.textContent = 'Applying clustering with threshold ' + threshold + '...';
             } else if (stage === 3) {
                 progressBar.style.width = '65%';
                 statusText.textContent = 'Saving hotspots...';
@@ -3605,7 +3645,6 @@
                 'X-CSRFToken': '{{ csrf_token }}'
             },
             body: JSON.stringify({
-                linkage_method: linkage,
                 distance_threshold: parseFloat(threshold),
                 min_cluster_size: parseInt(minSize)
             })
@@ -3676,16 +3715,6 @@
             <div id="clusterStep1">
                 <div style="font-weight: 600; color: #333; margin-bottom: 0.6rem; font-size: 0.85rem;">
                     <i class="fas fa-sliders-h"></i> Algorithm Parameters
-                </div>
-
-                <!-- Linkage Method -->
-                <div style="margin-bottom: 0.75rem;">
-                    <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #555; margin-bottom: 0.25rem;">Linkage Method</label>
-                    <select id="clLinkage" style="width: 100%; padding: 0.45rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.82rem; background: #fff;">
-                        <option value="complete" selected>Complete (recommended)</option>
-                        <option value="average">Average</option>
-                        <option value="single">Single</option>
-                    </select>
                 </div>
 
                 <!-- Distance Threshold -->

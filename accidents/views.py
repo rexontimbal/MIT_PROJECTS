@@ -30,8 +30,8 @@ def dashboard(request):
     # Check if it's an AJAX request for partial updates
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-    # Get current date for calculations
-    today = timezone.now().date()
+    # Get current date in local timezone (Asia/Manila) for calculations
+    today = timezone.localdate()
     now = timezone.now()
 
     # Use database aggregation for faster statistics
@@ -47,11 +47,18 @@ def dashboard(request):
         context = cached_data
     else:
         # === REAL-TIME OPERATIONAL STATS FOR PNP ===
+        # Hybrid approach for the operational summary:
+        #   - CSV-imported records (no linked report): filter by date_committed (incident date)
+        #   - Report-approved records (linked report): filter by created_at (approval date)
+        # This ensures newly approved reports immediately appear in Today/This Week/This Month
+        # while bulk-imported historical data uses the actual incident date.
 
         # TODAY's accidents
-        today_accidents = Accident.objects.filter(
-            date_committed=today
-        ).aggregate(
+        today_q = (
+            Q(report__isnull=True, date_committed=today) |
+            Q(report__isnull=False, created_at__date=today)
+        )
+        today_accidents = Accident.objects.filter(today_q).aggregate(
             total=Count('id'),
             fatal=Count('id', filter=Q(victim_killed=True)),
             injury=Count('id', filter=Q(victim_injured=True))
@@ -59,10 +66,11 @@ def dashboard(request):
 
         # THIS WEEK's accidents (Monday to today)
         week_start = today - timedelta(days=today.weekday())
-        week_accidents = Accident.objects.filter(
-            date_committed__gte=week_start,
-            date_committed__lte=today
-        ).aggregate(
+        week_q = (
+            Q(report__isnull=True, date_committed__gte=week_start, date_committed__lte=today) |
+            Q(report__isnull=False, created_at__date__gte=week_start, created_at__date__lte=today)
+        )
+        week_accidents = Accident.objects.filter(week_q).aggregate(
             total=Count('id'),
             fatal=Count('id', filter=Q(victim_killed=True)),
             injury=Count('id', filter=Q(victim_injured=True))
@@ -70,10 +78,11 @@ def dashboard(request):
 
         # THIS MONTH's accidents
         month_start = today.replace(day=1)
-        month_accidents = Accident.objects.filter(
-            date_committed__gte=month_start,
-            date_committed__lte=today
-        ).aggregate(
+        month_q = (
+            Q(report__isnull=True, date_committed__gte=month_start, date_committed__lte=today) |
+            Q(report__isnull=False, created_at__date__gte=month_start, created_at__date__lte=today)
+        )
+        month_accidents = Accident.objects.filter(month_q).aggregate(
             total=Count('id'),
             fatal=Count('id', filter=Q(victim_killed=True)),
             injury=Count('id', filter=Q(victim_injured=True))
@@ -316,8 +325,11 @@ def get_accidents_by_time_of_day():
 @pnp_login_required
 def accident_list(request):
     """List all accidents with filtering and statistics"""
-    accidents = Accident.objects.select_related('report').all().order_by('-created_at', '-date_committed')
-    
+    accidents = Accident.objects.select_related('report').all().order_by('-date_committed', '-created_at')
+
+    # Role-based data scoping: traffic_officer sees only their station's data
+    accidents = _apply_role_scoping(accidents, request.user)
+
     # Apply filters
     province = request.GET.get('province')
     municipal = request.GET.get('municipal')
@@ -706,6 +718,25 @@ def accident_details_json(request, pk):
         'suspect_details': accident.suspect_details or '',
         'case_status': accident.case_status or '',
         'offense': accident.offense or '',
+        # Additional fields for PNP Caraga report format
+        'offense_type': accident.offense_type or '',
+        'stage_of_felony': accident.stage_of_felony or '',
+        'date_reported': accident.date_reported.strftime('%B %d, %Y') if accident.date_reported else '',
+        'time_reported': accident.time_reported.strftime('%I:%M %p') if accident.time_reported else '',
+        'ppo': accident.ppo or '',
+        'pro': accident.pro or '',
+        'vehicle_make': accident.vehicle_make or '',
+        'vehicle_model': accident.vehicle_model or '',
+        'vehicle_plate_no': accident.vehicle_plate_no or '',
+        'vehicle_chassis_no': accident.vehicle_chassis_no or '',
+        'vehicle_colorum': accident.vehicle_colorum,
+        'drug_involved': accident.drug_involved,
+        'driver_gender': accident.get_driver_gender_display() if accident.driver_gender != 'UNKNOWN' else '',
+        'driver_age': accident.driver_age,
+        'victim_gender': accident.get_victim_gender_display() if accident.victim_gender != 'UNKNOWN' else '',
+        'victim_age': accident.victim_age,
+        'suspect_count': accident.suspect_count or 0,
+        'victim_unharmed': accident.victim_unharmed,
     }
 
     return JsonResponse(data)
@@ -786,7 +817,7 @@ def accident_csv_upload(request):
             df = None
             for enc in ['utf-8', 'cp1252', 'latin-1']:
                 try:
-                    df = pd.read_csv(io.BytesIO(raw_bytes), encoding=enc)
+                    df = pd.read_csv(io.BytesIO(raw_bytes), encoding=enc, comment='#', skip_blank_lines=True)
                     break
                 except (UnicodeDecodeError, Exception):
                     continue
@@ -808,103 +839,337 @@ def accident_csv_upload(request):
         # Normalize column names: strip whitespace
         df.columns = [str(c).strip() for c in df.columns]
 
+        # Validate that the file contains accident data columns
+        # These are accident-specific column names that would NOT appear in other files
+        ACCIDENT_COLUMNS = {
+            'dateCommitted', 'timeCommitted', 'incidentType', 'offense',
+            'offenseType', 'stageoffelony', 'victimKilled', 'victimInjured',
+            'victimUnharmed', 'victimCount', 'suspectCount', 'vehicleKind',
+            'vehicleMake', 'vehicleModel', 'vehiclePlateNo', 'casestatus',
+            'caseSolveType', 'dateReported', 'timeReported', 'typeofPlace',
+            'narrative', 'suspect', 'victim',
+        }
+        # Also accept columns from system-exported files (CSV and Excel exports)
+        EXPORTED_COLUMNS = {
+            'date_committed', 'time_committed', 'incident_type',
+            'victim_killed', 'victim_injured', 'victim_unharmed',
+            'victim_count', 'vehicle_kind', 'vehicle_make', 'vehicle_model',
+            'driver_gender', 'victim_gender', 'driver_age', 'victim_age',
+            'is_hotspot', 'cluster_id',
+        }
+        # CSV export uses these human-readable column names
+        CSV_EXPORT_COLUMNS = {
+            'Incident Type', 'Casualties', 'Fatal', 'Injured',
+            'Hotspot', 'Cluster ID',
+        }
+        file_columns = set(df.columns)
+        matched_original = file_columns & ACCIDENT_COLUMNS
+        matched_exported = file_columns & EXPORTED_COLUMNS
+        matched_csv_export = file_columns & CSV_EXPORT_COLUMNS
+        total_matched = len(matched_original) + len(matched_exported) + len(matched_csv_export)
+        if total_matched < 5:
+            err = 'The uploaded file does not appear to contain accident data. Please upload a valid accident dataset file.'
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': err}, status=400)
+            messages.error(request, err)
+            return redirect('accident_list')
+
+        # Map system-exported column names back to import column names
+        # so exported files can be re-imported seamlessly
+        EXPORT_TO_IMPORT_MAP = {
+            # Excel export → import columns
+            'date_committed': 'dateCommitted',
+            'time_committed': 'timeCommitted',
+            'incident_type': 'incidentType',
+            'victim_killed': 'victimKilled',
+            'victim_injured': 'victimInjured',
+            'victim_unharmed': 'victimUnharmed',
+            'victim_count': 'victimCount',
+            'vehicle_kind': 'vehicleKind',
+            'vehicle_make': 'vehicleMake',
+            'vehicle_model': 'vehicleModel',
+            'vehicle_plate_no': 'vehiclePlateNo',
+            'type_of_place': 'typeofPlace',
+            'date_reported': 'dateReported',
+            'time_reported': 'timeReported',
+            'offense_type': 'offenseType',
+            'stage_of_felony': 'stageoffelony',
+            'case_status': 'casestatus',
+            'case_solve_type': 'caseSolveType',
+            'suspect_count': 'suspectCount',
+            # CSV export → import columns
+            'Date': 'dateCommitted',
+            'Time': 'timeCommitted',
+            'Municipality': 'municipal',
+            'Incident Type': 'incidentType',
+            'Casualties': 'victimCount',
+            'Fatal': 'victimKilled',
+            'Injured': 'victimInjured',
+            'Latitude': 'lat',
+            'Longitude': 'lng',
+            'Province': 'province',
+            'Barangay': 'barangay',
+            'Street': 'street',
+        }
+        # Rename exported columns to import-expected names
+        rename_map = {k: v for k, v in EXPORT_TO_IMPORT_MAP.items() if k in df.columns and v not in df.columns}
+        if rename_map:
+            df = df.rename(columns=rename_map)
+
         # Replace NaN with None
         df = df.replace({np.nan: None})
 
-        # Handle import mode: 'replace' clears all existing data first
+        # Handle import mode: 'replace' clears ALL existing accident data first
+        # Report-linked accidents are also deleted (SET_NULL keeps the reports).
+        # Users can re-sync verified reports via the Re-sync button on Manage Reports.
         import_mode = request.POST.get('import_mode', 'add')
         deleted_count = 0
+        unsynced_count = 0
         if import_mode == 'replace':
+            # Count how many verified reports will lose their link
+            unsynced_count = AccidentReport.objects.filter(accident__isnull=False).count()
+            # Delete ALL accidents — SET_NULL on FK keeps reports safe
             deleted_count = Accident.objects.count()
             Accident.objects.all().delete()
+            # Also clear clustering data (depends on accidents)
+            AccidentCluster.objects.all().delete()
+            ClusteringJob.objects.all().delete()
+            from .models import ClusterValidationMetrics
+            ClusterValidationMetrics.objects.all().delete()
 
+        # ── Vectorized pre-processing (much faster than row-by-row) ──
+
+        # Helper: safe string column — strip, truncate, fill default
+        def _col_str(col_name, default=''):
+            if col_name not in df.columns:
+                return pd.Series([default] * len(df), index=df.index)
+            s = df[col_name].fillna('').astype(str).str.strip().str[:500]
+            if default:
+                s = s.replace('', default)
+            return s
+
+        # Helper: safe boolean column
+        def _col_bool(col_name):
+            if col_name not in df.columns:
+                return pd.Series([False] * len(df), index=df.index)
+            return df[col_name].fillna('').astype(str).str.strip().str.upper().isin(['YES', 'TRUE', '1', 'Y', 'T'])
+
+        # Helper: safe int column
+        def _col_int(col_name, default=None):
+            if col_name not in df.columns:
+                return pd.Series([default] * len(df), index=df.index)
+            return pd.to_numeric(df[col_name], errors='coerce').apply(
+                lambda v: int(v) if pd.notna(v) else default
+            )
+
+        # Parse dates using pandas (vectorized, much faster)
+        def _col_date(col_name):
+            if col_name not in df.columns:
+                return pd.Series([None] * len(df), index=df.index)
+            return pd.to_datetime(df[col_name], errors='coerce', infer_datetime_format=True).apply(
+                lambda v: v.date() if pd.notna(v) else None
+            )
+
+        # Parse times
+        def _col_time(col_name):
+            if col_name not in df.columns:
+                return pd.Series([None] * len(df), index=df.index)
+            def _parse_time(v):
+                if pd.isna(v) or str(v).strip() == '':
+                    return None
+                time_str = str(v).strip()
+                for fmt in ['%H:%M:%S', '%H:%M', '%I:%M:%S %p', '%I:%M %p']:
+                    try:
+                        return datetime.strptime(time_str, fmt).time()
+                    except (ValueError, TypeError):
+                        continue
+                return None
+            return df[col_name].apply(_parse_time)
+
+        # Parse coordinates
+        if 'lat' in df.columns:
+            lat_series = pd.to_numeric(df['lat'], errors='coerce')
+        elif 'latitude' in df.columns:
+            lat_series = pd.to_numeric(df['latitude'], errors='coerce')
+        else:
+            lat_series = pd.Series([np.nan] * len(df), index=df.index)
+
+        if 'lng' in df.columns:
+            lng_series = pd.to_numeric(df['lng'], errors='coerce')
+        elif 'longitude' in df.columns:
+            lng_series = pd.to_numeric(df['longitude'], errors='coerce')
+        else:
+            lng_series = pd.Series([np.nan] * len(df), index=df.index)
+
+        # Invalidate out-of-range coordinates
+        lat_series = lat_series.where(lat_series.between(7.0, 11.0))
+        lng_series = lng_series.where(lng_series.between(124.0, 128.0))
+
+        # Pre-process all columns
+        col_pro = _col_str('pro')
+        col_ppo = _col_str('ppo')
+        col_stn = _col_str('stn')
+        col_region = _col_str('region', 'CARAGA')
+        col_province = _col_str('province', 'UNKNOWN')
+        col_municipal = _col_str('municipal', 'UNKNOWN')
+        col_barangay = _col_str('barangay', 'UNKNOWN')
+        col_street = _col_str('street')
+        col_type_of_place = _col_str('typeofPlace')
+        col_date_reported = _col_date('dateReported')
+        col_time_reported = _col_time('timeReported')
+        col_date_committed = _col_date('dateCommitted')
+        col_time_committed = _col_time('timeCommitted')
+        col_year = _col_int('Year')
+        col_incident_type = _col_str('incidentType', 'UNKNOWN')
+        col_offense = _col_str('offense')
+        col_offense_type = _col_str('offenseType')
+        col_stage_of_felony = _col_str('stageoffelony')
+        col_victim_killed = _col_bool('victimKilled')
+        col_victim_injured = _col_bool('victimInjured')
+        col_victim_unharmed = _col_bool('victimUnharmed')
+        col_victim_count = _col_int('victimCount', 0)
+        col_suspect_count = _col_int('suspectCount', 0)
+        col_vehicle_kind = _col_str('vehicleKind')
+        col_vehicle_make = _col_str('vehicleMake')
+        col_vehicle_model = _col_str('vehicleModel')
+        col_vehicle_plate_no = _col_str('vehiclePlateNo')
+        col_victim_details = _col_str('victim')
+        col_suspect_details = _col_str('suspect')
+        col_narrative = _col_str('narrative', 'No details available')
+        col_case_status = _col_str('casestatus', 'UNKNOWN')
+        col_case_solve_type = _col_str('caseSolveType')
+
+        # Fallback date: use Year column, else 2020-01-01
+        for i in col_date_committed.index:
+            if col_date_committed[i] is None:
+                yr = col_year[i]
+                col_date_committed[i] = datetime(yr, 1, 1).date() if yr else datetime(2020, 1, 1).date()
+
+        # Fix missing coordinates using approximate lookup
+        for i in df.index:
+            lat_val = lat_series.get(i)
+            lng_val = lng_series.get(i)
+            if pd.isna(lat_val) or pd.isna(lng_val):
+                approx = import_cmd.get_approximate_coordinates(
+                    col_province[i], col_municipal[i], col_barangay[i]
+                )
+                if approx:
+                    lat_series.at[i] = approx[0]
+                    lng_series.at[i] = approx[1]
+                else:
+                    lat_series.at[i] = 9.0
+                    lng_series.at[i] = 125.5
+
+        # ── Build fingerprints of existing accidents to avoid duplicates ──
+        # Uses many fields to precisely identify the same accident record.
+        # Coordinates are excluded because they can change between export/import
+        # cycles (approximate lookup, rounding, etc.) which would cause false mismatches.
+        # A duplicate is only detected when ALL these fields match exactly.
+        existing_accidents = Accident.objects.all().values_list(
+            'date_committed', 'time_committed', 'province', 'municipal',
+            'barangay', 'street', 'incident_type', 'offense', 'vehicle_kind',
+            'victim_count', 'suspect_count'
+        )
+        existing_fingerprints = set()
+        for acc in existing_accidents:
+            fp = (
+                str(acc[0]) if acc[0] else '',
+                str(acc[1]) if acc[1] else '',
+                str(acc[2] or '').strip().upper(),
+                str(acc[3] or '').strip().upper(),
+                str(acc[4] or '').strip().upper(),
+                str(acc[5] or '').strip().upper(),
+                str(acc[6] or '').strip().upper(),
+                str(acc[7] or '').strip().upper(),
+                str(acc[8] or '').strip().upper(),
+                str(acc[9]) if acc[9] is not None else '0',
+                str(acc[10]) if acc[10] is not None else '0',
+            )
+            existing_fingerprints.add(fp)
+
+        # ── Build Accident objects and bulk insert ──
         imported = 0
+        skipped_duplicates = 0
         errors = 0
         error_samples = []
         batch = []
-        batch_size = 500
+        batch_size = 2000
 
-        for index, row in df.iterrows():
+        for i in df.index:
             try:
-                # Parse date
-                date_committed = import_cmd.safe_parse_date(row.get('dateCommitted'))
-                if not date_committed:
-                    year_value = import_cmd.safe_parse_int(row.get('Year'))
-                    if year_value:
-                        date_committed = datetime(year_value, 1, 1).date()
-                    else:
-                        date_committed = datetime(2020, 1, 1).date()
-
-                # Parse coordinates
-                latitude = import_cmd.safe_parse_float(row.get('lat'))
-                longitude = import_cmd.safe_parse_float(row.get('lng'))
-
-                if latitude and (latitude < 7.0 or latitude > 11.0):
-                    latitude = None
-                if longitude and (longitude < 124.0 or longitude > 128.0):
-                    longitude = None
-
-                if not latitude or not longitude:
-                    approx_coords = import_cmd.get_approximate_coordinates(
-                        row.get('province'), row.get('municipal'), row.get('barangay')
-                    )
-                    if approx_coords:
-                        latitude, longitude = approx_coords
-                    else:
-                        latitude, longitude = 9.0, 125.5
-
                 accident = Accident(
-                    pro=import_cmd.safe_string(row.get('pro')),
-                    ppo=import_cmd.safe_string(row.get('ppo')),
-                    station=import_cmd.safe_string(row.get('stn')),
-                    region=import_cmd.safe_string(row.get('region'), 'CARAGA'),
-                    province=import_cmd.safe_string(row.get('province'), 'UNKNOWN'),
-                    municipal=import_cmd.safe_string(row.get('municipal'), 'UNKNOWN'),
-                    barangay=import_cmd.safe_string(row.get('barangay'), 'UNKNOWN'),
-                    street=import_cmd.safe_string(row.get('street')),
-                    type_of_place=import_cmd.safe_string(row.get('typeofPlace')),
-                    latitude=Decimal(str(latitude)),
-                    longitude=Decimal(str(longitude)),
-                    date_reported=import_cmd.safe_parse_date(row.get('dateReported')),
-                    time_reported=import_cmd.safe_parse_time(row.get('timeReported')),
-                    date_committed=date_committed,
-                    time_committed=import_cmd.safe_parse_time(row.get('timeCommitted')),
-                    year=import_cmd.safe_parse_int(row.get('Year')),
-                    incident_type=import_cmd.safe_string(row.get('incidentType'), 'UNKNOWN'),
-                    offense=import_cmd.safe_string(row.get('offense')),
-                    offense_type=import_cmd.safe_string(row.get('offenseType')),
-                    stage_of_felony=import_cmd.safe_string(row.get('stageoffelony')),
-                    victim_killed=import_cmd.safe_parse_boolean(row.get('victimKilled')),
-                    victim_injured=import_cmd.safe_parse_boolean(row.get('victimInjured')),
-                    victim_unharmed=import_cmd.safe_parse_boolean(row.get('victimUnharmed')),
-                    victim_count=import_cmd.safe_parse_int(row.get('victimCount'), default=0),
-                    suspect_count=import_cmd.safe_parse_int(row.get('suspectCount'), default=0),
-                    vehicle_kind=import_cmd.safe_string(row.get('vehicleKind')),
-                    vehicle_make=import_cmd.safe_string(row.get('vehicleMake')),
-                    vehicle_model=import_cmd.safe_string(row.get('vehicleModel')),
-                    vehicle_plate_no=import_cmd.safe_string(row.get('vehiclePlateNo')),
-                    victim_details=import_cmd.safe_string(row.get('victim')),
-                    suspect_details=import_cmd.safe_string(row.get('suspect')),
-                    narrative=import_cmd.safe_string(row.get('narrative'), 'No details available'),
-                    case_status=import_cmd.safe_string(row.get('casestatus'), 'UNKNOWN'),
-                    case_solve_type=import_cmd.safe_string(row.get('caseSolveType')),
+                    pro=col_pro[i],
+                    ppo=col_ppo[i],
+                    station=col_stn[i],
+                    region=col_region[i],
+                    province=col_province[i],
+                    municipal=col_municipal[i],
+                    barangay=col_barangay[i],
+                    street=col_street[i],
+                    type_of_place=col_type_of_place[i],
+                    latitude=Decimal(str(lat_series[i])),
+                    longitude=Decimal(str(lng_series[i])),
+                    date_reported=col_date_reported[i],
+                    time_reported=col_time_reported[i],
+                    date_committed=col_date_committed[i],
+                    time_committed=col_time_committed[i],
+                    year=col_year[i],
+                    incident_type=col_incident_type[i],
+                    offense=col_offense[i],
+                    offense_type=col_offense_type[i],
+                    stage_of_felony=col_stage_of_felony[i],
+                    victim_killed=col_victim_killed[i],
+                    victim_injured=col_victim_injured[i],
+                    victim_unharmed=col_victim_unharmed[i],
+                    victim_count=col_victim_count[i],
+                    suspect_count=col_suspect_count[i],
+                    vehicle_kind=col_vehicle_kind[i],
+                    vehicle_make=col_vehicle_make[i],
+                    vehicle_model=col_vehicle_model[i],
+                    vehicle_plate_no=col_vehicle_plate_no[i],
+                    victim_details=col_victim_details[i],
+                    suspect_details=col_suspect_details[i],
+                    narrative=col_narrative[i],
+                    case_status=col_case_status[i],
+                    case_solve_type=col_case_solve_type[i],
                 )
 
+                # Skip if this row already exists (avoid duplicates)
+                # All 11 fields must match exactly for a row to be considered duplicate
+                row_fp = (
+                    str(col_date_committed[i]) if col_date_committed[i] else '',
+                    str(col_time_committed[i]) if col_time_committed[i] else '',
+                    str(col_province[i] or '').strip().upper(),
+                    str(col_municipal[i] or '').strip().upper(),
+                    str(col_barangay[i] or '').strip().upper(),
+                    str(col_street[i] or '').strip().upper(),
+                    str(col_incident_type[i] or '').strip().upper(),
+                    str(col_offense[i] or '').strip().upper(),
+                    str(col_vehicle_kind[i] or '').strip().upper(),
+                    str(col_victim_count[i]) if col_victim_count[i] is not None else '0',
+                    str(col_suspect_count[i]) if col_suspect_count[i] is not None else '0',
+                )
+                if row_fp in existing_fingerprints:
+                    skipped_duplicates += 1
+                    continue
+
+                # Add fingerprint so we also skip duplicates within the file itself
+                existing_fingerprints.add(row_fp)
                 batch.append(accident)
 
                 if len(batch) >= batch_size:
-                    Accident.objects.bulk_create(batch, ignore_conflicts=True)
+                    Accident.objects.bulk_create(batch)
                     imported += len(batch)
                     batch = []
 
             except Exception as e:
                 errors += 1
                 if len(error_samples) < 5:
-                    error_samples.append(f'Row {index + 2}: {str(e)[:120]}')
+                    error_samples.append(f'Row {i + 2}: {str(e)[:120]}')
 
         # Insert remaining
         if batch:
-            Accident.objects.bulk_create(batch, ignore_conflicts=True)
+            Accident.objects.bulk_create(batch)
             imported += len(batch)
 
         # Auto-extract gender & age from victim_details and suspect_details
@@ -968,14 +1233,18 @@ def accident_csv_upload(request):
                 'error_samples': error_samples,
                 'import_mode': import_mode,
                 'deleted_count': deleted_count,
+                'unsynced_count': unsynced_count,
+                'skipped_duplicates': skipped_duplicates,
                 'gender_extracted': gender_extracted,
             })
         else:
-            mode_msg = ' (replaced all existing data)' if import_mode == 'replace' else ''
+            mode_msg = f' (replaced {deleted_count} records)' if import_mode == 'replace' else ''
+            dup_msg = f', {skipped_duplicates} duplicates skipped' if skipped_duplicates > 0 else ''
+            resync_msg = f' — {unsynced_count} approved report(s) need re-sync via Manage Reports.' if import_mode == 'replace' and unsynced_count > 0 else ''
             if errors > 0:
-                messages.warning(request, f'Import completed{mode_msg}: {imported} records imported, {errors} errors encountered.')
+                messages.warning(request, f'Import completed{mode_msg}: {imported} records imported, {errors} errors encountered{dup_msg}.{resync_msg}')
             else:
-                messages.success(request, f'Successfully imported {imported} accident records from {uploaded_file.name}{mode_msg}!')
+                messages.success(request, f'Successfully imported {imported} accident records from {uploaded_file.name}{mode_msg}{dup_msg}!{resync_msg}')
             return redirect('accident_list')
 
     except Exception as e:
@@ -1032,6 +1301,11 @@ def update_case_status(request, pk):
     accident.case_status_updated_at = timezone.now()
     accident.save()
 
+    # Audit log
+    log_user_action(request, 'case_status_update',
+        f'Updated case status for accident #{pk} to "{new_status}"' + (f' ({solve_type})' if solve_type else ''),
+        object_type='Accident', object_id=pk)
+
     updater_name = request.user.get_full_name() or request.user.username
     return JsonResponse({
         'success': True,
@@ -1044,11 +1318,11 @@ def update_case_status(request, pk):
 
 @pnp_login_required
 def accident_edit(request, pk):
-    """Edit accident - admins with jurisdiction only"""
+    """Edit accident - admins and data encoders with jurisdiction"""
 
-    # Check if user has an admin role
+    # Check if user has an editing role
     if not hasattr(request.user, 'profile') or request.user.profile.role not in [
-        'super_admin', 'regional_director', 'provincial_chief', 'station_commander'
+        'super_admin', 'regional_director', 'provincial_chief', 'station_commander', 'data_encoder'
     ]:
         messages.error(request, 'Permission denied. You do not have permission to edit accidents.')
         return redirect('accident_list')
@@ -1062,7 +1336,6 @@ def accident_edit(request, pk):
         return redirect('accident_list')
     elif profile.role == 'station_commander' and accident.station != profile.station:
         messages.error(request, 'Permission denied. You can only edit accidents within your station.')
-        return redirect('accident_list')
 
     if request.method == 'POST':
         try:
@@ -1135,6 +1408,11 @@ def accident_edit(request, pk):
             accident.case_solve_type = request.POST.get('case_solve_type', accident.case_solve_type)
 
             accident.save()
+
+            # Audit log
+            log_user_action(request, 'accident_edit',
+                f'Edited accident #{pk} at {accident.municipal}, {accident.province}',
+                object_type='Accident', object_id=pk)
 
             messages.success(request, f'Accident #{pk} updated successfully!')
 
@@ -1634,6 +1912,12 @@ def report_accident(request):
     """Form for reporting new accidents"""
     from .forms import AccidentReportForm
 
+    # Check if user has report submission access
+    profile = getattr(request.user, 'profile', None)
+    if profile and not profile.can_submit_reports:
+        messages.error(request, 'You do not have permission to submit reports. Please contact your administrator.')
+        return redirect('dashboard')
+
     # Auto-fill reporter info from logged-in user's profile
     reporter_name = request.user.get_full_name() or request.user.username
     reporter_contact = ''
@@ -1669,6 +1953,16 @@ def report_accident(request):
             report.casualties_injured = int(request.POST.get('casualties_injured', 0) or 0)
 
             report.save()
+
+            # Handle dynamic photo uploads
+            from .models import ReportPhoto
+            photo_files = request.FILES.getlist('report_photos')
+            for idx, photo_file in enumerate(photo_files):
+                ReportPhoto.objects.create(
+                    report=report,
+                    image=photo_file,
+                    order=idx,
+                )
 
             # Log activity
             log_report_activity(report, 'submitted', request.user)
@@ -1759,14 +2053,16 @@ def my_reports(request):
     # Sort: latest activity first
     reports = reports.order_by('-updated_at')
 
-    # Pagination with configurable per-page (default 5)
-    per_page = request.GET.get('per_page', '5')
+    # Pagination with configurable per-page (system default from settings)
+    from .models import SystemSetting
+    sys_default = SystemSetting.get('default_per_page')
+    per_page = request.GET.get('per_page', sys_default)
     try:
         per_page_int = int(per_page)
-        if per_page_int not in (5, 10, 20, 50):
-            per_page_int = 5
+        if per_page_int not in (5, 10, 15, 20, 50):
+            per_page_int = int(sys_default)
     except (ValueError, TypeError):
-        per_page_int = 5
+        per_page_int = 15
     paginator = Paginator(reports, per_page_int)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -2109,24 +2405,31 @@ def pending_reports(request):
     pending_queryset = AccidentReport.objects.filter(status='pending')
     pending_count = get_reports_for_jurisdiction(request.user, pending_queryset).count()
 
-    # Pagination with configurable per-page (default 5)
+    # Pagination with configurable per-page (system default from settings)
+    from .models import SystemSetting
+    sys_default = SystemSetting.get('default_per_page')
     total_report_count = len(reports) if isinstance(reports, list) else reports.count()
-    per_page = request.GET.get('per_page', '5')
+    per_page = request.GET.get('per_page', sys_default)
     try:
         per_page_int = int(per_page)
-        if per_page_int not in (5, 10, 20, 50):
-            per_page_int = 5
+        if per_page_int not in (5, 10, 15, 20, 50):
+            per_page_int = int(sys_default)
     except (ValueError, TypeError):
-        per_page_int = 5
+        per_page_int = 15
     paginator = Paginator(reports, per_page_int)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
+
+    # Count verified reports that lost their Accident link (unsynced)
+    unsynced_reports = AccidentReport.objects.filter(status='verified', accident__isnull=True)
+    unsynced_count = get_reports_for_jurisdiction(request.user, unsynced_reports).count()
 
     context = {
         'reports': page_obj,
         'status_filter': status_filter,
         'status_choices': AccidentReport.STATUS_CHOICES,
         'pending_count': pending_count,
+        'unsynced_count': unsynced_count,
         'page_obj': page_obj,
         'per_page': str(per_page_int),
         'total_report_count': total_report_count,
@@ -2240,6 +2543,11 @@ def approve_report(request, pk):
         # Log activity
         log_report_activity(report, 'approved', request.user)
 
+        # Audit log
+        log_user_action(request, 'accident_create',
+            f'Accident #{accident.pk} created from approved report #{report.pk}',
+            object_type='Accident', object_id=accident.pk)
+
         # Notify the reporter that their report was approved
         approver_name = request.user.get_full_name() or request.user.username
         approver_role = request.user.profile.get_role_display() if hasattr(request.user, 'profile') else ''
@@ -2263,6 +2571,92 @@ def approve_report(request, pk):
 
     # GET request — redirect to detail page (approve only via POST)
     return redirect('report_detail', pk=pk)
+
+
+@pnp_login_required
+def resync_reports(request):
+    """Re-create Accident records for verified reports that lost their link.
+    Only super_admin and regional_director can perform this action."""
+    if not hasattr(request.user, 'profile') or request.user.profile.role not in ['super_admin', 'regional_director']:
+        messages.error(request, 'You do not have permission to perform this action.')
+        return redirect('pending_reports')
+
+    if request.method != 'POST':
+        return redirect('pending_reports')
+
+    # Get unsynced verified reports within user's jurisdiction
+    unsynced_qs = AccidentReport.objects.filter(status='verified', accident__isnull=True)
+    unsynced_reports = get_reports_for_jurisdiction(request.user, unsynced_qs)
+
+    if not unsynced_reports.exists():
+        messages.info(request, 'All verified reports are already synced. Nothing to do.')
+        return redirect('pending_reports')
+
+    synced_count = 0
+    for report in unsynced_reports.select_related('reported_by__profile'):
+        norm_province = report.province.upper() if report.province else ''
+        norm_municipal = normalize_municipal(report.municipal, report.province)
+        norm_barangay = report.barangay.upper() if report.barangay else ''
+
+        accident = Accident.objects.create(
+            province=norm_province,
+            municipal=norm_municipal,
+            barangay=norm_barangay,
+            street=report.street_address,
+            type_of_place=report.type_of_place_other if (report.type_of_place == 'OTHER' and report.type_of_place_other) else (report.get_type_of_place_display() if report.type_of_place else ''),
+            latitude=report.latitude,
+            longitude=report.longitude,
+            date_committed=report.incident_date,
+            time_committed=report.incident_time,
+            date_reported=report.created_at.date(),
+            time_reported=report.created_at.time(),
+            year=report.incident_date.year,
+            narrative=report.incident_description,
+            incident_type=report.incident_type_other if (report.incident_type == 'OTHER' and report.incident_type_other) else (report.get_incident_type_display() if report.incident_type else 'Traffic Accident'),
+            offense=report.offense or '',
+            offense_type=report.offense_type or '',
+            stage_of_felony=report.get_stage_of_felony_display() if report.stage_of_felony else '',
+            victim_killed=report.casualties_killed > 0,
+            victim_injured=report.casualties_injured > 0,
+            victim_unharmed=(report.casualties_killed == 0 and report.casualties_injured == 0),
+            victim_count=report.casualties_killed + report.casualties_injured,
+            victim_details=", ".join(
+                f"{v.get('name','')} ({v.get('age','')}/{v.get('gender','')}/{v.get('status','')}/{v.get('nationality','FILIPINO')}/{v.get('occupation','')})"
+                for v in (report.victims_data or [])
+            ) or (f"{report.victim_name or ''} ({report.victim_age or ''}/{report.get_victim_gender_display()}/{report.get_victim_status_display() if report.victim_status else ''})".strip(' (/)') if report.victim_name else ''),
+            victim_gender=(report.victims_data[0].get('gender', '').upper() if report.victims_data else report.victim_gender) or 'UNKNOWN',
+            victim_age=int(report.victims_data[0].get('age', 0) or 0) if report.victims_data else report.victim_age,
+            suspect_details=", ".join(
+                f"{s.get('name','')} ({s.get('age','')}/{s.get('gender','')}/{s.get('status','')}/{s.get('nationality','FILIPINO')}/{s.get('occupation','')})"
+                for s in (report.suspects_data or [])
+            ) or (f"{report.suspect_name or ''} ({report.driver_age or ''}/{report.get_driver_gender_display()})".strip(' (/)') if report.suspect_name else ''),
+            suspect_count=len(report.suspects_data) if report.suspects_data else (report.suspect_count or 0),
+            driver_gender=(report.suspects_data[0].get('gender', '').upper() if report.suspects_data else report.driver_gender) or 'UNKNOWN',
+            driver_age=int(report.suspects_data[0].get('age', 0) or 0) if report.suspects_data else report.driver_age,
+            vehicle_kind=report.vehicle_kind_other if (report.vehicle_kind == 'OTHER' and report.vehicle_kind_other) else (report.get_vehicle_kind_display() if report.vehicle_kind else None),
+            vehicle_make=report.vehicle_make_other if (report.vehicle_make == 'OTHER' and report.vehicle_make_other) else (report.vehicle_make or None),
+            vehicle_model=report.vehicle_model_other if (report.vehicle_model == 'OTHER' and report.vehicle_model_other) else (report.vehicle_model or None),
+            vehicle_plate_no=report.vehicle_plate_no or None,
+            vehicle_chassis_no=report.vehicle_chassis_no or None,
+            vehicle_colorum=report.vehicle_colorum,
+            drug_involved=report.drug_involved,
+            pro='PRO 13' if (hasattr(report.reported_by, 'profile') and report.reported_by.profile.region == 'CARAGA') else (report.reported_by.profile.region if hasattr(report.reported_by, 'profile') else ''),
+            ppo=report.reported_by.profile.province if hasattr(report.reported_by, 'profile') and report.reported_by.profile.province else '',
+            station=report.reported_by.profile.station if hasattr(report.reported_by, 'profile') and report.reported_by.profile.station else '',
+            case_status='Under Investigation',
+            created_by=report.reported_by,
+        )
+
+        report.accident = accident
+        report.save(update_fields=['accident'])
+        synced_count += 1
+
+    log_user_action(request, 'report_resync',
+        f'Re-synced {synced_count} verified report(s) to Accident records',
+        object_type='AccidentReport')
+
+    messages.success(request, f'Successfully re-synced {synced_count} verified report{"s" if synced_count != 1 else ""} to accident records.')
+    return redirect('pending_reports')
 
 
 @pnp_login_required
@@ -2472,6 +2866,11 @@ def bulk_action_reports(request):
             report.save()
 
             log_report_activity(report, 'approved', request.user)
+
+            # Audit log
+            log_user_action(request, 'accident_create',
+                f'Accident #{accident.pk} created from bulk-approved report #{report.pk}',
+                object_type='Accident', object_id=accident.pk)
 
             approver_name = request.user.get_full_name() or request.user.username
             approver_role = request.user.profile.get_role_display() if hasattr(request.user, 'profile') else ''
@@ -2697,7 +3096,7 @@ def edit_report(request, pk):
             updated_report.casualties_killed = int(request.POST.get('casualties_killed', 0) or 0)
             updated_report.casualties_injured = int(request.POST.get('casualties_injured', 0) or 0)
 
-            # Handle photo removal (clear photos marked for deletion)
+            # Handle legacy photo removal (clear photos marked for deletion)
             for photo_field in ['photo_1', 'photo_2', 'photo_3']:
                 if request.POST.get(f'{photo_field}-clear') == 'on':
                     photo = getattr(updated_report, photo_field)
@@ -2713,6 +3112,31 @@ def edit_report(request, pk):
                 updated_report.verified_at = None
 
             updated_report.save()
+
+            # Handle dynamic photo uploads (new ReportPhoto model)
+            from .models import ReportPhoto
+
+            # Remove photos marked for deletion
+            delete_photo_ids = request.POST.getlist('delete_photos')
+            if delete_photo_ids:
+                photos_to_delete = ReportPhoto.objects.filter(
+                    report=updated_report, pk__in=delete_photo_ids
+                )
+                for photo in photos_to_delete:
+                    if photo.image:
+                        photo.image.delete(save=False)
+                    photo.delete()
+
+            # Add new uploaded photos
+            photo_files = request.FILES.getlist('report_photos')
+            next_order = updated_report.photos.count()
+            for photo_file in photo_files:
+                ReportPhoto.objects.create(
+                    report=updated_report,
+                    image=photo_file,
+                    order=next_order,
+                )
+                next_order += 1
 
             # Log activity
             if is_resubmit:
@@ -2831,11 +3255,16 @@ def delete_report(request, pk):
         # Delete activity logs
         report.activity_logs.all().delete()
 
-        # Delete photo files
+        # Delete photo files (legacy fields)
         for photo_field in ['photo_1', 'photo_2', 'photo_3']:
             photo = getattr(report, photo_field)
             if photo:
                 photo.delete(save=False)
+
+        # Delete ReportPhoto files
+        for rp in report.photos.all():
+            if rp.image:
+                rp.image.delete(save=False)
 
         report.delete()
 
@@ -2876,37 +3305,37 @@ def profile(request):
 
 @login_required
 def change_password(request):
-    """Change password page - required for new users"""
-    from .auth_utils import log_user_action
+    """Change password page - required for new users and password resets"""
+    from .auth_utils import log_user_action, validate_password_strength
+
+    is_forced = hasattr(request.user, 'profile') and request.user.profile.must_change_password
+    error = None
 
     if request.method == 'POST':
-        current_password = request.POST.get('current_password')
-        new_password = request.POST.get('new_password')
-        confirm_password = request.POST.get('confirm_password')
+        current_password = request.POST.get('current_password', '')
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
 
         # Validate current password
         if not request.user.check_password(current_password):
-            # Clear all messages before adding new error
-            storage = messages.get_messages(request)
-            storage.used = True
-            messages.error(request, 'Current password is incorrect.')
-            return redirect('change_password')
-
+            error = 'Current password is incorrect.'
         # Validate new passwords match
-        if new_password != confirm_password:
-            # Clear all messages before adding new error
-            storage = messages.get_messages(request)
-            storage.used = True
-            messages.error(request, 'New passwords do not match.')
-            return redirect('change_password')
+        elif new_password != confirm_password:
+            error = 'New passwords do not match.'
+        # Validate new password is different from current
+        elif current_password == new_password:
+            error = 'New password must be different from your current password.'
+        else:
+            # Validate password strength using PNP requirements
+            strength_errors = validate_password_strength(new_password)
+            if strength_errors:
+                error = strength_errors[0]
 
-        # Validate password length
-        if len(new_password) < 8:
-            # Clear all messages before adding new error
-            storage = messages.get_messages(request)
-            storage.used = True
-            messages.error(request, 'Password must be at least 8 characters long.')
-            return redirect('change_password')
+        if error:
+            return render(request, 'accounts/change_password.html', {
+                'error': error,
+                'is_forced': is_forced,
+            })
 
         # Use atomic transaction to ensure changes are committed before redirect
         with transaction.atomic():
@@ -2920,8 +3349,6 @@ def change_password(request):
                 profile.must_change_password = False
                 profile.password_changed_at = timezone.now()
                 profile.save()
-
-        # Transaction is now committed - changes are in database
 
         # Keep user logged in after password change
         update_session_auth_hash(request, request.user)
@@ -2940,7 +3367,9 @@ def change_password(request):
         messages.success(request, 'Password changed successfully!')
         return redirect('dashboard')
 
-    return render(request, 'accounts/change_password.html')
+    return render(request, 'accounts/change_password.html', {
+        'is_forced': is_forced,
+    })
 
 @pnp_login_required
 def map_view(request):
@@ -3883,9 +4312,17 @@ def login(request):
     storage.used = True
 
     if request.method == 'POST':
-        username = request.POST.get('username')
+        username_or_badge = request.POST.get('username', '').strip()
         password = request.POST.get('password')
         remember = request.POST.get('remember')
+
+        # Resolve badge number to username if needed
+        username = username_or_badge
+        try:
+            badge_profile = UserProfile.objects.select_related('user').get(badge_number=username_or_badge)
+            username = badge_profile.user.username
+        except UserProfile.DoesNotExist:
+            pass  # Not a badge number — treat as username
 
         # Authenticate user
         user = authenticate(request, username=username, password=password)
@@ -3903,8 +4340,8 @@ def login(request):
                 messages.error(request, 'Account temporarily locked due to failed login attempts. Please try again later.')
                 return render(request, 'registration/login.html')
 
-            # Check if account is active
-            if not profile.is_active:
+            # Check if account is active (user.is_active is what admin toggles)
+            if not user.is_active:
                 messages.error(request, 'Your account has been deactivated. Contact administrator.')
                 log_user_action(
                     request,
@@ -3941,18 +4378,26 @@ def login(request):
             from django.contrib.auth.models import User
 
             # Check if user exists (by username or badge number)
-            user_exists = User.objects.filter(username=username).exists()
-            if not user_exists:
+            found_user = User.objects.filter(username=username).first()
+            if not found_user:
                 # Check if it's a badge number
-                user_exists = UserProfile.objects.filter(badge_number=username).exists()
+                try:
+                    found_user = UserProfile.objects.select_related('user').get(badge_number=username).user
+                except UserProfile.DoesNotExist:
+                    pass
 
-            if user_exists:
-                # User exists but password is wrong - keep username, focus on password
+            # Check if the account is inactive (deactivated by admin)
+            if found_user and not found_user.is_active:
+                messages.error(request, 'Your account has been deactivated. Contact administrator.')
+                return render(request, 'registration/login.html')
+
+            if found_user:
+                # User exists but password is wrong - keep input, focus on password
                 error_message = handle_failed_login(username, get_client_ip(request))
                 messages.error(request, error_message, extra_tags='focus-password')
-                # Pass the username to template to retain it in the form
+                # Pass the original input to template to retain it in the form
                 return render(request, 'registration/login.html', {
-                    'retained_username': username  # Retain username for user convenience
+                    'retained_username': username_or_badge
                 })
             else:
                 # User doesn't exist - clear both fields, focus on username
@@ -4166,12 +4611,44 @@ def change_password_api(request):
         return JsonResponse({'success': False, 'error': 'An error occurred. Please try again.'}, status=500)
 
 
+@login_required
+def display_settings(request):
+    """User-facing page to manage personal display preferences."""
+    from .models import SystemSetting
+
+    profile = request.user.profile
+
+    if request.method == 'POST':
+        accident_val = request.POST.get('pref_accident_view', '')
+        hotspot_val = request.POST.get('pref_hotspot_view', '')
+
+        if accident_val in ('', 'cards', 'table'):
+            profile.pref_accident_view = accident_val
+        if hotspot_val in ('', 'grid', 'list'):
+            profile.pref_hotspot_view = hotspot_val
+
+        profile.save(update_fields=['pref_accident_view', 'pref_hotspot_view'])
+        messages.success(request, 'Display settings saved successfully.')
+        return redirect('display_settings')
+
+    # Get system defaults for display
+    sys_accident = SystemSetting.get('accident_default_view')
+    sys_hotspot = SystemSetting.get('hotspot_default_view')
+
+    return render(request, 'pages/display_settings.html', {
+        'profile': profile,
+        'sys_accident_default': sys_accident,
+        'sys_hotspot_default': sys_hotspot,
+    })
+
+
 @pnp_login_required
 @require_http_methods(["POST"])
 def run_clustering_view(request):
     """Run AGNES clustering synchronously from the UI (no Celery needed)."""
-    if not (hasattr(request.user, 'profile') and request.user.profile.role in ('super_admin', 'regional_director')):
-        return JsonResponse({'success': False, 'error': 'Permission denied. Only Super Admin and Regional Director can run clustering.'}, status=403)
+    profile = getattr(request.user, 'profile', None)
+    if not (profile and (profile.role in ('super_admin', 'regional_director') or profile.can_run_clustering)):
+        return JsonResponse({'success': False, 'error': 'Permission denied. You do not have permission to run clustering.'}, status=403)
 
     try:
         data = json.loads(request.body) if request.body else {}
@@ -4201,6 +4678,11 @@ def run_clustering_view(request):
         status='running',
         started_by=request.user
     )
+
+    # Audit log - clustering started
+    log_user_action(request, 'clustering_run',
+        f'Started clustering job #{job.pk} (method={linkage_method}, threshold={distance_threshold}, min_size={min_cluster_size})',
+        object_type='ClusteringJob', object_id=job.pk)
 
     try:
         accidents = list(Accident.objects.filter(
@@ -4281,6 +4763,11 @@ def run_clustering_view(request):
         job.clusters_found = clusters_created
         job.save()
 
+        # Audit log - clustering completed
+        log_user_action(request, 'clustering_complete',
+            f'Clustering job #{job.pk} completed: {clusters_created} clusters found from {total_accidents} accidents in {duration}s',
+            object_type='ClusteringJob', object_id=job.pk)
+
         return JsonResponse({
             'success': True,
             'clusters_found': clusters_created,
@@ -4296,6 +4783,12 @@ def run_clustering_view(request):
         job.error_message = str(e)
         job.completed_at = timezone.now()
         job.save()
+
+        # Audit log - clustering failed
+        log_user_action(request, 'clustering_failed',
+            f'Clustering job #{job.pk} failed: {str(e)}',
+            object_type='ClusteringJob', object_id=job.pk, severity='critical', success=False)
+
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
@@ -4305,6 +4798,12 @@ def run_clustering_view(request):
 
 from django.http import FileResponse
 from .exports import AccidentExporter, ClusterPDFExporter
+
+
+def _apply_role_scoping(queryset, user):
+    """Apply role-based data scoping to an accident queryset.
+    Currently all roles can view all accident records for situational awareness."""
+    return queryset
 
 
 @pnp_login_required
@@ -4318,6 +4817,9 @@ def export_accidents_csv(request):
     # Build queryset with filters
     queryset = Accident.objects.all()
 
+    # Role-based data scoping
+    queryset = _apply_role_scoping(queryset, request.user)
+
     if province:
         queryset = queryset.filter(province__icontains=province)
     if year:
@@ -4330,6 +4832,11 @@ def export_accidents_csv(request):
     # Generate CSV
     exporter = AccidentExporter()
     filepath = exporter.export_to_csv(queryset)
+
+    # Audit log
+    log_user_action(request, 'export_data',
+        f'Exported {queryset.count()} accident records to CSV',
+        object_type='Accident')
 
     # Return file response
     response = FileResponse(
@@ -4351,6 +4858,9 @@ def export_accidents_excel(request):
     # Build queryset with filters
     queryset = Accident.objects.all()
 
+    # Role-based data scoping
+    queryset = _apply_role_scoping(queryset, request.user)
+
     if province:
         queryset = queryset.filter(province__icontains=province)
     if year:
@@ -4363,6 +4873,11 @@ def export_accidents_excel(request):
     # Generate Excel
     exporter = AccidentExporter()
     filepath = exporter.export_to_excel(queryset)
+
+    # Audit log
+    log_user_action(request, 'export_data',
+        f'Exported {queryset.count()} accident records to Excel',
+        object_type='Accident')
 
     # Return file response
     response = FileResponse(
@@ -4391,6 +4906,11 @@ def export_hotspots_pdf(request):
     # Generate PDF
     exporter = ClusterPDFExporter()
     filepath = exporter.generate_report(queryset)
+
+    # Audit log
+    log_user_action(request, 'export_data',
+        f'Exported {queryset.count()} hotspot clusters to PDF',
+        object_type='AccidentCluster')
 
     # Return file response
     response = FileResponse(
@@ -4508,6 +5028,1053 @@ def export_analytics_pdf(request):
         content_type='application/pdf'
     )
     response['Content-Disposition'] = f'attachment; filename="analytics_report.pdf"'
+
+    # Audit log
+    log_user_action(request, 'export_data',
+        'Exported analytics summary to PDF',
+        object_type='Analytics')
+
+    return response
+
+
+# =============================================================================
+# NARRATIVE ACCIDENT REPORT (PDF) — Weekly / Monthly / Yearly
+# =============================================================================
+
+@login_required
+def export_monthly_narrative_pdf(request):
+    """Generate a Narrative Accident Report PDF (weekly, monthly, or yearly)."""
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.platypus import (
+        SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer,
+        HRFlowable, KeepTogether, Image
+    )
+    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+    from django.http import FileResponse
+    import calendar
+    import os
+
+    period = request.GET.get('period', 'monthly')
+    year = int(request.GET.get('year', datetime.now().year))
+
+    if year < 2000 or year > 2100:
+        return JsonResponse({'error': 'Invalid year'}, status=400)
+
+    # ── Determine date range, labels, and previous-period comparison ──
+    if period == 'weekly':
+        week = int(request.GET.get('week', 1))
+        if week < 1 or week > 53:
+            return JsonResponse({'error': 'Invalid week number'}, status=400)
+        # ISO week → Monday-based start
+        from datetime import date as _date
+        start_date = _date.fromisocalendar(year, week, 1)
+        end_date = _date.fromisocalendar(year, week, 7)
+        period_label = f"Week {week} ({start_date.strftime('%b %d')} – {end_date.strftime('%b %d, %Y')})"
+        report_title = "WEEKLY ACCIDENT NARRATIVE REPORT"
+        file_prefix = f"weekly_narrative_{year}_W{week:02d}"
+        file_label = f"Weekly_Accident_Narrative_Report_W{week}_{year}"
+        # Narrative opening
+        period_phrase = f"the week of {start_date.strftime('%B %d')} to {end_date.strftime('%B %d, %Y')}"
+        # Previous period
+        prev_start = start_date - timedelta(days=7)
+        prev_end = end_date - timedelta(days=7)
+        prev_label = f"the previous week ({prev_start.strftime('%b %d')} – {prev_end.strftime('%b %d')})"
+
+    elif period == 'yearly':
+        start_date = datetime(year, 1, 1).date()
+        end_date = datetime(year, 12, 31).date()
+        period_label = f"Year {year}"
+        report_title = "ANNUAL ACCIDENT NARRATIVE REPORT"
+        file_prefix = f"annual_narrative_{year}"
+        file_label = f"Annual_Accident_Narrative_Report_{year}"
+        period_phrase = f"the year {year}"
+        prev_start = datetime(year - 1, 1, 1).date()
+        prev_end = datetime(year - 1, 12, 31).date()
+        prev_label = f"the previous year ({year - 1})"
+
+    else:  # monthly (default)
+        month = int(request.GET.get('month', datetime.now().month))
+        if month < 1 or month > 12:
+            return JsonResponse({'error': 'Invalid month'}, status=400)
+        month_name = calendar.month_name[month]
+        _, last_day = calendar.monthrange(year, month)
+        start_date = datetime(year, month, 1).date()
+        end_date = datetime(year, month, last_day).date()
+        period_label = f"{month_name} {year}"
+        report_title = "MONTHLY ACCIDENT NARRATIVE REPORT"
+        file_prefix = f"monthly_narrative_{year}_{month:02d}"
+        file_label = f"Monthly_Accident_Narrative_Report_{month_name}_{year}"
+        period_phrase = f"the month of {month_name} {year}"
+        if month == 1:
+            prev_m, prev_y = 12, year - 1
+        else:
+            prev_m, prev_y = month - 1, year
+        _, prev_last_day = calendar.monthrange(prev_y, prev_m)
+        prev_start = datetime(prev_y, prev_m, 1).date()
+        prev_end = datetime(prev_y, prev_m, prev_last_day).date()
+        prev_label = f"{calendar.month_name[prev_m]} {prev_y}"
+
+    # ── Query data ──
+    accidents = Accident.objects.filter(
+        date_committed__gte=start_date,
+        date_committed__lte=end_date
+    )
+    total = accidents.count()
+    fatal = accidents.filter(victim_killed=True).count()
+    injury = accidents.filter(victim_injured=True).count()
+    property_damage = total - fatal - injury
+    total_casualties = accidents.aggregate(s=Sum('victim_count'))['s'] or 0
+    hotspot_count = accidents.filter(is_hotspot=True).count()
+
+    province_stats = accidents.values('province').annotate(
+        count=Count('id'),
+        fatal_count=Count('id', filter=Q(victim_killed=True)),
+        injury_count=Count('id', filter=Q(victim_injured=True)),
+    ).order_by('-count')
+
+    incident_types = accidents.exclude(
+        incident_type__isnull=True
+    ).exclude(incident_type='').values('incident_type').annotate(
+        count=Count('id')
+    ).order_by('-count')[:10]
+
+    top_municipalities = accidents.values('municipal', 'province').annotate(
+        count=Count('id')
+    ).order_by('-count')[:10]
+
+    male_drivers = accidents.filter(driver_gender='MALE').count()
+    female_drivers = accidents.filter(driver_gender='FEMALE').count()
+
+    prev_total = Accident.objects.filter(
+        date_committed__gte=prev_start, date_committed__lte=prev_end
+    ).count()
+
+    # ── Build PDF ──
+    exports_dir = os.path.join(settings.MEDIA_ROOT, 'exports')
+    os.makedirs(exports_dir, exist_ok=True)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filepath = os.path.join(exports_dir, f'{file_prefix}_{timestamp}.pdf')
+
+    doc = SimpleDocTemplate(
+        filepath, pagesize=letter,
+        rightMargin=60, leftMargin=60,
+        topMargin=50, bottomMargin=40
+    )
+
+    elements = []
+    styles = getSampleStyleSheet()
+    W = doc.width  # usable width
+
+    PRIMARY = colors.HexColor('#003087')
+    LIGHT_BG = colors.HexColor('#F0F4FA')
+    BORDER = colors.HexColor('#CCCCCC')
+
+    s_hdr = ParagraphStyle('HdrSm', parent=styles['Normal'],
+        fontSize=8, fontName='Helvetica', alignment=TA_CENTER, leading=10, textColor=colors.HexColor('#444444'))
+    s_hdr_bold = ParagraphStyle('HdrBold', parent=styles['Normal'],
+        fontSize=11, fontName='Helvetica-Bold', alignment=TA_CENTER, leading=13)
+    style_title = ParagraphStyle('ReportTitle', parent=styles['Normal'],
+        fontSize=13, fontName='Helvetica-Bold', alignment=TA_CENTER, textColor=PRIMARY,
+        spaceAfter=2, spaceBefore=4)
+    style_subtitle = ParagraphStyle('ReportSubtitle', parent=styles['Normal'],
+        fontSize=10, alignment=TA_CENTER, textColor=colors.HexColor('#333333'), spaceAfter=8)
+    style_section = ParagraphStyle('SectionHead', parent=styles['Normal'],
+        fontSize=10, fontName='Helvetica-Bold', textColor=colors.white, leading=13)
+    style_body = ParagraphStyle('BodyText2', parent=styles['Normal'],
+        fontSize=9, leading=13, alignment=TA_JUSTIFY, spaceAfter=6)
+    style_footer = ParagraphStyle('Footer', parent=styles['Normal'],
+        fontSize=7, fontName='Helvetica-Oblique', alignment=TA_CENTER, textColor=colors.HexColor('#888888'), spaceBefore=12)
+
+    # ===================== HEADER (3-column: logo | text | logo) =====================
+    static_dir = settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT or ''
+    pnp_logo_path = os.path.join(static_dir, 'images', 'pnp-logo1.png')
+    if not os.path.exists(pnp_logo_path):
+        pnp_logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'pnp-logo1.png')
+    agnes_logo_path = os.path.join(static_dir, 'images', 'pnp-logo.png')
+    if not os.path.exists(agnes_logo_path):
+        agnes_logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'pnp-logo.png')
+
+    header_left = Image(pnp_logo_path, width=50, height=60) if os.path.exists(pnp_logo_path) else ''
+    header_right = Image(agnes_logo_path, width=50, height=55) if os.path.exists(agnes_logo_path) else ''
+
+    header_center = [
+        Paragraph('Republic of the Philippines', s_hdr),
+        Paragraph('<b>PHILIPPINE NATIONAL POLICE</b>', s_hdr_bold),
+        Paragraph('POLICE REGIONAL OFFICE 13', ParagraphStyle('PRO', parent=s_hdr_bold, fontSize=9, leading=11)),
+        Paragraph('Camp Col. Rafael C. Rodriguez, Libertad, Butuan City', s_hdr),
+    ]
+
+    header_tbl = Table(
+        [[header_left, header_center, header_right]],
+        colWidths=[0.9 * inch, W - 1.8 * inch, 0.9 * inch],
+    )
+    header_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'CENTER'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    elements.append(header_tbl)
+    elements.append(HRFlowable(width="100%", thickness=2, color=PRIMARY, spaceBefore=2, spaceAfter=2))
+    elements.append(HRFlowable(width="100%", thickness=0.5, color=PRIMARY, spaceBefore=0, spaceAfter=6))
+
+    # ===================== TITLE =====================
+    elements.append(Paragraph(f"<b>{report_title}</b>", style_title))
+    elements.append(Paragraph(period_label, style_subtitle))
+    elements.append(HRFlowable(width="40%", thickness=0.5, color=BORDER, spaceAfter=10))
+
+    # ── Section header builder (blue banner, matching report page) ──
+    def section_banner(title):
+        tbl = Table([[Paragraph(title, style_section)]], colWidths=[W])
+        tbl.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), PRIMARY),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('ROUNDEDCORNERS', [3, 3, 0, 0]),
+        ]))
+        return tbl
+
+    # ── Standard table style ──
+    def std_table_style():
+        return TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), PRIMARY),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+            ('GRID', (0, 0), (-1, -1), 0.5, BORDER),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT_BG]),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ])
+
+    # ===================== I. SUMMARY STATISTICS =====================
+    elements.append(section_banner('I. SUMMARY STATISTICS'))
+
+    if prev_total > 0:
+        trend_word = 'Increase' if total > prev_total else ('Decrease' if total < prev_total else 'Same as')
+        remarks_trend = f"{trend_word} from {prev_total} in {prev_label}"
+    else:
+        remarks_trend = f"No data for {prev_label}"
+
+    stats_data = [
+        ['Metric', 'Count', 'Remarks'],
+        ['Total Accidents Recorded', str(total), remarks_trend],
+        ['Fatal Accidents', str(fatal), f'{(fatal / max(total, 1) * 100):.1f}% of total'],
+        ['Injury Accidents', str(injury), f'{(injury / max(total, 1) * 100):.1f}% of total'],
+        ['Property Damage Only', str(property_damage), f'{(property_damage / max(total, 1) * 100):.1f}% of total'],
+        ['Total Casualties', str(total_casualties), 'Victims involved'],
+        ['Hotspot-Area Accidents', str(hotspot_count), f'{(hotspot_count / max(total, 1) * 100):.1f}% in identified hotspots'],
+    ]
+
+    stats_table = Table(stats_data, colWidths=[2.2 * inch, 0.8 * inch, W - 3.0 * inch])
+    stats_table.setStyle(std_table_style())
+    elements.append(stats_table)
+    elements.append(Spacer(1, 10))
+
+    # ===================== II. NARRATIVE SUMMARY =====================
+    elements.append(section_banner('II. NARRATIVE SUMMARY'))
+
+    if prev_total > 0:
+        change = total - prev_total
+        change_pct = abs(change) / prev_total * 100
+        if change > 0:
+            trend_text = f"an increase of {change} ({change_pct:.1f}%) compared to {prev_total} accidents in {prev_label}"
+        elif change < 0:
+            trend_text = f"a decrease of {abs(change)} ({change_pct:.1f}%) compared to {prev_total} accidents in {prev_label}"
+        else:
+            trend_text = f"the same number as {prev_label}"
+    else:
+        trend_text = f"with no records available for comparison from {prev_label}"
+
+    top_province = province_stats.first()
+    top_province_text = f"{top_province['province']} with {top_province['count']} recorded incidents" if top_province else "N/A"
+    top_muni = top_municipalities.first()
+    top_muni_text = f"{top_muni['municipal']}, {top_muni['province']}" if top_muni else "N/A"
+    top_type = incident_types.first()
+    top_type_text = f"{top_type['incident_type']} ({top_type['count']} incidents)" if top_type else "N/A"
+
+    total_gendered = male_drivers + female_drivers
+    male_pct = (male_drivers / max(total_gendered, 1) * 100)
+    female_pct = (female_drivers / max(total_gendered, 1) * 100)
+
+    narrative = (
+        f"For {period_phrase}, a total of <b>{total}</b> traffic accidents were "
+        f"recorded within the CARAGA region, representing {trend_text}. "
+        f"Of these, <b>{fatal}</b> were classified as fatal accidents, <b>{injury}</b> resulted in physical injuries, "
+        f"and <b>{property_damage}</b> involved property damage only. "
+        f"A total of <b>{total_casualties}</b> casualties (killed and injured combined) were reported during the period."
+    )
+    elements.append(Paragraph(narrative, style_body))
+
+    narrative2 = (
+        f"The highest concentration of accidents was observed in <b>{top_province_text}</b>, "
+        f"with <b>{top_muni_text}</b> recording the most incidents at the municipal level. "
+        f"The most prevalent type of incident was <b>{top_type_text}</b>. "
+        f"Among identified drivers/suspects, <b>{male_pct:.1f}%</b> were male and "
+        f"<b>{female_pct:.1f}%</b> were female."
+    )
+    elements.append(Paragraph(narrative2, style_body))
+
+    if hotspot_count > 0:
+        elements.append(Paragraph(
+            f"Notably, <b>{hotspot_count}</b> of the period's accidents ({(hotspot_count / max(total, 1) * 100):.1f}%) "
+            f"occurred within previously identified hotspot areas, underscoring the need for continued "
+            f"enforcement and preventive measures in these high-risk zones.",
+            style_body
+        ))
+
+    elements.append(Spacer(1, 8))
+
+    # ===================== III. BREAKDOWN BY PROVINCE =====================
+    if province_stats.exists():
+        elements.append(section_banner('III. BREAKDOWN BY PROVINCE'))
+        prov_data = [['Province', 'Total', 'Fatal', 'Injury', 'Property Damage']]
+        for p in province_stats:
+            pd_count = p['count'] - p['fatal_count'] - p['injury_count']
+            prov_data.append([p['province'] or 'Unknown', str(p['count']), str(p['fatal_count']), str(p['injury_count']), str(pd_count)])
+
+        cw = W / 5
+        prov_table = Table(prov_data, colWidths=[cw * 1.6, cw * 0.85, cw * 0.85, cw * 0.85, cw * 0.85])
+        prov_table.setStyle(std_table_style())
+        elements.append(prov_table)
+        elements.append(Spacer(1, 10))
+
+    # ===================== IV. TOP INCIDENT TYPES =====================
+    if incident_types.exists():
+        elements.append(section_banner('IV. TOP INCIDENT TYPES'))
+        type_data = [['Incident Type', 'Count', '% of Total']]
+        for t in incident_types:
+            type_data.append([t['incident_type'][:60], str(t['count']), f'{(t["count"] / max(total, 1) * 100):.1f}%'])
+
+        type_table = Table(type_data, colWidths=[W - 2.0 * inch, 1.0 * inch, 1.0 * inch])
+        type_table.setStyle(std_table_style())
+        elements.append(type_table)
+        elements.append(Spacer(1, 10))
+
+    # ===================== V. NARRATIVE REPORT OF ACCIDENTS =====================
+    elements.append(section_banner('V. NARRATIVE REPORT OF ACCIDENTS'))
+    elements.append(Paragraph(
+        f"The following are the individual narrative accounts of traffic accidents recorded "
+        f"during {period_phrase} in the CARAGA region, presented in chronological order "
+        f"following the standard PNP incident reporting format.",
+        style_body
+    ))
+
+    style_entry_no = ParagraphStyle('EntryNumber', parent=styles['Normal'],
+        fontSize=10, fontName='Helvetica-Bold', leading=13, textColor=colors.white)
+
+    accident_list = accidents.order_by('date_committed', 'time_committed')[:100]
+
+    for i, acc in enumerate(accident_list, 1):
+        entry_elements = []
+
+        # Severity classification
+        if acc.victim_killed:
+            severity = 'FATAL'
+            severity_color = '#DC2626'
+        elif acc.victim_injured:
+            severity = 'NON-FATAL (INJURY)'
+            severity_color = '#D97706'
+        else:
+            severity = 'DAMAGE TO PROPERTY'
+            severity_color = '#2563EB'
+
+        # ── Entry Number Header with severity badge ──
+        num_badge_data = [[
+            Paragraph(f"Entry No. {i}", style_entry_no),
+            Paragraph(f"<font color='white'><b>{severity}</b></font>",
+                ParagraphStyle('SevBadge', parent=styles['Normal'],
+                    fontSize=8, fontName='Helvetica-Bold', alignment=TA_CENTER,
+                    textColor=colors.white, leading=10))
+        ]]
+        num_badge = Table(num_badge_data, colWidths=[4.8 * inch, 1.6 * inch])
+        num_badge.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#003087')),
+            ('BACKGROUND', (1, 0), (1, 0), colors.HexColor(severity_color)),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('LEFTPADDING', (0, 0), (0, 0), 8),
+            ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        entry_elements.append(num_badge)
+
+        # ── Detail rows as structured table ──
+        detail_rows = []
+
+        # 1. Date/Time of Incident
+        date_str = acc.date_committed.strftime('%B %d, %Y') if acc.date_committed else 'N/A'
+        time_str = acc.time_committed.strftime('%I:%M %p') if acc.time_committed else 'N/A'
+        detail_rows.append(['Date/Time of Incident:', f"{date_str} at {time_str}"])
+
+        # 2. Date/Time Reported
+        rpt_date = acc.date_reported.strftime('%B %d, %Y') if acc.date_reported else 'N/A'
+        rpt_time = acc.time_reported.strftime('%I:%M %p') if acc.time_reported else 'N/A'
+        detail_rows.append(['Date/Time Reported:', f"{rpt_date} at {rpt_time}"])
+
+        # 3. Place of Incident
+        place_parts = []
+        if acc.street:
+            place_parts.append(acc.street)
+        if acc.barangay:
+            place_parts.append(f"Brgy. {acc.barangay}")
+        if acc.municipal:
+            place_parts.append(acc.municipal)
+        if acc.province:
+            place_parts.append(acc.province)
+        place_str = ', '.join(place_parts) if place_parts else 'N/A'
+        if acc.type_of_place:
+            place_str += f" ({acc.type_of_place})"
+        detail_rows.append(['Place of Incident:', place_str])
+
+        # 4. Reporting Unit/Station
+        station_parts = []
+        if acc.station:
+            station_parts.append(acc.station)
+        if acc.ppo:
+            station_parts.append(acc.ppo)
+        station_str = ', '.join(station_parts) if station_parts else 'N/A'
+        detail_rows.append(['Reporting Unit:', station_str])
+
+        # 5. Type of Incident / Offense
+        incident_str = acc.incident_type or 'N/A'
+        if acc.offense:
+            offense_text = str(acc.offense)[:80]
+            incident_str += f" / {offense_text}"
+        detail_rows.append(['Type of Incident:', incident_str])
+
+        # 6. Suspect/Driver Information
+        driver_info_parts = []
+        if acc.suspect_details and acc.suspect_details != 'nan':
+            # Clean up suspect details - take first 120 chars
+            suspect_text = str(acc.suspect_details).strip()[:120]
+            driver_info_parts.append(suspect_text)
+        else:
+            gender_str = acc.get_driver_gender_display() if acc.driver_gender != 'UNKNOWN' else 'Unidentified'
+            age_str = f", {acc.driver_age} years old" if acc.driver_age else ''
+            driver_info_parts.append(f"{gender_str}{age_str}")
+        detail_rows.append(['Suspect/Driver:', ' '.join(driver_info_parts)])
+
+        # 7. Victim Information
+        victim_info_parts = []
+        if acc.victim_details and acc.victim_details != 'nan':
+            victim_text = str(acc.victim_details).strip()[:120]
+            victim_info_parts.append(victim_text)
+        else:
+            v_gender = acc.get_victim_gender_display() if acc.victim_gender != 'UNKNOWN' else 'Unidentified'
+            v_age = f", {acc.victim_age} years old" if acc.victim_age else ''
+            victim_info_parts.append(f"{v_gender}{v_age}")
+        casualty_summary = []
+        if acc.victim_killed:
+            casualty_summary.append(f"Killed: {acc.victim_count}")
+        if acc.victim_injured:
+            casualty_summary.append(f"Injured: {acc.victim_count}")
+        if casualty_summary:
+            victim_info_parts.append(f"[{', '.join(casualty_summary)}]")
+        detail_rows.append(['Victim(s):', ' '.join(victim_info_parts)])
+
+        # 8. Vehicle Information
+        vehicle_parts = []
+        if acc.vehicle_kind:
+            vehicle_parts.append(str(acc.vehicle_kind))
+        if acc.vehicle_make:
+            vehicle_parts.append(str(acc.vehicle_make))
+        if acc.vehicle_model:
+            vehicle_parts.append(str(acc.vehicle_model))
+        vehicle_str = ' / '.join(vehicle_parts) if vehicle_parts else 'N/A'
+        if acc.vehicle_plate_no:
+            vehicle_str += f" (Plate: {acc.vehicle_plate_no})"
+        if acc.vehicle_colorum:
+            vehicle_str += " [COLORUM]"
+        detail_rows.append(['Vehicle Involved:', vehicle_str])
+
+        # 9. Drug/Alcohol Involvement
+        if acc.drug_involved:
+            detail_rows.append(['Drug/Alcohol:', 'YES - Drug/Alcohol involvement reported'])
+
+        # Build the detail table
+        # Convert detail_rows to Paragraph objects for word wrapping
+        detail_table_data = []
+        for label, value in detail_rows:
+            detail_table_data.append([
+                Paragraph(f"<b>{label}</b>", ParagraphStyle('DL', parent=styles['Normal'],
+                    fontSize=8, fontName='Helvetica-Bold', leading=10, textColor=colors.HexColor('#374151'))),
+                Paragraph(str(value), ParagraphStyle('DV', parent=styles['Normal'],
+                    fontSize=8, fontName='Helvetica', leading=10, textColor=colors.HexColor('#1a1a1a')))
+            ])
+
+        detail_table = Table(detail_table_data, colWidths=[1.4 * inch, 5.0 * inch])
+        detail_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('LEFTPADDING', (0, 0), (0, -1), 8),
+            ('LEFTPADDING', (1, 0), (1, -1), 6),
+            ('LINEBELOW', (0, 0), (-1, -2), 0.3, colors.HexColor('#E5E7EB')),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FAFBFC')),
+        ]))
+        entry_elements.append(detail_table)
+
+        # 10. Narrative paragraph (if available)
+        if acc.narrative and str(acc.narrative).strip() and str(acc.narrative).strip() != 'nan':
+            narr_text = str(acc.narrative).strip()[:500]
+            narr_header_data = [[
+                Paragraph("<b>NARRATIVE:</b>", ParagraphStyle('NH', parent=styles['Normal'],
+                    fontSize=8, fontName='Helvetica-Bold', leading=10, textColor=colors.HexColor('#003087')))
+            ]]
+            narr_header_tbl = Table(narr_header_data, colWidths=[6.4 * inch])
+            narr_header_tbl.setStyle(TableStyle([
+                ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FAFBFC')),
+            ]))
+            entry_elements.append(narr_header_tbl)
+
+            narr_body_data = [[
+                Paragraph(f"&ldquo;{narr_text}&rdquo;", ParagraphStyle('NB', parent=styles['Normal'],
+                    fontSize=8, fontName='Helvetica-Oblique', leading=11, textColor=colors.HexColor('#374151'),
+                    alignment=TA_JUSTIFY))
+            ]]
+            narr_body_tbl = Table(narr_body_data, colWidths=[6.4 * inch])
+            narr_body_tbl.setStyle(TableStyle([
+                ('LEFTPADDING', (0, 0), (-1, -1), 20),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+                ('TOPPADDING', (0, 0), (-1, -1), 2),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FAFBFC')),
+            ]))
+            entry_elements.append(narr_body_tbl)
+
+        # Wrap entire entry in KeepTogether to avoid page breaks mid-entry
+        elements.append(KeepTogether(entry_elements))
+        elements.append(Spacer(1, 8))
+
+    if total > 100:
+        elements.append(Paragraph(
+            f"<i>Note: This report displays the first 100 entries out of {total} total recorded accidents "
+            f"for {period_phrase}. A complete listing may be obtained from the AGNES system database.</i>",
+            ParagraphStyle('TruncNote', parent=styles['Normal'],
+                fontSize=8, fontName='Helvetica-Oblique', leading=10,
+                textColor=colors.HexColor('#6B7280'), alignment=TA_CENTER, spaceBefore=4)
+        ))
+    elif total == 0:
+        elements.append(Paragraph(
+            f"<i>No traffic accident records were found for {period_phrase}.</i>",
+            ParagraphStyle('NoData', parent=styles['Normal'],
+                fontSize=9, fontName='Helvetica-Oblique', leading=12,
+                textColor=colors.HexColor('#6B7280'), alignment=TA_CENTER, spaceBefore=8)
+        ))
+
+    elements.append(Spacer(1, 14))
+
+    # ===================== PREPARED / NOTED BY =====================
+    s_sig_label = ParagraphStyle('SigLabel', parent=styles['Normal'],
+        fontSize=7.5, fontName='Helvetica', alignment=TA_CENTER, textColor=colors.HexColor('#666666'))
+    s_sig_line = ParagraphStyle('SigLine', parent=styles['Normal'],
+        fontSize=8, fontName='Helvetica', alignment=TA_CENTER)
+
+    sig_line = '_' * 32
+    sig_data = [
+        ['', '', ''],
+        [Paragraph(sig_line, s_sig_line), '', Paragraph(sig_line, s_sig_line)],
+        [Paragraph('Prepared by', s_sig_label), '', Paragraph('Noted by', s_sig_label)],
+        [Paragraph('AGNES System / Investigating Officer', s_sig_label), '',
+         Paragraph('Chief of Police / OIC', s_sig_label)],
+    ]
+    sig_tbl = Table(sig_data, colWidths=[W * 0.4, W * 0.2, W * 0.4])
+    sig_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, 0), 20),
+        ('TOPPADDING', (0, 1), (-1, -1), 1),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+    ]))
+    elements.append(sig_tbl)
+    elements.append(Spacer(1, 12))
+
+    # ===================== FOOTER =====================
+    elements.append(HRFlowable(width="100%", thickness=1.5, color=PRIMARY, spaceAfter=6))
+    elements.append(Paragraph(
+        f"Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}",
+        style_footer
+    ))
+    elements.append(Paragraph(
+        f"AGNES Hotspot Detection System &nbsp;|&nbsp; PNP Police Regional Office 13",
+        style_footer
+    ))
+
+    doc.build(elements)
+
+    response = FileResponse(open(filepath, 'rb'), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{file_label}.pdf"'
+
+    log_user_action(request, 'export_data',
+        f'Generated {period.capitalize()} Narrative Report for {period_label}',
+        object_type='NarrativeReport')
+
+    return response
+
+
+# =============================================================================
+# ACCIDENT REPORT PDF DOWNLOAD
+# =============================================================================
+
+@login_required
+def download_report_pdf(request, pk):
+    """Generate a PDF of an approved accident report matching the official PNP form."""
+    from django.http import HttpResponse
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch, mm
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+    from reportlab.platypus import (
+        SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, KeepTogether
+    )
+    from io import BytesIO
+    import os
+
+    report = get_object_or_404(AccidentReport, pk=pk)
+
+    # Permission check: own report or approver with jurisdiction
+    is_own = report.reported_by == request.user
+    can_approve = can_approve_reports(request.user)
+    in_jurisdiction = can_user_approve_report(request.user, report) if can_approve else False
+
+    if not (is_own or (can_approve and in_jurisdiction)):
+        return JsonResponse({'error': 'Permission denied.'}, status=403)
+
+    # Only approved (verified) reports can be downloaded
+    if report.status != 'verified':
+        return JsonResponse({'error': 'Only approved reports can be downloaded as PDF.'}, status=403)
+
+    # ---------- helpers ----------
+    def _v(val, default='-'):
+        """Return val or default if empty/None."""
+        if val is None or val == '' or val == 'None':
+            return default
+        return str(val)
+
+    def _choice(val, choices, default='-'):
+        """Display label for a choice value."""
+        if not val:
+            return default
+        for k, label in choices:
+            if k == val:
+                return label
+        return _v(val, default)
+
+    def _bool(val):
+        return 'Yes' if val else 'No'
+
+    # ---------- build PDF in memory ----------
+    buf = BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=letter,
+        leftMargin=0.6 * inch, rightMargin=0.6 * inch,
+        topMargin=0.5 * inch, bottomMargin=0.5 * inch,
+    )
+
+    elements = []
+    styles = getSampleStyleSheet()
+    W = doc.width  # usable width
+
+    # Style definitions
+    s_title = ParagraphStyle('PNPTitle', parent=styles['Normal'], fontSize=11, fontName='Helvetica-Bold', alignment=TA_CENTER, leading=13)
+    s_subtitle = ParagraphStyle('PNPSub', parent=styles['Normal'], fontSize=8, fontName='Helvetica', alignment=TA_CENTER, leading=10)
+    s_section = ParagraphStyle('Section', parent=styles['Normal'], fontSize=9, fontName='Helvetica-Bold', leading=12, textColor=colors.white)
+    s_label = ParagraphStyle('Label', parent=styles['Normal'], fontSize=7.5, fontName='Helvetica-Bold', leading=9, textColor=colors.HexColor('#333333'))
+    s_value = ParagraphStyle('Value', parent=styles['Normal'], fontSize=8, fontName='Helvetica', leading=10)
+    s_value_sm = ParagraphStyle('ValueSm', parent=styles['Normal'], fontSize=7.5, fontName='Helvetica', leading=9)
+    s_narrative = ParagraphStyle('Narrative', parent=styles['Normal'], fontSize=8, fontName='Helvetica', leading=11, spaceBefore=2, spaceAfter=2)
+    s_footer = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=7, fontName='Helvetica-Oblique', alignment=TA_CENTER, textColor=colors.HexColor('#888888'))
+
+    PRIMARY = colors.HexColor('#003087')
+    LIGHT_BG = colors.HexColor('#F0F4FA')
+    BORDER = colors.HexColor('#CCCCCC')
+
+    # ==================== HEADER ====================
+    logo_path = os.path.join(settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT or '', 'images', 'pnp-logo1.png')
+
+    header_data = []
+    header_left = ''
+    if os.path.exists(logo_path):
+        header_left = Image(logo_path, width=50, height=60)
+
+    header_center = [
+        Paragraph('Republic of the Philippines', s_subtitle),
+        Paragraph('<b>NATIONAL POLICE COMMISSION</b>', ParagraphStyle('H0', parent=s_subtitle, fontSize=7.5, leading=9)),
+        Paragraph('<b>PHILIPPINE NATIONAL POLICE</b>', ParagraphStyle('H', parent=s_title, fontSize=10, leading=12)),
+        Paragraph('POLICE REGIONAL OFFICE 13', ParagraphStyle('H2', parent=s_title, fontSize=9, leading=11)),
+        Paragraph('Camp Col. Rafael C. Rodriguez, Libertad, Butuan City', s_subtitle),
+        Spacer(1, 4),
+        Paragraph('<b>TRAFFIC ACCIDENT REPORT</b>', ParagraphStyle('H3', parent=s_title, fontSize=11, leading=13, textColor=PRIMARY)),
+    ]
+
+    logo2_path = os.path.join(settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT or '', 'images', 'pnp-logo.png')
+    header_right = ''
+    if os.path.exists(logo2_path):
+        header_right = Image(logo2_path, width=50, height=55)
+
+    header_tbl = Table(
+        [[header_left, header_center, header_right]],
+        colWidths=[0.9 * inch, W - 1.8 * inch, 0.9 * inch],
+    )
+    header_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'CENTER'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(header_tbl)
+
+    # Report reference line
+    ref_data = [
+        [Paragraph(f'<b>Report No:</b> AR-{report.pk:05d}', s_value),
+         Paragraph(f'<b>Date Filed:</b> {report.created_at.strftime("%B %d, %Y")}', s_value),
+         Paragraph(f'<b>Status:</b> APPROVED', ParagraphStyle('S', parent=s_value, textColor=colors.HexColor('#059669')))]
+    ]
+    ref_tbl = Table(ref_data, colWidths=[W / 3] * 3)
+    ref_tbl.setStyle(TableStyle([
+        ('LINEABOVE', (0, 0), (-1, 0), 1, PRIMARY),
+        ('LINEBELOW', (0, 0), (-1, 0), 0.5, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+    ]))
+    elements.append(ref_tbl)
+    elements.append(Spacer(1, 6))
+
+    # ==================== SECTION BUILDER ====================
+    def section_header(title):
+        tbl = Table(
+            [[Paragraph(title, s_section)]],
+            colWidths=[W],
+        )
+        tbl.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), PRIMARY),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('ROUNDEDCORNERS', [3, 3, 0, 0]),
+        ]))
+        return tbl
+
+    def field_row(pairs, col_widths=None):
+        """Build a row of label-value pairs. pairs = [(label, value), ...]"""
+        cells = []
+        for lbl, val in pairs:
+            cells.append(Paragraph(f'<b>{lbl}:</b>', s_label))
+            cells.append(Paragraph(_v(val), s_value))
+        n = len(pairs)
+        if col_widths is None:
+            lw = 1.3 * inch
+            vw = (W - n * lw) / n
+            col_widths = []
+            for _ in range(n):
+                col_widths.extend([lw, vw])
+        tbl = Table([cells], colWidths=col_widths)
+        tbl.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('LINEBELOW', (0, 0), (-1, -1), 0.25, colors.HexColor('#E5E7EB')),
+        ]))
+        return tbl
+
+    # ==================== 1. INCIDENT INFORMATION ====================
+    elements.append(section_header('I. INCIDENT INFORMATION'))
+
+    incident_type_display = _choice(report.incident_type, AccidentReport.INCIDENT_TYPE_CHOICES)
+    if report.incident_type == 'OTHER' and report.incident_type_other:
+        incident_type_display = f'Other: {report.incident_type_other}'
+
+    place_type_display = _choice(report.type_of_place, AccidentReport.PLACE_TYPE_CHOICES)
+    if report.type_of_place == 'OTHER' and report.type_of_place_other:
+        place_type_display = f'Other: {report.type_of_place_other}'
+
+    elements.append(field_row([
+        ('Date of Incident', report.incident_date.strftime('%B %d, %Y') if report.incident_date else '-'),
+        ('Time of Incident', report.incident_time.strftime('%I:%M %p') if report.incident_time else '-'),
+    ]))
+    elements.append(field_row([
+        ('Type of Incident', incident_type_display),
+        ('Type of Place', place_type_display),
+    ]))
+    elements.append(Spacer(1, 6))
+
+    # ==================== 2. LOCATION ====================
+    elements.append(section_header('II. LOCATION OF INCIDENT'))
+
+    elements.append(field_row([
+        ('Province', _v(report.province)),
+        ('Municipality', _v(report.municipal)),
+    ]))
+    elements.append(field_row([
+        ('Barangay', _v(report.barangay)),
+        ('Street Address', _v(report.street_address)),
+    ]))
+    elements.append(field_row([
+        ('Latitude', str(report.latitude) if report.latitude else '-'),
+        ('Longitude', str(report.longitude) if report.longitude else '-'),
+    ]))
+    elements.append(Spacer(1, 6))
+
+    # ==================== 3. OFFENSE / LEGAL ====================
+    elements.append(section_header('III. OFFENSE / LEGAL CLASSIFICATION'))
+
+    offense_display = _choice(report.offense, AccidentReport.OFFENSE_CHOICES)
+    if report.offense == 'OTHER' and report.offense_other:
+        offense_display = f'Other: {report.offense_other}'
+
+    offense_type_display = _choice(report.offense_type, AccidentReport.OFFENSE_TYPE_CHOICES)
+    if report.offense_type == 'OTHER' and report.offense_type_other:
+        offense_type_display = f'Other: {report.offense_type_other}'
+
+    elements.append(field_row([('Offense', offense_display)],
+        col_widths=[1.3 * inch, W - 1.3 * inch]))
+    elements.append(field_row([
+        ('Offense Type', offense_type_display),
+        ('Stage of Felony', _choice(report.stage_of_felony, AccidentReport.STAGE_OF_FELONY_CHOICES)),
+    ]))
+    elements.append(field_row([
+        ('Drug/Alcohol Involved', _bool(report.drug_involved)),
+        ('Casualties Killed', str(report.casualties_killed)),
+    ]))
+    elements.append(field_row([
+        ('Casualties Injured', str(report.casualties_injured)),
+        ('', ''),
+    ]))
+    elements.append(Spacer(1, 6))
+
+    # ==================== 4. VICTIM INFORMATION ====================
+    elements.append(section_header('IV. VICTIM INFORMATION'))
+
+    victims = report.victims_data if report.victims_data else []
+    if not victims and report.victim_name:
+        victims = [{
+            'name': report.victim_name or '-',
+            'age': report.victim_age or '-',
+            'gender': _choice(report.victim_gender, AccidentReport.GENDER_CHOICES),
+            'status': _choice(report.victim_status, AccidentReport.VICTIM_STATUS_CHOICES),
+        }]
+
+    if victims:
+        v_header = [
+            Paragraph('<b>No.</b>', s_label),
+            Paragraph('<b>Name</b>', s_label),
+            Paragraph('<b>Age</b>', s_label),
+            Paragraph('<b>Gender</b>', s_label),
+            Paragraph('<b>Status</b>', s_label),
+        ]
+        v_rows = [v_header]
+        for i, v in enumerate(victims, 1):
+            gender_val = v.get('gender', '-')
+            if gender_val in ('MALE', 'FEMALE', 'UNKNOWN'):
+                gender_val = _choice(gender_val, AccidentReport.GENDER_CHOICES)
+            status_val = v.get('status', '-')
+            if status_val in ('KILLED', 'INJURED', 'UNHARMED'):
+                status_val = _choice(status_val, AccidentReport.VICTIM_STATUS_CHOICES)
+            v_rows.append([
+                Paragraph(str(i), s_value_sm),
+                Paragraph(_v(v.get('name')), s_value_sm),
+                Paragraph(_v(v.get('age')), s_value_sm),
+                Paragraph(_v(gender_val), s_value_sm),
+                Paragraph(_v(status_val), s_value_sm),
+            ])
+        v_tbl = Table(v_rows, colWidths=[0.4 * inch, 2.2 * inch, 0.6 * inch, 0.9 * inch, W - 4.1 * inch])
+        v_tbl.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
+            ('GRID', (0, 0), (-1, -1), 0.5, BORDER),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        elements.append(v_tbl)
+    else:
+        elements.append(Paragraph('No victim information recorded.', s_value))
+    elements.append(Spacer(1, 6))
+
+    # ==================== 5. SUSPECT / DRIVER ====================
+    elements.append(section_header('V. SUSPECT / DRIVER INFORMATION'))
+
+    suspects = report.suspects_data if report.suspects_data else []
+    if not suspects and report.suspect_name:
+        suspects = [{
+            'name': report.suspect_name or '-',
+            'age': report.driver_age or '-',
+            'gender': _choice(report.driver_gender, AccidentReport.GENDER_CHOICES),
+        }]
+
+    if suspects:
+        sp_header = [
+            Paragraph('<b>No.</b>', s_label),
+            Paragraph('<b>Name</b>', s_label),
+            Paragraph('<b>Age</b>', s_label),
+            Paragraph('<b>Gender</b>', s_label),
+        ]
+        sp_rows = [sp_header]
+        for i, s in enumerate(suspects, 1):
+            gender_val = s.get('gender', '-')
+            if gender_val in ('MALE', 'FEMALE', 'UNKNOWN'):
+                gender_val = _choice(gender_val, AccidentReport.GENDER_CHOICES)
+            sp_rows.append([
+                Paragraph(str(i), s_value_sm),
+                Paragraph(_v(s.get('name')), s_value_sm),
+                Paragraph(_v(s.get('age')), s_value_sm),
+                Paragraph(_v(gender_val), s_value_sm),
+            ])
+        sp_tbl = Table(sp_rows, colWidths=[0.4 * inch, 2.8 * inch, 0.6 * inch, W - 3.8 * inch])
+        sp_tbl.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
+            ('GRID', (0, 0), (-1, -1), 0.5, BORDER),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        elements.append(sp_tbl)
+    else:
+        elements.append(field_row([
+            ('Suspect Name', _v(report.suspect_name)),
+            ('Suspect Count', str(report.suspect_count)),
+        ]))
+        elements.append(field_row([
+            ('Driver Gender', _choice(report.driver_gender, AccidentReport.GENDER_CHOICES)),
+            ('Driver Age', _v(report.driver_age)),
+        ]))
+    elements.append(Spacer(1, 6))
+
+    # ==================== 6. VEHICLE INFORMATION ====================
+    elements.append(section_header('VI. VEHICLE INFORMATION'))
+
+    vk_display = _choice(report.vehicle_kind, AccidentReport.VEHICLE_KIND_CHOICES)
+    if report.vehicle_kind == 'OTHER' and report.vehicle_kind_other:
+        vk_display = f'Other: {report.vehicle_kind_other}'
+
+    make_display = _v(report.vehicle_make)
+    if report.vehicle_make == 'Other' and report.vehicle_make_other:
+        make_display = report.vehicle_make_other
+
+    model_display = _v(report.vehicle_model)
+    if report.vehicle_model == 'Other' and report.vehicle_model_other:
+        model_display = report.vehicle_model_other
+
+    elements.append(field_row([
+        ('Vehicle Type', vk_display),
+        ('Make/Brand', make_display),
+    ]))
+    elements.append(field_row([
+        ('Model', model_display),
+        ('Plate Number', _v(report.vehicle_plate_no)),
+    ]))
+    elements.append(field_row([
+        ('Chassis No.', _v(report.vehicle_chassis_no)),
+        ('Colorum (No Franchise)', _bool(report.vehicle_colorum)),
+    ]))
+    elements.append(Spacer(1, 6))
+
+    # ==================== 7. NARRATIVE ====================
+    elements.append(section_header('VII. INCIDENT NARRATIVE'))
+
+    narrative_text = report.incident_description or 'No narrative provided.'
+    # Wrap in a bordered box
+    nar_tbl = Table(
+        [[Paragraph(narrative_text.replace('\n', '<br/>'), s_narrative)]],
+        colWidths=[W],
+    )
+    nar_tbl.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FAFBFC')),
+    ]))
+    elements.append(nar_tbl)
+    elements.append(Spacer(1, 6))
+
+    # ==================== 8. REPORTER & VERIFICATION ====================
+    elements.append(section_header('VIII. REPORTER & VERIFICATION'))
+
+    elements.append(field_row([
+        ('Reported By', _v(report.reporter_name)),
+        ('Contact', _v(report.reporter_contact)),
+    ]))
+
+    verifier_name = '-'
+    verifier_rank = ''
+    if report.verified_by:
+        verifier_name = report.verified_by.get_full_name() or report.verified_by.username
+        if hasattr(report.verified_by, 'profile') and report.verified_by.profile.rank:
+            verifier_rank = f' ({report.verified_by.profile.get_rank_display()})'
+        verifier_name += verifier_rank
+
+    elements.append(field_row([
+        ('Approved By', verifier_name),
+        ('Date Approved', report.verified_at.strftime('%B %d, %Y') if report.verified_at else '-'),
+    ]))
+    elements.append(Spacer(1, 16))
+
+    # ==================== SIGNATURE BLOCK ====================
+    sig_line = '_' * 35
+    sig_data = [
+        ['', '', ''],
+        [Paragraph(sig_line, ParagraphStyle('SL', parent=s_value, alignment=TA_CENTER)),
+         '',
+         Paragraph(sig_line, ParagraphStyle('SL', parent=s_value, alignment=TA_CENTER))],
+        [Paragraph(f'<b>{_v(report.reporter_name).upper()}</b>', ParagraphStyle('SN', parent=s_label, alignment=TA_CENTER)),
+         '',
+         Paragraph(f'<b>{verifier_name.upper()}</b>', ParagraphStyle('SN', parent=s_label, alignment=TA_CENTER))],
+        [Paragraph('Reporter / Complainant', ParagraphStyle('SR', parent=s_value_sm, alignment=TA_CENTER, textColor=colors.HexColor('#666666'))),
+         '',
+         Paragraph('Approving Officer', ParagraphStyle('SR', parent=s_value_sm, alignment=TA_CENTER, textColor=colors.HexColor('#666666')))],
+    ]
+    sig_tbl = Table(sig_data, colWidths=[W * 0.4, W * 0.2, W * 0.4])
+    sig_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 1),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+    ]))
+    elements.append(sig_tbl)
+    elements.append(Spacer(1, 16))
+
+    # ==================== FOOTER ====================
+    elements.append(Paragraph(
+        f'Generated from AGNES Hotspot Detection System on {datetime.now().strftime("%B %d, %Y at %I:%M %p")}',
+        s_footer,
+    ))
+    elements.append(Paragraph(
+        'This document is a system-generated copy of an approved accident report.',
+        s_footer,
+    ))
+
+    # ---------- build & return ----------
+    doc.build(elements)
+    buf.seek(0)
+
+    response = HttpResponse(buf.read(), content_type='application/pdf')
+    filename = f'Accident_Report_AR-{report.pk:05d}.pdf'
+    # Inline for browser preview / print, attachment for download
+    disposition = request.GET.get('dl', '0')
+    if disposition == '1':
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    else:
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+
     return response
 
 
@@ -4586,6 +6153,16 @@ def get_notifications(request):
         pending_queryset = AccidentReport.objects.filter(status='pending')
         pending_count = get_reports_for_jurisdiction(request.user, pending_queryset).count()
 
+    # Count new accidents since last clustering (for roles that can run clustering)
+    unclustered_count = 0
+    if hasattr(request.user, 'profile') and request.user.profile.role in ('super_admin', 'regional_director', 'data_encoder'):
+        from .models import ClusteringJob
+        last_job = ClusteringJob.objects.filter(status='completed').order_by('-completed_at').first()
+        if last_job and last_job.completed_at:
+            unclustered_count = Accident.objects.filter(created_at__gt=last_job.completed_at).count()
+        else:
+            unclustered_count = Accident.objects.count()
+
     def get_notification_url(n):
         """Always use smart redirect for report-related notifications"""
         if n.related_report_id and n.notification_type in ('report_submitted', 'report_approved', 'report_rejected', 'report_cancelled'):
@@ -4596,6 +6173,7 @@ def get_notifications(request):
         'unread_count': unread_count,
         'pending_count': pending_count,
         'pending_count_total': pending_count_total,
+        'unclustered_count': unclustered_count,
         'notifications': [
             {
                 'id': n.id,

@@ -779,19 +779,19 @@
     /* Accidents Grid - Matching Hotspots */
     .accidents-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 0.75rem;
         margin-bottom: 2rem;
     }
 
     .accident-card {
         background: white;
-        border-radius: 10px;
+        border-radius: 8px;
         border: 1px solid #E5E7EB;
         overflow: visible;
         transition: all 0.2s ease;
         position: relative;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
     }
 
     .accident-card:hover {
@@ -892,24 +892,24 @@
     }
 
     .card-header {
-        padding: 16px 20px;
+        padding: 10px 14px;
         background: linear-gradient(135deg, #003087 0%, #0052CC 100%);
         border-bottom: 1px solid #F0F1F3;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-radius: 9px 9px 0 0;
+        border-radius: 7px 7px 0 0;
     }
 
     .severity-badge {
-        font-size: 0.75rem;
+        font-size: 0.68rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
+        gap: 5px;
+        padding: 3px 8px;
         border-radius: 4px;
         color: white;
     }
@@ -929,9 +929,9 @@
     .hotspot-mini-badge {
         background: #FEF3C7;
         color: #92400E;
-        padding: 4px 10px;
+        padding: 3px 8px;
         border-radius: 4px;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         font-weight: 600;
         letter-spacing: 0.3px;
         border: 1px solid #FDE68A;
@@ -939,25 +939,25 @@
 
     .hotspot-mini-badge i {
         color: #D97706;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
     }
 
     .card-body {
-        padding: 20px;
+        padding: 14px;
     }
 
     .card-date {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         color: #9CA3AF;
-        font-size: 0.875rem;
-        margin-bottom: 14px;
+        font-size: 0.8rem;
+        margin-bottom: 10px;
     }
 
     .card-date i {
         color: #D1D5DB;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
     }
 
     .card-date strong {
@@ -966,19 +966,19 @@
     }
 
     .card-location {
-        margin-bottom: 14px;
+        margin-bottom: 10px;
     }
 
     .card-location-title {
         font-weight: 600;
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         color: #111827;
         margin-bottom: 4px;
     }
 
     .card-location-sub {
         color: #6B7280;
-        font-size: 0.875rem;
+        font-size: 0.8rem;
         display: flex;
         align-items: center;
         gap: 5px;
@@ -986,38 +986,38 @@
 
     .card-location-sub i {
         color: #9CA3AF;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
     }
 
     .card-type {
         background: transparent;
         padding: 0;
         border-radius: 0;
-        font-size: 0.875rem;
+        font-size: 0.8rem;
         color: #6B7280;
-        margin-bottom: 16px;
-        line-height: 1.5;
+        margin-bottom: 12px;
+        line-height: 1.4;
     }
 
     .card-type i {
         color: #D1D5DB;
-        margin-right: 6px;
-        font-size: 0.75rem;
+        margin-right: 5px;
+        font-size: 0.7rem;
     }
 
     .card-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 10px;
-        padding-top: 10px;
+        gap: 8px;
+        padding-top: 8px;
         border-top: 1px solid #F3F4F6;
     }
 
     .card-action-btn {
         position: relative;
-        padding: 6px;
+        padding: 7px;
         border: none;
-        background: transparent;
+        background: #F3F4F6;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
@@ -1025,21 +1025,28 @@
         font-size: 0;
         text-decoration: none;
         border-radius: 6px;
-        transition: background 0.15s;
+        transition: background 0.15s, transform 0.1s;
     }
     .card-action-btn:hover {
-        background: #F3F4F6;
+        background: #E5E7EB;
+        transform: translateY(-1px);
     }
 
     .card-action-btn i {
         font-size: 1rem;
-        color: #9CA3AF;
+        color: #6B7280;
         transition: color 0.15s ease;
     }
 
     .card-action-btn:hover i {
-        color: #003087;
+        color: #374151;
     }
+
+    /* Distinct icon colors per button */
+    .card-action-btn.btn-view i { color: #6366F1; }
+    .card-action-btn.btn-map i { color: #10B981; }
+    .card-action-btn.btn-directions i { color: #3B82F6; }
+    .card-action-btn.btn-edit i { color: #F59E0B; }
 
     /* Action button tooltip */
     .card-action-btn::after {
@@ -1066,14 +1073,17 @@
     }
 
     /* Dark mode card action buttons */
+    [data-theme="dark"] .card-action-btn {
+        background: #374151;
+    }
     [data-theme="dark"] .card-action-btn:hover {
-        background: #2D3A4F;
+        background: #4B5563;
     }
     [data-theme="dark"] .card-action-btn i {
-        color: #7B8394;
+        color: #9CA3AF;
     }
     [data-theme="dark"] .card-action-btn:hover i {
-        color: #60A5FA;
+        color: #E5E7EB;
     }
 
     /* Table View */
@@ -1188,6 +1198,10 @@
 
     .table-action-btn.edit {
         background: #3B82F6;
+    }
+
+    .table-action-btn.directions {
+        background: #6366F1;
     }
 
     .text-center {
@@ -1393,8 +1407,9 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
     }
 
     .modal-content {
@@ -2967,6 +2982,10 @@
         background: #2563EB !important;
     }
 
+    [data-theme="dark"] .table-action-btn.directions {
+        background: #4F46E5 !important;
+    }
+
     /* ===== FILTER LABELS DARK MODE ===== */
     [data-theme="dark"] .filter-group label,
     [data-theme="dark"] .filters-grid label,
@@ -3294,10 +3313,11 @@
         position: fixed;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
+        width: 100vw;
+        height: 100vh;
         background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
         z-index: 99999;
         display: flex;
         align-items: flex-start;
@@ -3763,6 +3783,9 @@
         .accidents-table .table-action-btn.edit {
             background: #3B82F6 !important;
         }
+        .accidents-table .table-action-btn.directions {
+            background: #6366F1 !important;
+        }
     }
 </style>
 {% endblock %}
@@ -3781,7 +3804,7 @@ function switchView(viewType) {
     const options = document.querySelectorAll('.view-option');
 
     options.forEach(opt => opt.classList.remove('active'));
-    event.target.classList.add('active');
+    if (event && event.target) event.target.classList.add('active');
 
     var bottomCards = document.getElementById('bottomPaginationCards');
     var bottomTable = document.getElementById('bottomPaginationTable');
@@ -4358,6 +4381,25 @@ function openAccidentModal(id, date, time, barangay, municipal, province, incide
             currentAccidentData.suspect_details = data.suspect_details;
             currentAccidentData.case_status = data.case_status;
             currentAccidentData.offense = data.offense;
+            // Additional PNP report fields
+            currentAccidentData.offense_type = data.offense_type;
+            currentAccidentData.stage_of_felony = data.stage_of_felony;
+            currentAccidentData.date_reported = data.date_reported;
+            currentAccidentData.time_reported = data.time_reported;
+            currentAccidentData.ppo = data.ppo;
+            currentAccidentData.pro = data.pro;
+            currentAccidentData.vehicle_make = data.vehicle_make;
+            currentAccidentData.vehicle_model = data.vehicle_model;
+            currentAccidentData.vehicle_plate_no = data.vehicle_plate_no;
+            currentAccidentData.vehicle_chassis_no = data.vehicle_chassis_no;
+            currentAccidentData.vehicle_colorum = data.vehicle_colorum;
+            currentAccidentData.drug_involved = data.drug_involved;
+            currentAccidentData.driver_gender = data.driver_gender;
+            currentAccidentData.driver_age = data.driver_age;
+            currentAccidentData.victim_gender = data.victim_gender;
+            currentAccidentData.victim_age = data.victim_age;
+            currentAccidentData.suspect_count = data.suspect_count;
+            currentAccidentData.victim_unharmed = data.victim_unharmed;
         })
         .catch(() => {
             document.getElementById('modalNarrative').textContent = 'Unable to load narrative.';
@@ -4386,6 +4428,10 @@ function openAccidentModal(id, date, time, barangay, municipal, province, incide
         window.location.href = `/map/?lat=${lat}&lng=${lng}&zoom=16&accident_id=${id}&single=true&source=list`;
     };
 
+    document.getElementById('modalDirectionsBtn').onclick = function() {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+    };
+
     document.getElementById('modalDetailBtn').onclick = function() {
         window.location.href = `/accidents/${id}/`;
     };
@@ -4401,206 +4447,421 @@ function closeAccidentModal() {
     document.body.style.overflow = 'auto';
 }
 
-// Print Accident Report
+// Print Accident Report — PNP Caraga Standard Format
 function printAccidentReport() {
     const d = currentAccidentData;
 
-    // Determine severity
-    let severity = 'Property Damage';
+    // Determine severity classification
+    let severity = 'DAMAGE TO PROPERTY';
     let severityClass = 'property';
     if (d.isFatal) {
         severity = 'FATAL';
         severityClass = 'fatal';
     } else if (d.isInjury) {
-        severity = 'INJURY';
+        severity = 'NON-FATAL (PHYSICAL INJURY)';
         severityClass = 'injury';
     }
+
+    // Build vehicle description
+    let vehicleDesc = d.vehicle || 'Not specified';
+    let vehicleDetails = [];
+    if (d.vehicle_make) vehicleDetails.push(d.vehicle_make);
+    if (d.vehicle_model) vehicleDetails.push(d.vehicle_model);
+    let vehicleFullDesc = vehicleDetails.length > 0 ? vehicleDetails.join(' ') : '';
+    let plateInfo = d.vehicle_plate_no ? d.vehicle_plate_no : 'N/A';
+    let chassisInfo = d.vehicle_chassis_no || '';
+
+    // Logo paths
+    const logoUrl = '{% static "images/pnp-logo1.png" %}';
+    const logoUrl2 = '{% static "images/pnp-logo.png" %}';
 
     const printContent = `
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Accident Report - ${d.date}</title>
+            <title>PNP Traffic Accident Report - ${d.date}</title>
             <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
                 body {
-                    font-family: 'Segoe UI', Arial, sans-serif;
-                    padding: 20px;
+                    font-family: 'Times New Roman', Times, serif;
+                    padding: 20px 30px;
                     font-size: 11pt;
-                    color: #333;
-                    line-height: 1.5;
+                    color: #000;
+                    line-height: 1.4;
                 }
+
+                /* ── HEADER ── */
                 .report-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 12px;
+                    padding-bottom: 6px;
+                    margin-bottom: 0;
+                }
+                .report-header img.logo-left {
+                    width: 52px;
+                    height: auto;
+                    flex-shrink: 0;
+                }
+                .report-header img.logo-right {
+                    width: 48px;
+                    height: auto;
+                    flex-shrink: 0;
+                }
+                .report-header .header-text {
                     text-align: center;
-                    border-bottom: 3px solid #003087;
-                    padding-bottom: 15px;
-                    margin-bottom: 20px;
+                    flex: 1;
                 }
-                .report-header h1 {
+                .report-header .republic {
+                    font-size: 8.5pt;
+                    color: #444;
+                }
+                .report-header .agency {
+                    font-size: 11pt;
+                    font-weight: bold;
                     color: #003087;
-                    font-size: 18pt;
-                    margin-bottom: 5px;
+                    letter-spacing: 0.3px;
                 }
-                .report-header .subtitle {
+                .report-header .office {
+                    font-size: 9pt;
+                    font-weight: 600;
+                    color: #222;
+                }
+                .report-header .camp-addr {
+                    font-size: 7.5pt;
+                    color: #555;
+                    margin-top: 1px;
+                }
+                .header-line {
+                    border: none;
+                    border-top: 2.5px solid #003087;
+                    margin: 4px 0 2px 0;
+                }
+                .header-line-thin {
+                    border: none;
+                    border-top: 1px solid #003087;
+                    margin-top: 0;
+                    margin-bottom: 8px;
+                }
+
+                /* ── TITLE ── */
+                .report-title {
+                    text-align: center;
+                    font-size: 13pt;
+                    font-weight: bold;
+                    color: #003087;
+                    margin-bottom: 2px;
+                    letter-spacing: 0.5px;
+                }
+                .report-subtitle {
+                    text-align: center;
+                    font-size: 8pt;
                     color: #666;
-                    font-size: 10pt;
+                    margin-bottom: 10px;
                 }
+
+                /* ── SEVERITY BANNER ── */
                 .severity-banner {
                     text-align: center;
-                    padding: 8px;
-                    border-radius: 5px;
+                    padding: 6px 0;
                     font-weight: bold;
-                    font-size: 12pt;
-                    margin-bottom: 20px;
-                }
-                .severity-banner.fatal { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
-                .severity-banner.injury { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
-                .severity-banner.property { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
-                .info-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 12px;
-                    margin-bottom: 20px;
-                }
-                .info-item {
-                    display: flex;
-                    gap: 8px;
-                }
-                .info-label {
-                    font-weight: 600;
-                    color: #003087;
-                    min-width: 100px;
-                }
-                .info-value {
-                    color: #333;
-                }
-                .section {
-                    margin-bottom: 15px;
-                }
-                .section-title {
-                    font-weight: 600;
-                    color: #003087;
-                    border-bottom: 1px solid #ddd;
-                    padding-bottom: 5px;
-                    margin-bottom: 8px;
                     font-size: 11pt;
+                    margin-bottom: 15px;
+                    letter-spacing: 1px;
+                    border: 2px solid;
                 }
-                .section-content {
-                    color: #444;
-                    white-space: pre-wrap;
+                .severity-banner.fatal { background: #fef2f2; color: #991b1b; border-color: #991b1b; }
+                .severity-banner.injury { background: #fffbeb; color: #92400e; border-color: #b45309; }
+                .severity-banner.property { background: #eff6ff; color: #1e40af; border-color: #1e40af; }
+
+                /* ── FIELD TABLE ── */
+                .field-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 15px;
                     font-size: 10pt;
-                    background: #f9f9f9;
-                    padding: 10px;
-                    border-radius: 5px;
                 }
+                .field-table td {
+                    padding: 5px 8px;
+                    vertical-align: top;
+                    border: 1px solid #ccc;
+                }
+                .field-label {
+                    font-weight: bold;
+                    color: #003087;
+                    background: #f0f4fa;
+                    width: 140px;
+                    white-space: nowrap;
+                }
+                .field-value {
+                    color: #000;
+                }
+
+                /* ── SECTION ── */
+                .section {
+                    margin-bottom: 12px;
+                }
+                .section-header {
+                    font-weight: bold;
+                    font-size: 10.5pt;
+                    color: #003087;
+                    padding: 4px 8px;
+                    background: #f0f4fa;
+                    border: 1px solid #ccc;
+                    border-bottom: 2px solid #003087;
+                    margin-bottom: 0;
+                }
+                .section-body {
+                    border: 1px solid #ccc;
+                    border-top: none;
+                    padding: 10px 12px;
+                    font-size: 10pt;
+                    white-space: pre-wrap;
+                    line-height: 1.6;
+                    text-align: justify;
+                    color: #000;
+                    min-height: 30px;
+                }
+
+                /* ── PERSON DETAILS ── */
                 .person-grid {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
-                    gap: 15px;
+                    gap: 0;
+                    margin-bottom: 12px;
                 }
-                .footer {
-                    margin-top: 30px;
-                    padding-top: 15px;
-                    border-top: 1px solid #ddd;
+                .person-col {
+                    border: 1px solid #ccc;
+                }
+                .person-col:first-child {
+                    border-right: none;
+                }
+                .person-col-header {
+                    font-weight: bold;
+                    font-size: 10pt;
+                    color: #003087;
+                    padding: 4px 8px;
+                    background: #f0f4fa;
+                    border-bottom: 2px solid #003087;
                     text-align: center;
-                    font-size: 9pt;
-                    color: #666;
                 }
-                .footer .generated {
-                    margin-bottom: 5px;
+                .person-col-body {
+                    padding: 8px 10px;
+                    font-size: 9.5pt;
+                    white-space: pre-wrap;
+                    min-height: 50px;
+                    line-height: 1.5;
                 }
+
+                /* ── FOOTER ── */
+                .report-footer {
+                    margin-top: 25px;
+                    padding-top: 10px;
+                    border-top: 2px solid #003087;
+                    text-align: center;
+                    font-size: 8.5pt;
+                    color: #555;
+                }
+                .report-footer .gen-date {
+                    margin-bottom: 2px;
+                }
+
+                /* ── PRINT ── */
                 @media print {
-                    body { padding: 0; }
-                    @page { margin: 15mm; }
+                    body { padding: 10px 15px; }
+                    @page { margin: 12mm; size: letter; }
                 }
             </style>
         </head>
         <body>
+
+            <!-- HEADER -->
             <div class="report-header">
-                <h1>TRAFFIC ACCIDENT REPORT</h1>
-                <div class="subtitle">AGNES Hotspot Detection System - PNP Caraga</div>
+                <img src="${logoUrl}" alt="PNP Seal" class="logo-left">
+                <div class="header-text">
+                    <div class="republic">Republic of the Philippines</div>
+                    <div class="agency">PHILIPPINE NATIONAL POLICE</div>
+                    <div class="office">Police Regional Office 13</div>
+                    <div class="camp-addr">Camp Col. Rafael C. Rodriguez, Libertad, Butuan City</div>
+                </div>
+                <img src="${logoUrl2}" alt="AGNES Logo" class="logo-right">
             </div>
+            <hr class="header-line">
+            <hr class="header-line-thin">
 
-            <div class="severity-banner ${severityClass}">
-                ${severity} ACCIDENT
-            </div>
+            <!-- TITLE -->
+            <div class="report-title">TRAFFIC ACCIDENT REPORT</div>
+            <div class="report-subtitle">(PNP PRO 13 Standard Format)</div>
 
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Date:</span>
-                    <span class="info-value">${d.date}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Time:</span>
-                    <span class="info-value">${d.time}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Location:</span>
-                    <span class="info-value">${d.barangay}, ${d.municipal}, ${d.province}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Street:</span>
-                    <span class="info-value">${d.street || 'N/A'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Incident Type:</span>
-                    <span class="info-value">${d.incidentType}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Victims:</span>
-                    <span class="info-value">${d.victimCount} victim(s)</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Place Type:</span>
-                    <span class="info-value">${d.placeType || 'Road/Highway'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Vehicle(s):</span>
-                    <span class="info-value">${d.vehicle || 'Not specified'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Police Station:</span>
-                    <span class="info-value">${d.station || 'Not specified'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Cluster ID:</span>
-                    <span class="info-value">${d.clusterId || '-'}</span>
-                </div>
-            </div>
+            <!-- SEVERITY -->
+            <div class="severity-banner ${severityClass}">${severity}</div>
 
-            <div class="section">
-                <div class="section-title">NARRATIVE</div>
-                <div class="section-content">${d.narrative || 'No narrative available.'}</div>
-            </div>
+            <!-- A. REPORTING INFORMATION -->
+            <table class="field-table">
+                <tr>
+                    <td class="field-label">PRO/PPO:</td>
+                    <td class="field-value">${d.pro || 'PRO 13'}${d.ppo ? ' / ' + d.ppo : ''}</td>
+                    <td class="field-label">Police Station:</td>
+                    <td class="field-value">${d.station || 'N/A'}</td>
+                </tr>
+            </table>
 
+            <!-- B. WHEN -->
+            <table class="field-table">
+                <tr>
+                    <td class="field-label">Date of Incident:</td>
+                    <td class="field-value">${d.date || 'N/A'}</td>
+                    <td class="field-label">Time of Incident:</td>
+                    <td class="field-value">${d.time || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Date Reported:</td>
+                    <td class="field-value">${d.date_reported || 'N/A'}</td>
+                    <td class="field-label">Time Reported:</td>
+                    <td class="field-value">${d.time_reported || 'N/A'}</td>
+                </tr>
+            </table>
+
+            <!-- C. WHERE -->
+            <table class="field-table">
+                <tr>
+                    <td class="field-label">Province:</td>
+                    <td class="field-value">${d.province || 'N/A'}</td>
+                    <td class="field-label">Municipality:</td>
+                    <td class="field-value">${d.municipal || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Barangay:</td>
+                    <td class="field-value">${d.barangay || 'N/A'}</td>
+                    <td class="field-label">Street:</td>
+                    <td class="field-value">${d.street || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Type of Place:</td>
+                    <td class="field-value" colspan="3">${d.placeType || 'N/A'}</td>
+                </tr>
+            </table>
+
+            <!-- D. WHAT -->
+            <table class="field-table">
+                <tr>
+                    <td class="field-label">Incident Type:</td>
+                    <td class="field-value" colspan="3">${d.incidentType || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Offense:</td>
+                    <td class="field-value">${d.offense || 'N/A'}</td>
+                    <td class="field-label">Offense Type:</td>
+                    <td class="field-value">${d.offense_type || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Classification:</td>
+                    <td class="field-value">${severity}</td>
+                    <td class="field-label">Stage of Felony:</td>
+                    <td class="field-value">${d.stage_of_felony || 'N/A'}</td>
+                </tr>
+            </table>
+
+            <!-- E. CASUALTIES -->
+            <table class="field-table">
+                <tr>
+                    <td class="field-label">No. of Victims:</td>
+                    <td class="field-value">${d.victimCount || 0}</td>
+                    <td class="field-label">No. of Suspects:</td>
+                    <td class="field-value">${d.suspect_count || 0}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Killed:</td>
+                    <td class="field-value">${d.isFatal ? 'Yes' : 'None'}</td>
+                    <td class="field-label">Injured:</td>
+                    <td class="field-value">${d.isInjury ? 'Yes' : 'None'}</td>
+                </tr>
+            </table>
+
+            <!-- F. VEHICLE INFORMATION -->
+            <table class="field-table">
+                <tr>
+                    <td class="field-label">Vehicle Kind:</td>
+                    <td class="field-value">${vehicleDesc}</td>
+                    <td class="field-label">Make/Model:</td>
+                    <td class="field-value">${vehicleFullDesc || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Plate Number:</td>
+                    <td class="field-value">${plateInfo}</td>
+                    <td class="field-label">Chassis No.:</td>
+                    <td class="field-value">${chassisInfo || 'N/A'}</td>
+                </tr>
+                ${d.vehicle_colorum || d.drug_involved ? '<tr>' +
+                    '<td class="field-label">Colorum:</td>' +
+                    '<td class="field-value">' + (d.vehicle_colorum ? '<b style="color:#991b1b;">YES</b>' : 'No') + '</td>' +
+                    '<td class="field-label">Drug/Alcohol:</td>' +
+                    '<td class="field-value">' + (d.drug_involved ? '<b style="color:#991b1b;">YES</b>' : 'No') + '</td>' +
+                '</tr>' : ''}
+                ${d.clusterId && d.clusterId !== '-' ? '<tr>' +
+                    '<td class="field-label">Hotspot Cluster:</td>' +
+                    '<td class="field-value" colspan="3">Cluster ID: ' + d.clusterId + ' (Identified Hotspot Area)</td>' +
+                '</tr>' : ''}
+            </table>
+
+            <!-- G. VICTIM DETAILS / SUSPECT DETAILS -->
             <div class="person-grid">
-                <div class="section">
-                    <div class="section-title">VICTIM DETAILS</div>
-                    <div class="section-content">${d.victim_details || 'N/A'}</div>
+                <div class="person-col">
+                    <div class="person-col-header">VICTIM INFORMATION</div>
+                    <div class="person-col-body">${d.victim_details || (d.victim_gender ? d.victim_gender + (d.victim_age ? ', ' + d.victim_age + ' years old' : '') : 'N/A')}</div>
                 </div>
-                <div class="section">
-                    <div class="section-title">SUSPECT/DRIVER DETAILS</div>
-                    <div class="section-content">${d.suspect_details || 'N/A'}</div>
+                <div class="person-col">
+                    <div class="person-col-header">SUSPECT / DRIVER INFORMATION</div>
+                    <div class="person-col-body">${d.suspect_details || (d.driver_gender ? d.driver_gender + (d.driver_age ? ', ' + d.driver_age + ' years old' : '') : 'N/A')}</div>
                 </div>
             </div>
 
-            <div class="footer">
-                <div class="generated">Generated on ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}</div>
-                <div>AGNES Hotspot Detection System | PNP Regional Office Caraga</div>
+            <!-- H. NARRATIVE -->
+            <div class="section">
+                <div class="section-header">NARRATIVE / BRIEF DESCRIPTION OF INCIDENT</div>
+                <div class="section-body">${d.narrative || 'No narrative available.'}</div>
             </div>
+
+            <!-- SIGNATURE LINES -->
+            <table style="width:100%; margin-top:30px; font-size:9.5pt; border:none;">
+                <tr>
+                    <td style="width:50%; text-align:center; padding-top:40px; border:none;">
+                        <div style="border-top:1px solid #000; width:200px; margin:0 auto; padding-top:3px;">
+                            Investigating Officer
+                        </div>
+                    </td>
+                    <td style="width:50%; text-align:center; padding-top:40px; border:none;">
+                        <div style="border-top:1px solid #000; width:200px; margin:0 auto; padding-top:3px;">
+                            Chief of Police / OIC
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- FOOTER -->
+            <div class="report-footer">
+                <div class="gen-date">Generated on ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}</div>
+                <div>AGNES Hotspot Detection System &nbsp;|&nbsp; PNP Police Regional Office 13</div>
+            </div>
+
         </body>
         </html>
     `;
 
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    const printWindow = window.open('', '_blank', 'width=800,height=900');
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.focus();
 
-    // Print after content loads
+    // Print after content loads (including logo image)
+    printWindow.onload = function() {
+        printWindow.print();
+    };
+    // Fallback if onload doesn't fire
     setTimeout(() => {
         printWindow.print();
-    }, 250);
+    }, 500);
 }
 
 // Close modal on Escape key
@@ -5272,7 +5533,7 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                     <i class="fas fa-car-crash"></i> Property Damage
                 </button>
                 <button onclick="quickSearch('Not Hotspot')" class="quick-search-btn standalone">
-                    <i class="fas fa-circle-dot"></i> Standalone
+                    <i class="fas fa-circle-dot"></i> Unclustered
                 </button>
             </div>
 
@@ -5374,12 +5635,12 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
 
     <!-- View Toggle -->
     <div class="view-toggle">
-        <button class="view-option active" onclick="switchView('cards')">📊 Cards View</button>
-        <button class="view-option" onclick="switchView('table')">📋 Table View</button>
+        <button class="view-option {% if accident_default_view != 'table' %}active{% endif %}" onclick="switchView('cards')">📊 Cards View</button>
+        <button class="view-option {% if accident_default_view == 'table' %}active{% endif %}" onclick="switchView('table')">📋 Table View</button>
     </div>
 
     <!-- Cards View -->
-    <div id="cardsView">
+    <div id="cardsView" {% if accident_default_view == 'table' %}style="display:none;"{% endif %}>
         <div class="accidents-grid" id="accidentsContainer">
             {% for accident in accidents %}
             <div class="accident-card" onclick="openAccidentModal({{ accident.pk }}, '{{ accident.date_committed|date:"M d, Y" }}', '{{ accident.time_committed|time:"g:i A" }}', '{{ accident.barangay }}', '{{ accident.municipal }}', '{{ accident.province }}', '{{ accident.incident_type }}', {{ accident.victim_killed|yesno:"true,false" }}, {{ accident.victim_injured|yesno:"true,false" }}, {{ accident.is_hotspot|yesno:"true,false" }}, {{ accident.latitude }}, {{ accident.longitude }}, '{{ accident.street|default:"N/A" }}', {{ accident.victim_count|default:0 }}, '{{ accident.type_of_place|default:"Road/Highway" }}', '{{ accident.vehicle_kind|default:"Not specified" }}', '{{ accident.station|default:"Not specified" }}', '{{ accident.cluster_id|default:"-" }}')" style="cursor: pointer;">
@@ -5438,7 +5699,10 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                         <button class="card-action-btn btn-map" data-tooltip="View on Map" onclick="event.stopPropagation(); viewOnMap({{ accident.latitude }}, {{ accident.longitude }}, {{ accident.pk }})">
                             <i class="fas fa-map"></i> Map
                         </button>
-                        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
+                        <button class="card-action-btn btn-directions" data-tooltip="Get Directions" onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination={{ accident.latitude }},{{ accident.longitude }}', '_blank')">
+                            <i class="fas fa-directions"></i>
+                        </button>
+                        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' or user.profile.role == 'data_encoder' %}
                         <button class="card-action-btn btn-edit" data-tooltip="Edit Record" onclick="event.stopPropagation(); openEditModal({{ accident.pk }})">
                             <i class="fas fa-edit"></i> Edit
                         </button>
@@ -5466,7 +5730,7 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
 
     <!-- Bottom Pagination (pill-style) -->
     {% if accidents.has_other_pages %}
-    <div id="bottomPaginationCards" class="al-pagination" style="margin-top: 1rem;">
+    <div id="bottomPaginationCards" class="al-pagination" style="margin-top: 1rem;{% if accident_default_view == 'table' %} display:none;{% endif %}">
         {% if accidents.has_previous %}
         <a class="al-page-btn" href="javascript:void(0)" onclick="navigateToPage('{{ accidents.previous_page_number }}')">
             <i class="fas fa-chevron-left"></i>
@@ -5506,7 +5770,7 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
     {% endif %}
 
     <!-- Table View -->
-    <div id="tableView" class="accidents-table-container" style="display: none;">
+    <div id="tableView" class="accidents-table-container" {% if accident_default_view != 'table' %}style="display: none;"{% endif %}>
         <div id="tableResponsive" class="table-responsive scrollable">
             <table class="accidents-table">
                 <thead>
@@ -5571,7 +5835,10 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                                 <button class="table-action-btn map" onclick="viewOnMap({{ accident.latitude }}, {{ accident.longitude }})">
                                     <i class="fas fa-map"></i> Map
                                 </button>
-                                {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
+                                <button class="table-action-btn directions" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination={{ accident.latitude }},{{ accident.longitude }}', '_blank')">
+                                    <i class="fas fa-directions"></i> Route
+                                </button>
+                                {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' or user.profile.role == 'data_encoder' %}
                                 <button class="table-action-btn edit" onclick="openEditModal({{ accident.pk }})">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
@@ -5605,7 +5872,7 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
 
     <!-- Bottom Pagination (pill-style) for Table View -->
     {% if accidents.has_other_pages %}
-    <div id="bottomPaginationTable" class="al-pagination" style="margin-top: 1rem; display: none;">
+    <div id="bottomPaginationTable" class="al-pagination" style="margin-top: 1rem;{% if accident_default_view != 'table' %} display:none;{% endif %}">
         {% if accidents.has_previous %}
         <a class="al-page-btn" href="javascript:void(0)" onclick="navigateToPage('{{ accidents.previous_page_number }}')">
             <i class="fas fa-chevron-left"></i>
@@ -5778,6 +6045,9 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
             </button>
             <button class="modal-btn btn-map" id="modalMapBtn">
                 <i class="fas fa-map-marked-alt"></i> View on Map
+            </button>
+            <button class="modal-btn" id="modalDirectionsBtn" style="background: #1a73e8; color: white;">
+                <i class="fas fa-directions"></i> Get Directions
             </button>
             <button class="modal-btn btn-detail" id="modalDetailBtn">
                 <i class="fas fa-file-alt"></i> View Details
@@ -5961,10 +6231,10 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                     <!-- Replace Confirmation (hidden by default) -->
                     <div id="replaceWarning" style="display: none; margin-top: 0.5rem; padding: 0.5rem 0.65rem; background: #fff3e0; border-radius: 4px;">
                         <div style="font-weight: 600; color: #e65100; font-size: 0.75rem;">
-                            <i class="fas fa-exclamation-triangle"></i> Warning: Deletes ALL existing records!
+                            <i class="fas fa-exclamation-triangle"></i> Warning: Replaces imported data!
                         </div>
                         <div style="font-size: 0.72rem; color: #666; margin-top: 0.15rem;">
-                            All current data will be permanently removed. This cannot be undone.
+                            All CSV/Excel-imported records will be removed and replaced. Accidents from approved reports will be preserved.
                         </div>
                     </div>
 
@@ -6021,10 +6291,14 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
                         <div id="resultSubtitle" style="font-size: 0.8rem; color: #666; margin-bottom: 1rem;"></div>
 
                         <!-- Stats cards -->
-                        <div id="resultStats" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem;">
+                        <div id="resultStats" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem;">
                             <div style="background: #e8f5e9; border-radius: 6px; padding: 0.6rem;">
                                 <div id="statImported" style="font-size: 1.2rem; font-weight: 700; color: #2e7d32;">0</div>
                                 <div style="font-size: 0.7rem; color: #4caf50;">Imported</div>
+                            </div>
+                            <div id="statSkippedBox" style="background: #f3e5f5; border-radius: 6px; padding: 0.6rem; display: none;">
+                                <div id="statSkipped" style="font-size: 1.2rem; font-weight: 700; color: #7b1fa2;">0</div>
+                                <div style="font-size: 0.7rem; color: #9c27b0;">Duplicates Skipped</div>
                             </div>
                             <div style="background: #fff3e0; border-radius: 6px; padding: 0.6rem;">
                                 <div id="statErrors" style="font-size: 1.2rem; font-weight: 700; color: #e65100;">0</div>
@@ -6263,7 +6537,7 @@ document.getElementById('dateModal')?.addEventListener('click', function(e) {
 
                     <!-- Vehicle Tab -->
                     <div id="vehicleTab" class="edit-tab-panel">
-                        <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem;">Vehicle Information</h3>
+                        <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.1rem;">Vehicle Information (Suspect/Driver)</h3>
                         <div class="form-group">
                             <label for="editVehicleKind">Vehicle Kind/Type</label>
                             <select id="editVehicleKind" name="vehicle_kind" class="form-control">
@@ -6677,12 +6951,23 @@ function showImportResult(data) {
         resultIcon.innerHTML = '<i class="fas fa-check-circle" style="color: #2e7d32;"></i>';
         resultTitle.textContent = 'Import Successful!';
         resultTitle.style.color = '#2e7d32';
-        var modeText = data.import_mode === 'replace' ? ' (Replaced all data)' : ' (Added to existing)';
+        var modeText = data.import_mode === 'replace' ? ' (Replaced ' + data.deleted_count + ' records, preserved ' + (data.preserved_count || 0) + ' from approved reports)' : ' (Added to existing)';
+        if (data.skipped_duplicates > 0) modeText += ', ' + data.skipped_duplicates + ' duplicates skipped';
         resultSubtitle.textContent = data.file_name + ' - ' + data.success_rate + '% success rate' + modeText;
 
         document.getElementById('statImported').textContent = data.imported;
         document.getElementById('statErrors').textContent = data.errors;
         document.getElementById('statTotal').textContent = data.total_rows;
+
+        // Show skipped duplicates if any
+        if (data.skipped_duplicates && data.skipped_duplicates > 0) {
+            document.getElementById('statSkipped').textContent = data.skipped_duplicates;
+            document.getElementById('statSkippedBox').style.display = 'block';
+            document.getElementById('resultStats').style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
+        } else {
+            document.getElementById('statSkippedBox').style.display = 'none';
+            document.getElementById('resultStats').style.gridTemplateColumns = '1fr 1fr 1fr';
+        }
 
         // Show error samples if any
         if (data.error_samples && data.error_samples.length > 0) {
@@ -7254,10 +7539,11 @@ function closeEditModal() {
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 /* Edit Modal Tabs */

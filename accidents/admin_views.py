@@ -8,16 +8,21 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q, Count
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.core.paginator import Paginator
+from django.core.cache import cache
+from django.conf import settings
 from datetime import timedelta
 import json
 import re
+import subprocess
+import os
 
 from .models import (
     UserProfile, AuditLog, ClusteringJob,
-    Accident, AccidentCluster, AccidentReport, ReportActivityLog
+    Accident, AccidentCluster, AccidentReport, ReportActivityLog,
+    SystemSetting
 )
 from .auth_utils import log_user_action
 
@@ -56,6 +61,15 @@ def is_admin(user):
 def is_staff_or_superuser(user):
     """Check if user can access admin features (super_admin or regional_director)"""
     return is_admin(user)
+
+
+def can_manage_users(user):
+    """Check if user can manage personnel (admin roles + provincial_chief/station_commander for their jurisdiction)"""
+    if not user.is_authenticated:
+        return False
+    if hasattr(user, 'profile'):
+        return user.profile.role in ['super_admin', 'regional_director', 'provincial_chief', 'station_commander']
+    return False
 
 
 # ============================================================================
@@ -120,9 +134,9 @@ def admin_dashboard(request):
 # ============================================================================
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(can_manage_users)
 def user_management(request):
-    """User management page - list all users"""
+    """User management page - list all users (scoped by jurisdiction)"""
 
     # Search and Filter
     search_query = request.GET.get('search', '')
@@ -131,6 +145,24 @@ def user_management(request):
 
     # Get all users with profiles, ordered by username
     users = User.objects.select_related('profile').all().order_by('username')
+
+    # Jurisdiction-based scoping
+    profile = getattr(request.user, 'profile', None)
+    if profile and profile.role == 'provincial_chief':
+        # Provincial Chief: manage station_commander, traffic_officer, data_encoder in their province
+        manageable_roles = ['station_commander', 'traffic_officer', 'data_encoder']
+        users = users.filter(profile__role__in=manageable_roles)
+        if profile.province:
+            users = users.filter(profile__province=profile.province)
+    elif profile and profile.role == 'station_commander':
+        # Station Commander: manage traffic_officer, data_encoder at their station only
+        manageable_roles = ['traffic_officer', 'data_encoder']
+        users = users.filter(
+            profile__role__in=manageable_roles,
+            profile__station=profile.station
+        )
+        if profile.province:
+            users = users.filter(profile__province=profile.province)
 
     # Apply search - searches across multiple fields
     if search_query:
@@ -144,9 +176,14 @@ def user_management(request):
             Q(profile__station__icontains=search_query)
         )
 
-    # Apply role filter
+    # Apply role filter (sanitize for scoped roles)
     if role_filter:
-        users = users.filter(profile__role=role_filter)
+        if profile and profile.role == 'station_commander' and role_filter not in ['traffic_officer', 'data_encoder']:
+            role_filter = ''
+        elif profile and profile.role == 'provincial_chief' and role_filter not in ['station_commander', 'traffic_officer', 'data_encoder']:
+            role_filter = ''
+        else:
+            users = users.filter(profile__role=role_filter)
 
     # Apply status filter
     if status_filter == 'active':
@@ -154,14 +191,15 @@ def user_management(request):
     elif status_filter == 'inactive':
         users = users.filter(is_active=False)
 
-    # Pagination with configurable per-page
-    per_page = request.GET.get('per_page', '10')
+    # Pagination with configurable per-page (system default from settings)
+    sys_default = SystemSetting.get('default_per_page')
+    per_page = request.GET.get('per_page', sys_default)
     try:
         per_page = int(per_page)
-        if per_page not in [10, 20, 50]:
-            per_page = 10
+        if per_page not in [10, 15, 20, 50]:
+            per_page = int(sys_default)
     except (ValueError, TypeError):
-        per_page = 10
+        per_page = 15
 
     paginator = Paginator(users, per_page)
     page_number = request.GET.get('page')
@@ -169,6 +207,9 @@ def user_management(request):
 
     # Get all roles for filter dropdown
     roles = UserProfile.ROLE_CHOICES
+
+    uses_main_layout = profile and profile.role in ['station_commander', 'provincial_chief']
+    base_template = 'base.html' if uses_main_layout else 'admin_panel/base.html'
 
     context = {
         'page_obj': page_obj,
@@ -179,18 +220,30 @@ def user_management(request):
         'ranks': UserProfile.RANK_CHOICES,
         'total_count': users.count(),
         'per_page': per_page,
+        'base_template': base_template,
     }
 
     return render(request, 'admin_panel/user_management.html', context)
 
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(can_manage_users)
 def user_detail(request, user_id):
     """View and edit user details"""
 
     user = get_object_or_404(User, pk=user_id)
     profile = user.profile if hasattr(user, 'profile') else None
+
+    # Jurisdiction checks for scoped roles
+    requester = getattr(request.user, 'profile', None)
+    if requester and requester.role == 'provincial_chief':
+        if not profile or profile.role not in ['station_commander', 'traffic_officer', 'data_encoder'] or profile.province != requester.province:
+            messages.error(request, 'You can only manage personnel in your province.')
+            return redirect('admin_panel:users')
+    elif requester and requester.role == 'station_commander':
+        if not profile or profile.role not in ['traffic_officer', 'data_encoder'] or profile.station != requester.station:
+            messages.error(request, 'You can only manage personnel at your station.')
+            return redirect('admin_panel:users')
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -250,15 +303,36 @@ def user_detail(request, user_id):
             # Update user profile
             if profile:
                 old_role = profile.role
+                new_role = request.POST.get('role', '')
+
+                # Validate role assignment based on requester's jurisdiction
+                if requester and requester.role == 'station_commander':
+                    if new_role not in ['traffic_officer', 'data_encoder']:
+                        new_role = old_role
+                elif requester and requester.role == 'provincial_chief':
+                    if new_role not in ['station_commander', 'traffic_officer', 'data_encoder']:
+                        new_role = old_role
+
                 profile.badge_number = request.POST.get('badge_number', '')
                 profile.rank = request.POST.get('rank', '')
-                profile.role = request.POST.get('role', '')
+                profile.role = new_role
                 profile.region = request.POST.get('region', '')
                 profile.province = request.POST.get('province', '')
-                profile.station = request.POST.get('station', '')
                 profile.unit = request.POST.get('unit', '')
                 profile.mobile_number = request.POST.get('mobile_number', '')
                 profile.phone_number = request.POST.get('phone_number', '')
+
+                # Handle station vs office based on role
+                if profile.role == 'regional_director':
+                    profile.office = request.POST.get('office_pro', '') or request.POST.get('office', '') or 'Police Regional Office CARAGA'
+                    profile.station = ''  # Clear station for command-level roles
+                elif profile.role == 'provincial_chief':
+                    profile.office = request.POST.get('office', '')
+                    profile.station = ''  # Clear station for command-level roles
+                else:
+                    profile.station = request.POST.get('station', '')
+                    profile.office = ''  # Clear office for station-level roles
+
                 profile.save()
 
                 # Automatically update permissions based on role
@@ -283,16 +357,24 @@ def user_detail(request, user_id):
                 )
 
         elif action == 'update_permissions':
-            # Update active status only (permissions are role-based now)
+            # Update active status and report access
             user.is_active = request.POST.get('is_active') == 'on'
             user.save()
+
+            if profile:
+                profile.can_submit_reports = request.POST.get('can_submit_reports') == 'on'
+                update_fields = ['can_submit_reports']
+                if requester and requester.role in ('super_admin', 'regional_director'):
+                    profile.can_run_clustering = request.POST.get('can_run_clustering') == 'on'
+                    update_fields.append('can_run_clustering')
+                profile.save(update_fields=update_fields)
 
             messages.success(request, f'Status for {user.username} updated successfully!')
 
             log_user_action(
                 request=request,
                 action='user_status_edit',
-                description=f'Updated status for user: {user.username} (Active: {user.is_active})',
+                description=f'Updated status for user: {user.username} (Active: {user.is_active}, Report Access: {profile.can_submit_reports if profile else "N/A"})',
                 severity='warning'
             )
 
@@ -365,19 +447,52 @@ def user_detail(request, user_id):
             # 3. Update Profile Information
             if profile:
                 old_role = profile.role
+                new_role = request.POST.get('role', '')
+
+                # Validate role assignment based on requester's jurisdiction
+                if requester and requester.role == 'station_commander':
+                    if new_role not in ['traffic_officer', 'data_encoder']:
+                        new_role = old_role  # Reject unauthorized role change
+                elif requester and requester.role == 'provincial_chief':
+                    if new_role not in ['station_commander', 'traffic_officer', 'data_encoder']:
+                        new_role = old_role  # Reject unauthorized role change
+
                 profile.badge_number = request.POST.get('badge_number', '')
                 profile.rank = request.POST.get('rank', '')
-                profile.role = request.POST.get('role', '')
+                profile.role = new_role
                 profile.region = request.POST.get('region', '')
                 profile.province = request.POST.get('province', '')
-                profile.station = request.POST.get('station', '')
                 profile.unit = request.POST.get('unit', '')
                 profile.mobile_number = request.POST.get('mobile_number', '')
                 profile.phone_number = request.POST.get('phone_number', '')
 
+                # Handle station vs office based on role
+                if profile.role == 'regional_director':
+                    profile.office = request.POST.get('office_pro', '') or request.POST.get('office', '') or 'Police Regional Office CARAGA'
+                    profile.station = ''
+                elif profile.role == 'provincial_chief':
+                    profile.office = request.POST.get('office', '')
+                    profile.station = ''
+                else:
+                    profile.station = request.POST.get('station', '')
+                    profile.office = ''
+
                 # Track role change
                 if old_role != profile.role:
                     changes_made.append(f'changed role from {old_role} to {profile.role}')
+
+                # Update report access
+                old_report_access = profile.can_submit_reports
+                profile.can_submit_reports = request.POST.get('can_submit_reports') == 'on'
+                if old_report_access != profile.can_submit_reports:
+                    changes_made.append(f'{"enabled" if profile.can_submit_reports else "disabled"} report access')
+
+                # Update clustering access (only super_admin and regional_director can grant this)
+                if requester and requester.role in ('super_admin', 'regional_director'):
+                    old_clustering_access = profile.can_run_clustering
+                    profile.can_run_clustering = request.POST.get('can_run_clustering') == 'on'
+                    if old_clustering_access != profile.can_run_clustering:
+                        changes_made.append(f'{"enabled" if profile.can_run_clustering else "disabled"} clustering access')
 
                 # Automatically update permissions based on role
                 if profile.role == 'super_admin':
@@ -416,7 +531,10 @@ def user_detail(request, user_id):
         return redirect('admin_panel:user_detail', user_id=user.id)
 
     # Get user's recent audit logs
-    recent_logs = AuditLog.objects.filter(user=user).order_by('-timestamp')[:20]
+    recent_logs = AuditLog.objects.filter(user=user).order_by('-timestamp')
+
+    uses_main_layout = requester and requester.role in ['station_commander', 'provincial_chief']
+    base_template = 'base.html' if uses_main_layout else 'admin_panel/base.html'
 
     context = {
         'target_user': user,
@@ -424,18 +542,21 @@ def user_detail(request, user_id):
         'recent_logs': recent_logs,
         'ranks': UserProfile.RANK_CHOICES,
         'roles': UserProfile.ROLE_CHOICES,
+        'base_template': base_template,
     }
 
     return render(request, 'admin_panel/user_detail.html', context)
 
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(can_manage_users)
 def user_create(request):
     """Create new user"""
     import re
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    _req_profile = getattr(request.user, 'profile', None)
+    base_template = 'base.html' if (_req_profile and _req_profile.role in ['station_commander', 'provincial_chief']) else 'admin_panel/base.html'
 
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -458,6 +579,7 @@ def user_create(request):
                 'ranks': UserProfile.RANK_CHOICES,
                 'roles': UserProfile.ROLE_CHOICES,
                 'form_data': request.POST,
+                'base_template': base_template,
             }
             return render(request, 'admin_panel/user_create.html', context)
         badge_number = badge_clean
@@ -480,6 +602,7 @@ def user_create(request):
                 'ranks': UserProfile.RANK_CHOICES,
                 'roles': UserProfile.ROLE_CHOICES,
                 'form_data': request.POST,
+                'base_template': base_template,
             }
             return render(request, 'admin_panel/user_create.html', context)
 
@@ -493,6 +616,7 @@ def user_create(request):
                 'ranks': UserProfile.RANK_CHOICES,
                 'roles': UserProfile.ROLE_CHOICES,
                 'form_data': request.POST,
+                'base_template': base_template,
             }
             return render(request, 'admin_panel/user_create.html', context)
 
@@ -508,6 +632,7 @@ def user_create(request):
                 'roles': UserProfile.ROLE_CHOICES,
                 'form_data': request.POST,
                 'focus_field': 'badge_number',  # Focus on the error field
+                'base_template': base_template,
             }
             return render(request, 'admin_panel/user_create.html', context)
 
@@ -522,6 +647,7 @@ def user_create(request):
                 'roles': UserProfile.ROLE_CHOICES,
                 'form_data': request.POST,
                 'focus_field': 'mobile_number',
+                'base_template': base_template,
             }
             return render(request, 'admin_panel/user_create.html', context)
 
@@ -536,8 +662,27 @@ def user_create(request):
                 'roles': UserProfile.ROLE_CHOICES,
                 'form_data': request.POST,
                 'focus_field': 'mobile_number',
+                'base_template': base_template,
             }
             return render(request, 'admin_panel/user_create.html', context)
+
+        # Jurisdiction-based role and location restrictions
+        requester_profile = getattr(request.user, 'profile', None)
+        requested_role = request.POST.get('role', 'traffic_officer')
+        if requester_profile and requester_profile.role == 'provincial_chief':
+            if requested_role not in ['station_commander', 'traffic_officer', 'data_encoder']:
+                error_msg = 'You can only create Station Commander, Traffic Officer, or Data Encoder accounts.'
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': error_msg})
+                messages.error(request, error_msg)
+                return redirect('admin_panel:user_create')
+        elif requester_profile and requester_profile.role == 'station_commander':
+            if requested_role not in ['traffic_officer', 'data_encoder']:
+                error_msg = 'You can only create Traffic Officer or Data Encoder accounts.'
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': error_msg})
+                messages.error(request, error_msg)
+                return redirect('admin_panel:user_create')
 
         # Create user and profile in a transaction to ensure both succeed or both fail
         from django.db import transaction
@@ -552,19 +697,42 @@ def user_create(request):
                     last_name=last_name
                 )
 
+                # Enforce location based on requester's jurisdiction
+                if requester_profile and requester_profile.role == 'station_commander':
+                    create_province = requester_profile.province or ''
+                    create_station = requester_profile.station or ''
+                elif requester_profile and requester_profile.role == 'provincial_chief':
+                    create_province = requester_profile.province or ''
+                    create_station = request.POST.get('station', '')
+                else:
+                    create_province = request.POST.get('province', '')
+                    create_station = request.POST.get('station', '')
+
+                # Determine office field for command-level roles
+                create_office = ''
+                if requested_role == 'provincial_chief':
+                    create_office = request.POST.get('office', '')
+                    create_station = ''  # Provincial Chief has no station
+                elif requested_role == 'regional_director':
+                    create_office = request.POST.get('office_pro', '') or request.POST.get('office', '') or 'Police Regional Office CARAGA'
+                    create_station = ''  # Regional Director has no station
+
                 # Create profile
                 profile = UserProfile.objects.create(
                     user=user,
                     badge_number=badge_number,
                     rank=request.POST.get('rank', 'pcpl'),
-                    role=request.POST.get('role', 'traffic_officer'),
+                    role=requested_role,
                     region=request.POST.get('region', 'Caraga'),
-                    province=request.POST.get('province', ''),
-                    station=request.POST.get('station', ''),
+                    province=create_province,
+                    station=create_station,
+                    office=create_office,
                     unit=request.POST.get('unit', ''),
                     mobile_number=mobile_number,
                     phone_number=request.POST.get('phone_number', ''),
-                    must_change_password='must_change_password' in request.POST,  # True if checkbox is checked
+                    must_change_password='must_change_password' in request.POST,
+                    can_submit_reports='can_submit_reports' in request.POST,
+                    can_run_clustering='can_run_clustering' in request.POST and requester and requester.role in ('super_admin', 'regional_director'),
                     created_by=request.user
                 )
 
@@ -644,24 +812,37 @@ def user_create(request):
                 'ranks': UserProfile.RANK_CHOICES,
                 'roles': UserProfile.ROLE_CHOICES,
                 'form_data': request.POST,
+                'base_template': base_template,
             }
             return render(request, 'admin_panel/user_create.html', context)
 
     context = {
         'ranks': UserProfile.RANK_CHOICES,
         'roles': UserProfile.ROLE_CHOICES,
+        'base_template': base_template,
     }
 
     return render(request, 'admin_panel/user_create.html', context)
 
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(can_manage_users)
 def user_reset_password(request, user_id):
     """Reset user password"""
 
     if request.method == 'POST':
         user = get_object_or_404(User, pk=user_id)
+
+        # Jurisdiction checks for password reset
+        requester = getattr(request.user, 'profile', None)
+        if requester and requester.role == 'provincial_chief':
+            target_profile = getattr(user, 'profile', None)
+            if not target_profile or target_profile.role not in ['station_commander', 'traffic_officer', 'data_encoder'] or target_profile.province != requester.province:
+                return JsonResponse({'success': False, 'error': 'You can only reset passwords for personnel in your province.'})
+        elif requester and requester.role == 'station_commander':
+            target_profile = getattr(user, 'profile', None)
+            if not target_profile or target_profile.role not in ['traffic_officer', 'data_encoder'] or target_profile.station != requester.station:
+                return JsonResponse({'success': False, 'error': 'You can only reset passwords for personnel at your station.'})
 
         # Handle both JSON and form data
         if request.content_type == 'application/json':
@@ -704,12 +885,23 @@ def user_reset_password(request, user_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(can_manage_users)
 def user_toggle_active(request, user_id):
     """Activate or deactivate user"""
 
     if request.method == 'POST':
         user = get_object_or_404(User, pk=user_id)
+
+        # Jurisdiction checks for toggling active status
+        requester = getattr(request.user, 'profile', None)
+        if requester and requester.role == 'provincial_chief':
+            target_profile = getattr(user, 'profile', None)
+            if not target_profile or target_profile.role not in ['station_commander', 'traffic_officer', 'data_encoder'] or target_profile.province != requester.province:
+                return JsonResponse({'success': False, 'error': 'You can only manage personnel in your province.'})
+        elif requester and requester.role == 'station_commander':
+            target_profile = getattr(user, 'profile', None)
+            if not target_profile or target_profile.role not in ['traffic_officer', 'data_encoder'] or target_profile.station != requester.station:
+                return JsonResponse({'success': False, 'error': 'You can only manage personnel at your station.'})
 
         # Don't allow deactivating yourself
         if user == request.user:
@@ -822,8 +1014,17 @@ def audit_logs(request):
     # Order by timestamp (newest first)
     logs = logs.order_by('-timestamp')
 
-    # Pagination
-    paginator = Paginator(logs, 50)  # 50 logs per page
+    # Pagination (system default from settings)
+    sys_default = SystemSetting.get('default_per_page')
+    per_page_param = request.GET.get('per_page', sys_default)
+    try:
+        per_page = int(per_page_param)
+        if per_page not in (5, 10, 15, 25, 50):
+            per_page = int(sys_default)
+    except (ValueError, TypeError):
+        per_page = 15
+
+    paginator = Paginator(logs, per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -842,6 +1043,7 @@ def audit_logs(request):
         'action_choices': action_choices,
         'severities': severities,
         'total_count': logs.count(),
+        'per_page': per_page,
     }
 
     return render(request, 'admin_panel/audit_logs.html', context)
@@ -884,8 +1086,16 @@ def report_activity_logs(request):
 
     logs = logs.order_by('-timestamp')
 
-    # Pagination
-    paginator = Paginator(logs, 50)
+    # Pagination (system default from settings)
+    sys_default = SystemSetting.get('default_per_page')
+    per_page = request.GET.get('per_page', sys_default)
+    try:
+        per_page = int(per_page)
+        if per_page not in (5, 10, 15, 25, 50):
+            per_page = int(sys_default)
+    except (ValueError, TypeError):
+        per_page = 15
+    paginator = Paginator(logs, per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -897,6 +1107,7 @@ def report_activity_logs(request):
         'date_to': date_to,
         'action_choices': ReportActivityLog.ACTION_CHOICES,
         'total_count': logs.count(),
+        'per_page': per_page,
     }
 
     return render(request, 'admin_panel/report_activity_logs.html', context)
@@ -919,8 +1130,8 @@ def system_monitoring(request):
         'failed': ClusteringJob.objects.filter(status='failed').count(),
     }
 
-    # Recent clustering jobs
-    recent_jobs = ClusteringJob.objects.order_by('-started_at')[:10]
+    # Recent clustering jobs (all, client-side pagination)
+    recent_jobs = ClusteringJob.objects.order_by('-started_at')
 
     # System health metrics
     health = {
@@ -943,6 +1154,185 @@ def system_monitoring(request):
     }
 
     return render(request, 'admin_panel/system_monitoring.html', context)
+
+
+# ============================================================================
+# MAINTENANCE TOOLS
+# ============================================================================
+
+@login_required
+@user_passes_test(is_super_admin)
+def clear_cache(request):
+    """Clear the Django cache"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
+    try:
+        cache.clear()
+
+        # Also clear the file-based cache directory if it exists
+        cache_dir = settings.BASE_DIR / 'cache'
+        cleared_files = 0
+        if cache_dir.exists():
+            for f in cache_dir.iterdir():
+                if f.is_file():
+                    f.unlink()
+                    cleared_files += 1
+
+        log_user_action(
+            request=request,
+            action='system_config',
+            description=f'Cleared system cache ({cleared_files} cache files removed)',
+            severity='info'
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Cache cleared successfully. {cleared_files} cache file{"s" if cleared_files != 1 else ""} removed.'
+        })
+
+    except Exception as e:
+        log_user_action(
+            request=request,
+            action='system_config',
+            description=f'Failed to clear cache: {str(e)}',
+            severity='critical',
+            success=False
+        )
+        return JsonResponse({
+            'success': False,
+            'error': f'Failed to clear cache: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@user_passes_test(is_super_admin)
+def database_backup(request):
+    """Create and download a PostgreSQL database backup"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
+    try:
+        db_settings = settings.DATABASES['default']
+        db_engine = db_settings.get('ENGINE', '')
+
+        if 'postgresql' not in db_engine:
+            return JsonResponse({
+                'success': False,
+                'error': 'Database backup is only supported for PostgreSQL databases.'
+            }, status=400)
+
+        db_name = db_settings.get('NAME', '')
+        db_user = db_settings.get('USER', '')
+        db_password = db_settings.get('PASSWORD', '')
+        db_host = db_settings.get('HOST', 'localhost')
+        db_port = db_settings.get('PORT', '5432')
+
+        # Find pg_dump executable
+        import shutil
+        pg_dump_path = shutil.which('pg_dump')
+        if not pg_dump_path:
+            # Search common PostgreSQL installation paths on Windows
+            import glob
+            pg_paths = glob.glob(r'C:/Program Files/PostgreSQL/*/bin/pg_dump.exe')
+            if pg_paths:
+                pg_dump_path = pg_paths[-1]  # Use the latest version
+            else:
+                raise FileNotFoundError('pg_dump not found')
+
+        # Build pg_dump command
+        cmd = [
+            pg_dump_path,
+            '--host', db_host,
+            '--port', str(db_port),
+            '--username', db_user,
+            '--no-password',
+            '--format', 'custom',
+            '--compress', '6',
+            db_name,
+        ]
+
+        # Set PGPASSWORD environment variable for authentication
+        env = os.environ.copy()
+        env['PGPASSWORD'] = db_password
+
+        # Run pg_dump
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            env=env,
+            timeout=300,  # 5-minute timeout
+        )
+
+        if result.returncode != 0:
+            error_msg = result.stderr.decode('utf-8', errors='replace').strip()
+            log_user_action(
+                request=request,
+                action='system_config',
+                description=f'Database backup failed: {error_msg[:200]}',
+                severity='critical',
+                success=False
+            )
+            return JsonResponse({
+                'success': False,
+                'error': f'pg_dump failed: {error_msg[:200]}'
+            }, status=500)
+
+        # Generate filename with timestamp
+        timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'{db_name}_backup_{timestamp}.dump'
+
+        log_user_action(
+            request=request,
+            action='system_config',
+            description=f'Created database backup: {filename} ({len(result.stdout)} bytes)',
+            severity='info'
+        )
+
+        # Stream the backup file as a download
+        response = HttpResponse(result.stdout, content_type='application/octet-stream')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Length'] = len(result.stdout)
+        return response
+
+    except subprocess.TimeoutExpired:
+        log_user_action(
+            request=request,
+            action='system_config',
+            description='Database backup timed out after 5 minutes',
+            severity='critical',
+            success=False
+        )
+        return JsonResponse({
+            'success': False,
+            'error': 'Database backup timed out. The database may be too large.'
+        }, status=500)
+
+    except FileNotFoundError:
+        log_user_action(
+            request=request,
+            action='system_config',
+            description='pg_dump not found on system PATH',
+            severity='critical',
+            success=False
+        )
+        return JsonResponse({
+            'success': False,
+            'error': 'pg_dump is not installed or not found in system PATH. Please ensure PostgreSQL client tools are installed.'
+        }, status=500)
+
+    except Exception as e:
+        log_user_action(
+            request=request,
+            action='system_config',
+            description=f'Database backup failed: {str(e)}',
+            severity='critical',
+            success=False
+        )
+        return JsonResponse({
+            'success': False,
+            'error': f'Backup failed: {str(e)}'
+        }, status=500)
 
 
 # ============================================================================
@@ -979,3 +1369,110 @@ def get_system_health(request):
     }
 
     return JsonResponse(health)
+
+
+# ============================================================================
+# SYSTEM SETTINGS (Display Preferences)
+# ============================================================================
+
+@login_required
+@user_passes_test(is_admin)
+def system_settings(request):
+    """Manage system-wide display settings."""
+
+    # Settings definitions: key → (label, description, choices)
+    SETTING_DEFS = {
+        'accident_default_view': {
+            'label': 'Accident Page Default View',
+            'description': 'Default display view when users open the Accidents page.',
+            'choices': [('cards', 'Cards View'), ('table', 'Table View')],
+            'icon': 'fas fa-car-crash',
+        },
+        'hotspot_default_view': {
+            'label': 'Hotspot Page Default View',
+            'description': 'Default display view when users open the Hotspots page.',
+            'choices': [('grid', 'Grid View'), ('list', 'List View')],
+            'icon': 'fas fa-fire',
+        },
+        'session_timeout': {
+            'label': 'Session Timeout Duration',
+            'description': 'How long an inactive user stays logged in before being automatically signed out.',
+            'choices': [
+                ('15', '15 Minutes'),
+                ('30', '30 Minutes'),
+                ('60', '1 Hour'),
+                ('120', '2 Hours'),
+                ('480', '8 Hours'),
+            ],
+            'icon': 'fas fa-clock',
+        },
+        'default_per_page': {
+            'label': 'Default Items Per Page',
+            'description': 'Default number of items shown per page across all list views (users, logs, reports, etc.).',
+            'choices': [
+                ('10', '10 Items'),
+                ('15', '15 Items'),
+                ('20', '20 Items'),
+                ('50', '50 Items'),
+            ],
+            'icon': 'fas fa-list-ol',
+        },
+    }
+
+    if request.method == 'POST':
+        changed_labels = []
+        changed_keys = []
+        for key, definition in SETTING_DEFS.items():
+            new_value = request.POST.get(key, '')
+            valid_values = [c[0] for c in definition['choices']]
+            if new_value not in valid_values:
+                continue
+
+            obj, created = SystemSetting.objects.update_or_create(
+                key=key,
+                defaults={
+                    'value': new_value,
+                    'description': definition['description'],
+                    'updated_by': request.user,
+                }
+            )
+            changed_labels.append(definition['label'])
+            changed_keys.append(key)
+
+        if changed_labels:
+            # Clear the admin's own display preferences so system defaults apply
+            if hasattr(request.user, 'profile'):
+                profile = request.user.profile
+                update_fields = []
+                if 'accident_default_view' in changed_keys:
+                    profile.pref_accident_view = ''
+                    update_fields.append('pref_accident_view')
+                if 'hotspot_default_view' in changed_keys:
+                    profile.pref_hotspot_view = ''
+                    update_fields.append('pref_hotspot_view')
+                if update_fields:
+                    profile.save(update_fields=update_fields)
+
+            log_user_action(request, 'system_settings_update',
+                f'Updated settings: {", ".join(changed_labels)}',
+                object_type='SystemSetting')
+            messages.success(request, f'Settings updated successfully.')
+        return redirect('admin_panel:system_settings')
+
+    # Build context with current values
+    settings_list = []
+    for key, definition in SETTING_DEFS.items():
+        current_value = SystemSetting.get(key)
+        settings_list.append({
+            'key': key,
+            'label': definition['label'],
+            'description': definition['description'],
+            'choices': definition['choices'],
+            'current': current_value,
+            'icon': definition['icon'],
+        })
+
+    return render(request, 'admin_panel/system_settings.html', {
+        'settings_list': settings_list,
+        'page_title': 'Display Settings',
+    })

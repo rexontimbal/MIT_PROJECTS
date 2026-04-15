@@ -1,9 +1,30 @@
-{% extends 'admin_panel/base.html' %}
+{% extends base_template %}
 
-{% block title %}User: {{ target_user.username }}{% endblock %}
+{% block title %}{% if user.profile.role == 'station_commander' or user.profile.role == 'provincial_chief' %}Personnel: {{ target_user.username }}{% else %}User: {{ target_user.username }}{% endif %}{% endblock %}
+
+{% block extra_css %}
+{% if base_template == 'base.html' %}
+{% include 'admin_panel/_admin_styles.html' %}
+{% endif %}
+{% endblock %}
+
+{% block breadcrumb_items %}
+{% if base_template == 'base.html' %}
+<span> / <a href="{% url 'admin_panel:users' %}">Manage Personnel</a> / {{ target_user.get_full_name|default:target_user.username }}</span>
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <style>
+    /* =========================================
+       MOBILE: Stack main + sidebar vertically
+       ========================================= */
+    @media (max-width: 768px) {
+        .ud-layout {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
     /* =========================================
        PHILIPPINE PHONE NUMBER INPUT STYLING
        ========================================= */
@@ -35,6 +56,29 @@
         flex-shrink: 0;
     }
 
+    .ud-phone-wrap {
+        position: relative;
+        flex: 1;
+        display: flex;
+        min-width: 0;
+    }
+    .ud-phone-placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 0.75rem 0.75rem;
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        color: #9ca3af;
+        pointer-events: none;
+        white-space: nowrap;
+        font-family: inherit;
+        line-height: inherit;
+    }
+
     .phone-input-field {
         flex: 1;
         border: none;
@@ -44,8 +88,10 @@
         font-weight: 500;
         letter-spacing: 0.05em;
         outline: none;
-        background: white;
+        background: transparent;
         color: #1f2937;
+        position: relative;
+        z-index: 1;
     }
 
     .phone-input-field:hover {
@@ -53,7 +99,7 @@
     }
 
     .phone-input-field:focus {
-        background: white;
+        background: transparent;
         color: #1f2937;
     }
 
@@ -129,7 +175,7 @@
     </div>
 {% endif %}
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+<div class="ud-layout" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
     <!-- Main Content -->
     <div>
         <!-- Basic Information -->
@@ -157,16 +203,16 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="email">Email Address</label>
-                    <input type="email" name="email" id="email" class="form-control" value="{{ target_user.email }}">
-                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" name="email" id="email" class="form-control" value="{{ target_user.email }}">
+                    </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="username">
-                        Username
-                    </label>
-                    <div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="username">
+                            Username
+                        </label>
                         <input type="text"
                                name="username"
                                id="username"
@@ -174,23 +220,23 @@
                                value="{{ target_user.username }}"
                                data-original="{{ target_user.username }}"
                                {% if not user.is_superuser or user.profile.role != 'super_admin' %}disabled{% endif %}>
-                        <small style="color: var(--text-light); display: block; margin-top: var(--space-2);">
-                            {% if user.is_superuser and user.profile.role == 'super_admin' %}
-                                Password confirmation will be required when saving changes.
-                            {% else %}
-                                Username editing is restricted to Super Admin accounts only
-                            {% endif %}
-                        </small>
                     </div>
                 </div>
+                <small style="color: var(--text-light); display: block; margin-top: 0.25rem; margin-bottom: 0.75rem;">
+                    {% if user.is_superuser and user.profile.role == 'super_admin' %}
+                        Password confirmation will be required when saving username changes.
+                    {% else %}
+                        Username editing is restricted to Super Admin accounts only
+                    {% endif %}
+                </small>
 
-                <!-- Password Reset Section (For Super Admin Users) -->
-                {% if user.is_superuser and user.profile.role == 'super_admin' %}
+                <!-- Password Reset Section (For authorized personnel managers) -->
+                {% if user.is_superuser and user.profile.role == 'super_admin' or user.profile.role == 'station_commander' or user.profile.role == 'provincial_chief' %}
                 <div class="form-group">
                     <label class="form-label">
                         Password
                         <span class="badge badge-warning" style="margin-left: var(--space-2); font-size: 0.75rem;">
-                            <i class="fas fa-shield-alt"></i> Super Admin Only
+                            <i class="fas fa-shield-alt"></i> Authorized Only
                         </span>
                     </label>
                     <div style="display: flex; gap: var(--space-3); align-items: center;">
@@ -209,145 +255,223 @@
                 <div class="form-group">
                     <label class="form-label" for="profile_picture">Profile Picture</label>
 
-                    <!-- Modern Drag & Drop Area -->
-                    <div id="profilePictureUpload" style="
-                        border: 2px dashed var(--border-color);
-                        border-radius: 16px;
-                        padding: 2rem;
-                        text-align: center;
-                        background: var(--gray-50);
-                        transition: all 0.3s ease;
-                        cursor: pointer;
-                        position: relative;
-                        overflow: hidden;
-                    "
-                    onclick="document.getElementById('profile_picture').click()"
-                    ondragover="handleDragOver(event)"
-                    ondragleave="handleDragLeave(event)"
-                    ondrop="handleDrop(event)">
-
-                        {% if profile.profile_picture %}
-                        <!-- Current Picture Display -->
-                        <div id="currentPicture" style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                            <div style="position: relative;">
-                                <img src="{{ profile.profile_picture.url }}"
-                                     alt="Profile Picture"
-                                     style="width: 120px;
-                                            height: 120px;
-                                            object-fit: cover;
-                                            border-radius: 50%;
-                                            border: 4px solid white;
-                                            box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                                <div style="
-                                    position: absolute;
-                                    bottom: 0;
-                                    right: 0;
-                                    background: var(--pnp-blue);
-                                    color: white;
-                                    width: 36px;
-                                    height: 36px;
-                                    border-radius: 50%;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    border: 3px solid white;
-                                    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                                ">
-                                    <i class="fas fa-camera"></i>
-                                </div>
-                            </div>
-                            <div>
-                                <p style="margin: 0; font-weight: 600; color: var(--text-primary);">Click or drag to change</p>
-                                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: var(--text-light);">JPG, PNG • Max 5MB</p>
-                            </div>
-                            <label style="
-                                display: inline-flex;
-                                align-items: center;
-                                gap: 0.5rem;
-                                padding: 0.5rem 1rem;
-                                background: rgba(239, 68, 68, 0.1);
-                                border: 1px solid rgba(239, 68, 68, 0.3);
-                                border-radius: 8px;
-                                cursor: pointer;
-                                transition: all 0.2s;
-                                color: #991b1b;
-                                font-size: 0.875rem;
-                                font-weight: 500;
-                            "
-                            onmouseover="this.style.background='rgba(239, 68, 68, 0.15)'"
-                            onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'"
-                            onclick="event.stopPropagation()">
-                                <input type="checkbox" name="remove_picture" value="1" style="margin: 0;">
-                                <i class="fas fa-trash-alt"></i>
-                                <span>Remove Picture</span>
-                            </label>
-                        </div>
-                        {% else %}
-                        <!-- Empty State -->
-                        <div id="emptyState">
-                            <div style="
-                                width: 80px;
-                                height: 80px;
-                                margin: 0 auto 1rem;
-                                background: linear-gradient(135deg, var(--pnp-blue) 0%, #0047BB 100%);
-                                border-radius: 50%;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                box-shadow: 0 8px 16px rgba(0, 48, 135, 0.2);
-                            ">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: white;"></i>
-                            </div>
-                            <p style="margin: 0; font-weight: 600; font-size: 1.125rem; color: var(--text-primary);">Upload Profile Picture</p>
-                            <p style="margin: 0.5rem 0 0 0; color: var(--text-light);">Click to browse or drag and drop</p>
-                            <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: var(--text-light);">JPG, PNG • Max 5MB</p>
-                        </div>
-                        {% endif %}
-
-                        <!-- Hidden File Input -->
-                        <input type="file"
-                               name="profile_picture"
-                               id="profile_picture"
-                               class="form-control"
-                               accept="image/*"
-                               onchange="previewProfilePicture(event)"
-                               style="display: none;">
-                    </div>
-
-                    <!-- New Picture Preview -->
-                    <div id="image-preview" style="
-                        margin-top: 1rem;
-                        display: none;
-                        padding: 1.5rem;
-                        background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%);
-                        border: 2px solid rgba(16, 185, 129, 0.3);
-                        border-radius: 12px;
-                        text-align: center;
-                    ">
-                        <p style="
-                            margin: 0 0 1rem 0;
-                            font-weight: 600;
-                            color: #065f46;
+                    <style>
+                        .pp-zone {
+                            border-radius: 14px;
+                            padding: 1.25rem;
+                            background: var(--gray-50, #F9FAFB);
+                            transition: all 0.25s ease;
+                            cursor: pointer;
+                        }
+                        .pp-zone.pp-dragover {
+                            background: rgba(0, 48, 135, 0.04);
+                        }
+                        .pp-layout {
                             display: flex;
                             align-items: center;
                             justify-content: center;
-                            gap: 0.5rem;
-                        ">
-                            <i class="fas fa-check-circle"></i>
-                            New Picture Preview
-                        </p>
-                        <img id="preview-img" style="
-                            width: 120px;
-                            height: 120px;
-                            object-fit: cover;
+                            gap: 1.25rem;
+                        }
+                        .pp-avatar-wrap {
+                            position: relative;
+                            width: 160px;
+                            height: 160px;
+                            flex-shrink: 0;
                             border-radius: 50%;
+                            overflow: hidden;
+                        }
+                        .pp-avatar-img {
+                            width: 160px;
+                            height: 160px;
+                            border-radius: 50%;
+                            object-fit: cover;
+                            display: block;
                             border: 4px solid white;
-                            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                        ">
-                        <p style="margin: 1rem 0 0 0; font-size: 0.875rem; color: var(--text-light);">
-                            <i class="fas fa-info-circle"></i> Profile picture will be saved when you click "Save All Changes" at the bottom
-                        </p>
+                            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+                            transition: opacity 0.25s ease;
+                        }
+                        .pp-avatar-empty {
+                            width: 160px;
+                            height: 160px;
+                            border-radius: 50%;
+                            background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            border: 4px solid white;
+                            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+                        }
+                        .pp-avatar-empty i {
+                            font-size: 3.5rem;
+                            color: #818CF8;
+                        }
+                        .pp-overlay {
+                            position: absolute;
+                            inset: 0;
+                            border-radius: 50%;
+                            background: rgba(0,0,0,0.45);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            opacity: 0;
+                            transition: opacity 0.2s ease;
+                        }
+                        .pp-overlay i { color: white; font-size: 1.75rem; }
+                        .pp-zone:hover .pp-overlay { opacity: 1; }
+                        .pp-zone:hover .pp-avatar-img { opacity: 0.85; }
+                        .pp-details {
+                            min-width: 0;
+                        }
+                        .pp-subtitle {
+                            font-size: 0.8rem;
+                            color: #9CA3AF;
+                            margin-top: 2px;
+                        }
+                        .pp-badge-new {
+                            display: none;
+                            align-items: center;
+                            gap: 0.3rem;
+                            margin-top: 0.25rem;
+                            padding: 0.2rem 0.6rem;
+                            background: #ECFDF5;
+                            color: #059669;
+                            border-radius: 20px;
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            width: fit-content;
+                        }
+                        .pp-badge-new.visible { display: inline-flex; }
+                        .pp-file-name {
+                            display: none;
+                            font-size: 0.75rem;
+                            color: #9CA3AF;
+                            margin-top: 2px;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            max-width: 220px;
+                        }
+                        .pp-file-name.visible { display: block; }
+                        .pp-btns {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                            margin-top: 0.5rem;
+                        }
+                        .pp-btn {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 0.35rem;
+                            padding: 0.375rem 0.85rem;
+                            border-radius: 8px;
+                            font-size: 0.8125rem;
+                            font-weight: 500;
+                            cursor: pointer;
+                            border: none;
+                            transition: all 0.2s ease;
+                            line-height: 1.4;
+                        }
+                        .pp-btn-primary {
+                            background: var(--pnp-blue, #003087);
+                            color: white;
+                        }
+                        .pp-btn-primary:hover {
+                            background: #0047BB;
+                            box-shadow: 0 2px 6px rgba(0,48,135,0.25);
+                        }
+                        .pp-btn-danger {
+                            background: transparent;
+                            color: #EF4444;
+                            border: 1px solid #FECACA;
+                        }
+                        .pp-btn-danger:hover {
+                            background: #FEF2F2;
+                        }
+                        .pp-btn-danger.active {
+                            background: #FEE2E2;
+                            color: #B91C1C;
+                            border-color: #FCA5A5;
+                        }
+                        .pp-meta {
+                            font-size: 0.6875rem;
+                            color: #B0B5BC;
+                            margin-top: 0.375rem;
+                        }
+                        .pp-remove-warn {
+                            display: none;
+                            font-size: 0.75rem;
+                            color: #DC2626;
+                            margin-top: 0.25rem;
+                        }
+                        .pp-remove-warn.visible { display: block; }
+                        @media (max-width: 480px) {
+                            .pp-layout { flex-direction: column; text-align: center; }
+                            .pp-avatar-wrap { width: 130px; height: 130px; }
+                            .pp-avatar-img, .pp-avatar-empty { width: 130px; height: 130px; }
+                            .pp-btns { justify-content: center; }
+                        }
+                    </style>
+
+                    <div class="pp-zone" id="ppZone"
+                         onclick="document.getElementById('profile_picture').click()"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event)">
+
+                        <div class="pp-layout">
+                            <!-- Avatar circle -->
+                            <div class="pp-avatar-wrap">
+                                {% if profile.profile_picture %}
+                                <img src="{{ profile.profile_picture.url }}" alt="Profile" class="pp-avatar-img" id="ppAvatarImg">
+                                {% else %}
+                                <div class="pp-avatar-empty" id="ppAvatarPlaceholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% endif %}
+                                <img src="" alt="Preview" class="pp-avatar-img" id="ppPreviewImg"
+                                     style="display:none; position:absolute; top:0; left:0;">
+                                <div class="pp-overlay"><i class="fas fa-camera"></i></div>
+                            </div>
+
+                            <!-- Info below avatar -->
+                            <div class="pp-details" onclick="event.stopPropagation()">
+                                <div class="pp-subtitle" id="ppStatusText">
+                                    {% if profile.profile_picture %}Click photo or buttons to change{% else %}Click or drag an image to upload{% endif %}
+                                </div>
+                                <div class="pp-badge-new" id="ppNewBadge">
+                                    <i class="fas fa-check-circle"></i> New photo selected
+                                </div>
+                                <div class="pp-file-name" id="ppFileName"></div>
+
+                                <div class="pp-btns">
+                                    <button type="button" class="pp-btn pp-btn-primary" onclick="document.getElementById('profile_picture').click()">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        {% if profile.profile_picture %}Change{% else %}Upload{% endif %}
+                                    </button>
+                                    {% if profile.profile_picture %}
+                                    <button type="button" class="pp-btn pp-btn-danger" id="ppRemoveBtn" onclick="toggleRemovePicture()">
+                                        <i class="fas fa-trash-alt"></i> Remove
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                <div class="pp-meta">JPG, PNG &bull; Max 5MB &bull; Drag & drop</div>
+                                <div class="pp-remove-warn" id="ppRemoveNote">
+                                    <i class="fas fa-exclamation-circle"></i> Photo will be removed when you save
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Hidden elements needed for ppTitle reference in JS -->
+                    <span id="ppTitle" style="display:none;">{% if profile.profile_picture %}Profile Photo{% else %}No Photo{% endif %}</span>
+
+                    <!-- Hidden inputs -->
+                    <input type="file" name="profile_picture" id="profile_picture" accept="image/*"
+                           onchange="previewProfilePicture(event)" style="display:none;">
+                    <input type="checkbox" name="remove_picture" value="1" id="ppRemoveCheckbox" style="display:none;">
+
+                    <!-- Hidden preview for legacy compat -->
+                    <div id="image-preview" style="display:none;"><img id="preview-img"></div>
                 </div>
         </div>
 
@@ -380,7 +504,17 @@
                         <label class="form-label" for="role">Role</label>
                         <select name="role" id="role" class="form-control">
                             {% for value, label in roles %}
-                            <option value="{{ value }}" {% if profile.role == value %}selected{% endif %}>{{ label }}</option>
+                                {% if user.profile.role == 'station_commander' %}
+                                    {% if value == 'traffic_officer' or value == 'data_encoder' %}
+                                    <option value="{{ value }}" {% if profile.role == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endif %}
+                                {% elif user.profile.role == 'provincial_chief' %}
+                                    {% if value == 'station_commander' or value == 'traffic_officer' or value == 'data_encoder' %}
+                                    <option value="{{ value }}" {% if profile.role == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endif %}
+                                {% else %}
+                                    <option value="{{ value }}" {% if profile.role == value %}selected{% endif %}>{{ label }}</option>
+                                {% endif %}
                             {% endfor %}
                         </select>
                     </div>
@@ -407,14 +541,33 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
+                    <div class="form-group" id="station-group" {% if profile.role in 'provincial_chief,regional_director' %}style="display:none;"{% endif %}>
                         <label class="form-label" for="station">Station</label>
                         <select name="station" id="station" class="form-control">
                             <option value="">-- Select Province First --</option>
                         </select>
                     </div>
+                    <!-- Provincial Chief: PPO dropdown -->
+                    <div class="form-group" id="office-group" {% if profile.role != 'provincial_chief' %}style="display:none;"{% endif %}>
+                        <label class="form-label" for="office">Office/Command</label>
+                        <select name="office" id="office" class="form-control" {% if profile.role != 'provincial_chief' %}disabled{% endif %}>
+                            <option value="">-- Select PPO --</option>
+                            <option value="Agusan del Norte PPO" {% if profile.office == 'Agusan del Norte PPO' %}selected{% endif %}>Agusan del Norte PPO</option>
+                            <option value="Agusan del Sur PPO" {% if profile.office == 'Agusan del Sur PPO' %}selected{% endif %}>Agusan del Sur PPO</option>
+                            <option value="Butuan City Police Office" {% if profile.office == 'Butuan City Police Office' %}selected{% endif %}>Butuan City Police Office</option>
+                            <option value="Dinagat Islands PPO" {% if profile.office == 'Dinagat Islands PPO' %}selected{% endif %}>Dinagat Islands PPO</option>
+                            <option value="Surigao del Norte PPO" {% if profile.office == 'Surigao del Norte PPO' %}selected{% endif %}>Surigao del Norte PPO</option>
+                            <option value="Surigao del Sur PPO" {% if profile.office == 'Surigao del Sur PPO' %}selected{% endif %}>Surigao del Sur PPO</option>
+                        </select>
+                    </div>
+                    <!-- Regional Director: auto-assigned PRO (read-only) -->
+                    <div class="form-group" id="pro-group" {% if profile.role != 'regional_director' %}style="display:none;"{% endif %}>
+                        <label class="form-label">Office/Command</label>
+                        <input type="text" class="form-control" value="Police Regional Office CARAGA" readonly style="background: #f3f4f6; cursor: not-allowed;">
+                        <input type="hidden" name="office_pro" id="office_pro" value="Police Regional Office CARAGA">
+                    </div>
 
-                    <div class="form-group">
+                    <div class="form-group" id="unit-group" {% if profile.role not in 'super_admin,regional_director' %}style="display:none;"{% endif %}>
                         <label class="form-label" for="unit">Unit/Office</label>
                         <select name="unit" id="unit" class="form-control">
                             <option value="">--- Select Unit ---</option>
@@ -453,14 +606,6 @@
                                 <option value="Regional Communications and Electronics Unit" {% if profile.unit == 'Regional Communications and Electronics Unit' %}selected{% endif %}>RCEU</option>
                                 <option value="Regional Personnel Holding and Accounting Unit" {% if profile.unit == 'Regional Personnel Holding and Accounting Unit' %}selected{% endif %}>RPHAU</option>
                             </optgroup>
-                            <optgroup label="Provincial/City Police Offices">
-                                <option value="Agusan del Norte Police Provincial Office" {% if profile.unit == 'Agusan del Norte Police Provincial Office' %}selected{% endif %}>Agusan del Norte PPO</option>
-                                <option value="Agusan del Sur Police Provincial Office" {% if profile.unit == 'Agusan del Sur Police Provincial Office' %}selected{% endif %}>Agusan del Sur PPO</option>
-                                <option value="Surigao del Norte Police Provincial Office" {% if profile.unit == 'Surigao del Norte Police Provincial Office' %}selected{% endif %}>Surigao del Norte PPO</option>
-                                <option value="Surigao del Sur Police Provincial Office" {% if profile.unit == 'Surigao del Sur Police Provincial Office' %}selected{% endif %}>Surigao del Sur PPO</option>
-                                <option value="Dinagat Islands Police Provincial Office" {% if profile.unit == 'Dinagat Islands Police Provincial Office' %}selected{% endif %}>Dinagat Islands PPO</option>
-                                <option value="Butuan City Police Office" {% if profile.unit == 'Butuan City Police Office' %}selected{% endif %}>Butuan City Police Office</option>
-                            </optgroup>
                         </select>
                     </div>
                 </div>
@@ -472,15 +617,18 @@
                     </label>
                     <div class="phone-input-group" id="mobileNumberGroup">
                         <div class="phone-prefix-area">+63</div>
-                        <input type="text"
-                               name="mobile_number"
-                               id="mobile_number"
-                               class="form-control phone-input-field"
-                               value="{{ profile.mobile_number|default:'' }}"
-                               placeholder=""
-                               maxlength="18"
-                               inputmode="numeric"
-                               required>
+                        <div class="ud-phone-wrap">
+                            <span class="ud-phone-placeholder" id="udPhonePlaceholder">9XX XXX XXXX</span>
+                            <input type="text"
+                                   name="mobile_number"
+                                   id="mobile_number"
+                                   class="form-control phone-input-field"
+                                   value="{{ profile.mobile_number|default:'' }}"
+                                   placeholder=""
+                                   maxlength="18"
+                                   inputmode="numeric"
+                                   required>
+                        </div>
                     </div>
                     <small id="mobileNumberHint" style="color: var(--text-light); display: none; margin-top: 0.5rem;">
                         <i class="fas fa-info-circle"></i> Please enter exactly 10 digits
@@ -489,72 +637,10 @@
         </div>
         {% endif %}
 
-        <!-- Account Status & Role-Based Permissions -->
-        <div class="admin-card">
-            <div class="admin-card-header">
-                <h2 class="admin-card-title">
-                    <i class="fas fa-lock"></i>
-                    Account Status & Permissions
-                </h2>
-            </div>
-
-            <!-- Role-Based Permissions Info -->
-            <div style="background: linear-gradient(135deg, #E3F2FD 0%, #F3E5F5 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                <div style="display: flex; align-items: start; gap: 0.75rem;">
-                    <i class="fas fa-info-circle" style="font-size: 18px; color: #003087; margin-top: 2px;"></i>
-                    <div>
-                        <strong style="color: #003087; display: block; margin-bottom: 0.25rem;">Role-Based Access Control</strong>
-                        <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.5;">
-                            Access permissions are automatically managed based on the user's <strong>Role</strong>:
-                        </p>
-                        <div style="margin-top: 0.5rem; font-size: 13px; color: #374151;">
-                            {% if profile %}
-                                {% if profile.role == 'super_admin' %}
-                                <div style="padding: 0.5rem; background: rgba(0, 48, 135, 0.1); border-radius: 6px; margin-top: 0.5rem;">
-                                    <i class="fas fa-crown" style="color: #003087;"></i>
-                                    <strong style="color: #003087;">Super Admin</strong> → Full access to Django Admin & Admin Panel
-                                </div>
-                                {% elif profile.role == 'regional_director' %}
-                                <div style="padding: 0.5rem; background: rgba(0, 71, 171, 0.1); border-radius: 6px; margin-top: 0.5rem;">
-                                    <i class="fas fa-user-shield" style="color: #0047AB;"></i>
-                                    <strong style="color: #0047AB;">Regional Director</strong> → Access to Admin Panel only
-                                </div>
-                                {% else %}
-                                <div style="padding: 0.5rem; background: rgba(107, 114, 128, 0.1); border-radius: 6px; margin-top: 0.5rem;">
-                                    <i class="fas fa-user" style="color: #6B7280;"></i>
-                                    <strong style="color: #6B7280;">{{ profile.get_role_display }}</strong> → View profile only
-                                </div>
-                                {% endif %}
-                            {% endif %}
-                            <small style="display: block; margin-top: 0.5rem; color: #6B7280;">
-                                To change access level, update the user's Role in the PNP Profile section above.
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Account Status -->
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; border: 2px solid {% if target_user.is_active %}#10B981{% else %}#EF4444{% endif %}; background: {% if target_user.is_active %}rgba(16, 185, 129, 0.05){% else %}rgba(239, 68, 68, 0.05){% endif %};">
-                        <input type="checkbox" name="is_active" {% if target_user.is_active %}checked{% endif %} style="width: 20px; height: 20px;">
-                        <div>
-                            <strong style="color: var(--text-dark);">
-                                <i class="fas {% if target_user.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}" style="color: {% if target_user.is_active %}#10B981{% else %}#EF4444{% endif %};"></i>
-                                Active Account
-                            </strong>
-                            <br>
-                            <small style="color: var(--text-light);">
-                                {% if target_user.is_active %}
-                                User can log in and access the system
-                                {% else %}
-                                User is currently blocked from logging in
-                                {% endif %}
-                            </small>
-                        </div>
-                    </label>
-                </div>
-        </div>
+            <!-- Hidden inputs synced with sidebar checkboxes -->
+            <input type="hidden" name="is_active" id="isActiveHidden" value="{% if target_user.is_active %}on{% endif %}">
+            <input type="hidden" name="can_submit_reports" id="canSubmitReportsHidden" value="{% if profile.can_submit_reports %}on{% endif %}">
+            <input type="hidden" name="can_run_clustering" id="canRunClusteringHidden" value="{% if profile.can_run_clustering %}on{% endif %}">
             </form>
     </div>
 
@@ -606,6 +692,95 @@
             </div>
         </div>
 
+        <!-- Account Status -->
+        <div class="admin-card" style="margin-top: 1.5rem;">
+            <div class="admin-card-header">
+                <h2 class="admin-card-title">
+                    <i class="fas fa-lock"></i>
+                    Account Status
+                </h2>
+            </div>
+            <div>
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; border: 2px solid {% if target_user.is_active %}#10B981{% else %}#EF4444{% endif %}; background: {% if target_user.is_active %}rgba(16, 185, 129, 0.05){% else %}rgba(239, 68, 68, 0.05){% endif %};" id="accountStatusLabel">
+                    <input type="checkbox" id="isActiveCheckbox" {% if target_user.is_active %}checked{% endif %} style="width: 20px; height: 20px;" onchange="syncAccountStatus(this)">
+                    <div>
+                        <strong style="color: var(--text-dark);">
+                            <i class="fas {% if target_user.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}" style="color: {% if target_user.is_active %}#10B981{% else %}#EF4444{% endif %};" id="accountStatusIcon"></i>
+                            <span id="accountStatusText">Active Account</span>
+                        </strong>
+                        <br>
+                        <small style="color: var(--text-light);" id="accountStatusHint">
+                            {% if target_user.is_active %}
+                            User can log in and access the system
+                            {% else %}
+                            User is currently blocked from logging in
+                            {% endif %}
+                        </small>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Report Access -->
+        <div class="admin-card" style="margin-top: 1.5rem;">
+            <div class="admin-card-header">
+                <h2 class="admin-card-title">
+                    <i class="fas fa-file-alt"></i>
+                    Report Access
+                </h2>
+            </div>
+            <div>
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; border: 2px solid {% if profile.can_submit_reports %}#3B82F6{% else %}#9CA3AF{% endif %}; background: {% if profile.can_submit_reports %}rgba(59, 130, 246, 0.05){% else %}rgba(156, 163, 175, 0.05){% endif %};" id="reportAccessLabel">
+                    <input type="checkbox" id="canSubmitReportsCheckbox" {% if profile.can_submit_reports %}checked{% endif %} style="width: 20px; height: 20px;" onchange="syncReportAccess(this)">
+                    <div>
+                        <strong style="color: var(--text-dark);">
+                            <i class="fas {% if profile.can_submit_reports %}fa-check-circle{% else %}fa-ban{% endif %}" style="color: {% if profile.can_submit_reports %}#3B82F6{% else %}#9CA3AF{% endif %};" id="reportAccessIcon"></i>
+                            <span id="reportAccessText">{% if profile.can_submit_reports %}Can Submit Reports{% else %}Report Access Disabled{% endif %}</span>
+                        </strong>
+                        <br>
+                        <small style="color: #6B7280;" id="reportAccessHint">
+                            {% if profile.can_submit_reports %}
+                            User can access the report submission page
+                            {% else %}
+                            Report button is hidden for this user
+                            {% endif %}
+                        </small>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
+        <!-- Clustering Access -->
+        <div class="admin-card" style="margin-top: 1rem;">
+            <div class="admin-card-header">
+                <h2 class="admin-card-title">
+                    <i class="fas fa-project-diagram"></i>
+                    Clustering Access
+                </h2>
+            </div>
+            <div>
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; border: 2px solid {% if profile.can_run_clustering %}#DC143C{% else %}#9CA3AF{% endif %}; background: {% if profile.can_run_clustering %}rgba(220, 20, 60, 0.05){% else %}rgba(156, 163, 175, 0.05){% endif %};" id="clusteringAccessLabel">
+                    <input type="checkbox" id="canRunClusteringCheckbox" {% if profile.can_run_clustering %}checked{% endif %} style="width: 20px; height: 20px;" onchange="syncClusteringAccess(this)">
+                    <div>
+                        <strong style="color: #1f2937;">
+                            <i class="fas {% if profile.can_run_clustering %}fa-check-circle{% else %}fa-ban{% endif %}" style="color: {% if profile.can_run_clustering %}#DC143C{% else %}#9CA3AF{% endif %};" id="clusteringAccessIcon"></i>
+                            <span id="clusteringAccessText">{% if profile.can_run_clustering %}Can Run Clustering{% else %}Clustering Access Disabled{% endif %}</span>
+                        </strong>
+                        <br>
+                        <small style="color: #6B7280;" id="clusteringAccessHint">
+                            {% if profile.can_run_clustering %}
+                            User can run the hotspot clustering algorithm
+                            {% else %}
+                            Clustering button is hidden for this user
+                            {% endif %}
+                        </small>
+                    </div>
+                </label>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Save Button (Sticky) -->
         <div style="
             position: sticky;
@@ -641,8 +816,87 @@
         </h2>
     </div>
 
+    <style>
+        .ra-paging-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .ra-paging-info {
+            font-size: 0.8rem;
+            color: #6B7280;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .ra-paging-info i { color: #003087; font-size: 0.75rem; }
+        .ra-paging-center {
+            display: flex;
+            justify-content: center;
+            padding: 0.375rem 1rem 0.75rem;
+        }
+        .ra-per-page {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.8rem;
+            color: #6B7280;
+        }
+        .ra-per-page select {
+            padding: 0.2rem 0.35rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #374151;
+            background: white;
+            cursor: pointer;
+            outline: none;
+        }
+        .ra-per-page select:focus {
+            border-color: #003087;
+            box-shadow: 0 0 0 2px rgba(0,48,135,0.08);
+        }
+        .ra-paging-btns {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .ra-pg-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid #D1D5DB;
+            background: white;
+            color: #374151;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .ra-pg-btn:hover:not(.ra-pg-active):not(:disabled) {
+            background: #F3F4F6;
+            border-color: #9CA3AF;
+        }
+        .ra-pg-btn:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+        .ra-pg-btn.ra-pg-active {
+            background: #003087;
+            color: white;
+            border-color: #003087;
+            font-weight: 600;
+        }
+    </style>
+
     <div class="admin-table-container">
-        <table class="admin-table">
+        <table class="admin-table" id="raTable">
             <thead>
                 <tr>
                     <th>Timestamp</th>
@@ -652,9 +906,9 @@
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="raBody">
                 {% for log in recent_logs %}
-                <tr>
+                <tr class="ra-row">
                     <td style="white-space: nowrap;">{{ log.timestamp|date:"M d, Y H:i" }}</td>
                     <td>
                         <span class="badge {% if log.severity == 'critical' %}badge-danger{% elif log.severity == 'warning' %}badge-warning{% else %}badge-info{% endif %}">
@@ -672,12 +926,36 @@
                     </td>
                 </tr>
                 {% empty %}
-                <tr>
+                <tr id="raEmptyRow">
                     <td colspan="5" style="text-align: center; color: var(--text-light);">No activity recorded</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <!-- Pagination bar -->
+    <div id="raPagingBar" style="display:none; border-top: 1px solid #E5E7EB; background: #FAFBFC;">
+        <div class="ra-paging-bar">
+            <div class="ra-paging-info">
+                <i class="fas fa-info-circle"></i>
+                <span id="raPagingInfo"></span>
+            </div>
+            <div class="ra-per-page">
+                Show
+                <select id="raPerPage" onchange="raSetPerPage(this.value)">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15" selected>15</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+                per page
+            </div>
+        </div>
+        <div class="ra-paging-center">
+            <div class="ra-paging-btns" id="raPagingBtns"></div>
+        </div>
     </div>
 </div>
 
@@ -685,6 +963,94 @@
 
 {% block extra_js %}
 <script>
+// Fallback functions when using base.html instead of admin_panel/base.html
+// (Station Commander and Provincial Chief use base.html layout)
+if (typeof window.handleSuperuserSubmit !== 'function') {
+    window.handleSuperuserSubmit = function(event, form, formId) {
+        event.preventDefault();
+        form.submit();
+        return false;
+    };
+}
+if (typeof window.showCenterNotification !== 'function') {
+    window.showCenterNotification = function(msg, type, duration) {
+        alert(msg);
+    };
+}
+
+// Sync Account Status checkbox (sidebar) with hidden input (inside form)
+function syncAccountStatus(checkbox) {
+    var hidden = document.getElementById('isActiveHidden');
+    var label = document.getElementById('accountStatusLabel');
+    var icon = document.getElementById('accountStatusIcon');
+    var hint = document.getElementById('accountStatusHint');
+    if (checkbox.checked) {
+        hidden.value = 'on';
+        label.style.borderColor = '#10B981';
+        label.style.background = 'rgba(16, 185, 129, 0.05)';
+        icon.className = 'fas fa-check-circle';
+        icon.style.color = '#10B981';
+        hint.textContent = 'User can log in and access the system';
+    } else {
+        hidden.value = '';
+        label.style.borderColor = '#EF4444';
+        label.style.background = 'rgba(239, 68, 68, 0.05)';
+        icon.className = 'fas fa-times-circle';
+        icon.style.color = '#EF4444';
+        hint.textContent = 'User is currently blocked from logging in';
+    }
+}
+
+function syncReportAccess(checkbox) {
+    var hidden = document.getElementById('canSubmitReportsHidden');
+    var label = document.getElementById('reportAccessLabel');
+    var icon = document.getElementById('reportAccessIcon');
+    var text = document.getElementById('reportAccessText');
+    var hint = document.getElementById('reportAccessHint');
+    if (checkbox.checked) {
+        hidden.value = 'on';
+        label.style.borderColor = '#3B82F6';
+        label.style.background = 'rgba(59, 130, 246, 0.05)';
+        icon.className = 'fas fa-check-circle';
+        icon.style.color = '#3B82F6';
+        text.textContent = 'Can Submit Reports';
+        hint.textContent = 'User can access the report submission page';
+    } else {
+        hidden.value = '';
+        label.style.borderColor = '#9CA3AF';
+        label.style.background = 'rgba(156, 163, 175, 0.05)';
+        icon.className = 'fas fa-ban';
+        icon.style.color = '#9CA3AF';
+        text.textContent = 'Report Access Disabled';
+        hint.textContent = 'Report button is hidden for this user';
+    }
+}
+
+function syncClusteringAccess(checkbox) {
+    var hidden = document.getElementById('canRunClusteringHidden');
+    var label = document.getElementById('clusteringAccessLabel');
+    var icon = document.getElementById('clusteringAccessIcon');
+    var text = document.getElementById('clusteringAccessText');
+    var hint = document.getElementById('clusteringAccessHint');
+    if (checkbox.checked) {
+        hidden.value = 'on';
+        label.style.borderColor = '#DC143C';
+        label.style.background = 'rgba(220, 20, 60, 0.05)';
+        icon.className = 'fas fa-check-circle';
+        icon.style.color = '#DC143C';
+        text.textContent = 'Can Run Clustering';
+        hint.textContent = 'User can run the hotspot clustering algorithm';
+    } else {
+        hidden.value = '';
+        label.style.borderColor = '#9CA3AF';
+        label.style.background = 'rgba(156, 163, 175, 0.05)';
+        icon.className = 'fas fa-ban';
+        icon.style.color = '#9CA3AF';
+        text.textContent = 'Clustering Access Disabled';
+        hint.textContent = 'Clustering button is hidden for this user';
+    }
+}
+
 // Caraga Region Police Stations Database (Real PNP Data)
 const stationsByProvince = {
     'Agusan del Norte': ['Santiago MPS', 'Las Nieves MPS', 'Remedios T Romualdes MPS', 'Buenavista MPS', 'Jabonga MPS', 'Cabadbaran City PS', 'Tubay MPS', 'Kitcharao MPS', 'Magallanes MPS', 'Nasipit MPS', 'Carmen MPS'],
@@ -752,9 +1118,63 @@ function checkForChanges() {
     return true;
 }
 
+// Dynamic station/office toggle based on role
+const UNIT_ROLES_DETAIL = ['super_admin', 'regional_director'];
+const OFFICE_ROLES_DETAIL = ['provincial_chief', 'regional_director'];
+const PPO_MAP_DETAIL = {
+    'Agusan del Norte': 'Agusan del Norte PPO',
+    'Agusan del Sur': 'Agusan del Sur PPO',
+    'Butuan City': 'Butuan City Police Office',
+    'Dinagat Islands': 'Dinagat Islands PPO',
+    'Surigao del Norte': 'Surigao del Norte PPO',
+    'Surigao del Sur': 'Surigao del Sur PPO',
+};
+
+function toggleStationOfficeDetail() {
+    const roleSelect = document.getElementById('role');
+    const stationGroup = document.getElementById('station-group');
+    const officeGroup = document.getElementById('office-group');
+    const proGroup = document.getElementById('pro-group');
+    const unitGroup = document.getElementById('unit-group');
+    const stationSelect = document.getElementById('station');
+    const officeInput = document.getElementById('office');
+
+    // Show Unit field only for Super Admin and Regional Director
+    unitGroup.style.display = UNIT_ROLES_DETAIL.includes(roleSelect.value) ? '' : 'none';
+
+    if (roleSelect.value === 'regional_director') {
+        // Regional Director: auto-assigned PRO, read-only
+        stationGroup.style.display = 'none';
+        stationSelect.disabled = true;
+        officeGroup.style.display = 'none';
+        officeInput.disabled = true;
+        proGroup.style.display = '';
+    } else if (roleSelect.value === 'provincial_chief') {
+        // Provincial Chief: PPO dropdown only
+        stationGroup.style.display = 'none';
+        stationSelect.disabled = true;
+        proGroup.style.display = 'none';
+        officeGroup.style.display = '';
+        officeInput.disabled = false;
+    } else {
+        // Station-level roles
+        stationGroup.style.display = '';
+        stationSelect.disabled = false;
+        officeGroup.style.display = 'none';
+        officeInput.disabled = true;
+        proGroup.style.display = 'none';
+    }
+}
+
 // Initialize station dropdown on page load
 document.addEventListener('DOMContentLoaded', function() {
     updateStations();
+
+    // Setup role change listener for station/office toggle
+    const roleSelect = document.getElementById('role');
+    if (roleSelect) {
+        roleSelect.addEventListener('change', toggleStationOfficeDetail);
+    }
 
     // =========================================
     // AUTO-CAPITALIZE FIRST NAME AND LAST NAME
@@ -807,33 +1227,80 @@ document.addEventListener('DOMContentLoaded', function() {
 // Profile picture preview
 function previewProfilePicture(event) {
     const file = event.target.files[0];
-    if (file) {
-        // Check file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            showCenterNotification('File size too large! Maximum 5MB allowed.', 'error', 5000);
-            event.target.value = '';
-            document.getElementById('image-preview').style.display = 'none';
-            return;
-        }
+    if (!file) return;
 
-        // Check file type
-        if (!file.type.startsWith('image/')) {
-            showCenterNotification('Please select a valid image file!', 'error', 5000);
-            event.target.value = '';
-            document.getElementById('image-preview').style.display = 'none';
-            return;
-        }
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showCenterNotification('File size too large! Maximum 5MB allowed.', 'error', 5000);
+        event.target.value = '';
+        return;
+    }
 
-        // Show preview
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('preview-img').src = e.target.result;
-            document.getElementById('image-preview').style.display = 'block';
-            document.getElementById('image-preview').style.animation = 'slideDown 0.3s ease';
-        };
-        reader.readAsDataURL(file);
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+        showCenterNotification('Please select a valid image file!', 'error', 5000);
+        event.target.value = '';
+        return;
+    }
+
+    // Show inline preview on the avatar
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const previewImg = document.getElementById('ppPreviewImg');
+        const currentImg = document.getElementById('ppAvatarImg');
+        const placeholder = document.getElementById('ppAvatarPlaceholder');
+
+        // Show preview, hide current
+        previewImg.src = e.target.result;
+        previewImg.style.display = 'block';
+        if (currentImg) currentImg.style.display = 'none';
+        if (placeholder) placeholder.style.display = 'none';
+
+        // Update text and badges
+        document.getElementById('ppTitle').textContent = 'New Photo';
+        document.getElementById('ppStatusText').textContent = 'Click "Save All Changes" to apply';
+        document.getElementById('ppNewBadge').classList.add('visible');
+        const fnEl = document.getElementById('ppFileName');
+        fnEl.textContent = file.name;
+        fnEl.classList.add('visible');
+
+        // Clear remove state if it was set
+        const rmCb = document.getElementById('ppRemoveCheckbox');
+        if (rmCb) { rmCb.checked = false; removePictureChecked = false; }
+        const rmBtn = document.getElementById('ppRemoveBtn');
+        if (rmBtn) rmBtn.classList.remove('active');
+        document.getElementById('ppRemoveNote').classList.remove('visible');
+        if (currentImg) currentImg.style.opacity = '1';
+
+        // Legacy compat
+        document.getElementById('preview-img').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    showCenterNotification('Photo selected! Click "Save All Changes" to apply.', 'success', 3000);
+}
+
+// Toggle remove picture
+function toggleRemovePicture() {
+    const cb = document.getElementById('ppRemoveCheckbox');
+    const btn = document.getElementById('ppRemoveBtn');
+    const note = document.getElementById('ppRemoveNote');
+    const avatarImg = document.getElementById('ppAvatarImg');
+
+    cb.checked = !cb.checked;
+    removePictureChecked = cb.checked;
+
+    if (cb.checked) {
+        btn.classList.add('active');
+        note.classList.add('visible');
+        if (avatarImg) avatarImg.style.opacity = '0.35';
+        document.getElementById('ppStatusText').textContent = 'Photo will be removed on save';
+        showCenterNotification('Photo marked for removal. Save to confirm.', 'warning', 3000);
     } else {
-        document.getElementById('image-preview').style.display = 'none';
+        btn.classList.remove('active');
+        note.classList.remove('visible');
+        if (avatarImg) avatarImg.style.opacity = '1';
+        document.getElementById('ppStatusText').textContent = 'Click photo or buttons to change';
     }
 }
 
@@ -841,40 +1308,26 @@ function previewProfilePicture(event) {
 function handleDragOver(event) {
     event.preventDefault();
     event.stopPropagation();
-    const uploadArea = document.getElementById('profilePictureUpload');
-    uploadArea.style.borderColor = 'var(--pnp-blue)';
-    uploadArea.style.background = 'rgba(0, 48, 135, 0.05)';
-    uploadArea.style.transform = 'scale(1.02)';
+    document.getElementById('ppZone').classList.add('pp-dragover');
 }
 
 function handleDragLeave(event) {
     event.preventDefault();
     event.stopPropagation();
-    const uploadArea = document.getElementById('profilePictureUpload');
-    uploadArea.style.borderColor = 'var(--border-color)';
-    uploadArea.style.background = 'var(--gray-50)';
-    uploadArea.style.transform = 'scale(1)';
+    document.getElementById('ppZone').classList.remove('pp-dragover');
 }
 
 function handleDrop(event) {
     event.preventDefault();
     event.stopPropagation();
-
-    const uploadArea = document.getElementById('profilePictureUpload');
-    uploadArea.style.borderColor = 'var(--border-color)';
-    uploadArea.style.background = 'var(--gray-50)';
-    uploadArea.style.transform = 'scale(1)';
+    document.getElementById('ppZone').classList.remove('pp-dragover');
 
     const files = event.dataTransfer.files;
     if (files.length > 0) {
         const fileInput = document.getElementById('profile_picture');
         fileInput.files = files;
-
-        // Trigger preview
         const changeEvent = new Event('change', { bubbles: true });
         fileInput.dispatchEvent(changeEvent);
-
-        showCenterNotification('Image selected! Click "Save All Changes" at the bottom to upload.', 'success', 4000);
     }
 }
 
@@ -945,6 +1398,29 @@ function formatPhilippineNumber(input) {
     }
 }
 
+// =========================================
+// PHONE PLACEHOLDER — digit-by-digit fade
+// =========================================
+function udUpdatePhonePlaceholder(digits) {
+    var ph = document.getElementById('udPhonePlaceholder');
+    if (!ph) return;
+    var template = '9XXXXXXXXX';
+    var len = digits.length;
+    if (len >= 10) { ph.textContent = ''; return; }
+    var remaining = template.substring(len);
+    var full = template.substring(0, len) + remaining;
+    // Format with spaces: XXX XXX XXXX
+    var formatted = full.substring(0, 3);
+    if (full.length > 3) formatted += ' ' + full.substring(3, 6);
+    if (full.length > 6) formatted += ' ' + full.substring(6);
+    // Typed portion invisible, remaining visible as gray
+    var typedFormatted = '';
+    if (len <= 3) typedFormatted = digits;
+    else if (len <= 6) typedFormatted = digits.substring(0, 3) + ' ' + digits.substring(3);
+    else typedFormatted = digits.substring(0, 3) + ' ' + digits.substring(3, 6) + ' ' + digits.substring(6);
+    ph.innerHTML = '<span style="visibility:hidden">' + typedFormatted + '</span>' + formatted.substring(typedFormatted.length);
+}
+
 // Apply to mobile number field
 const mobileNumberInput = document.getElementById('mobile_number');
 const mobileNumberGroup = document.getElementById('mobileNumberGroup');
@@ -954,11 +1430,21 @@ if (mobileNumberInput) {
     // Format existing value on page load
     if (mobileNumberInput.value && mobileNumberInput.value.trim() !== '') {
         formatPhilippineNumber(mobileNumberInput);
+        // Sync placeholder on load
+        var loadDigits = mobileNumberInput.value.replace(/\D/g, '');
+        if (loadDigits.startsWith('63')) loadDigits = loadDigits.substring(2);
+        if (loadDigits.startsWith('0')) loadDigits = loadDigits.substring(1);
+        udUpdatePhonePlaceholder(loadDigits);
     }
 
     // Format on input
     mobileNumberInput.addEventListener('input', function() {
         formatPhilippineNumber(this);
+        // Sync placeholder
+        var d = this.value.replace(/\D/g, '');
+        if (d.startsWith('63')) d = d.substring(2);
+        if (d.startsWith('0')) d = d.substring(1);
+        udUpdatePhonePlaceholder(d);
         // Clear error state while typing
         mobileNumberGroup.classList.remove('error');
         mobileNumberHint.style.display = 'none';
@@ -968,12 +1454,13 @@ if (mobileNumberInput) {
     mobileNumberInput.addEventListener('keydown', function(e) {
         // Allow standard key operations
         if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
-            setTimeout(() => {
-                if (this.value) {
-                    formatPhilippineNumber(this);
-                } else {
-                    formatPhilippineNumber(this);
-                }
+            var self = this;
+            setTimeout(function() {
+                formatPhilippineNumber(self);
+                var d = self.value.replace(/\D/g, '');
+                if (d.startsWith('63')) d = d.substring(2);
+                if (d.startsWith('0')) d = d.substring(1);
+                udUpdatePhonePlaceholder(d);
             }, 0);
         }
     });
@@ -1067,5 +1554,127 @@ function validateMobileAndProceed(event) {
 // =========================================
 // Set global flag so base.html handleSuperuserSubmit knows if editing superuser
 const isSuperuser = {{ target_user.is_superuser|lower }};
+
+// =========================================
+// RECENT ACTIVITY — CLIENT-SIDE PAGINATION
+// =========================================
+(function() {
+    var rows = document.querySelectorAll('#raBody .ra-row');
+    if (!rows.length) return; // no data, keep "No activity" row visible
+
+    var totalRows = rows.length;
+    var perPage = 15;
+    var currentPage = 1;
+
+    var pagingBar = document.getElementById('raPagingBar');
+    var pagingInfo = document.getElementById('raPagingInfo');
+    var pagingBtns = document.getElementById('raPagingBtns');
+
+    pagingBar.style.display = '';
+
+    function totalPages() { return Math.ceil(totalRows / perPage); }
+
+    function render() {
+        var tp = totalPages();
+        if (currentPage > tp) currentPage = tp;
+        if (currentPage < 1) currentPage = 1;
+
+        var start = (currentPage - 1) * perPage;
+        var end = start + perPage;
+
+        // Show/hide rows
+        for (var i = 0; i < totalRows; i++) {
+            rows[i].style.display = (i >= start && i < end) ? '' : 'none';
+        }
+
+        // Info text
+        var showEnd = Math.min(end, totalRows);
+        pagingInfo.textContent = 'Showing ' + (start + 1) + '-' + showEnd + ' of ' + totalRows + ' activities';
+
+        // Build page buttons
+        var html = '';
+        // Prev
+        html += '<button class="ra-pg-btn" onclick="raGoPage(' + (currentPage - 1) + ')"' + (currentPage <= 1 ? ' disabled' : '') + '><i class="fas fa-chevron-left" style="font-size:0.65rem;"></i></button>';
+
+        // Page numbers with ellipsis
+        var pages = [];
+        if (tp <= 7) {
+            for (var p = 1; p <= tp; p++) pages.push(p);
+        } else {
+            pages.push(1);
+            if (currentPage > 3) pages.push('...');
+            var pStart = Math.max(2, currentPage - 1);
+            var pEnd = Math.min(tp - 1, currentPage + 1);
+            for (var p = pStart; p <= pEnd; p++) pages.push(p);
+            if (currentPage < tp - 2) pages.push('...');
+            pages.push(tp);
+        }
+
+        for (var j = 0; j < pages.length; j++) {
+            var pg = pages[j];
+            if (pg === '...') {
+                html += '<span style="padding:0 0.2rem;color:#9CA3AF;font-size:0.8rem;">…</span>';
+            } else {
+                html += '<button class="ra-pg-btn' + (pg === currentPage ? ' ra-pg-active' : '') + '" onclick="raGoPage(' + pg + ')">' + pg + '</button>';
+            }
+        }
+
+        // Next
+        html += '<button class="ra-pg-btn" onclick="raGoPage(' + (currentPage + 1) + ')"' + (currentPage >= tp ? ' disabled' : '') + '><i class="fas fa-chevron-right" style="font-size:0.65rem;"></i></button>';
+
+        pagingBtns.innerHTML = html;
+    }
+
+    window.raGoPage = function(p) {
+        var tp = totalPages();
+        if (p < 1 || p > tp) return;
+        currentPage = p;
+        render();
+    };
+
+    window.raSetPerPage = function(val) {
+        perPage = parseInt(val) || 15;
+        currentPage = 1;
+        render();
+    };
+
+    render();
+})();
+
+{% if user.profile.role == 'station_commander' %}
+// Lock province/station fields for Station Commander (role remains editable)
+(function() {
+    const provinceSelect = document.getElementById('province');
+    const stationSelect = document.getElementById('station');
+    if (provinceSelect) provinceSelect.disabled = true;
+    if (stationSelect) stationSelect.disabled = true;
+
+    // Add hidden inputs so disabled values still submit
+    const form = document.querySelector('form');
+    if (form) {
+        [['province', provinceSelect], ['station', stationSelect]].forEach(([name, el]) => {
+            if (el && el.value) {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden'; hidden.name = name; hidden.value = el.value;
+                form.appendChild(hidden);
+            }
+        });
+    }
+})();
+{% elif user.profile.role == 'provincial_chief' %}
+// Lock province field for Provincial Chief (station and role remain editable)
+(function() {
+    const provinceSelect = document.getElementById('province');
+    if (provinceSelect) {
+        provinceSelect.disabled = true;
+        const form = document.querySelector('form');
+        if (form && provinceSelect.value) {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden'; hidden.name = 'province'; hidden.value = provinceSelect.value;
+            form.appendChild(hidden);
+        }
+    }
+})();
+{% endif %}
 </script>
 {% endblock %}

@@ -1329,56 +1329,101 @@
 
     /* Modern Export Section */
     .export-section {
-        background: linear-gradient(135deg, var(--analytics-primary) 0%, var(--analytics-secondary) 100%);
-        color: white;
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--gray-200, #E5E7EB);
         border-radius: 12px;
         padding: 1.25rem 1.5rem;
         margin-top: 1.5rem;
         text-align: center;
-        box-shadow: 0 4px 12px rgba(107, 70, 193, 0.2);
     }
 
     .export-section h3 {
-        color: white;
-        margin-bottom: 0.375rem;
+        color: var(--gray-900, #111827);
+        margin-bottom: 0.25rem;
         font-size: 1rem;
-        font-weight: 600;
+        font-weight: 700;
     }
 
     .export-section p {
-        color: rgba(255, 255, 255, 0.95);
+        color: var(--gray-500, #6B7280);
         margin-bottom: 1rem;
-        font-size: 0.8125rem;
+        font-size: 0.8rem;
     }
 
     .export-options {
         display: flex;
-        gap: 0.5rem;
+        gap: 1.25rem;
         justify-content: center;
+        align-items: flex-start;
         flex-wrap: wrap;
     }
 
-    .export-btn-enhanced {
-        padding: 0.4rem 0.875rem;
-        border-radius: 6px;
-        font-weight: 500;
-        border: 1.5px solid white;
-        background: white;
-        color: var(--analytics-primary);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        min-width: 110px;
-        font-size: 0.8125rem;
-        display: inline-flex;
+    .export-group {
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
         gap: 0.375rem;
     }
 
+    .export-group-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--gray-400, #9CA3AF);
+    }
+
+    .export-group-btns {
+        display: flex;
+        gap: 0.375rem;
+    }
+
+    .export-divider {
+        width: 1px;
+        background: var(--gray-200, #E5E7EB);
+        align-self: stretch;
+        margin: 0 0.25rem;
+    }
+
+    .export-btn-enhanced {
+        padding: 0.45rem 0.875rem;
+        border-radius: 8px;
+        font-weight: 600;
+        border: 1.5px solid var(--gray-200, #E5E7EB);
+        background: var(--card-bg, #fff);
+        color: var(--gray-700, #374151);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        white-space: nowrap;
+    }
+
     .export-btn-enhanced:hover {
-        background: transparent;
-        color: white;
-        transform: translateY(-2px);
+        border-color: var(--analytics-primary, #6B46C1);
+        color: var(--analytics-primary, #6B46C1);
+        background: rgba(107, 70, 193, 0.05);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(107, 70, 193, 0.12);
+    }
+
+    .export-btn-enhanced .fa-file-csv { color: #059669; }
+    .export-btn-enhanced .fa-file-excel { color: #16A34A; }
+    .export-btn-enhanced .fa-file-pdf { color: #DC2626; }
+
+    .export-btn-accent {
+        background: var(--analytics-primary, #6B46C1);
+        color: #fff;
+        border-color: var(--analytics-primary, #6B46C1);
+    }
+    .export-btn-accent .fa-file-pdf { color: #fff; }
+    .export-btn-accent:hover {
+        background: #5B38A9;
+        color: #fff;
+        border-color: #5B38A9;
     }
 
     @media (max-width: 768px) {
@@ -1409,10 +1454,22 @@
 
         .export-options {
             flex-direction: column;
+            align-items: stretch;
+            gap: 0.75rem;
+        }
+
+        .export-divider {
+            width: 100%;
+            height: 1px;
+            margin: 0;
+        }
+
+        .export-group-btns {
+            width: 100%;
         }
 
         .export-btn-enhanced {
-            width: 100%;
+            flex: 1;
         }
     }
 
@@ -1673,6 +1730,14 @@
             max-width: none !important;
             max-height: 90vh;
             margin: 5vh auto;
+        }
+    }
+
+    /* Tablet/mobile: stack chart grids */
+    @media (max-width: 768px) {
+        .analytics-grid,
+        .comparison-section {
+            grid-template-columns: 1fr !important;
         }
     }
 
@@ -2910,23 +2975,115 @@
 
     <!-- Export Section -->
     <div class="export-section">
-        <h3>📤 Export Analytics Data</h3>
-        <p>Download comprehensive analytics data for further analysis</p>
+        <h3>Export Analytics Data</h3>
+        <p>Download data or generate official reports</p>
         <div class="export-options">
-            <button class="export-btn-enhanced" onclick="exportAnalytics()">
-                <i class="fas fa-file-csv"></i> Export as CSV
-            </button>
-            <button class="export-btn-enhanced" onclick="exportAsExcelRegular()">
-                <i class="fas fa-file-excel"></i> Export as Excel
-            </button>
-            <button class="export-btn-enhanced" onclick="generateSummaryReport()">
-                <i class="fas fa-file-alt"></i> Summary Report
-            </button>
-            <button class="export-btn-enhanced" onclick="window.print()">
-                <i class="fas fa-print"></i> Print Report
-            </button>
+            <div class="export-group">
+                <span class="export-group-label">Data Export</span>
+                <div class="export-group-btns">
+                    <button class="export-btn-enhanced" onclick="exportAnalytics()">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </button>
+                    <button class="export-btn-enhanced" onclick="exportAsExcelRegular()">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                </div>
+            </div>
+            <div class="export-divider"></div>
+            <div class="export-group">
+                <span class="export-group-label">Report</span>
+                <div class="export-group-btns">
+                    <button class="export-btn-enhanced export-btn-accent" onclick="openMonthlyReportModal()">
+                        <i class="fas fa-file-pdf"></i> Narrative Report
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Narrative Report Modal -->
+    <div id="monthlyReportOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99999; align-items:flex-start; justify-content:center; padding-top:5px;">
+        <div style="background:#fff; border-radius:12px; padding:2rem; width:400px; max-width:90vw; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 style="margin:0 0 0.25rem 0; font-size:1.2rem; color:#003087;"><i class="fas fa-file-pdf" style="margin-right:8px;"></i>Narrative Accident Report</h3>
+            <p style="margin:0 0 1rem 0; color:#6B7280; font-size:0.85rem;">Select a report period to generate the PNP-style narrative accident report.</p>
+
+            <!-- Period Type Selector -->
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; font-size:0.8rem; font-weight:600; color:#374151; margin-bottom:4px;">Report Period</label>
+                <div id="mnrPeriodTabs" style="display:flex; border:1.5px solid #D1D5DB; border-radius:6px; overflow:hidden;">
+                    <button type="button" onclick="setNarrativePeriod('weekly')" class="mnr-tab" style="flex:1; padding:8px 0; border:none; cursor:pointer; font-size:0.85rem; font-weight:600; background:#fff; color:#374151;">Weekly</button>
+                    <button type="button" onclick="setNarrativePeriod('monthly')" class="mnr-tab mnr-tab-active" style="flex:1; padding:8px 0; border:none; border-left:1.5px solid #D1D5DB; border-right:1.5px solid #D1D5DB; cursor:pointer; font-size:0.85rem; font-weight:600; background:#003087; color:#fff;">Monthly</button>
+                    <button type="button" onclick="setNarrativePeriod('yearly')" class="mnr-tab" style="flex:1; padding:8px 0; border:none; cursor:pointer; font-size:0.85rem; font-weight:600; background:#fff; color:#374151;">Yearly</button>
+                </div>
+            </div>
+
+            <!-- Date Fields -->
+            <div style="display:flex; gap:10px; margin-bottom:1.25rem;">
+                <div id="mnrMonthGroup" style="flex:1;">
+                    <label style="display:block; font-size:0.8rem; font-weight:600; color:#374151; margin-bottom:4px;">Month</label>
+                    <select id="mnrMonth" onchange="if(currentNarrativePeriod==='weekly') populateWeekDropdown();" style="width:100%; padding:8px 10px; border:1.5px solid #D1D5DB; border-radius:6px; font-size:0.9rem;">
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                <div id="mnrWeekGroup" style="flex:1; display:none;">
+                    <label style="display:block; font-size:0.8rem; font-weight:600; color:#374151; margin-bottom:4px;">Week</label>
+                    <select id="mnrWeek" style="width:100%; padding:8px 10px; border:1.5px solid #D1D5DB; border-radius:6px; font-size:0.9rem;"></select>
+                </div>
+                <div id="mnrYearGroup" style="flex:1;">
+                    <label style="display:block; font-size:0.8rem; font-weight:600; color:#374151; margin-bottom:4px;">Year</label>
+                    <select id="mnrYear" onchange="if(currentNarrativePeriod==='weekly') populateWeekDropdown();" style="width:100%; padding:8px 10px; border:1.5px solid #D1D5DB; border-radius:6px; font-size:0.9rem;"></select>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button onclick="closeMonthlyReportModal()" style="padding:8px 20px; border:1.5px solid #D1D5DB; border-radius:6px; background:#fff; color:#374151; cursor:pointer; font-size:0.9rem;">Cancel</button>
+                <button onclick="downloadMonthlyReport()" style="padding:8px 20px; border:none; border-radius:6px; background:#003087; color:#fff; cursor:pointer; font-size:0.9rem; font-weight:600;">
+                    <i class="fas fa-download" style="margin-right:6px;"></i>Generate PDF
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Chart data payload (replaced on each filter fetch) -->
+    <script type="application/json" id="chart-data">
+    {
+        "total_accidents": {{ total_accidents }},
+        "fatal_count": {{ fatal_count }},
+        "injury_count": {{ injury_count }},
+        "predicted_next_month": {{ predicted_next_month }},
+        "trend_labels": {{ trend_labels|safe }},
+        "trend_total": {{ trend_total|safe }},
+        "trend_fatal": {{ trend_fatal|safe }},
+        "trend_injury": {{ trend_injury|safe }},
+        "vehicle_labels": {{ vehicle_labels|safe }},
+        "vehicle_data": {{ vehicle_data|safe }},
+        "hourly_labels": {{ hourly_labels|safe }},
+        "hourly_data": {{ hourly_data|safe }},
+        "dow_data": {{ dow_data|safe }},
+        "province_labels": {{ province_labels|safe }},
+        "province_total": {{ province_total|safe }},
+        "province_fatal": {{ province_fatal|safe }},
+        "province_injury": {{ province_injury|safe }},
+        "incident_labels": {{ incident_labels|safe }},
+        "incident_data": {{ incident_data|safe }},
+        "gender_labels": {{ gender_labels|safe }},
+        "gender_data": {{ gender_data|safe }},
+        "gender_trend_labels": {{ gender_trend_labels|safe }},
+        "gender_trend_male": {{ gender_trend_male|safe }},
+        "gender_trend_female": {{ gender_trend_female|safe }},
+        "gender_hourly_male": {{ gender_hourly_male|safe }},
+        "gender_hourly_female": {{ gender_hourly_female|safe }}
+    }
+    </script>
     </div>
     <!-- End of analytics-main-content -->
 
@@ -3696,36 +3853,39 @@ function updatePageContent(url, forcedScrollPosition = null) {
     });
 
     // ============================================================================
-    // GET DATA FROM DJANGO WITH FALLBACKS FOR EMPTY DATA
+    // GET DATA FROM JSON PAYLOAD (refreshed on each filter change)
     // ============================================================================
-    const rawTrendLabels = {{ trend_labels|safe }};
-    const rawTrendTotal = {{ trend_total|safe }};
-    const rawTrendFatal = {{ trend_fatal|safe }};
-    const rawTrendInjury = {{ trend_injury|safe }};
-    
-    const rawVehicleLabels = {{ vehicle_labels|safe }};
-    const rawVehicleData = {{ vehicle_data|safe }};
-    
-    const rawHourlyLabels = {{ hourly_labels|safe }};
-    const rawHourlyData = {{ hourly_data|safe }};
-    
-    const rawDowData = {{ dow_data|safe }};
-    
-    const rawProvinceLabels = {{ province_labels|safe }};
-    const rawProvinceTotal = {{ province_total|safe }};
-    const rawProvinceFatal = {{ province_fatal|safe }};
-    const rawProvinceInjury = {{ province_injury|safe }};
-    
-    const rawIncidentLabels = {{ incident_labels|safe }};
-    const rawIncidentData = {{ incident_data|safe }};
-    
+    const chartDataEl = document.getElementById('chart-data');
+    const CD = chartDataEl ? JSON.parse(chartDataEl.textContent) : {};
+
+    const rawTrendLabels = CD.trend_labels || [];
+    const rawTrendTotal = CD.trend_total || [];
+    const rawTrendFatal = CD.trend_fatal || [];
+    const rawTrendInjury = CD.trend_injury || [];
+
+    const rawVehicleLabels = CD.vehicle_labels || [];
+    const rawVehicleData = CD.vehicle_data || [];
+
+    const rawHourlyLabels = CD.hourly_labels || [];
+    const rawHourlyData = CD.hourly_data || [];
+
+    const rawDowData = CD.dow_data || [];
+
+    const rawProvinceLabels = CD.province_labels || [];
+    const rawProvinceTotal = CD.province_total || [];
+    const rawProvinceFatal = CD.province_fatal || [];
+    const rawProvinceInjury = CD.province_injury || [];
+
+    const rawIncidentLabels = CD.incident_labels || [];
+    const rawIncidentData = CD.incident_data || [];
+
     // Check if data is empty and provide fallbacks
     const hasData = rawTrendLabels && rawTrendLabels.length > 0;
-    
+
     console.log('📊 Data Check:', {
         hasData: hasData,
         trendLabels: rawTrendLabels ? rawTrendLabels.length : 0,
-        totalAccidents: {{ total_accidents }}
+        totalAccidents: CD.total_accidents || 0
     });
     
     // Use actual data or sample data
@@ -3826,9 +3986,9 @@ function updatePageContent(url, forcedScrollPosition = null) {
     if (severityCtx) {
         console.log('🎨 Creating Severity Chart...');
         try {
-            const totalAcc = {{ total_accidents }};
-            const fatalAcc = {{ fatal_count }};
-            const injuryAcc = {{ injury_count }};
+            const totalAcc = CD.total_accidents || 0;
+            const fatalAcc = CD.fatal_count || 0;
+            const injuryAcc = CD.injury_count || 0;
             const propertyDamage = Math.max(0, totalAcc - fatalAcc - injuryAcc);
 
             severityChart = new Chart(severityCtx, {
@@ -4156,7 +4316,7 @@ function updatePageContent(url, forcedScrollPosition = null) {
     if (forecastCtx) {
         console.log('🎨 Creating Forecast Chart...');
         try {
-            const predictedValue = {{ predicted_next_month }};
+            const predictedValue = CD.predicted_next_month || 0;
             const lastFive = trendLabels.slice(-5);
             const lastFiveData = trendTotal.slice(-5);
             
@@ -4484,9 +4644,9 @@ function updatePageContent(url, forcedScrollPosition = null) {
             const genderPieChart = new Chart(genderPieCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: {{ gender_labels|safe }},
+                    labels: CD.gender_labels || ['Male Drivers', 'Female Drivers'],
                     datasets: [{
-                        data: {{ gender_data|safe }},
+                        data: CD.gender_data || [0, 0],
                         backgroundColor: ['#2563EB', '#EC4899'],
                         borderWidth: 2,
                         borderColor: '#fff'
@@ -4533,11 +4693,11 @@ function updatePageContent(url, forcedScrollPosition = null) {
             const genderTrendChart = new Chart(genderTrendCtx, {
                 type: 'line',
                 data: {
-                    labels: {{ gender_trend_labels|safe }},
+                    labels: CD.gender_trend_labels || [],
                     datasets: [
                         {
                             label: 'Male Drivers',
-                            data: {{ gender_trend_male|safe }},
+                            data: CD.gender_trend_male || [],
                             borderColor: '#2563EB',
                             backgroundColor: 'rgba(37, 99, 235, 0.1)',
                             fill: true,
@@ -4545,7 +4705,7 @@ function updatePageContent(url, forcedScrollPosition = null) {
                         },
                         {
                             label: 'Female Drivers',
-                            data: {{ gender_trend_female|safe }},
+                            data: CD.gender_trend_female || [],
                             borderColor: '#EC4899',
                             backgroundColor: 'rgba(236, 72, 153, 0.1)',
                             fill: true,
@@ -4600,18 +4760,18 @@ function updatePageContent(url, forcedScrollPosition = null) {
             const genderHourlyChart = new Chart(genderHourlyCtx, {
                 type: 'bar',
                 data: {
-                    labels: {{ hourly_labels|safe }},
+                    labels: CD.hourly_labels || [],
                     datasets: [
                         {
                             label: 'Male Drivers',
-                            data: {{ gender_hourly_male|safe }},
+                            data: CD.gender_hourly_male || [],
                             backgroundColor: 'rgba(37, 99, 235, 0.7)',
                             borderColor: '#2563EB',
                             borderWidth: 1
                         },
                         {
                             label: 'Female Drivers',
-                            data: {{ gender_hourly_female|safe }},
+                            data: CD.gender_hourly_female || [],
                             backgroundColor: 'rgba(236, 72, 153, 0.7)',
                             borderColor: '#EC4899',
                             borderWidth: 1
@@ -4673,7 +4833,7 @@ function updatePageContent(url, forcedScrollPosition = null) {
         setTimeout(() => {
             try {
                 // Calculate average monthly
-                const totalAccidents = {{ total_accidents }};
+                const totalAccidents = CD.total_accidents || 0;
                 const avgMonthly = Math.round(totalAccidents / 12);
                 const avgElement = document.getElementById('avgMonthly');
                 
@@ -5020,6 +5180,158 @@ function updatePageContent(url, forcedScrollPosition = null) {
         }
     }
 
+    // ── Narrative Report Modal ──
+    var currentNarrativePeriod = 'monthly';
+
+    function openMonthlyReportModal() {
+        var overlay = document.getElementById('monthlyReportOverlay');
+        var now = new Date();
+
+        // Populate year dropdown (2019 to current year)
+        var yearSelect = document.getElementById('mnrYear');
+        yearSelect.innerHTML = '';
+        for (var y = now.getFullYear(); y >= 2019; y--) {
+            var opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            yearSelect.appendChild(opt);
+        }
+
+        // Set current month
+        document.getElementById('mnrMonth').value = now.getMonth() + 1;
+
+        // Default to monthly
+        setNarrativePeriod('monthly');
+
+        overlay.style.display = 'flex';
+    }
+
+    function setNarrativePeriod(period) {
+        currentNarrativePeriod = period;
+
+        // Update tab styling
+        var tabs = document.querySelectorAll('#mnrPeriodTabs .mnr-tab');
+        tabs.forEach(function(tab) {
+            tab.style.background = '#fff';
+            tab.style.color = '#374151';
+        });
+        var tabIndex = period === 'weekly' ? 0 : period === 'monthly' ? 1 : 2;
+        tabs[tabIndex].style.background = '#003087';
+        tabs[tabIndex].style.color = '#fff';
+
+        // Show/hide fields based on period
+        var monthGroup = document.getElementById('mnrMonthGroup');
+        var weekGroup = document.getElementById('mnrWeekGroup');
+
+        if (period === 'weekly') {
+            // Weekly: show month + week + year
+            monthGroup.style.display = 'block';
+            weekGroup.style.display = 'block';
+            populateWeekDropdown();
+        } else if (period === 'monthly') {
+            // Monthly: show month + year
+            monthGroup.style.display = 'block';
+            weekGroup.style.display = 'none';
+        } else {
+            // Yearly: show year only
+            monthGroup.style.display = 'none';
+            weekGroup.style.display = 'none';
+        }
+    }
+
+    function populateWeekDropdown() {
+        var year = parseInt(document.getElementById('mnrYear').value);
+        var month = parseInt(document.getElementById('mnrMonth').value);
+        var weekSelect = document.getElementById('mnrWeek');
+        weekSelect.innerHTML = '';
+
+        // Find ISO weeks that fall within the selected month
+        // Get first and last day of the month
+        var firstDay = new Date(year, month - 1, 1);
+        var lastDay = new Date(year, month, 0); // last day of month
+
+        // Helper: get ISO week number for a date
+        function getISOWeek(d) {
+            var date = new Date(d.getTime());
+            date.setHours(0, 0, 0, 0);
+            date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+            var week1 = new Date(date.getFullYear(), 0, 4);
+            return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+        }
+
+        // Helper: get ISO week year
+        function getISOWeekYear(d) {
+            var date = new Date(d.getTime());
+            date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+            return date.getFullYear();
+        }
+
+        // Collect unique weeks in this month
+        var weeks = [];
+        var seen = {};
+        for (var day = 1; day <= lastDay.getDate(); day++) {
+            var d = new Date(year, month - 1, day);
+            var wk = getISOWeek(d);
+            var wy = getISOWeekYear(d);
+            var key = wy + '-' + wk;
+            if (!seen[key]) {
+                seen[key] = true;
+                // Get Monday (start) of this ISO week
+                var mon = new Date(d.getTime());
+                mon.setDate(mon.getDate() - (mon.getDay() + 6) % 7);
+                // Get Sunday (end) of this ISO week
+                var sun = new Date(mon.getTime());
+                sun.setDate(sun.getDate() + 6);
+                var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                var label = 'Week ' + wk + ' (' + monthNames[mon.getMonth()] + ' ' + mon.getDate() + ' – ' + monthNames[sun.getMonth()] + ' ' + sun.getDate() + ')';
+                weeks.push({ week: wk, year: wy, label: label });
+            }
+        }
+
+        // Determine current week for default selection
+        var now = new Date();
+        var currentWeek = weeks.length > 0 ? weeks[0].week : 1;
+        if (year === now.getFullYear() && month === now.getMonth() + 1) {
+            currentWeek = getISOWeek(now);
+        }
+
+        for (var i = 0; i < weeks.length; i++) {
+            var opt = document.createElement('option');
+            opt.value = weeks[i].week;
+            opt.textContent = weeks[i].label;
+            weekSelect.appendChild(opt);
+        }
+
+        // Set default selection
+        weekSelect.value = currentWeek;
+        if (!weekSelect.value && weeks.length > 0) {
+            weekSelect.value = weeks[0].week;
+        }
+    }
+
+    function closeMonthlyReportModal() {
+        document.getElementById('monthlyReportOverlay').style.display = 'none';
+    }
+
+    function downloadMonthlyReport() {
+        var year = document.getElementById('mnrYear').value;
+        var url = '/export/monthly-narrative/pdf/?period=' + currentNarrativePeriod + '&year=' + year;
+
+        if (currentNarrativePeriod === 'monthly') {
+            url += '&month=' + document.getElementById('mnrMonth').value;
+        } else if (currentNarrativePeriod === 'weekly') {
+            url += '&week=' + document.getElementById('mnrWeek').value;
+        }
+
+        window.location.href = url;
+        closeMonthlyReportModal();
+    }
+
+    // Close modal on overlay click
+    document.getElementById('monthlyReportOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeMonthlyReportModal();
+    });
+
     function exportAnalytics() {
         console.log('📊 Exporting analytics data...');
         
@@ -5119,74 +5431,6 @@ function updatePageContent(url, forcedScrollPosition = null) {
 
         console.log('✅ Excel exported successfully');
     }
-
-function generateSummaryReport() {
-    console.log('📋 Generating summary report...');
-    
-    try {
-        // Calculate property damage in JavaScript
-        const totalAccidents = {{ total_accidents }};
-        const fatalCount = {{ fatal_count }};
-        const injuryCount = {{ injury_count }};
-        const propertyDamage = totalAccidents - fatalCount - injuryCount;
-        
-        const reportContent = `
-AGNES HOTSPOT DETECTION SYSTEM
-ANALYTICS SUMMARY REPORT
-═══════════════════════════════════════════════════════
-
-Generated: ${new Date().toLocaleString()}
-Date Range: {{ from_date }} to {{ to_date }}
-
-SUMMARY STATISTICS
-─────────────────────────────────────────────────────
-Total Accidents:        ${totalAccidents}
-Fatal Accidents:        ${fatalCount}
-Injury Accidents:       ${injuryCount}
-Property Damage:        ${propertyDamage}
-Fatality Rate:          {{ fatality_rate|floatformat:1 }}%
-
-PREDICTIVE INSIGHTS
-─────────────────────────────────────────────────────
-Risk Level:             {{ risk_level }}
-Predicted Next Month:   {{ predicted_next_month }} accidents
-Trend Direction:        {{ trend_direction|upper }}
-Trend Change:           {{ trend_percentage }}%
-Peak Hours:             {{ peak_hours }}
-
-ACTIVE FILTERS
-─────────────────────────────────────────────────────
-Severity Filter:        {{ current_severity_filter|default:"All" }}
-Province Filter:        {{ current_province_filter|default:"All" }}
-Time Granularity:       {{ current_time_granularity|default:"Monthly" }}
-Analysis Type:          {{ current_analysis_type|default:"Overview" }}
-
-TOP MUNICIPALITIES BY SEVERITY
-─────────────────────────────────────────────────────
-{% for loc in severity_locations %}{{ forloop.counter }}. {{ loc.municipal }}, {{ loc.province }}
-   Total: {{ loc.total }} | Fatal: {{ loc.killed }} | Injured: {{ loc.injured }}
-{% endfor %}
-
-═══════════════════════════════════════════════════════
-Report generated by AGNES Hotspot Detection System
-Philippine National Police - Caraga Region
-        `;
-        
-        // Create text file download
-        const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `analytics_summary_${new Date().toISOString().split('T')[0]}.txt`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        console.log('✅ Summary report generated successfully');
-    } catch (error) {
-        console.error('❌ Error generating report:', error);
-        alert('Error generating report. Check console for details.');
-    }
-}
 
 // Make filters sticky when scrolling
 window.addEventListener('scroll', function() {

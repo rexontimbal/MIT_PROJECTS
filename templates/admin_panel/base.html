@@ -28,6 +28,7 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}?v=1.0">
 
     <style>
         /* ============================================
@@ -1281,11 +1282,14 @@
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            backdrop-filter: blur(4px);
+            width: 100vw;
+            height: 100vh;
+            max-width: none !important;
+            margin: 0 !important;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10015;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             align-items: center;
             justify-content: center;
             opacity: 0;
@@ -1499,10 +1503,10 @@
                 <img src="{% static 'images/pnp-logo.png' %}" alt="PNP Logo" class="admin-navbar-logo">
                 <div class="admin-navbar-title">
                     {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
-                    <h1>AGNES Admin Panel</h1>
+                    <h1>AI Based Admin Panel</h1>
                     <p>Philippine National Police - CARAGA Region</p>
                     {% else %}
-                    <h1>AGNES Report Management</h1>
+                    <h1>AI Based Report Management</h1>
                     <p>Philippine National Police - CARAGA Region</p>
                     {% endif %}
                 </div>
@@ -1640,6 +1644,13 @@
                     <a href="{% url 'admin_panel:audit_logs' %}" class="admin-nav-link {% if 'audit' in request.path %}active{% endif %}" data-tooltip="Audit Logs">
                         <i class="fas fa-clipboard-list"></i>
                         <span>Audit Logs</span>
+                    </a>
+                </li>
+
+                <li class="admin-nav-item">
+                    <a href="{% url 'admin_panel:system_settings' %}" class="admin-nav-link {% if 'settings' in request.path %}active{% endif %}" data-tooltip="Display Settings">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Display Settings</span>
                     </a>
                 </li>
 

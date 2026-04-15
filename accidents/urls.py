@@ -41,6 +41,7 @@ urlpatterns = [
     path('report/<int:pk>/edit/', views.edit_report, name='edit_report'),
     path('report/<int:pk>/cancel/', views.cancel_report, name='cancel_report'),
     path('report/<int:pk>/delete/', views.delete_report, name='delete_report'),
+    path('report/<int:pk>/download-pdf/', views.download_report_pdf, name='download_report_pdf'),
 
     # Pending Reports Management (for Station Commanders, Provincial Chiefs, etc.)
     path('manage/pending-reports/', views.pending_reports, name='pending_reports'),
@@ -49,6 +50,7 @@ urlpatterns = [
     path('manage/report/<int:pk>/cancel/', views.admin_cancel_report, name='admin_cancel_report'),
     path('manage/report/<int:pk>/go/', views.report_notification_redirect, name='report_notification_redirect'),
     path('manage/bulk-action/', views.bulk_action_reports, name='bulk_action_reports'),
+    path('manage/resync-reports/', views.resync_reports, name='resync_reports'),
     path('api/check-duplicate/', views.check_duplicate_report, name='check_duplicate_report'),
 
     # Analytics
@@ -63,12 +65,14 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('profile/change-username/', views.change_username, name='change_username'),
     path('profile/change-password/', views.change_password_api, name='change_password_api'),
+    path('display-settings/', views.display_settings, name='display_settings'),
 
     # Export Endpoints
     path('export/accidents/csv/', views.export_accidents_csv, name='export_accidents_csv'),
     path('export/accidents/excel/', views.export_accidents_excel, name='export_accidents_excel'),
     path('export/hotspots/pdf/', views.export_hotspots_pdf, name='export_hotspots_pdf'),
     path('export/analytics/pdf/', views.export_analytics_pdf, name='export_analytics_pdf'),
+    path('export/monthly-narrative/pdf/', views.export_monthly_narrative_pdf, name='export_monthly_narrative_pdf'),
 
     # Notifications
     path('notifications/', views.notifications_page, name='notifications'),

@@ -1,24 +1,48 @@
-{% extends 'admin_panel/base.html' %}
+{% extends base_template %}
 
-{% block title %}User Management{% endblock %}
+{% block title %}{% if user.profile.role == 'station_commander' or user.profile.role == 'provincial_chief' %}Manage Personnel{% else %}User Management{% endif %}{% endblock %}
+
+{% block extra_css %}
+{% if base_template == 'base.html' %}
+{% include 'admin_panel/_admin_styles.html' %}
+{% endif %}
+{% endblock %}
+
+{% block breadcrumb_items %}
+{% if base_template == 'base.html' %}
+<span> / Manage Personnel</span>
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <!-- Page Header -->
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">
+            {% if user.profile.role == 'station_commander' %}
+            <i class="fas fa-users-cog"></i>
+            Station Personnel
+            {% elif user.profile.role == 'provincial_chief' %}
+            <i class="fas fa-users-cog"></i>
+            Provincial Personnel
+            {% else %}
             <i class="fas fa-users"></i>
             User Management
+            {% endif %}
         </h1>
         <div class="admin-breadcrumb">
+            {% if user.profile.role == 'station_commander' or user.profile.role == 'provincial_chief' %}
+            <a href="{% url 'admin_panel:users' %}"><i class="fas fa-users-cog"></i> Personnel</a>
+            {% else %}
             <a href="{% url 'admin_panel:dashboard' %}"><i class="fas fa-tachometer-alt"></i> Admin</a>
             <span>/</span>
             <span>Users</span>
+            {% endif %}
         </div>
     </div>
     <button type="button" class="btn btn-primary" onclick="openCreateUserModal()">
         <i class="fas fa-user-plus"></i>
-        Create New User
+        {% if user.profile.role == 'station_commander' or user.profile.role == 'provincial_chief' %}Add Personnel{% else %}Create New User{% endif %}
     </button>
 </div>
 
@@ -46,7 +70,17 @@
                 <select name="role" id="role" class="form-control">
                     <option value="">All Roles</option>
                     {% for value, label in roles %}
-                    <option value="{{ value }}" {% if role_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% if user.profile.role == 'station_commander' %}
+                            {% if value == 'traffic_officer' or value == 'data_encoder' %}
+                            <option value="{{ value }}" {% if role_filter == value %}selected{% endif %}>{{ label }}</option>
+                            {% endif %}
+                        {% elif user.profile.role == 'provincial_chief' %}
+                            {% if value == 'station_commander' or value == 'traffic_officer' or value == 'data_encoder' %}
+                            <option value="{{ value }}" {% if role_filter == value %}selected{% endif %}>{{ label }}</option>
+                            {% endif %}
+                        {% else %}
+                            <option value="{{ value }}" {% if role_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endif %}
                     {% endfor %}
                 </select>
             </div>
@@ -74,22 +108,7 @@
     </form>
 </div>
 
-<!-- Results Summary + Per Page -->
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-    <div style="color: var(--text-light); font-size: 0.85rem;">
-        <i class="fas fa-info-circle"></i>
-        Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ total_count }} user{{ total_count|pluralize }}
-    </div>
-    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem;">
-        <span style="color: var(--text-light);">Show</span>
-        <select id="perPageSelect" onchange="changePerPage(this.value)" style="padding: 0.3rem 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.82rem; color: #374151; cursor: pointer; background: white;">
-            <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-            <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
-            <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
-        </select>
-        <span style="color: var(--text-light);">per page</span>
-    </div>
-</div>
+<!-- Results Summary + Per Page (moved into pagination below table) -->
 
 <!-- Users Table -->
 <div class="admin-table-container">
@@ -102,7 +121,7 @@
                 <th>Badge</th>
                 <th>Rank</th>
                 <th>Role</th>
-                <th>Station</th>
+                <th>Station/Office</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
@@ -161,7 +180,7 @@
                 </td>
                 <td>
                     {% if user.profile %}
-                    {{ user.profile.station|default:"-" }}
+                    {{ user.profile.assignment_display|default:"-" }}
                     {% else %}
                     -
                     {% endif %}
@@ -207,31 +226,57 @@
 </div>
 
 <!-- Pagination -->
-{% if page_obj.has_other_pages %}
-<div class="um-pagination">
-    {% if page_obj.has_previous %}
-    <a class="um-page-btn" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}&per_page={{ per_page }}" title="First page">
-        <i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left" style="margin-left: -4px;"></i>
-    </a>
-    <a class="um-page-btn" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}&per_page={{ per_page }}" title="Previous page">
-        <i class="fas fa-chevron-left"></i>
-    </a>
-    {% endif %}
+<div class="um-paging-wrap">
+    <div class="um-paging-top">
+        <div class="um-paging-info">
+            <i class="fas fa-info-circle"></i>
+            Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ total_count }} user{{ total_count|pluralize }}
+        </div>
+        <div class="um-per-page">
+            Show
+            <select onchange="changePerPage(this.value)">
+                <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                <option value="15" {% if per_page == 15 %}selected{% endif %}>15</option>
+                <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+                <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+            </select>
+            per page
+        </div>
+    </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="um-paging-center">
+        <div class="um-paging-btns">
+            <!-- Prev -->
+            <a class="um-pg-btn{% if not page_obj.has_previous %} um-pg-disabled{% endif %}"
+               href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}&per_page={{ per_page }}{% else %}#{% endif %}">
+                <i class="fas fa-chevron-left" style="font-size:0.65rem;"></i>
+            </a>
 
-    <span class="um-page-btn um-page-current">
-        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-    </span>
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <a class="um-pg-btn um-pg-active" href="#">{{ num }}</a>
+                {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                    <a class="um-pg-btn"
+                       href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}&per_page={{ per_page }}">{{ num }}</a>
+                {% elif num >= page_obj.number|add:"-1" and num <= page_obj.number|add:"1" %}
+                    <a class="um-pg-btn"
+                       href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}&per_page={{ per_page }}">{{ num }}</a>
+                {% elif num == 2 and page_obj.number > 3 %}
+                    <span class="um-pg-ellipsis">&hellip;</span>
+                {% elif num == page_obj.paginator.num_pages|add:"-1" and page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
+                    <span class="um-pg-ellipsis">&hellip;</span>
+                {% endif %}
+            {% endfor %}
 
-    {% if page_obj.has_next %}
-    <a class="um-page-btn" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}&per_page={{ per_page }}" title="Next page">
-        <i class="fas fa-chevron-right"></i>
-    </a>
-    <a class="um-page-btn" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}&per_page={{ per_page }}" title="Last page">
-        <i class="fas fa-chevron-right"></i><i class="fas fa-chevron-right" style="margin-left: -4px;"></i>
-    </a>
+            <!-- Next -->
+            <a class="um-pg-btn{% if not page_obj.has_next %} um-pg-disabled{% endif %}"
+               href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}&per_page={{ per_page }}{% else %}#{% endif %}">
+                <i class="fas fa-chevron-right" style="font-size:0.65rem;"></i>
+            </a>
+        </div>
+    </div>
     {% endif %}
 </div>
-{% endif %}
 
 <!-- =========================================
      CREATE USER MODAL
@@ -280,6 +325,10 @@
                         <div class="cm-field">
                             <label for="cm_username">Username <span class="cm-req">*</span></label>
                             <input type="text" name="username" id="cm_username" class="cm-input" required>
+                            <div class="cm-email-suggest" id="cmUsernameSuggest" style="display: none;">
+                                <span class="cm-email-suggest-label">Suggested:</span>
+                                <button type="button" class="cm-email-suggest-btn" id="cmUsernameSuggestBtn" onclick="applyCmUsernameSuggestion()"></button>
+                            </div>
                             <small class="cm-hint">Letters, digits, and @/./+/-/_ only</small>
                         </div>
                         <div class="cm-field">
@@ -304,33 +353,70 @@
                         </div>
                     </div>
 
-                    <div class="cm-checkbox-row">
-                        <input type="checkbox" name="must_change_password" id="cm_must_change_password" checked>
-                        <label for="cm_must_change_password">
-                            <i class="fas fa-lock" style="color: #003087; font-size: 0.72rem;"></i>
-                            Require password change on first login
-                        </label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div class="cm-checkbox-row">
+                            <input type="checkbox" name="must_change_password" id="cm_must_change_password" checked>
+                            <label for="cm_must_change_password">
+                                <i class="fas fa-lock" style="color: #003087; font-size: 0.72rem;"></i>
+                                Require password change on first login
+                            </label>
+                        </div>
+                        <div class="cm-checkbox-row">
+                            <input type="checkbox" name="can_submit_reports" id="cm_can_submit_reports" checked>
+                            <label for="cm_can_submit_reports">
+                                <i class="fas fa-file-alt" style="color: #3B82F6; font-size: 0.72rem;"></i>
+                                Allow access to report page
+                            </label>
+                        </div>
+                        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
+                        <div class="cm-checkbox-row">
+                            <input type="checkbox" name="can_run_clustering" id="cm_can_run_clustering">
+                            <label for="cm_can_run_clustering">
+                                <i class="fas fa-project-diagram" style="color: #DC143C; font-size: 0.72rem;"></i>
+                                Authorize to run clustering
+                            </label>
+                        </div>
+                        {% endif %}
                     </div>
 
                     <!-- Profile Picture Upload -->
                     <div class="cm-field" style="margin-top: 0.5rem;">
                         <label>Profile Picture</label>
-                        <div class="cm-upload" id="cmUploadArea"
+                        <div class="cm-pp-zone" id="cmUploadArea"
                              onclick="document.getElementById('cm_profile_picture').click()"
                              ondragover="cmDragOver(event)" ondragleave="cmDragLeave(event)" ondrop="cmDrop(event)">
-                            <div id="cmEmptyState">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; color: #003087; margin-bottom: 0.3rem;"></i>
-                                <p style="margin: 0; font-weight: 600; font-size: 0.8rem; color: #1f2937;">Upload Photo</p>
-                                <p style="margin: 0.15rem 0 0; font-size: 0.7rem; color: #9ca3af;">Click or drag & drop - JPG, PNG - Max 5MB</p>
-                            </div>
-                            <div id="cmPreviewState" style="display: none;">
-                                <img id="cmPreviewImg" style="width: 56px; height: 56px; object-fit: cover; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-                                <p style="margin: 0.3rem 0 0; font-size: 0.72rem; color: #059669; font-weight: 600;">
-                                    <i class="fas fa-check-circle"></i> Picture selected
-                                </p>
+                            <div class="cm-pp-row">
+                                <!-- Avatar -->
+                                <div class="cm-pp-avatar-wrap">
+                                    <div class="cm-pp-avatar-empty" id="cmEmptyAvatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <img id="cmPreviewImg" class="cm-pp-avatar-img" style="display:none; position:absolute; top:0; left:0;">
+                                    <div class="cm-pp-overlay"><i class="fas fa-camera"></i></div>
+                                </div>
+                                <!-- Info -->
+                                <div class="cm-pp-info" onclick="event.stopPropagation()">
+                                    <div class="cm-pp-status" id="cmPPStatus">Click or drag a photo to upload</div>
+                                    <div class="cm-pp-badge" id="cmPPBadge">
+                                        <i class="fas fa-check-circle"></i> Photo selected
+                                    </div>
+                                    <div class="cm-pp-filename" id="cmPPFileName"></div>
+                                    <div class="cm-pp-btns">
+                                        <button type="button" class="cm-pp-btn cm-pp-btn-primary" onclick="document.getElementById('cm_profile_picture').click()">
+                                            <i class="fas fa-cloud-upload-alt"></i> Upload
+                                        </button>
+                                        <button type="button" class="cm-pp-btn cm-pp-btn-remove" id="cmPPRemoveBtn" style="display:none;" onclick="cmRemovePicture()">
+                                            <i class="fas fa-times"></i> Remove
+                                        </button>
+                                    </div>
+                                    <div class="cm-pp-hint">JPG, PNG &bull; Max 5MB &bull; Drag & drop</div>
+                                </div>
                             </div>
                             <input type="file" name="profile_picture" id="cm_profile_picture" accept="image/*" onchange="cmPreviewPicture(event)" style="display: none;">
                         </div>
+                        <!-- Keep hidden elements for reset compatibility -->
+                        <div id="cmEmptyState" style="display:none;"></div>
+                        <div id="cmPreviewState" style="display:none;"></div>
                     </div>
                 </div>
 
@@ -358,8 +444,11 @@
                             </label>
                             <div class="cm-phone-group" id="cmMobileGroup">
                                 <div class="cm-phone-prefix">+63</div>
-                                <input type="text" name="mobile_number" id="cm_mobile_number"
-                                       class="cm-phone-input" maxlength="18" inputmode="numeric" required>
+                                <div class="cm-phone-wrap">
+                                    <span class="cm-phone-placeholder" id="cmPhonePlaceholder">9XX XXX XXXX</span>
+                                    <input type="text" name="mobile_number" id="cm_mobile_number"
+                                           class="cm-phone-input" maxlength="18" inputmode="numeric" required>
+                                </div>
                             </div>
                             <small class="cm-error-hint" id="cmMobileHint" style="display: none;">
                                 <i class="fas fa-info-circle"></i> Please enter exactly 10 digits
@@ -380,7 +469,17 @@
                             <label for="cm_role">Role <span class="cm-req">*</span></label>
                             <select name="role" id="cm_role" class="cm-input" required>
                                 {% for value, label in roles %}
-                                <option value="{{ value }}">{{ label }}</option>
+                                    {% if user.profile.role == 'station_commander' %}
+                                        {% if value == 'traffic_officer' or value == 'data_encoder' %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                        {% endif %}
+                                    {% elif user.profile.role == 'provincial_chief' %}
+                                        {% if value == 'station_commander' or value == 'traffic_officer' or value == 'data_encoder' %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                        {% endif %}
+                                    {% else %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                    {% endif %}
                                 {% endfor %}
                             </select>
                         </div>
@@ -406,13 +505,30 @@
                     </div>
 
                     <div class="cm-row">
-                        <div class="cm-field">
+                        <div class="cm-field" id="cm-station-group">
                             <label for="cm_station">Station <span class="cm-req">*</span></label>
                             <select name="station" id="cm_station" class="cm-input" required>
                                 <option value="">-- Select Province First --</option>
                             </select>
                         </div>
-                        <div class="cm-field">
+                        <div class="cm-field" id="cm-office-group" style="display: none;">
+                            <label for="cm_office">Office/Command <span class="cm-req">*</span></label>
+                            <select name="office" id="cm_office" class="cm-input" disabled>
+                                <option value="">-- Select Office --</option>
+                                <optgroup label="Provincial Police Offices">
+                                    <option value="Agusan del Norte PPO">Agusan del Norte PPO</option>
+                                    <option value="Agusan del Sur PPO">Agusan del Sur PPO</option>
+                                    <option value="Dinagat Islands PPO">Dinagat Islands PPO</option>
+                                    <option value="Surigao del Norte PPO">Surigao del Norte PPO</option>
+                                    <option value="Surigao del Sur PPO">Surigao del Sur PPO</option>
+                                    <option value="Prosperity PPO (Agusan del Sur)">Prosperity PPO (Agusan del Sur)</option>
+                                </optgroup>
+                                <optgroup label="Regional Office">
+                                    <option value="Police Regional Office CARAGA">Police Regional Office CARAGA</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="cm-field" id="cm-unit-group" style="display: none;">
                             <label for="cm_unit">Unit/Office</label>
                             <select name="unit" id="cm_unit" class="cm-input">
                                 <option value="">--- Select Unit ---</option>
@@ -451,24 +567,11 @@
                                     <option value="Regional Communications and Electronics Unit">RCEU</option>
                                     <option value="Regional Personnel Holding and Accounting Unit">RPHAU</option>
                                 </optgroup>
-                                <optgroup label="Provincial/City Police Offices">
-                                    <option value="Agusan del Norte Police Provincial Office">Agusan del Norte PPO</option>
-                                    <option value="Agusan del Sur Police Provincial Office">Agusan del Sur PPO</option>
-                                    <option value="Surigao del Norte Police Provincial Office">Surigao del Norte PPO</option>
-                                    <option value="Surigao del Sur Police Provincial Office">Surigao del Sur PPO</option>
-                                    <option value="Dinagat Islands Police Provincial Office">Dinagat Islands PPO</option>
-                                    <option value="Butuan City Police Office">Butuan City Police Office</option>
-                                </optgroup>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- Error display -->
-                <div class="cm-error-box" id="cmErrorBox" style="display: none;">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <span id="cmErrorText"></span>
-                </div>
             </form>
         </div>
 
@@ -489,50 +592,105 @@
 {% block extra_js %}
 <style>
 /* =========================================
-   PAGINATION - Pill Style
+   PAGINATION - Numbered Circle Style
    ========================================= */
-.um-pagination {
+.um-paging-wrap {
+    border-top: 1px solid #E5E7EB;
+    background: #FAFBFC;
+    margin-top: 0.5rem;
+    border-radius: 0 0 12px 12px;
+}
+.um-paging-top {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 1.5rem;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
     flex-wrap: wrap;
+    gap: 0.5rem;
 }
-.um-page-btn {
+.um-paging-info {
+    font-size: 0.8rem;
+    color: #6B7280;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.um-paging-info i { color: #003087; font-size: 0.75rem; }
+.um-per-page {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    color: #6B7280;
+}
+.um-per-page select {
+    padding: 0.2rem 0.35rem;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #374151;
+    background: white;
+    cursor: pointer;
+    outline: none;
+}
+.um-per-page select:focus {
+    border-color: #003087;
+    box-shadow: 0 0 0 2px rgba(0,48,135,0.08);
+}
+.um-paging-center {
+    display: flex;
+    justify-content: center;
+    padding: 0.375rem 1rem 0.75rem;
+}
+.um-paging-btns {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.um-pg-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #D1D5DB;
+    background: white;
+    color: #374151;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 38px;
-    height: 38px;
-    padding: 0 14px;
-    border-radius: 20px;
-    font-size: 0.82rem;
-    font-weight: 600;
     text-decoration: none;
-    border: 1px solid #d1d5db;
-    background: #fff;
-    color: #374151;
-    cursor: pointer;
     transition: all 0.15s ease;
-    white-space: nowrap;
 }
-.um-page-btn:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
-    color: #111827;
+.um-pg-btn:hover:not(.um-pg-active) {
+    background: #F3F4F6;
+    border-color: #9CA3AF;
 }
-.um-page-btn.um-page-current {
+.um-pg-btn.um-pg-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+.um-pg-btn.um-pg-active {
     background: #003087;
-    color: #fff;
+    color: white;
     border-color: #003087;
-    cursor: default;
+    font-weight: 600;
 }
-.um-page-btn.um-page-current:hover {
-    background: #003087;
-    border-color: #003087;
-    color: #fff;
+.um-pg-ellipsis {
+    padding: 0 0.2rem;
+    color: #9CA3AF;
+    font-size: 0.8rem;
 }
+
+/* Dark Theme - Pagination */
+[data-theme="dark"] .um-paging-wrap { background: #1A2332; border-color: #2D3A4F; }
+[data-theme="dark"] .um-paging-info { color: #9CA3AF; }
+[data-theme="dark"] .um-per-page { color: #9CA3AF; }
+[data-theme="dark"] .um-per-page select { background: #0F172A; border-color: #2D3A4F; color: #D1D5DB; }
+[data-theme="dark"] .um-pg-btn { background: #0F172A; border-color: #2D3A4F; color: #D1D5DB; }
+[data-theme="dark"] .um-pg-btn:hover:not(.um-pg-active) { background: #1E293B; }
+[data-theme="dark"] .um-pg-btn.um-pg-active { background: #003087; color: white; border-color: #003087; }
 
 /* =========================================
    CONFIRMATION MODAL (existing)
@@ -541,15 +699,17 @@
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
+    width: 100vw;
+    height: 100vh;
+    max-width: none !important;
+    margin: 0 !important;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    padding-top: 5px;
-    z-index: 10010;
+    z-index: 10016;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -732,19 +892,21 @@
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(3px);
+    width: 100vw;
+    height: 100vh;
+    max-width: none !important;
+    margin: 0 !important;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     z-index: 10015;
     display: none;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    padding: 24px 16px;
+    padding: 16px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
-    overflow-y: auto;
+    transition: opacity 0.3s ease;
 }
 .create-modal-overlay.show {
     display: flex;
@@ -760,7 +922,7 @@
     max-width: 680px;
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 48px);
+    max-height: calc(100vh - 32px);
     transform: translateY(-20px) scale(0.98);
     transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -943,6 +1105,27 @@
     font-size: 0.78rem;
     flex-shrink: 0;
 }
+.cm-phone-wrap {
+    position: relative;
+    flex: 1;
+    display: flex;
+    min-width: 0;
+}
+.cm-phone-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.42rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: #9ca3af;
+    pointer-events: none;
+    white-space: nowrap;
+    font-family: inherit;
+}
 .cm-phone-input {
     flex: 1;
     border: none;
@@ -951,12 +1134,12 @@
     font-weight: 500;
     letter-spacing: 0.04em;
     outline: none;
-    background: white;
+    background: transparent;
     color: #1f2937;
     min-width: 0;
-}
-.cm-phone-input::placeholder {
-    color: #9ca3af;
+    position: relative;
+    z-index: 1;
+    caret-color: #003087;
 }
 .cm-error-hint {
     font-size: 0.66rem;
@@ -1022,18 +1205,131 @@
 }
 
 /* Upload */
-.cm-upload {
-    border: 1.5px dashed #d1d5db;
-    border-radius: 8px;
-    padding: 0.85rem;
-    text-align: center;
-    background: #fafbfc;
+.cm-pp-zone {
+    border-radius: 10px;
+    padding: 0.875rem;
+    background: #F9FAFB;
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
+    transition: background 0.2s ease;
 }
-.cm-upload:hover {
-    border-color: #003087;
-    background: rgba(0, 48, 135, 0.02);
+.cm-pp-zone:hover { background: #F3F4F6; }
+.cm-pp-zone.cm-pp-dragover { background: rgba(0,48,135,0.04); }
+.cm-pp-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+.cm-pp-avatar-wrap {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+}
+.cm-pp-avatar-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 3px solid white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: opacity 0.2s ease;
+}
+.cm-pp-avatar-empty {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #E0E7FF, #C7D2FE);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+.cm-pp-avatar-empty i { font-size: 1.75rem; color: #818CF8; }
+.cm-pp-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.cm-pp-overlay i { color: white; font-size: 1.1rem; }
+.cm-pp-zone:hover .cm-pp-overlay { opacity: 1; }
+.cm-pp-zone:hover .cm-pp-avatar-img { opacity: 0.85; }
+.cm-pp-info { min-width: 0; }
+.cm-pp-status {
+    font-size: 0.78rem;
+    color: #9CA3AF;
+}
+.cm-pp-badge {
+    display: none;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.2rem;
+    padding: 0.15rem 0.5rem;
+    background: #ECFDF5;
+    color: #059669;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    width: fit-content;
+}
+.cm-pp-badge.visible { display: inline-flex; }
+.cm-pp-filename {
+    display: none;
+    font-size: 0.7rem;
+    color: #9CA3AF;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+}
+.cm-pp-filename.visible { display: block; }
+.cm-pp-btns {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+}
+.cm-pp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+}
+.cm-pp-btn-primary {
+    background: #003087;
+    color: white;
+}
+.cm-pp-btn-primary:hover {
+    background: #0047BB;
+    box-shadow: 0 2px 6px rgba(0,48,135,0.25);
+}
+.cm-pp-btn-remove {
+    background: transparent;
+    color: #EF4444;
+    border: 1px solid #FECACA;
+}
+.cm-pp-btn-remove:hover { background: #FEF2F2; }
+.cm-pp-hint {
+    font-size: 0.625rem;
+    color: #B0B5BC;
+    margin-top: 0.25rem;
 }
 
 /* Permissions bar */
@@ -1060,19 +1356,6 @@
     color: #374151;
 }
 
-/* Error box */
-.cm-error-box {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 7px;
-    padding: 0.55rem 0.75rem;
-    font-size: 0.76rem;
-    color: #dc2626;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
 
 /* Footer */
 .create-modal-footer {
@@ -1213,7 +1496,7 @@ const cmStations = {
 // =========================================
 function cmFormatPhone(input) {
     let digits = input.value.replace(/\D/g, '');
-    if (!digits) { input.value = ''; return; }
+    if (!digits) { input.value = ''; cmUpdatePhonePlaceholder(''); return; }
     if (digits.startsWith('63')) digits = digits.substring(2);
     if (digits.startsWith('0')) digits = digits.substring(1);
     if (digits.length > 10) digits = digits.substring(0, 10);
@@ -1221,6 +1504,34 @@ function cmFormatPhone(input) {
     if (digits.length <= 3) input.value = digits;
     else if (digits.length <= 6) input.value = `${digits.substring(0, 3)} ${digits.substring(3)}`;
     else input.value = `${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6)}`;
+
+    cmUpdatePhonePlaceholder(digits);
+}
+
+function cmUpdatePhonePlaceholder(digits) {
+    var ph = document.getElementById('cmPhonePlaceholder');
+    if (!ph) return;
+    // Template: 9XX XXX XXXX (positions 0-9)
+    var template = '9XXXXXXXXX';
+    var len = digits.length;
+    if (len >= 10) { ph.textContent = ''; return; }
+    // Build: typed portion as invisible (transparent) + remaining as gray placeholder
+    // We match the formatted spacing: 3-3-4
+    var remaining = template.substring(len);
+    // Add spaces to match format
+    var typed = template.substring(0, len);
+    var full = typed + remaining;
+    // Format with spaces: XXX XXX XXXX
+    var formatted = full.substring(0, 3);
+    if (full.length > 3) formatted += ' ' + full.substring(3, 6);
+    if (full.length > 6) formatted += ' ' + full.substring(6);
+    // The typed part should be invisible (same width but transparent)
+    var typedFormatted = '';
+    if (len <= 3) typedFormatted = digits;
+    else if (len <= 6) typedFormatted = digits.substring(0, 3) + ' ' + digits.substring(3);
+    else typedFormatted = digits.substring(0, 3) + ' ' + digits.substring(3, 6) + ' ' + digits.substring(6);
+    // Use a span to make typed portion invisible
+    ph.innerHTML = '<span style="visibility:hidden">' + typedFormatted + '</span>' + formatted.substring(typedFormatted.length);
 }
 
 // =========================================
@@ -1231,6 +1542,45 @@ function changePerPage(value) {
     url.searchParams.set('per_page', value);
     url.searchParams.set('page', '1');
     window.location.href = url.toString();
+}
+
+// =========================================
+// USERNAME AUTO-SUGGESTION
+// =========================================
+function updateCmUsernameSuggestion() {
+    const firstName = document.getElementById('cm_first_name').value.trim().toLowerCase();
+    const lastName = document.getElementById('cm_last_name').value.trim().toLowerCase();
+    const usernameInput = document.getElementById('cm_username');
+    const suggestBox = document.getElementById('cmUsernameSuggest');
+    const suggestBtn = document.getElementById('cmUsernameSuggestBtn');
+
+    if (firstName && lastName) {
+        const cleanFirst = firstName.replace(/[^a-z]/g, '');
+        const cleanLast = lastName.replace(/[^a-z]/g, '');
+
+        if (cleanFirst && cleanLast) {
+            const suggested = cleanFirst + '.' + cleanLast;
+            suggestBtn.textContent = suggested;
+            suggestBtn.title = suggested;
+            suggestBox.style.display = 'flex';
+
+            // If username is empty, auto-fill it
+            if (!usernameInput.value.trim()) {
+                usernameInput.value = suggested;
+                suggestBox.style.display = 'none';
+            } else if (usernameInput.value.trim() === suggested) {
+                suggestBox.style.display = 'none';
+            }
+            return;
+        }
+    }
+    suggestBox.style.display = 'none';
+}
+
+function applyCmUsernameSuggestion() {
+    const suggestBtn = document.getElementById('cmUsernameSuggestBtn');
+    document.getElementById('cm_username').value = suggestBtn.textContent;
+    document.getElementById('cmUsernameSuggest').style.display = 'none';
 }
 
 // =========================================
@@ -1299,11 +1649,9 @@ function closeCreateUserModal() {
     setTimeout(() => { overlay.style.display = 'none'; }, 300);
     // Reset form
     document.getElementById('createUserForm').reset();
-    // Reset preview
-    document.getElementById('cmEmptyState').style.display = '';
-    document.getElementById('cmPreviewState').style.display = 'none';
-    // Reset error
-    document.getElementById('cmErrorBox').style.display = 'none';
+    // Reset profile picture preview
+    cmRemovePicture();
+    // Reset error hints
     document.getElementById('cmBadgeHint').style.display = 'none';
     document.getElementById('cmMobileHint').style.display = 'none';
     document.getElementById('cmMobileGroup').classList.remove('error');
@@ -1316,6 +1664,13 @@ function closeCreateUserModal() {
     // Reset password borders
     document.getElementById('cm_confirm_password').style.borderColor = '';
     document.getElementById('cm_confirm_password').style.borderWidth = '';
+    // Reset phone placeholder
+    cmUpdatePhonePlaceholder('');
+    // Reset username/email suggestions
+    var usSuggest = document.getElementById('cmUsernameSuggest');
+    if (usSuggest) usSuggest.style.display = 'none';
+    var emSuggest = document.getElementById('cmEmailSuggest');
+    if (emSuggest) emSuggest.style.display = 'none';
 }
 
 // =========================================
@@ -1339,22 +1694,75 @@ function cmUpdateStations() {
 }
 
 // =========================================
+// DYNAMIC STATION/OFFICE TOGGLE IN MODAL
+// =========================================
+const CM_OFFICE_ROLES = ['provincial_chief', 'regional_director'];
+const CM_PPO_MAP = {
+    'Agusan del Norte': 'Agusan del Norte PPO',
+    'Agusan del Sur': 'Agusan del Sur PPO',
+    'Butuan City': 'Butuan City Police Office',
+    'Dinagat Islands': 'Dinagat Islands PPO',
+    'Surigao del Norte': 'Surigao del Norte PPO',
+    'Surigao del Sur': 'Surigao del Sur PPO',
+};
+
+const CM_UNIT_ROLES = ['super_admin', 'regional_director'];
+
+function cmToggleStationOffice() {
+    const role = document.getElementById('cm_role').value;
+    const stationGroup = document.getElementById('cm-station-group');
+    const officeGroup = document.getElementById('cm-office-group');
+    const unitGroup = document.getElementById('cm-unit-group');
+    const stationSelect = document.getElementById('cm_station');
+    const officeInput = document.getElementById('cm_office');
+
+    // Show Unit field only for Super Admin and Regional Director
+    unitGroup.style.display = CM_UNIT_ROLES.includes(role) ? '' : 'none';
+
+    if (CM_OFFICE_ROLES.includes(role)) {
+        stationGroup.style.display = 'none';
+        stationSelect.disabled = true;
+        stationSelect.removeAttribute('required');
+        officeGroup.style.display = '';
+        officeInput.disabled = false;
+        officeInput.setAttribute('required', 'required');
+        if (role === 'provincial_chief') {
+            const prov = document.getElementById('cm_province').value;
+            if (prov && CM_PPO_MAP[prov]) officeInput.value = CM_PPO_MAP[prov];
+        } else if (role === 'regional_director') {
+            officeInput.value = 'Police Regional Office CARAGA';
+        }
+    } else {
+        stationGroup.style.display = '';
+        stationSelect.disabled = false;
+        stationSelect.setAttribute('required', 'required');
+        officeGroup.style.display = 'none';
+        officeInput.disabled = true;
+        officeInput.removeAttribute('required');
+    }
+}
+
+document.getElementById('cm_role').addEventListener('change', cmToggleStationOffice);
+document.getElementById('cm_province').addEventListener('change', function() {
+    if (document.getElementById('cm_role').value === 'provincial_chief') {
+        document.getElementById('cm_office').value = CM_PPO_MAP[this.value] || '';
+    }
+});
+
+// =========================================
 // DRAG & DROP / PREVIEW
 // =========================================
 function cmDragOver(e) {
     e.preventDefault(); e.stopPropagation();
-    document.getElementById('cmUploadArea').style.borderColor = '#003087';
-    document.getElementById('cmUploadArea').style.background = 'rgba(0,48,135,0.04)';
+    document.getElementById('cmUploadArea').classList.add('cm-pp-dragover');
 }
 function cmDragLeave(e) {
     e.preventDefault(); e.stopPropagation();
-    document.getElementById('cmUploadArea').style.borderColor = '#d1d5db';
-    document.getElementById('cmUploadArea').style.background = '#fafbfc';
+    document.getElementById('cmUploadArea').classList.remove('cm-pp-dragover');
 }
 function cmDrop(e) {
     e.preventDefault(); e.stopPropagation();
-    document.getElementById('cmUploadArea').style.borderColor = '#d1d5db';
-    document.getElementById('cmUploadArea').style.background = '#fafbfc';
+    document.getElementById('cmUploadArea').classList.remove('cm-pp-dragover');
     if (e.dataTransfer.files.length > 0) {
         document.getElementById('cm_profile_picture').files = e.dataTransfer.files;
         cmPreviewPicture({ target: document.getElementById('cm_profile_picture') });
@@ -1376,12 +1784,31 @@ function cmPreviewPicture(event) {
         }
         const reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('cmPreviewImg').src = e.target.result;
-            document.getElementById('cmEmptyState').style.display = 'none';
-            document.getElementById('cmPreviewState').style.display = '';
+            var img = document.getElementById('cmPreviewImg');
+            var empty = document.getElementById('cmEmptyAvatar');
+            img.src = e.target.result;
+            img.style.display = 'block';
+            empty.style.display = 'none';
+            document.getElementById('cmPPStatus').textContent = 'Photo ready to upload';
+            document.getElementById('cmPPBadge').classList.add('visible');
+            var fnEl = document.getElementById('cmPPFileName');
+            fnEl.textContent = file.name;
+            fnEl.classList.add('visible');
+            document.getElementById('cmPPRemoveBtn').style.display = '';
         };
         reader.readAsDataURL(file);
     }
+}
+
+function cmRemovePicture() {
+    var fi = document.getElementById('cm_profile_picture');
+    fi.value = '';
+    document.getElementById('cmPreviewImg').style.display = 'none';
+    document.getElementById('cmEmptyAvatar').style.display = 'flex';
+    document.getElementById('cmPPStatus').textContent = 'Click or drag a photo to upload';
+    document.getElementById('cmPPBadge').classList.remove('visible');
+    document.getElementById('cmPPFileName').classList.remove('visible');
+    document.getElementById('cmPPRemoveBtn').style.display = 'none';
 }
 
 // =========================================
@@ -1390,25 +1817,22 @@ function cmPreviewPicture(event) {
 async function submitCreateUser() {
     const form = document.getElementById('createUserForm');
     const btn = document.getElementById('cmSubmitBtn');
-    const errorBox = document.getElementById('cmErrorBox');
-    const errorText = document.getElementById('cmErrorText');
 
-    // Hide previous error
-    errorBox.style.display = 'none';
+    function showError(msg) {
+        showCenterNotification(msg, 'error', 4000);
+    }
 
     // Client-side validation
     const password = document.getElementById('cm_password').value;
     const confirmPassword = document.getElementById('cm_confirm_password').value;
 
     if (password !== confirmPassword) {
-        errorText.textContent = 'Passwords do not match!';
-        errorBox.style.display = 'flex';
+        showError('Passwords do not match!');
         document.getElementById('cm_confirm_password').focus();
         return;
     }
     if (password.length < 8) {
-        errorText.textContent = 'Password must be at least 8 characters long!';
-        errorBox.style.display = 'flex';
+        showError('Password must be at least 8 characters long!');
         document.getElementById('cm_password').focus();
         return;
     }
@@ -1419,15 +1843,13 @@ async function submitCreateUser() {
     const badgeVal = badgeInput.value.trim().replace(/[^a-zA-Z0-9]/g, '');
 
     if (!badgeVal) {
-        errorText.textContent = 'Badge number is required!';
-        errorBox.style.display = 'flex';
+        showError('Badge number is required!');
         badgeHint.style.display = 'block';
         badgeInput.focus();
         return;
     }
     if (badgeVal.length < 4 || badgeVal.length > 8) {
-        errorText.textContent = 'Badge number must be 4-8 alphanumeric characters.';
-        errorBox.style.display = 'flex';
+        showError('Badge number must be 4-8 alphanumeric characters.');
         badgeHint.style.display = 'block';
         badgeInput.focus();
         return;
@@ -1441,30 +1863,34 @@ async function submitCreateUser() {
     const mobileDigits = mobileInput.value.replace(/\D/g, '');
 
     if (!mobileInput.value.trim()) {
-        errorText.textContent = 'Mobile number is required!';
-        errorBox.style.display = 'flex';
+        showError('Mobile number is required!');
         mobileGroup.classList.add('error');
         mobileHint.style.display = 'block';
         mobileInput.focus();
         return;
     }
     if (mobileDigits.length !== 10) {
-        errorText.textContent = 'Please enter exactly 10 digits for mobile number.';
-        errorBox.style.display = 'flex';
+        showError('Please enter exactly 10 digits for mobile number.');
         mobileGroup.classList.add('error');
         mobileHint.style.display = 'block';
         mobileInput.focus();
         return;
     }
 
-    // Check required fields
-    const requiredFields = ['cm_first_name', 'cm_last_name', 'cm_username', 'cm_password', 'cm_badge_number', 'cm_province', 'cm_station'];
-    for (const fieldId of requiredFields) {
+    // Check required fields (station vs office depends on role)
+    const cmRole = document.getElementById('cm_role').value;
+    const baseRequired = ['cm_first_name', 'cm_last_name', 'cm_username', 'cm_password', 'cm_badge_number', 'cm_province'];
+    if (CM_OFFICE_ROLES.includes(cmRole)) {
+        if (cmRole === 'provincial_chief') baseRequired.push('cm_office');
+        // regional_director office is auto-assigned, no validation needed
+    } else {
+        baseRequired.push('cm_station');
+    }
+    for (const fieldId of baseRequired) {
         const el = document.getElementById(fieldId);
         if (!el.value.trim()) {
             const label = el.closest('.cm-field').querySelector('label').textContent.replace('*', '').trim();
-            errorText.textContent = `${label} is required!`;
-            errorBox.style.display = 'flex';
+            showError(`${label} is required!`);
             el.focus();
             return;
         }
@@ -1498,8 +1924,7 @@ async function submitCreateUser() {
             }, 1200);
         } else {
             // Show error
-            errorText.textContent = data.error || 'An error occurred.';
-            errorBox.style.display = 'flex';
+            showError(data.error || 'An error occurred.');
             // Focus the error field if provided
             if (data.field) {
                 const fieldEl = document.getElementById('cm_' + data.field);
@@ -1511,8 +1936,7 @@ async function submitCreateUser() {
         }
     } catch (err) {
         console.error('Error:', err);
-        errorText.textContent = 'Network error. Please try again.';
-        errorBox.style.display = 'flex';
+        showError('Network error. Please try again.');
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-user-plus"></i> Create User';
     }
@@ -1531,6 +1955,49 @@ document.addEventListener('DOMContentLoaded', function() {
         history.replaceState(null, '', url.toString());
     }
 
+    // Auto-fill province/station based on creator's role
+    {% if user.profile.role == 'station_commander' %}
+    (function() {
+        var cmProvince = document.getElementById('cm_province');
+        var cmStation = document.getElementById('cm_station');
+        var cmdProvince = '{{ user.profile.province|escapejs }}';
+        var cmdStation = '{{ user.profile.station|escapejs }}';
+        if (cmdProvince) {
+            cmProvince.value = cmdProvince;
+            cmUpdateStations();
+            if (cmdStation) cmStation.value = cmdStation;
+            cmProvince.disabled = true;
+            cmStation.disabled = true;
+            // Add hidden inputs so disabled values still submit
+            var form = document.getElementById('createUserForm');
+            var hProv = document.createElement('input');
+            hProv.type = 'hidden'; hProv.name = 'province'; hProv.value = cmdProvince;
+            hProv.id = 'cm_province_hidden';
+            var hStn = document.createElement('input');
+            hStn.type = 'hidden'; hStn.name = 'station'; hStn.value = cmdStation;
+            hStn.id = 'cm_station_hidden';
+            form.appendChild(hProv);
+            form.appendChild(hStn);
+        }
+    })();
+    {% elif user.profile.role == 'provincial_chief' %}
+    (function() {
+        var cmProvince = document.getElementById('cm_province');
+        var chiefProvince = '{{ user.profile.province|escapejs }}';
+        if (chiefProvince) {
+            cmProvince.value = chiefProvince;
+            cmUpdateStations();
+            cmProvince.disabled = true;
+            // Add hidden input so disabled province still submits
+            var form = document.getElementById('createUserForm');
+            var hProv = document.createElement('input');
+            hProv.type = 'hidden'; hProv.name = 'province'; hProv.value = chiefProvince;
+            hProv.id = 'cm_province_hidden';
+            form.appendChild(hProv);
+        }
+    })();
+    {% endif %}
+
     // Escape key closes modal (overlay click disabled to prevent accidental close while filling form)
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && document.getElementById('createUserOverlay').classList.contains('show')) {
@@ -1538,14 +2005,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Auto-capitalize first/last name + trigger email suggestion
+    // Auto-capitalize first/last name + trigger username & email suggestion
     document.querySelectorAll('#createUserForm .capitalize-input').forEach(input => {
         input.addEventListener('input', function() {
             if (this.value.length > 0) {
                 this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
             }
+            updateCmUsernameSuggestion();
             updateCmEmailSuggestion();
         });
+    });
+
+    // Show suggestion again if user clears/changes username
+    document.getElementById('cm_username').addEventListener('input', function() {
+        updateCmUsernameSuggestion();
     });
 
     // Show suggestion again if user clears/changes email

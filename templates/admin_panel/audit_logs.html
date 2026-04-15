@@ -2,6 +2,109 @@
 
 {% block title %}Audit Logs{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Pagination */
+    .al-paging-wrap {
+        border-top: 1px solid #E5E7EB;
+        background: #FAFBFC;
+        margin-top: 0.5rem;
+        border-radius: 0 0 12px 12px;
+    }
+    .al-paging-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .al-paging-info {
+        font-size: 0.8rem;
+        color: #6B7280;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .al-paging-info i { color: #003087; font-size: 0.75rem; }
+    .al-per-page {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        color: #6B7280;
+    }
+    .al-per-page select {
+        padding: 0.2rem 0.35rem;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        color: #374151;
+        background: white;
+        cursor: pointer;
+        outline: none;
+    }
+    .al-per-page select:focus {
+        border-color: #003087;
+        box-shadow: 0 0 0 2px rgba(0,48,135,0.08);
+    }
+    .al-paging-center {
+        display: flex;
+        justify-content: center;
+        padding: 0.375rem 1rem 0.75rem;
+    }
+    .al-paging-btns {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .al-pg-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid #D1D5DB;
+        background: white;
+        color: #374151;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+    .al-pg-btn:hover:not(.al-pg-active) {
+        background: #F3F4F6;
+        border-color: #9CA3AF;
+    }
+    .al-pg-btn.al-pg-disabled {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+    .al-pg-btn.al-pg-active {
+        background: #003087;
+        color: white;
+        border-color: #003087;
+        font-weight: 600;
+    }
+    .al-pg-ellipsis {
+        padding: 0 0.2rem;
+        color: #9CA3AF;
+        font-size: 0.8rem;
+    }
+
+    /* Dark Theme */
+    [data-theme="dark"] .al-paging-wrap { background: #1A2332; border-color: #2D3A4F; }
+    [data-theme="dark"] .al-paging-info { color: #9CA3AF; }
+    [data-theme="dark"] .al-per-page { color: #9CA3AF; }
+    [data-theme="dark"] .al-per-page select { background: #0F172A; border-color: #2D3A4F; color: #D1D5DB; }
+    [data-theme="dark"] .al-pg-btn { background: #0F172A; border-color: #2D3A4F; color: #D1D5DB; }
+    [data-theme="dark"] .al-pg-btn:hover:not(.al-pg-active) { background: #1E293B; }
+    [data-theme="dark"] .al-pg-btn.al-pg-active { background: #003087; color: white; border-color: #003087; }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Page Header -->
 <div class="admin-page-header">
@@ -87,11 +190,7 @@
     </form>
 </div>
 
-<!-- Results Summary -->
-<div style="margin-bottom: 1rem; color: var(--text-light);">
-    <i class="fas fa-info-circle"></i>
-    Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ total_count }} log{{ total_count|pluralize }}
-</div>
+<!-- Results summary moved into pagination bar below table -->
 
 <!-- Logs Table -->
 <div class="admin-table-container">
@@ -165,28 +264,66 @@
 </div>
 
 <!-- Pagination -->
-{% if page_obj.has_other_pages %}
-<div class="pagination">
-    {% if page_obj.has_previous %}
-    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
-        <i class="fas fa-angle-double-left"></i>
-    </a>
-    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
-        <i class="fas fa-angle-left"></i>
-    </a>
-    {% endif %}
+<div class="al-paging-wrap">
+    <div class="al-paging-top">
+        <div class="al-paging-info">
+            <i class="fas fa-info-circle"></i>
+            Showing {{ page_obj.start_index|default:0 }}-{{ page_obj.end_index|default:0 }} of {{ total_count }} log{{ total_count|pluralize }}
+        </div>
+        <div class="al-per-page">
+            Show
+            <select onchange="alChangePerPage(this.value)">
+                <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+                <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                <option value="15" {% if per_page == 15 %}selected{% endif %}>15</option>
+                <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+            </select>
+            per page
+        </div>
+    </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="al-paging-center">
+        <div class="al-paging-btns">
+            <!-- Prev -->
+            <a class="al-pg-btn{% if not page_obj.has_previous %} al-pg-disabled{% endif %}"
+               href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}&per_page={{ per_page }}{% else %}#{% endif %}">
+                <i class="fas fa-chevron-left" style="font-size:0.65rem;"></i>
+            </a>
 
-    <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <a class="al-pg-btn al-pg-active" href="#">{{ num }}</a>
+                {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                    <a class="al-pg-btn"
+                       href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}&per_page={{ per_page }}">{{ num }}</a>
+                {% elif num >= page_obj.number|add:"-1" and num <= page_obj.number|add:"1" %}
+                    <a class="al-pg-btn"
+                       href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}&per_page={{ per_page }}">{{ num }}</a>
+                {% elif num == 2 and page_obj.number > 3 %}
+                    <span class="al-pg-ellipsis">&hellip;</span>
+                {% elif num == page_obj.paginator.num_pages|add:"-1" and page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
+                    <span class="al-pg-ellipsis">&hellip;</span>
+                {% endif %}
+            {% endfor %}
 
-    {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
-        <i class="fas fa-angle-right"></i>
-    </a>
-    <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
-        <i class="fas fa-angle-double-right"></i>
-    </a>
+            <!-- Next -->
+            <a class="al-pg-btn{% if not page_obj.has_next %} al-pg-disabled{% endif %}"
+               href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}&per_page={{ per_page }}{% else %}#{% endif %}">
+                <i class="fas fa-chevron-right" style="font-size:0.65rem;"></i>
+            </a>
+        </div>
+    </div>
     {% endif %}
 </div>
-{% endif %}
+
+<script>
+function alChangePerPage(val) {
+    var url = new URL(window.location.href);
+    url.searchParams.set('per_page', val);
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+</script>
 
 {% endblock %}

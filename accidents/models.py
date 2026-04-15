@@ -454,6 +454,25 @@ class AccidentReport(models.Model):
         return f"Report by {self.reporter_name} - {self.incident_date} ({self.status})"
 
 
+class ReportPhoto(models.Model):
+    """Photos attached to an accident report (supports unlimited photos)"""
+    report = models.ForeignKey(AccidentReport, on_delete=models.CASCADE, related_name='photos')
+    image = models.ImageField(
+        upload_to='accident_reports/',
+        validators=[validate_image_file_size, validate_image_file_extension],
+        help_text="Photo of accident scene (max 5MB, jpg/png)"
+    )
+    order = models.PositiveIntegerField(default=0, help_text="Display order")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'report_photos'
+        ordering = ['order', 'uploaded_at']
+
+    def __str__(self):
+        return f"Photo {self.order + 1} for Report #{self.report_id}"
+
+
 class Notification(models.Model):
     """In-app notifications for users"""
 
@@ -708,13 +727,6 @@ class UserProfile(models.Model):
         ('Regional Chaplain Service', 'Regional Chaplain Service'),
         ('Regional Communications and Electronics Unit', 'Regional Communications and Electronics Unit'),
         ('Regional Personnel Holding and Accounting Unit', 'Regional Personnel Holding and Accounting Unit'),
-        # Provincial/City Police Offices
-        ('Surigao del Norte Police Provincial Office', 'Surigao del Norte Police Provincial Office'),
-        ('Surigao del Sur Police Provincial Office', 'Surigao del Sur Police Provincial Office'),
-        ('Agusan del Norte Police Provincial Office', 'Agusan del Norte Police Provincial Office'),
-        ('Agusan del Sur Police Provincial Office', 'Agusan del Sur Police Provincial Office'),
-        ('Dinagat Islands Police Provincial Office', 'Dinagat Islands Police Provincial Office'),
-        ('Butuan City Police Office', 'Butuan City Police Office'),
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -728,6 +740,8 @@ class UserProfile(models.Model):
     region = models.CharField(max_length=100, default="CARAGA")
     province = models.CharField(max_length=100, blank=True, null=True)
     station = models.CharField(max_length=200, blank=True, null=True)
+    office = models.CharField(max_length=200, blank=True, null=True, verbose_name="Office/Command",
+        help_text="For Provincial Chief (PPO) and Regional Director (PRO). Leave blank for station-level personnel.")
     unit = models.CharField(max_length=200, blank=True, null=True, verbose_name="Unit/Office", choices=UNIT_CHOICES)
 
     # Contact
@@ -744,6 +758,20 @@ class UserProfile(models.Model):
     last_login = models.DateTimeField(null=True, blank=True)
     password_changed_at = models.DateTimeField(null=True, blank=True)
     must_change_password = models.BooleanField(default=True)
+
+    # Report Access
+    can_submit_reports = models.BooleanField(default=True, verbose_name='Can Submit Reports',
+        help_text='Allow this user to access the report submission page')
+
+    # Clustering Access
+    can_run_clustering = models.BooleanField(default=False, verbose_name='Can Run Clustering',
+        help_text='Allow this user to run the hotspot clustering algorithm')
+
+    # Display Preferences (blank = use system default)
+    VIEW_CHOICES = [('', 'System Default'), ('cards', 'Cards'), ('table', 'Table')]
+    HOTSPOT_VIEW_CHOICES = [('', 'System Default'), ('grid', 'Grid'), ('list', 'List')]
+    pref_accident_view = models.CharField(max_length=10, blank=True, default='', choices=VIEW_CHOICES, verbose_name='Accident page view')
+    pref_hotspot_view = models.CharField(max_length=10, blank=True, default='', choices=HOTSPOT_VIEW_CHOICES, verbose_name='Hotspot page view')
 
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
@@ -763,6 +791,21 @@ class UserProfile(models.Model):
         """Return rank + full name"""
         name = self.user.get_full_name() or self.user.username
         return f"{self.get_rank_display()} {name}"
+
+    @property
+    def assignment_display(self):
+        """Return the appropriate assignment label based on role.
+        Provincial Chief/Regional Director use office, others use station."""
+        if self.role in ('provincial_chief', 'regional_director') and self.office:
+            return self.office
+        return self.station or ''
+
+    @property
+    def assignment_label(self):
+        """Return the field label for this role's assignment."""
+        if self.role in ('provincial_chief', 'regional_director'):
+            return 'Office'
+        return 'Station'
 
     def has_permission(self, permission):
         """
@@ -817,24 +860,24 @@ class UserProfile(models.Model):
             ],
             'traffic_officer': [
                 'view', 'add',  # Primary job: add accident reports
-                'view_own_data',  # Can only view own created records
+                'view_all_data',  # Can view all accident records for awareness
             ],
             'data_encoder': [
-                'view', 'add',  # Data entry from paper forms
+                'view', 'add', 'edit',  # Data entry from paper forms + correct errors
                 'view_all_data',  # Need to see all data for verification
+                'generate_reports',  # Can export data for reporting
+                'run_clustering',  # Can run AGNES clustering to reduce admin workload
             ],
         }
         return permission in permissions.get(self.role, [])
 
     def can_view_accident(self, accident):
         """Check if user can view specific accident based on jurisdiction"""
-        if self.role in ['super_admin', 'regional_director', 'data_encoder']:
+        if self.role in ['super_admin', 'regional_director', 'data_encoder', 'traffic_officer']:
             return True
         if self.role == 'provincial_chief':
             return (accident.province or '').upper() == (self.province or '').upper()
         if self.role == 'station_commander':
-            return (accident.station or '') == (self.station or '')
-        if self.role == 'traffic_officer':
             return (accident.station or '') == (self.station or '')
         return False
 
@@ -855,22 +898,35 @@ class AuditLog(models.Model):
     """Comprehensive audit trail for all user actions"""
 
     ACTION_CHOICES = [
+        # Authentication
         ('login', 'User Login'),
         ('logout', 'User Logout'),
         ('login_failed', 'Failed Login Attempt'),
         ('password_change', 'Password Changed'),
+        ('password_reset', 'Password Reset'),
+        ('password_verify', 'Password Verified'),
+        ('CHANGE_USERNAME', 'Username Changed'),
+        ('FAILED_PASSWORD_CHANGE', 'Failed Password Change'),
+        ('FAILED_USERNAME_CHANGE', 'Failed Username Change'),
+        # Accident Records
         ('accident_create', 'Accident Created'),
         ('accident_edit', 'Accident Edited'),
-        ('accident_delete', 'Accident Deleted'),
-        ('accident_view', 'Accident Viewed'),
+        ('case_status_update', 'Case Status Updated'),
+        # User Management
         ('user_create', 'User Created'),
         ('user_edit', 'User Edited'),
-        ('user_delete', 'User Deleted'),
-        ('user_activate', 'User Activated'),
-        ('user_deactivate', 'User Deactivated'),
+        ('user_status_change', 'User Status Changed'),
+        ('user_profile_edit', 'User Profile Edited'),
+        ('user_status_edit', 'User Status Edited'),
+        ('username_change', 'Username Changed by Admin'),
+        ('profile_picture_upload', 'Profile Picture Uploaded'),
+        # Clustering
         ('clustering_run', 'Clustering Executed'),
-        ('report_generate', 'Report Generated'),
+        ('clustering_complete', 'Clustering Completed'),
+        ('clustering_failed', 'Clustering Failed'),
+        # Data & System
         ('export_data', 'Data Exported'),
+        ('admin_dashboard_view', 'Admin Dashboard Viewed'),
         ('system_config', 'System Configuration Changed'),
     ]
 
@@ -932,3 +988,40 @@ class AuditLog(models.Model):
             action_description=description,
             **kwargs
         )
+
+
+class SystemSetting(models.Model):
+    """System-wide settings managed by admin / regional director."""
+
+    key = models.CharField(max_length=100, unique=True, db_index=True)
+    value = models.CharField(max_length=255)
+    description = models.CharField(max_length=500, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='system_settings_updated'
+    )
+
+    class Meta:
+        ordering = ['key']
+        verbose_name = 'System Setting'
+        verbose_name_plural = 'System Settings'
+
+    def __str__(self):
+        return f"{self.key} = {self.value}"
+
+    # ── Default values for every known key ──
+    DEFAULTS = {
+        'accident_default_view': 'cards',   # cards | table
+        'hotspot_default_view': 'grid',     # grid | list
+        'session_timeout': '60',            # minutes: 15 | 30 | 60 | 120 | 480
+        'default_per_page': '15',           # items per page: 10 | 15 | 20 | 50
+    }
+
+    @classmethod
+    def get(cls, key):
+        """Return the value for *key*, falling back to DEFAULTS."""
+        try:
+            return cls.objects.get(key=key).value
+        except cls.DoesNotExist:
+            return cls.DEFAULTS.get(key, '')
