@@ -1061,23 +1061,56 @@ def accident_csv_upload(request):
         driver_ages_list, driver_genders_list = _extract_gender_age(col_suspect_details)
         victim_ages_list, victim_genders_list = _extract_gender_age(col_victim_details)
 
-        # ── Convert all Series to Python lists ──────────────────────────────
+        # ── Convert all Series to Python lists AFTER fallback loops ─────────
         # pandas Series.__getitem__ inside a tight Python loop is ~10× slower
-        # than plain list indexing. Convert once, iterate fast.
+        # than plain list indexing.  The fallback date and coordinate loops
+        # below mutate col_date_committed / lat_series / lng_series in-place,
+        # so we must convert to lists only AFTER those loops have finished.
+
+        # Fallback date: use Year column, else 2020-01-01
+        col_date_committed = col_date_committed.tolist()
+        col_year_list = col_year.tolist()
+        for idx in range(len(col_date_committed)):
+            if col_date_committed[idx] is None:
+                yr = col_year_list[idx]
+                col_date_committed[idx] = datetime(yr, 1, 1).date() if yr else datetime(2020, 1, 1).date()
+
+        # Fix missing coordinates using approximate lookup; keep as plain lists
+        lat_list = lat_series.tolist()
+        lng_list = lng_series.tolist()
+        col_province_list = col_province.tolist()
+        col_municipal_list = col_municipal.tolist()
+        col_barangay_list = col_barangay.tolist()
+        import math as _math
+        for idx in range(len(lat_list)):
+            lat_val = lat_list[idx]
+            lng_val = lng_list[idx]
+            if lat_val is None or lng_val is None or (isinstance(lat_val, float) and _math.isnan(lat_val)) or (isinstance(lng_val, float) and _math.isnan(lng_val)):
+                approx = import_cmd.get_approximate_coordinates(
+                    col_province_list[idx], col_municipal_list[idx], col_barangay_list[idx]
+                )
+                if approx:
+                    lat_list[idx] = approx[0]
+                    lng_list[idx] = approx[1]
+                else:
+                    lat_list[idx] = 9.0
+                    lng_list[idx] = 125.5
+
+        # Now convert the remaining Series to lists (all fallbacks applied)
         list_pro      = col_pro.tolist()
         list_ppo      = col_ppo.tolist()
         list_stn      = col_stn.tolist()
         list_region   = col_region.tolist()
-        list_province = col_province.tolist()
-        list_municipal = col_municipal.tolist()
-        list_barangay = col_barangay.tolist()
+        list_province = col_province_list
+        list_municipal = col_municipal_list
+        list_barangay = col_barangay_list
         list_street   = col_street.tolist()
         list_top      = col_type_of_place.tolist()
         list_dr       = col_date_reported.tolist()
         list_tr       = col_time_reported.tolist()
-        list_dc       = col_date_committed.tolist()
+        list_dc       = col_date_committed      # already a list (mutated above)
         list_tc       = col_time_committed.tolist()
-        list_year     = col_year.tolist()
+        list_year     = col_year_list
         list_itype    = col_incident_type.tolist()
         list_offense  = col_offense.tolist()
         list_otype    = col_offense_type.tolist()
@@ -1096,29 +1129,8 @@ def accident_csv_upload(request):
         list_narrative = col_narrative.tolist()
         list_cstatus  = col_case_status.tolist()
         list_csolve   = col_case_solve_type.tolist()
-        list_lat      = lat_series.tolist()
-        list_lng      = lng_series.tolist()
-
-        # Fallback date: use Year column, else 2020-01-01
-        for i in col_date_committed.index:
-            if col_date_committed[i] is None:
-                yr = col_year[i]
-                col_date_committed[i] = datetime(yr, 1, 1).date() if yr else datetime(2020, 1, 1).date()
-
-        # Fix missing coordinates using approximate lookup
-        for i in df.index:
-            lat_val = lat_series.get(i)
-            lng_val = lng_series.get(i)
-            if pd.isna(lat_val) or pd.isna(lng_val):
-                approx = import_cmd.get_approximate_coordinates(
-                    col_province[i], col_municipal[i], col_barangay[i]
-                )
-                if approx:
-                    lat_series.at[i] = approx[0]
-                    lng_series.at[i] = approx[1]
-                else:
-                    lat_series.at[i] = 9.0
-                    lng_series.at[i] = 125.5
+        list_lat      = lat_list               # already a list (mutated above)
+        list_lng      = lng_list               # already a list (mutated above)
 
         # ── Build fingerprints of existing accidents to avoid duplicates ──
         # Uses many fields to precisely identify the same accident record.
