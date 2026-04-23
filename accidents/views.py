@@ -1039,6 +1039,66 @@ def accident_csv_upload(request):
         col_case_status = _col_str('casestatus', 'UNKNOWN')
         col_case_solve_type = _col_str('caseSolveType')
 
+        # ── Vectorized gender & age extraction ──────────────────────────────
+        # Do this once here (pure Python, no DB) so we can set driver_gender /
+        # victim_gender directly on each Accident object during bulk creation,
+        # eliminating the expensive post-import iterator+bulk_update DB loop.
+        import re as _re
+        _gender_pat = _re.compile(r'\((\d+)/(Male|Female)', _re.IGNORECASE)
+
+        def _extract_gender_age(series):
+            ages, genders = [], []
+            for val in series:
+                m = _gender_pat.search(str(val)) if val else None
+                if m:
+                    ages.append(int(m.group(1)))
+                    genders.append(m.group(2).upper())
+                else:
+                    ages.append(None)
+                    genders.append('UNKNOWN')
+            return ages, genders
+
+        driver_ages_list, driver_genders_list = _extract_gender_age(col_suspect_details)
+        victim_ages_list, victim_genders_list = _extract_gender_age(col_victim_details)
+
+        # ── Convert all Series to Python lists ──────────────────────────────
+        # pandas Series.__getitem__ inside a tight Python loop is ~10× slower
+        # than plain list indexing. Convert once, iterate fast.
+        list_pro      = col_pro.tolist()
+        list_ppo      = col_ppo.tolist()
+        list_stn      = col_stn.tolist()
+        list_region   = col_region.tolist()
+        list_province = col_province.tolist()
+        list_municipal = col_municipal.tolist()
+        list_barangay = col_barangay.tolist()
+        list_street   = col_street.tolist()
+        list_top      = col_type_of_place.tolist()
+        list_dr       = col_date_reported.tolist()
+        list_tr       = col_time_reported.tolist()
+        list_dc       = col_date_committed.tolist()
+        list_tc       = col_time_committed.tolist()
+        list_year     = col_year.tolist()
+        list_itype    = col_incident_type.tolist()
+        list_offense  = col_offense.tolist()
+        list_otype    = col_offense_type.tolist()
+        list_sof      = col_stage_of_felony.tolist()
+        list_vkilled  = col_victim_killed.tolist()
+        list_vinjured = col_victim_injured.tolist()
+        list_vunharmed = col_victim_unharmed.tolist()
+        list_vcount   = col_victim_count.tolist()
+        list_scount   = col_suspect_count.tolist()
+        list_vkind    = col_vehicle_kind.tolist()
+        list_vmake    = col_vehicle_make.tolist()
+        list_vmodel   = col_vehicle_model.tolist()
+        list_vplate   = col_vehicle_plate_no.tolist()
+        list_vdetails = col_victim_details.tolist()
+        list_sdetails = col_suspect_details.tolist()
+        list_narrative = col_narrative.tolist()
+        list_cstatus  = col_case_status.tolist()
+        list_csolve   = col_case_solve_type.tolist()
+        list_lat      = lat_series.tolist()
+        list_lng      = lng_series.tolist()
+
         # Fallback date: use Year column, else 2020-01-01
         for i in col_date_committed.index:
             if col_date_committed[i] is None:
@@ -1095,59 +1155,63 @@ def accident_csv_upload(request):
         batch = []
         batch_size = 2000
 
-        for i in df.index:
+        for row_i, i in enumerate(df.index):
             try:
                 accident = Accident(
-                    pro=col_pro[i],
-                    ppo=col_ppo[i],
-                    station=col_stn[i],
-                    region=col_region[i],
-                    province=col_province[i],
-                    municipal=col_municipal[i],
-                    barangay=col_barangay[i],
-                    street=col_street[i],
-                    type_of_place=col_type_of_place[i],
-                    latitude=Decimal(str(lat_series[i])),
-                    longitude=Decimal(str(lng_series[i])),
-                    date_reported=col_date_reported[i],
-                    time_reported=col_time_reported[i],
-                    date_committed=col_date_committed[i],
-                    time_committed=col_time_committed[i],
-                    year=col_year[i],
-                    incident_type=col_incident_type[i],
-                    offense=col_offense[i],
-                    offense_type=col_offense_type[i],
-                    stage_of_felony=col_stage_of_felony[i],
-                    victim_killed=col_victim_killed[i],
-                    victim_injured=col_victim_injured[i],
-                    victim_unharmed=col_victim_unharmed[i],
-                    victim_count=col_victim_count[i],
-                    suspect_count=col_suspect_count[i],
-                    vehicle_kind=col_vehicle_kind[i],
-                    vehicle_make=col_vehicle_make[i],
-                    vehicle_model=col_vehicle_model[i],
-                    vehicle_plate_no=col_vehicle_plate_no[i],
-                    victim_details=col_victim_details[i],
-                    suspect_details=col_suspect_details[i],
-                    narrative=col_narrative[i],
-                    case_status=col_case_status[i],
-                    case_solve_type=col_case_solve_type[i],
+                    pro=list_pro[row_i],
+                    ppo=list_ppo[row_i],
+                    station=list_stn[row_i],
+                    region=list_region[row_i],
+                    province=list_province[row_i],
+                    municipal=list_municipal[row_i],
+                    barangay=list_barangay[row_i],
+                    street=list_street[row_i],
+                    type_of_place=list_top[row_i],
+                    latitude=Decimal(str(list_lat[row_i])),
+                    longitude=Decimal(str(list_lng[row_i])),
+                    date_reported=list_dr[row_i],
+                    time_reported=list_tr[row_i],
+                    date_committed=list_dc[row_i],
+                    time_committed=list_tc[row_i],
+                    year=list_year[row_i],
+                    incident_type=list_itype[row_i],
+                    offense=list_offense[row_i],
+                    offense_type=list_otype[row_i],
+                    stage_of_felony=list_sof[row_i],
+                    victim_killed=list_vkilled[row_i],
+                    victim_injured=list_vinjured[row_i],
+                    victim_unharmed=list_vunharmed[row_i],
+                    victim_count=list_vcount[row_i],
+                    suspect_count=list_scount[row_i],
+                    vehicle_kind=list_vkind[row_i],
+                    vehicle_make=list_vmake[row_i],
+                    vehicle_model=list_vmodel[row_i],
+                    vehicle_plate_no=list_vplate[row_i],
+                    victim_details=list_vdetails[row_i],
+                    suspect_details=list_sdetails[row_i],
+                    narrative=list_narrative[row_i],
+                    case_status=list_cstatus[row_i],
+                    case_solve_type=list_csolve[row_i],
+                    driver_gender=driver_genders_list[row_i],
+                    driver_age=driver_ages_list[row_i],
+                    victim_gender=victim_genders_list[row_i],
+                    victim_age=victim_ages_list[row_i],
                 )
 
                 # Skip if this row already exists (avoid duplicates)
                 # All 11 fields must match exactly for a row to be considered duplicate
                 row_fp = (
-                    str(col_date_committed[i]) if col_date_committed[i] else '',
-                    str(col_time_committed[i]) if col_time_committed[i] else '',
-                    str(col_province[i] or '').strip().upper(),
-                    str(col_municipal[i] or '').strip().upper(),
-                    str(col_barangay[i] or '').strip().upper(),
-                    str(col_street[i] or '').strip().upper(),
-                    str(col_incident_type[i] or '').strip().upper(),
-                    str(col_offense[i] or '').strip().upper(),
-                    str(col_vehicle_kind[i] or '').strip().upper(),
-                    str(col_victim_count[i]) if col_victim_count[i] is not None else '0',
-                    str(col_suspect_count[i]) if col_suspect_count[i] is not None else '0',
+                    str(list_dc[row_i]) if list_dc[row_i] else '',
+                    str(list_tc[row_i]) if list_tc[row_i] else '',
+                    str(list_province[row_i] or '').strip().upper(),
+                    str(list_municipal[row_i] or '').strip().upper(),
+                    str(list_barangay[row_i] or '').strip().upper(),
+                    str(list_street[row_i] or '').strip().upper(),
+                    str(list_itype[row_i] or '').strip().upper(),
+                    str(list_offense[row_i] or '').strip().upper(),
+                    str(list_vkind[row_i] or '').strip().upper(),
+                    str(list_vcount[row_i]) if list_vcount[row_i] is not None else '0',
+                    str(list_scount[row_i]) if list_scount[row_i] is not None else '0',
                 )
                 if row_fp in existing_fingerprints:
                     skipped_duplicates += 1
@@ -1172,48 +1236,9 @@ def accident_csv_upload(request):
             Accident.objects.bulk_create(batch)
             imported += len(batch)
 
-        # Auto-extract gender & age from victim_details and suspect_details
-        gender_extracted = 0
-        try:
-            import re
-            extract_pattern = re.compile(r'\((\d+)/(Male|Female|male|female)')
-            gender_updates = []
-            for acc in Accident.objects.filter(
-                Q(driver_gender='UNKNOWN') | Q(victim_gender='UNKNOWN')
-            ).only('id', 'suspect_details', 'victim_details', 'driver_gender', 'victim_gender', 'driver_age', 'victim_age').iterator():
-                updated = False
-                # Extract driver/suspect gender & age
-                if acc.suspect_details and acc.driver_gender == 'UNKNOWN':
-                    match = extract_pattern.search(str(acc.suspect_details))
-                    if match:
-                        acc.driver_age = int(match.group(1))
-                        acc.driver_gender = match.group(2).upper()
-                        updated = True
-                # Extract victim gender & age
-                if acc.victim_details and acc.victim_gender == 'UNKNOWN':
-                    match = extract_pattern.search(str(acc.victim_details))
-                    if match:
-                        acc.victim_age = int(match.group(1))
-                        acc.victim_gender = match.group(2).upper()
-                        updated = True
-                if updated:
-                    gender_updates.append(acc)
-                    gender_extracted += 1
-                if len(gender_updates) >= 500:
-                    Accident.objects.bulk_update(
-                        gender_updates,
-                        ['driver_gender', 'driver_age', 'victim_gender', 'victim_age'],
-                        batch_size=500
-                    )
-                    gender_updates = []
-            if gender_updates:
-                Accident.objects.bulk_update(
-                    gender_updates,
-                    ['driver_gender', 'driver_age', 'victim_gender', 'victim_age'],
-                    batch_size=500
-                )
-        except Exception:
-            pass  # Gender extraction is best-effort, don't fail the import
+        # Gender was already extracted vectorized during pre-processing above.
+        # No separate DB pass needed.
+        gender_extracted = imported
 
         # Clear dashboard cache so fresh data shows immediately
         from django.core.cache import cache
