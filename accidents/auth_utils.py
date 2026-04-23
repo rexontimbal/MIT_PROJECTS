@@ -4,6 +4,7 @@ Authentication utilities and decorators for PNP system
 """
 from functools import wraps
 from django.shortcuts import redirect
+from django.http import JsonResponse
 from django.contrib import messages
 from django.utils import timezone
 from datetime import timedelta
@@ -42,16 +43,30 @@ def log_user_action(request, action, description, **kwargs):
 
 def pnp_login_required(view_func):
     """
-    Decorator to require PNP login and check account status
+    Decorator to require PNP login and check account status.
+    Returns JSON 401/403 for AJAX requests instead of HTML redirects,
+    so the import modal (and other AJAX calls) can display proper error messages.
     """
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
         if not request.user.is_authenticated:
+            if is_ajax:
+                return JsonResponse(
+                    {'success': False, 'error': 'Your session has expired. Please refresh the page and log in again.'},
+                    status=401
+                )
             messages.warning(request, 'Please login to access this page.')
             return redirect('login')
 
         # Check if user has profile
         if not hasattr(request.user, 'profile'):
+            if is_ajax:
+                return JsonResponse(
+                    {'success': False, 'error': 'Your account is not properly configured. Please contact administrator.'},
+                    status=403
+                )
             messages.error(request, 'Your account is not properly configured. Please contact administrator.')
             return redirect('login')
 
@@ -61,16 +76,31 @@ def pnp_login_required(view_func):
 
         # Check if account is active (user.is_active is what admin toggles)
         if not request.user.is_active:
+            if is_ajax:
+                return JsonResponse(
+                    {'success': False, 'error': 'Your account has been deactivated. Please contact administrator.'},
+                    status=403
+                )
             messages.error(request, 'Your account has been deactivated. Please contact administrator.')
             return redirect('login')
 
         # Check if account is locked
         if profile.is_account_locked():
+            if is_ajax:
+                return JsonResponse(
+                    {'success': False, 'error': 'Your account is temporarily locked due to multiple failed login attempts.'},
+                    status=403
+                )
             messages.error(request, 'Your account is temporarily locked due to multiple failed login attempts.')
             return redirect('login')
 
         # Check if must change password
         if profile.must_change_password and request.path != '/change-password/':
+            if is_ajax:
+                return JsonResponse(
+                    {'success': False, 'error': 'Your password has expired. Please change it before continuing.'},
+                    status=403
+                )
             # Clear existing messages to avoid duplicates and show only password change requirement
             from django.contrib.messages import get_messages
             storage = get_messages(request)
