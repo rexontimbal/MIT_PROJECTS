@@ -42,6 +42,7 @@ urlpatterns = [
     path('report/<int:pk>/cancel/', views.cancel_report, name='cancel_report'),
     path('report/<int:pk>/delete/', views.delete_report, name='delete_report'),
     path('report/<int:pk>/download-pdf/', views.download_report_pdf, name='download_report_pdf'),
+    path('report/<int:pk>/police-report/', views.generate_police_report_pdf, name='generate_police_report_pdf'),
 
     # Pending Reports Management (for Station Commanders, Provincial Chiefs, etc.)
     path('manage/pending-reports/', views.pending_reports, name='pending_reports'),

@@ -1,19 +1,53 @@
 from django import forms
-from .models import AccidentReport
+from .models import AccidentReport, DropdownOption
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+
+def get_dynamic_choices(field_name):
+    """Get choices from DropdownOption table, with empty default."""
+    try:
+        choices = DropdownOption.get_choices(field_name)
+        if choices:
+            return [('', '-- Select --')] + choices + [('OTHER', 'Other')]
+    except Exception:
+        pass
+    # Fallback to model choices if DB not ready
+    return []
+
+
 class AccidentReportForm(forms.ModelForm):
-    """Form for reporting new accidents - matches CARAGA dataset structure"""
+    """Traffic Accident Report (TAR) form — PNP Caraga Region"""
 
     class Meta:
         model = AccidentReport
         fields = [
-            'incident_date', 'incident_time', 'incident_type', 'incident_type_other', 'type_of_place', 'type_of_place_other',
-            'offense', 'offense_other', 'offense_type', 'offense_type_other', 'stage_of_felony',
-            'latitude', 'longitude', 'province', 'municipal', 'barangay', 'street_address',
-            'vehicle_kind', 'vehicle_kind_other', 'vehicle_make', 'vehicle_make_other', 'vehicle_model', 'vehicle_model_other', 'vehicle_plate_no', 'vehicle_chassis_no', 'vehicle_colorum',
+            # B. Basic Information
+            'incident_date', 'incident_time',
+            # C. Accident Details
+            'incident_type', 'incident_type_other', 'type_of_place', 'type_of_place_other',
+            'cause_of_accident', 'cause_of_accident_other',
+            'weather_condition', 'light_condition', 'road_condition', 'road_character',
+            # C. Location
+            'province', 'municipal', 'barangay', 'street_address',
+            'latitude', 'longitude',
+            # C. Offense / Legal Classification
+            'offense', 'offense_other', 'offense_type', 'offense_type_other',
+            'stage_of_felony', 'stage_of_felony_other',
+            # D. Persons — Victim details
+            'victim_address', 'victim_work_address', 'hospital_taken_to',
+            # D. Persons — Suspect / Driver details
+            'driver_license_no', 'suspect_relation_to_victim', 'suspect_address',
+            # E. Vehicle Information
+            'vehicle_kind', 'vehicle_kind_other', 'vehicle_make', 'vehicle_make_other',
+            'vehicle_model', 'vehicle_model_other', 'vehicle_plate_no', 'vehicle_chassis_no',
+            'vehicle_colorum', 'vehicle_registered_owner', 'vehicle_or_cr_no',
             'drug_involved',
+            # F. Narrative
             'incident_description',
+            # G. Sketch
+            'sketch_image',
+            # H. Action Taken
+            'action_taken',
         ]
 
         widgets = {
@@ -29,7 +63,8 @@ class AccidentReportForm(forms.ModelForm):
             'offense_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify offense...'}),
             'offense_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_offense_type'}),
             'offense_type_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify offense type...'}),
-            'stage_of_felony': forms.Select(attrs={'class': 'form-control'}),
+            'stage_of_felony': forms.Select(attrs={'class': 'form-control', 'id': 'id_stage_of_felony'}),
+            'stage_of_felony_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify...'}),
             # Location
             'latitude': forms.NumberInput(attrs={
                 'class': 'form-control', 'placeholder': 'Click on map',
@@ -50,6 +85,18 @@ class AccidentReportForm(forms.ModelForm):
             'municipal': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Municipality/City'}),
             'barangay': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Barangay name'}),
             'street_address': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Street name or landmark'}),
+            # TAR Scene / Road Conditions
+            'cause_of_accident': forms.Select(attrs={'class': 'form-control', 'id': 'id_cause_of_accident'}),
+            'cause_of_accident_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify cause...'}),
+            'weather_condition': forms.Select(attrs={'class': 'form-control'}),
+            'light_condition': forms.Select(attrs={'class': 'form-control'}),
+            'road_condition': forms.Select(attrs={'class': 'form-control'}),
+            'road_character': forms.Select(attrs={'class': 'form-control'}),
+            # Action Taken
+            'action_taken': forms.Textarea(attrs={
+                'class': 'form-control', 'rows': 3,
+                'placeholder': 'Describe actions taken by the responding officer (e.g., traffic investigation conducted, evidence gathered, charges filed, etc.)...'
+            }),
             # Vehicle Info
             'vehicle_kind': forms.Select(attrs={'class': 'form-control', 'id': 'id_vehicle_kind'}),
             'vehicle_kind_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Please specify...'}),
@@ -61,12 +108,54 @@ class AccidentReportForm(forms.ModelForm):
             'vehicle_chassis_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., MHKE8FF22PJK001562'}),
             'vehicle_colorum': forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_vehicle_colorum'}),
             'drug_involved': forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_drug_involved'}),
+            # Victim Enhanced Details
+            'victim_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Current address of victim'}),
+            'victim_work_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Work address of victim'}),
+            'hospital_taken_to': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Hospital name'}),
+            # Suspect / Driver Enhanced Details
+            'driver_license_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Driver's license number"}),
+            'suspect_relation_to_victim': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Relation to victim'}),
+            'suspect_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Current address of suspect'}),
+            # Vehicle Enhanced Details
+            'vehicle_registered_owner': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Registered owner name'}),
+            'vehicle_or_cr_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'OR/CR Number'}),
+            # Sketch
+            'sketch_image': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
             # Narrative
             'incident_description': forms.Textarea(attrs={
                 'class': 'form-control', 'rows': 4,
                 'placeholder': 'Provide a detailed narrative of the accident including sequence of events, circumstances, and relevant details...'
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Override choices with dynamic DB options (exclude 'OTHER' from DB, we add it manually)
+        dynamic_fields = ['incident_type', 'type_of_place', 'offense', 'offense_type', 'stage_of_felony', 'vehicle_kind']
+        for field_name in dynamic_fields:
+            choices = get_dynamic_choices(field_name)
+            if choices:
+                # Remove duplicate OTHER if it's already in the DB choices
+                seen_other = False
+                cleaned = []
+                for val, lbl in choices:
+                    if val == 'OTHER':
+                        if not seen_other:
+                            cleaned.append((val, lbl))
+                            seen_other = True
+                    else:
+                        cleaned.append((val, lbl))
+                self.fields[field_name].choices = cleaned
+
+    def clean_sketch_image(self):
+        sketch = self.cleaned_data.get('sketch_image')
+        if sketch and hasattr(sketch, 'content_type'):
+            allowed = ['image/jpeg', 'image/png', 'image/jpg']
+            if sketch.content_type not in allowed:
+                raise forms.ValidationError('Only image files (JPG, PNG) are allowed for sketch upload.')
+            if sketch.size > 5 * 1024 * 1024:
+                raise forms.ValidationError('Sketch image must be under 5MB.')
+        return sketch
 
     def clean(self):
         cleaned_data = super().clean()

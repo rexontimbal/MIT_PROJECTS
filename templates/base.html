@@ -1731,6 +1731,15 @@
                     </a>
                 </li>
 
+                {% if can_edit_reports %}
+                <li>
+                    <a href="{% url 'admin_panel:dropdown_management' %}" class="nav-link {% if 'dropdown' in request.path %}active{% endif %}" data-tooltip="Form Dropdowns">
+                        <span class="icon"><i class="fas fa-list-alt"></i></span>
+                        <span class="text">Dropdowns</span>
+                    </a>
+                </li>
+                {% endif %}
+
                 <!-- Mobile-only items (hidden on desktop via CSS) -->
                 <li class="mobile-only-item" style="display:none;">
                     <div class="mobile-menu-divider"></div>

@@ -248,11 +248,51 @@ class AccidentReport(models.Model):
         ('cancelled', 'Cancelled'),
     ]
     
-    # Reporter Information
+    CIVIL_STATUS_CHOICES = [
+        ('SINGLE', 'Single'),
+        ('MARRIED', 'Married'),
+        ('WIDOWED', 'Widowed'),
+        ('SEPARATED', 'Separated'),
+        ('DIVORCED', 'Divorced'),
+    ]
+
+    EDUCATION_CHOICES = [
+        ('ELEMENTARY', 'Elementary'),
+        ('HIGH_SCHOOL', 'High School'),
+        ('SENIOR_HIGH', 'Senior High School'),
+        ('VOCATIONAL', 'Vocational/Technical'),
+        ('COLLEGE', 'College'),
+        ('POST_GRADUATE', 'Post Graduate'),
+        ('NONE', 'None'),
+    ]
+
+    # Investigating Officer (system user who submitted the report)
     reported_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    reporter_name = models.CharField(max_length=200)
-    reporter_contact = models.CharField(max_length=50)
-    
+
+    # Complainant / Reporting Person (IRF Item A — civilian who reported the incident)
+    has_complainant = models.BooleanField(default=False, help_text="Whether a civilian complainant reported this incident")
+    reporter_name = models.CharField(max_length=200, blank=True, default='', help_text="Complainant full name")
+    reporter_contact = models.CharField(max_length=50, blank=True, default='', help_text="Complainant contact number")
+
+    # Reporter IRF Item A — Enhanced Details (all optional)
+    reporter_qualifier = models.CharField(max_length=20, blank=True, null=True, help_text="Jr./Sr./III etc.")
+    reporter_nickname = models.CharField(max_length=100, blank=True, null=True)
+    reporter_citizenship = models.CharField(max_length=100, blank=True, null=True, default='Filipino')
+    reporter_gender = models.CharField(max_length=10, blank=True, null=True)
+    reporter_civil_status = models.CharField(max_length=20, blank=True, null=True)
+    reporter_dob = models.DateField(blank=True, null=True, help_text="Date of birth")
+    reporter_place_of_birth = models.CharField(max_length=200, blank=True, null=True)
+    reporter_home_phone = models.CharField(max_length=50, blank=True, null=True)
+    reporter_email = models.EmailField(blank=True, null=True)
+    reporter_address_village = models.CharField(max_length=200, blank=True, null=True, help_text="Village/Sitio")
+    reporter_address_barangay = models.CharField(max_length=100, blank=True, null=True)
+    reporter_address_city = models.CharField(max_length=100, blank=True, null=True)
+    reporter_address_province = models.CharField(max_length=100, blank=True, null=True)
+    reporter_other_address = models.TextField(blank=True, null=True)
+    reporter_education = models.CharField(max_length=200, blank=True, null=True)
+    reporter_occupation = models.CharField(max_length=200, blank=True, null=True)
+    reporter_id_presented = models.CharField(max_length=200, blank=True, null=True, help_text="ID card presented")
+
     # Incident Basic Info
     incident_date = models.DateField(
         validators=[validate_date_not_future],
@@ -339,6 +379,7 @@ class AccidentReport(models.Model):
         ('CONSUMMATED', 'Consummated'),
     ]
     stage_of_felony = models.CharField(max_length=100, choices=STAGE_OF_FELONY_CHOICES, blank=True, null=True)
+    stage_of_felony_other = models.CharField(max_length=200, blank=True, null=True, help_text="Specify if Other is selected")
 
     # Location
     latitude = models.DecimalField(
@@ -357,7 +398,65 @@ class AccidentReport(models.Model):
     municipal = models.CharField(max_length=100)
     barangay = models.CharField(max_length=100)
     street_address = models.CharField(max_length=200, blank=True, null=True)
-    
+
+    # TAR Scene / Road Conditions
+    WEATHER_CHOICES = [
+        ('CLEAR', 'Clear'),
+        ('CLOUDY', 'Cloudy'),
+        ('RAINY', 'Rainy'),
+        ('FOGGY', 'Foggy'),
+        ('WINDY', 'Windy'),
+        ('OTHER', 'Other'),
+    ]
+    weather_condition = models.CharField(max_length=50, choices=WEATHER_CHOICES, blank=True, null=True)
+
+    LIGHT_CHOICES = [
+        ('DAYLIGHT', 'Daylight'),
+        ('DUSK_DAWN', 'Dusk / Dawn'),
+        ('DARK_LIGHTED', 'Dark (Street Lighted)'),
+        ('DARK_UNLIGHTED', 'Dark (Not Lighted)'),
+    ]
+    light_condition = models.CharField(max_length=50, choices=LIGHT_CHOICES, blank=True, null=True)
+
+    ROAD_CONDITION_CHOICES = [
+        ('DRY', 'Dry'),
+        ('WET', 'Wet'),
+        ('MUDDY', 'Muddy'),
+        ('FLOODED', 'Flooded'),
+        ('UNDER_CONSTRUCTION', 'Under Construction'),
+        ('OTHER', 'Other'),
+    ]
+    road_condition = models.CharField(max_length=50, choices=ROAD_CONDITION_CHOICES, blank=True, null=True)
+
+    ROAD_CHARACTER_CHOICES = [
+        ('STRAIGHT_FLAT', 'Straight & Flat'),
+        ('STRAIGHT_GRADE', 'Straight & Grade'),
+        ('CURVE_FLAT', 'Curve & Flat'),
+        ('CURVE_GRADE', 'Curve & Grade'),
+    ]
+    road_character = models.CharField(max_length=50, choices=ROAD_CHARACTER_CHOICES, blank=True, null=True)
+
+    CAUSE_CHOICES = [
+        ('OVER_SPEEDING', 'Over Speeding'),
+        ('DRUNK_DRIVING', 'Drunk Driving'),
+        ('RECKLESS_DRIVING', 'Reckless Driving'),
+        ('MECHANICAL_FAILURE', 'Mechanical Failure / Defect'),
+        ('DRIVER_FATIGUE', 'Driver Fatigue'),
+        ('DISTRACTED_DRIVING', 'Distracted Driving'),
+        ('POOR_ROAD_CONDITION', 'Poor Road Condition'),
+        ('POOR_VISIBILITY', 'Poor Visibility'),
+        ('OVERTAKING', 'Improper Overtaking'),
+        ('DISREGARD_TRAFFIC_SIGNS', 'Disregard of Traffic Signs/Signals'),
+        ('PEDESTRIAN_ERROR', 'Pedestrian Error'),
+        ('ANIMAL_ON_ROAD', 'Animal on Road'),
+        ('OTHER', 'Other'),
+    ]
+    cause_of_accident = models.CharField(max_length=100, choices=CAUSE_CHOICES, blank=True, null=True)
+    cause_of_accident_other = models.CharField(max_length=300, blank=True, null=True)
+
+    # TAR Section I — Action Taken
+    action_taken = models.TextField(blank=True, null=True, help_text="Action taken by responding officer")
+
     # Incident Details
     incident_description = models.TextField(help_text="Detailed description of the accident")
     casualties_killed = models.IntegerField(
@@ -383,6 +482,11 @@ class AccidentReport(models.Model):
     ]
     victim_status = models.CharField(max_length=20, choices=VICTIM_STATUS_CHOICES, blank=True, null=True)
 
+    # Victim Enhanced Details
+    victim_address = models.TextField(blank=True, null=True, help_text="Current address of victim")
+    victim_work_address = models.TextField(blank=True, null=True, help_text="Work address of victim")
+    hospital_taken_to = models.CharField(max_length=300, blank=True, null=True, help_text="Hospital victim was taken to")
+
     # Multi-victim/suspect data (JSON arrays matching CARAGA dataset format)
     victims_data = models.JSONField(default=list, blank=True, help_text="List of victims [{name, age, gender, status, nationality, occupation}]")
     suspects_data = models.JSONField(default=list, blank=True, help_text="List of suspects [{name, age, gender, status, nationality, occupation}]")
@@ -392,6 +496,11 @@ class AccidentReport(models.Model):
     suspect_count = models.IntegerField(default=1, validators=[MinValueValidator(0), MaxValueValidator(50)])
     driver_gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='UNKNOWN')
     driver_age = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(150)])
+
+    # Suspect / Driver Enhanced Details
+    driver_license_no = models.CharField(max_length=100, blank=True, null=True, help_text="Driver's license number")
+    suspect_relation_to_victim = models.CharField(max_length=200, blank=True, null=True)
+    suspect_address = models.TextField(blank=True, null=True, help_text="Current address of suspect")
 
     # Vehicle Information (structured)
     vehicle_kind = models.CharField(max_length=200, choices=VEHICLE_KIND_CHOICES, blank=True, null=True)
@@ -407,8 +516,25 @@ class AccidentReport(models.Model):
     # Drug involvement
     drug_involved = models.BooleanField(default=False, help_text="Whether drugs/alcohol were involved")
 
+    # Vehicle Enhanced Details
+    vehicle_registered_owner = models.CharField(max_length=200, blank=True, null=True)
+    vehicle_or_cr_no = models.CharField(max_length=100, blank=True, null=True, help_text="Official Receipt / Certificate of Registration No.")
+    vehicles_data = models.JSONField(default=list, blank=True, help_text="Additional vehicles [{kind, make, model, plate_no, chassis_no, registered_owner, or_cr_no}]")
+
     # Vehicle involved (legacy JSON - kept for backward compatibility)
     vehicles_involved = models.JSONField(default=list, blank=True)
+
+    # Witnesses
+    witnesses_data = models.JSONField(default=list, blank=True, help_text="List of witnesses [{name, age, address, contact}]")
+
+    # Sketch / Diagram
+    sketch_image = models.ImageField(
+        upload_to='accident_sketches/',
+        null=True,
+        blank=True,
+        validators=[validate_image_file_size, validate_image_file_extension],
+        help_text="Sketch of the accident scene (max 5MB, jpg/png)"
+    )
 
     # Media attachments
     photo_1 = models.ImageField(
@@ -439,6 +565,12 @@ class AccidentReport(models.Model):
     verified_at = models.DateTimeField(null=True, blank=True)
     rejection_reason = models.TextField(blank=True, null=True, help_text="Reason for rejection (if rejected)")
     
+    # Blotter number — auto-assigned on approval (Traffic Police Blotter Entry No.)
+    blotter_number = models.PositiveIntegerField(
+        null=True, blank=True, unique=True,
+        help_text="Traffic Police Blotter Entry No. — auto-incremented on approval"
+    )
+
     # Link to official accident record (after verification)
     accident = models.OneToOneField(Accident, on_delete=models.SET_NULL, null=True, blank=True, related_name='report')
     
@@ -767,6 +899,10 @@ class UserProfile(models.Model):
     can_run_clustering = models.BooleanField(default=False, verbose_name='Can Run Clustering',
         help_text='Allow this user to run the hotspot clustering algorithm')
 
+    # Report Form Edit Access
+    can_edit_reports = models.BooleanField(default=False, verbose_name='Can Edit Report Form',
+        help_text='Allow this user to edit/submit accident report forms')
+
     # Display Preferences (blank = use system default)
     VIEW_CHOICES = [('', 'System Default'), ('cards', 'Cards'), ('table', 'Table')]
     HOTSPOT_VIEW_CHOICES = [('', 'System Default'), ('grid', 'Grid'), ('list', 'List')]
@@ -1016,6 +1152,7 @@ class SystemSetting(models.Model):
         'hotspot_default_view': 'grid',     # grid | list
         'session_timeout': '60',            # minutes: 15 | 30 | 60 | 120 | 480
         'default_per_page': '15',           # items per page: 10 | 15 | 20 | 50
+        'blotter_starting_number': '1',     # starting blotter entry number
     }
 
     @classmethod
@@ -1025,3 +1162,221 @@ class SystemSetting(models.Model):
             return cls.objects.get(key=key).value
         except cls.DoesNotExist:
             return cls.DEFAULTS.get(key, '')
+
+    @classmethod
+    def next_blotter_number(cls):
+        """Return the next blotter entry number based on the configured starting number
+        and the highest currently assigned blotter number."""
+        from django.db.models import Max
+        starting = int(cls.get('blotter_starting_number') or 1)
+        highest = AccidentReport.objects.aggregate(Max('blotter_number'))['blotter_number__max']
+        if highest is None:
+            return starting
+        return max(highest + 1, starting)
+
+
+class DropdownOption(models.Model):
+    """Dynamic dropdown options for the report submission form.
+    Managed by Admin and Regional Director."""
+
+    FIELD_CHOICES = [
+        ('incident_type', 'Incident Type'),
+        ('type_of_place', 'Type of Place'),
+        ('offense', 'Offense'),
+        ('offense_type', 'Offense Type'),
+        ('stage_of_felony', 'Stage of Felony'),
+        ('vehicle_kind', 'Vehicle Type'),
+        ('vehicle_make', 'Vehicle Make / Brand'),
+        ('vehicle_model', 'Vehicle Model'),
+    ]
+
+    field_name = models.CharField(max_length=50, choices=FIELD_CHOICES, db_index=True)
+    value = models.CharField(max_length=300, help_text='Internal value (stored in DB)')
+    label = models.CharField(max_length=500, help_text='Display label shown to users')
+    parent_value = models.CharField(max_length=300, blank=True, default='',
+        help_text='Parent option value for hierarchical fields (e.g., vehicle_make parent is vehicle_kind value)')
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0)
+    is_default = models.BooleanField(default=False, help_text='Pre-loaded from original system choices (cannot delete)')
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='dropdown_options_created'
+    )
+
+    class Meta:
+        ordering = ['field_name', 'sort_order', 'label']
+        unique_together = ['field_name', 'value', 'parent_value']
+        verbose_name = 'Dropdown Option'
+        verbose_name_plural = 'Dropdown Options'
+
+    def __str__(self):
+        return f"{self.get_field_name_display()}: {self.label}"
+
+    @classmethod
+    def get_choices(cls, field_name, parent_value=None):
+        """Return active choices for a field as a list of (value, label) tuples.
+        For hierarchical fields, filter by parent_value."""
+        qs = cls.objects.filter(field_name=field_name, is_active=True)
+        if parent_value is not None:
+            qs = qs.filter(parent_value=parent_value)
+        return [(opt.value, opt.label) for opt in qs]
+
+    @classmethod
+    def get_vehicle_hierarchy(cls):
+        """Return full vehicle hierarchy as nested dict for JS: {kind: {make: [model, ...]}}."""
+        hierarchy = {}
+        # Get all active vehicle makes grouped by parent (vehicle_kind)
+        makes = cls.objects.filter(field_name='vehicle_make', is_active=True).order_by('sort_order', 'label')
+        for m in makes:
+            kind = m.parent_value
+            if kind not in hierarchy:
+                hierarchy[kind] = {}
+            hierarchy[kind][m.value] = {'label': m.label, 'models': []}
+
+        # Get all active vehicle models grouped by parent (kind__make)
+        models = cls.objects.filter(field_name='vehicle_model', is_active=True).order_by('sort_order', 'label')
+        for mdl in models:
+            # parent_value format: "MOTORCYCLE__HONDA"
+            parts = mdl.parent_value.split('__', 1)
+            if len(parts) == 2:
+                kind, make = parts
+                if kind in hierarchy and make in hierarchy[kind]:
+                    hierarchy[kind][make]['models'].append(mdl.label)
+
+        return hierarchy
+
+    @classmethod
+    def seed_defaults(cls):
+        """Populate default options from AccidentReport model choices and vehicle data."""
+        from accidents.models import AccidentReport
+        field_map = {
+            'incident_type': AccidentReport.INCIDENT_TYPE_CHOICES,
+            'type_of_place': AccidentReport.PLACE_TYPE_CHOICES,
+            'offense': AccidentReport.OFFENSE_CHOICES,
+            'offense_type': AccidentReport.OFFENSE_TYPE_CHOICES,
+            'stage_of_felony': AccidentReport.STAGE_OF_FELONY_CHOICES,
+            'vehicle_kind': AccidentReport.VEHICLE_KIND_CHOICES,
+        }
+        for field_name, choices in field_map.items():
+            for i, (value, label) in enumerate(choices):
+                cls.objects.get_or_create(
+                    field_name=field_name,
+                    value=value,
+                    parent_value='',
+                    defaults={
+                        'label': label,
+                        'sort_order': i * 10,
+                        'is_default': True,
+                        'is_active': True,
+                    }
+                )
+
+        # Seed vehicle makes and models (hierarchical)
+        vehicle_data = {
+            'MOTORCYCLE': {
+                'YAMAHA': ('Yamaha', ['Mio', 'NMAX', 'Aerox', 'Sniper', 'YTX', 'XTZ', 'MT-15', 'R15', 'FZ-i', 'Sight']),
+                'HONDA': ('Honda', ['Click', 'Beat', 'PCX', 'ADV', 'Wave', 'XRM', 'TMX', 'CRF', 'CBR', 'Rebel']),
+                'SUZUKI': ('Suzuki', ['Raider', 'Skydrive', 'Smash', 'Gixxer', 'Burgman', 'GSX']),
+                'KAWASAKI': ('Kawasaki', ['Barako', 'CT100', 'Rouser', 'Ninja', 'Z400', 'Dominar', 'KLX']),
+                'RUSI': ('Rusi', ['Classic', 'Sigma', 'Rapid', 'Flash', 'DL150']),
+            },
+            'TRICYCLE': {
+                'YAMAHA': ('Yamaha', ['Mio', 'NMAX', 'Sniper', 'YTX']),
+                'HONDA': ('Honda', ['TMX', 'Wave', 'XRM', 'Click']),
+                'SUZUKI': ('Suzuki', ['Raider', 'Smash']),
+                'KAWASAKI': ('Kawasaki', ['Barako', 'CT100', 'Rouser']),
+                'RUSI': ('Rusi', ['Classic', 'Sigma', 'Rapid']),
+            },
+            'CAR': {
+                'TOYOTA': ('Toyota', ['Vios', 'Wigo', 'Raize', 'Camry', 'Corolla Altis', 'GR Yaris', 'Corolla Cross']),
+                'MITSUBISHI': ('Mitsubishi', ['Mirage', 'Mirage G4', 'Lancer', 'Attrage']),
+                'HONDA': ('Honda', ['City', 'Civic', 'Accord', 'Brio']),
+                'HYUNDAI': ('Hyundai', ['Accent', 'Elantra', 'Reina', 'Ioniq']),
+                'NISSAN': ('Nissan', ['Almera', 'Sylphy', 'GT-R']),
+                'KIA': ('Kia', ['Sonet', 'Stonic', 'Forte', 'K3']),
+                'SUZUKI': ('Suzuki', ['Ciaz', 'Dzire', 'Swift', 'Celerio', 'S-Presso', 'Alto']),
+                'MAZDA': ('Mazda', ['3', '6', 'MX-5']),
+                'BMW': ('BMW', ['3 Series', '5 Series', 'X1']),
+                'MERCEDES': ('Mercedes-Benz', ['A-Class', 'C-Class', 'E-Class']),
+                'SUBARU': ('Subaru', ['Impreza', 'WRX', 'BRZ']),
+                'VOLKSWAGEN': ('Volkswagen', ['Lavida', 'Lamando']),
+                'BYD': ('BYD', ['Dolphin', 'Seal', 'Han']),
+                'GEELY': ('Geely', ['Emgrand', 'Coolray Sedan']),
+                'CHERY': ('Chery', ['Arrizo 5', 'Arrizo 8']),
+                'MG': ('MG', ['5', 'GT']),
+                'CHEVROLET': ('Chevrolet', ['Sail', 'Malibu']),
+            },
+            'SUV': {
+                'TOYOTA': ('Toyota', ['Fortuner', 'Hilux', 'Innova', 'Rush', 'Land Cruiser', 'RAV4', 'Avanza']),
+                'MITSUBISHI': ('Mitsubishi', ['Xpander', 'Xpander Cross', 'Montero Sport', 'Strada', 'Outlander']),
+                'FORD': ('Ford', ['Ranger', 'Everest', 'Territory', 'Explorer', 'Raptor']),
+                'NISSAN': ('Nissan', ['Navara', 'Terra', 'X-Trail', 'Patrol']),
+                'HONDA': ('Honda', ['CR-V', 'HR-V', 'BR-V', 'ZR-V']),
+                'HYUNDAI': ('Hyundai', ['Tucson', 'Creta', 'Santa Fe', 'Stargazer', 'Palisade']),
+                'KIA': ('Kia', ['Seltos', 'Sportage', 'Sorento', 'Carnival']),
+                'ISUZU': ('Isuzu', ['D-Max', 'mu-X']),
+                'SUZUKI': ('Suzuki', ['Ertiga', 'XL7', 'Vitara', 'Jimny', 'Grand Vitara']),
+                'MAZDA': ('Mazda', ['CX-5', 'CX-30', 'CX-3', 'CX-9', 'BT-50']),
+                'SUBARU': ('Subaru', ['Forester', 'XV', 'Outback', 'Evoltis']),
+                'BMW': ('BMW', ['X1', 'X3', 'X5']),
+                'MERCEDES': ('Mercedes-Benz', ['GLA', 'GLC', 'GLE']),
+                'BYD': ('BYD', ['Atto 3', 'Tang', 'Song Plus']),
+                'GEELY': ('Geely', ['Coolray', 'Azkarra', 'Okavango', 'Monjaro']),
+                'CHERY': ('Chery', ['Tiggo 4 Pro', 'Tiggo 7 Pro', 'Tiggo 8 Pro']),
+                'MG': ('MG', ['ZS', 'HS', 'RX5', 'Extender']),
+                'GAC': ('GAC', ['GS3', 'GS4', 'GS8', 'Emkoo']),
+                'CHANGAN': ('Changan', ['CS35 Plus', 'CS55 Plus', 'CS75 Plus', 'UNI-T']),
+                'VOLKSWAGEN': ('Volkswagen', ['T-Cross', 'Tiguan']),
+                'CHEVROLET': ('Chevrolet', ['Tracker', 'Trailblazer', 'Colorado']),
+            },
+            'VAN': {
+                'TOYOTA': ('Toyota', ['HiAce', 'Lite Ace', 'Grandia', 'Super Grandia']),
+                'NISSAN': ('Nissan', ['NV350 Urvan']),
+                'HYUNDAI': ('Hyundai', ['Staria', 'Grand Starex', 'Stargazer X']),
+                'KIA': ('Kia', ['Carnival']),
+                'FOTON': ('Foton', ['Transvan', 'View Traveller', 'Toano']),
+                'GAC': ('GAC', ['GN8']),
+            },
+            'TRUCK': {
+                'ISUZU': ('Isuzu', ['NLR', 'NMR', 'NPR', 'FRR', 'FVR', 'CYZ', 'EXZ']),
+                'HINO': ('Hino', ['300 Series', '500 Series', '700 Series']),
+                'FOTON': ('Foton', ['Tornado', 'Hurricane', 'EST-M']),
+                'HYUNDAI': ('Hyundai', ['HD36', 'HD65', 'Mighty']),
+                'MITSUBISHI': ('Mitsubishi', ['Canter', 'Fighter']),
+            },
+            'BUS': {
+                'HINO': ('Hino', ['RK Series', 'RM Series']),
+                'ISUZU': ('Isuzu', ['LT Series']),
+                'HYUNDAI': ('Hyundai', ['County', 'Universe']),
+            },
+        }
+
+        for kind_value, makes in vehicle_data.items():
+            for i, (make_value, (make_label, models)) in enumerate(makes.items()):
+                # Seed vehicle_make
+                cls.objects.get_or_create(
+                    field_name='vehicle_make',
+                    value=make_value,
+                    parent_value=kind_value,
+                    defaults={
+                        'label': make_label,
+                        'sort_order': i * 10,
+                        'is_default': True,
+                        'is_active': True,
+                    }
+                )
+                # Seed vehicle_model
+                parent_key = f'{kind_value}__{make_value}'
+                for j, model_name in enumerate(models):
+                    cls.objects.get_or_create(
+                        field_name='vehicle_model',
+                        value=model_name,
+                        parent_value=parent_key,
+                        defaults={
+                            'label': model_name,
+                            'sort_order': j * 10,
+                            'is_default': True,
+                            'is_active': True,
+                        }
+                    )

@@ -34,6 +34,10 @@ urlpatterns = [
     path('system/clear-cache/', admin_views.clear_cache, name='clear_cache'),
     path('system/database-backup/', admin_views.database_backup, name='database_backup'),
 
+    # Dropdown Options Management
+    path('dropdown-options/', admin_views.dropdown_management, name='dropdown_management'),
+    path('api/dropdown-options/', admin_views.dropdown_api, name='dropdown_api'),
+
     # AJAX Endpoints
     path('api/user-stats/', admin_views.get_user_stats, name='api_user_stats'),
     path('api/system-health/', admin_views.get_system_health, name='api_system_health'),

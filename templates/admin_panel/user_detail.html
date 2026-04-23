@@ -641,6 +641,7 @@
             <input type="hidden" name="is_active" id="isActiveHidden" value="{% if target_user.is_active %}on{% endif %}">
             <input type="hidden" name="can_submit_reports" id="canSubmitReportsHidden" value="{% if profile.can_submit_reports %}on{% endif %}">
             <input type="hidden" name="can_run_clustering" id="canRunClusteringHidden" value="{% if profile.can_run_clustering %}on{% endif %}">
+            <input type="hidden" name="can_edit_reports" id="canEditReportsHidden" value="{% if profile.can_edit_reports %}on{% endif %}">
             </form>
     </div>
 
@@ -692,94 +693,46 @@
             </div>
         </div>
 
-        <!-- Account Status -->
+        <!-- Permissions & Access -->
         <div class="admin-card" style="margin-top: 1.5rem;">
             <div class="admin-card-header">
-                <h2 class="admin-card-title">
-                    <i class="fas fa-lock"></i>
-                    Account Status
+                <h2 class="admin-card-title" style="font-size: 0.95rem;">
+                    <i class="fas fa-shield-alt"></i>
+                    Permissions
                 </h2>
             </div>
-            <div>
-                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; border: 2px solid {% if target_user.is_active %}#10B981{% else %}#EF4444{% endif %}; background: {% if target_user.is_active %}rgba(16, 185, 129, 0.05){% else %}rgba(239, 68, 68, 0.05){% endif %};" id="accountStatusLabel">
-                    <input type="checkbox" id="isActiveCheckbox" {% if target_user.is_active %}checked{% endif %} style="width: 20px; height: 20px;" onchange="syncAccountStatus(this)">
-                    <div>
-                        <strong style="color: var(--text-dark);">
-                            <i class="fas {% if target_user.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}" style="color: {% if target_user.is_active %}#10B981{% else %}#EF4444{% endif %};" id="accountStatusIcon"></i>
-                            <span id="accountStatusText">Active Account</span>
-                        </strong>
-                        <br>
-                        <small style="color: var(--text-light);" id="accountStatusHint">
-                            {% if target_user.is_active %}
-                            User can log in and access the system
-                            {% else %}
-                            User is currently blocked from logging in
-                            {% endif %}
-                        </small>
-                    </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <!-- Active Account -->
+                <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.5rem 0.65rem; border-radius: 6px; background: #f9fafb; transition: background 0.15s;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='#f9fafb'" id="accountStatusLabel">
+                    <input type="checkbox" id="isActiveCheckbox" {% if target_user.is_active %}checked{% endif %} style="width: 16px; height: 16px; accent-color: #10B981;" onchange="syncAccountStatus(this)">
+                    <i class="fas fa-power-off" style="color: {% if target_user.is_active %}#10B981{% else %}#EF4444{% endif %}; font-size: 0.8rem; width: 16px; text-align: center;" id="accountStatusIcon"></i>
+                    <span style="font-size: 0.85rem; font-weight: 500; color: #374151;" id="accountStatusText">Active Account</span>
                 </label>
-            </div>
-        </div>
 
-        <!-- Report Access -->
-        <div class="admin-card" style="margin-top: 1.5rem;">
-            <div class="admin-card-header">
-                <h2 class="admin-card-title">
-                    <i class="fas fa-file-alt"></i>
-                    Report Access
-                </h2>
-            </div>
-            <div>
-                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; border: 2px solid {% if profile.can_submit_reports %}#3B82F6{% else %}#9CA3AF{% endif %}; background: {% if profile.can_submit_reports %}rgba(59, 130, 246, 0.05){% else %}rgba(156, 163, 175, 0.05){% endif %};" id="reportAccessLabel">
-                    <input type="checkbox" id="canSubmitReportsCheckbox" {% if profile.can_submit_reports %}checked{% endif %} style="width: 20px; height: 20px;" onchange="syncReportAccess(this)">
-                    <div>
-                        <strong style="color: var(--text-dark);">
-                            <i class="fas {% if profile.can_submit_reports %}fa-check-circle{% else %}fa-ban{% endif %}" style="color: {% if profile.can_submit_reports %}#3B82F6{% else %}#9CA3AF{% endif %};" id="reportAccessIcon"></i>
-                            <span id="reportAccessText">{% if profile.can_submit_reports %}Can Submit Reports{% else %}Report Access Disabled{% endif %}</span>
-                        </strong>
-                        <br>
-                        <small style="color: #6B7280;" id="reportAccessHint">
-                            {% if profile.can_submit_reports %}
-                            User can access the report submission page
-                            {% else %}
-                            Report button is hidden for this user
-                            {% endif %}
-                        </small>
-                    </div>
+                <!-- Can Submit Reports -->
+                <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.5rem 0.65rem; border-radius: 6px; background: #f9fafb; transition: background 0.15s;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='#f9fafb'" id="reportAccessLabel">
+                    <input type="checkbox" id="canSubmitReportsCheckbox" {% if profile.can_submit_reports %}checked{% endif %} style="width: 16px; height: 16px; accent-color: #3B82F6;" onchange="syncReportAccess(this)">
+                    <i class="fas fa-file-alt" style="color: {% if profile.can_submit_reports %}#3B82F6{% else %}#9CA3AF{% endif %}; font-size: 0.8rem; width: 16px; text-align: center;" id="reportAccessIcon"></i>
+                    <span style="font-size: 0.85rem; font-weight: 500; color: #374151;" id="reportAccessText">Can Submit Reports</span>
                 </label>
-            </div>
-        </div>
 
-        {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
-        <!-- Clustering Access -->
-        <div class="admin-card" style="margin-top: 1rem;">
-            <div class="admin-card-header">
-                <h2 class="admin-card-title">
-                    <i class="fas fa-project-diagram"></i>
-                    Clustering Access
-                </h2>
-            </div>
-            <div>
-                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; border: 2px solid {% if profile.can_run_clustering %}#DC143C{% else %}#9CA3AF{% endif %}; background: {% if profile.can_run_clustering %}rgba(220, 20, 60, 0.05){% else %}rgba(156, 163, 175, 0.05){% endif %};" id="clusteringAccessLabel">
-                    <input type="checkbox" id="canRunClusteringCheckbox" {% if profile.can_run_clustering %}checked{% endif %} style="width: 20px; height: 20px;" onchange="syncClusteringAccess(this)">
-                    <div>
-                        <strong style="color: #1f2937;">
-                            <i class="fas {% if profile.can_run_clustering %}fa-check-circle{% else %}fa-ban{% endif %}" style="color: {% if profile.can_run_clustering %}#DC143C{% else %}#9CA3AF{% endif %};" id="clusteringAccessIcon"></i>
-                            <span id="clusteringAccessText">{% if profile.can_run_clustering %}Can Run Clustering{% else %}Clustering Access Disabled{% endif %}</span>
-                        </strong>
-                        <br>
-                        <small style="color: #6B7280;" id="clusteringAccessHint">
-                            {% if profile.can_run_clustering %}
-                            User can run the hotspot clustering algorithm
-                            {% else %}
-                            Clustering button is hidden for this user
-                            {% endif %}
-                        </small>
-                    </div>
+                {% if user.profile.role == 'super_admin' or user.profile.role == 'regional_director' %}
+                <!-- Can Run Clustering -->
+                <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.5rem 0.65rem; border-radius: 6px; background: #f9fafb; transition: background 0.15s;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='#f9fafb'" id="clusteringAccessLabel">
+                    <input type="checkbox" id="canRunClusteringCheckbox" {% if profile.can_run_clustering %}checked{% endif %} style="width: 16px; height: 16px; accent-color: #DC143C;" onchange="syncClusteringAccess(this)">
+                    <i class="fas fa-project-diagram" style="color: {% if profile.can_run_clustering %}#DC143C{% else %}#9CA3AF{% endif %}; font-size: 0.8rem; width: 16px; text-align: center;" id="clusteringAccessIcon"></i>
+                    <span style="font-size: 0.85rem; font-weight: 500; color: #374151;" id="clusteringAccessText">Can Run Clustering</span>
                 </label>
+
+                <!-- Can Edit Report Form -->
+                <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.5rem 0.65rem; border-radius: 6px; background: #f9fafb; transition: background 0.15s;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='#f9fafb'" id="editReportsLabel">
+                    <input type="checkbox" id="canEditReportsCheckbox" {% if profile.can_edit_reports %}checked{% endif %} style="width: 16px; height: 16px; accent-color: #7C3AED;" onchange="syncEditReportsAccess(this)">
+                    <i class="fas fa-edit" style="color: {% if profile.can_edit_reports %}#7C3AED{% else %}#9CA3AF{% endif %}; font-size: 0.8rem; width: 16px; text-align: center;" id="editReportsIcon"></i>
+                    <span style="font-size: 0.85rem; font-weight: 500; color: #374151;" id="editReportsText">Can Edit Report Form</span>
+                </label>
+                {% endif %}
             </div>
         </div>
-        {% endif %}
 
         <!-- Save Button (Sticky) -->
         <div style="
@@ -981,74 +934,38 @@ if (typeof window.showCenterNotification !== 'function') {
 // Sync Account Status checkbox (sidebar) with hidden input (inside form)
 function syncAccountStatus(checkbox) {
     var hidden = document.getElementById('isActiveHidden');
-    var label = document.getElementById('accountStatusLabel');
     var icon = document.getElementById('accountStatusIcon');
-    var hint = document.getElementById('accountStatusHint');
-    if (checkbox.checked) {
-        hidden.value = 'on';
-        label.style.borderColor = '#10B981';
-        label.style.background = 'rgba(16, 185, 129, 0.05)';
-        icon.className = 'fas fa-check-circle';
-        icon.style.color = '#10B981';
-        hint.textContent = 'User can log in and access the system';
-    } else {
-        hidden.value = '';
-        label.style.borderColor = '#EF4444';
-        label.style.background = 'rgba(239, 68, 68, 0.05)';
-        icon.className = 'fas fa-times-circle';
-        icon.style.color = '#EF4444';
-        hint.textContent = 'User is currently blocked from logging in';
-    }
+    var text = document.getElementById('accountStatusText');
+    hidden.value = checkbox.checked ? 'on' : '';
+    icon.style.color = checkbox.checked ? '#10B981' : '#EF4444';
+    text.textContent = checkbox.checked ? 'Active Account' : 'Account Disabled';
 }
 
 function syncReportAccess(checkbox) {
     var hidden = document.getElementById('canSubmitReportsHidden');
-    var label = document.getElementById('reportAccessLabel');
     var icon = document.getElementById('reportAccessIcon');
     var text = document.getElementById('reportAccessText');
-    var hint = document.getElementById('reportAccessHint');
-    if (checkbox.checked) {
-        hidden.value = 'on';
-        label.style.borderColor = '#3B82F6';
-        label.style.background = 'rgba(59, 130, 246, 0.05)';
-        icon.className = 'fas fa-check-circle';
-        icon.style.color = '#3B82F6';
-        text.textContent = 'Can Submit Reports';
-        hint.textContent = 'User can access the report submission page';
-    } else {
-        hidden.value = '';
-        label.style.borderColor = '#9CA3AF';
-        label.style.background = 'rgba(156, 163, 175, 0.05)';
-        icon.className = 'fas fa-ban';
-        icon.style.color = '#9CA3AF';
-        text.textContent = 'Report Access Disabled';
-        hint.textContent = 'Report button is hidden for this user';
-    }
+    hidden.value = checkbox.checked ? 'on' : '';
+    icon.style.color = checkbox.checked ? '#3B82F6' : '#9CA3AF';
+    text.textContent = checkbox.checked ? 'Can Submit Reports' : 'Report Access Disabled';
 }
 
 function syncClusteringAccess(checkbox) {
     var hidden = document.getElementById('canRunClusteringHidden');
-    var label = document.getElementById('clusteringAccessLabel');
     var icon = document.getElementById('clusteringAccessIcon');
     var text = document.getElementById('clusteringAccessText');
-    var hint = document.getElementById('clusteringAccessHint');
-    if (checkbox.checked) {
-        hidden.value = 'on';
-        label.style.borderColor = '#DC143C';
-        label.style.background = 'rgba(220, 20, 60, 0.05)';
-        icon.className = 'fas fa-check-circle';
-        icon.style.color = '#DC143C';
-        text.textContent = 'Can Run Clustering';
-        hint.textContent = 'User can run the hotspot clustering algorithm';
-    } else {
-        hidden.value = '';
-        label.style.borderColor = '#9CA3AF';
-        label.style.background = 'rgba(156, 163, 175, 0.05)';
-        icon.className = 'fas fa-ban';
-        icon.style.color = '#9CA3AF';
-        text.textContent = 'Clustering Access Disabled';
-        hint.textContent = 'Clustering button is hidden for this user';
-    }
+    hidden.value = checkbox.checked ? 'on' : '';
+    icon.style.color = checkbox.checked ? '#DC143C' : '#9CA3AF';
+    text.textContent = checkbox.checked ? 'Can Run Clustering' : 'Clustering Disabled';
+}
+
+function syncEditReportsAccess(checkbox) {
+    var hidden = document.getElementById('canEditReportsHidden');
+    var icon = document.getElementById('editReportsIcon');
+    var text = document.getElementById('editReportsText');
+    hidden.value = checkbox.checked ? 'on' : '';
+    icon.style.color = checkbox.checked ? '#7C3AED' : '#9CA3AF';
+    text.textContent = checkbox.checked ? 'Can Edit Report Form' : 'Report Edit Disabled';
 }
 
 // Caraga Region Police Stations Database (Real PNP Data)

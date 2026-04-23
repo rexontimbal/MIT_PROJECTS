@@ -1,6 +1,7 @@
 # hotspot_detection/settings.py
 
 import os
+import dj_database_url
 from pathlib import Path
 from decouple import config
 
@@ -12,12 +13,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ==============================================================================
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key-change-this-in-production-12345')
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = "RENDER" not in os.environ
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',') + ['*']
+ALLOWED_HOSTS = []
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # ==============================================================================
 # APPLICATION DEFINITION
@@ -83,14 +87,10 @@ WSGI_APPLICATION = 'hotspot_detection.wsgi.application'
 # ==============================================================================
 
 DATABASES = {
-    'default': {
-        'ENGINE': config('DB_ENGINE', default='django.db.backends.postgresql'),
-        'NAME': config('DB_NAME', default='accident_hotspot_db'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='irex@9911'),  # Default password for development
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-    }
+    "default": dj_database_url.config(
+        default="postgresql://postgres:irex@9911@localhost:5432/accident_hotspot_db",
+        conn_max_age=600
+    )
 }
 
 # Use SQLite for testing
@@ -150,14 +150,11 @@ USE_TZ = True
 # STATIC FILES (CSS, JavaScript, Images)
 # ==============================================================================
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Simplified static file serving for development
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # ==============================================================================
 # MEDIA FILES (User Uploads)

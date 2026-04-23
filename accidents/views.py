@@ -18,7 +18,7 @@ import json
 from datetime import timedelta
 from datetime import time as dt_time
 from django.contrib.auth.models import User
-from .models import Accident, AccidentCluster, AccidentReport, UserProfile, Notification, ReportActivityLog, ClusteringJob
+from .models import Accident, AccidentCluster, AccidentReport, UserProfile, Notification, ReportActivityLog, ClusteringJob, SystemSetting
 from datetime import datetime
 from django.contrib.auth.views import LoginView
 from .auth_utils import pnp_login_required, log_user_action
@@ -1918,23 +1918,20 @@ def report_accident(request):
         messages.error(request, 'You do not have permission to submit reports. Please contact your administrator.')
         return redirect('dashboard')
 
-    # Auto-fill reporter info from logged-in user's profile
-    reporter_name = request.user.get_full_name() or request.user.username
-    reporter_contact = ''
-    if hasattr(request.user, 'profile'):
-        reporter_contact = request.user.profile.mobile_number or request.user.profile.phone_number or request.user.email or ''
-    if not reporter_contact:
-        reporter_contact = request.user.email or ''
-
     if request.method == 'POST':
         form = AccidentReportForm(request.POST, request.FILES)
 
         if form.is_valid():
             report = form.save(commit=False)
             report.reported_by = request.user
-            # Always use profile data for reporter fields
-            report.reporter_name = reporter_name
-            report.reporter_contact = reporter_contact
+
+            # Parse has_complainant from hidden field (sent as 'true'/'false' string)
+            report.has_complainant = request.POST.get('has_complainant') == 'true'
+
+            # Clear complainant fields if no complainant
+            if not report.has_complainant:
+                report.reporter_name = ''
+                report.reporter_contact = ''
 
             # Parse multi-victim/suspect JSON from dynamic form rows
             import json as json_module
@@ -1946,6 +1943,14 @@ def report_accident(request):
                 report.suspects_data = json_module.loads(request.POST.get('suspects_json', '[]'))
             except (json_module.JSONDecodeError, TypeError):
                 report.suspects_data = []
+            try:
+                report.witnesses_data = json_module.loads(request.POST.get('witnesses_json', '[]'))
+            except (json_module.JSONDecodeError, TypeError):
+                report.witnesses_data = []
+            try:
+                report.vehicles_data = json_module.loads(request.POST.get('vehicles_data_json', '[]'))
+            except (json_module.JSONDecodeError, TypeError):
+                report.vehicles_data = []
 
             # Auto-compute counts from victim/suspect data
             report.suspect_count = len(report.suspects_data) or 1
@@ -1982,7 +1987,7 @@ def report_accident(request):
                         recipient=admin_user,
                         notification_type='report_submitted',
                         title='New Accident Report',
-                        message=f'{reporter_name} submitted a new accident report at {report.barangay}, {report.municipal}.',
+                        message=f'{request.user.get_full_name() or request.user.username} submitted a new accident report at {report.barangay}, {report.municipal}.',
                         url=f'/manage/report/{report.pk}/go/',
                         related_report=report,
                     ))
@@ -1994,8 +1999,18 @@ def report_accident(request):
     else:
         form = AccidentReportForm()
 
+    # Build vehicle hierarchy JSON for dynamic dropdowns
+    import json as json_module
+    from .models import DropdownOption
+    try:
+        vehicle_hierarchy = DropdownOption.get_vehicle_hierarchy()
+    except Exception:
+        vehicle_hierarchy = {}
+    vehicle_hierarchy_json = json_module.dumps(vehicle_hierarchy)
+
     context = {
         'form': form,
+        'vehicle_hierarchy_json': vehicle_hierarchy_json,
     }
 
     return render(request, 'reports/report_form.html', context)
@@ -2533,11 +2548,13 @@ def approve_report(request, pk):
             created_by=report.reported_by,
         )
 
-        # Update report status
+        # Update report status and auto-assign blotter number
         report.status = 'verified'
         report.verified_by = request.user
         report.verified_at = timezone.now()
         report.accident = accident
+        if not report.blotter_number:
+            report.blotter_number = SystemSetting.next_blotter_number()
         report.save()
 
         # Log activity
@@ -3080,6 +3097,12 @@ def edit_report(request, pk):
         if form.is_valid():
             updated_report = form.save(commit=False)
 
+            # Parse has_complainant from hidden field
+            updated_report.has_complainant = request.POST.get('has_complainant') == 'true'
+            if not updated_report.has_complainant:
+                updated_report.reporter_name = ''
+                updated_report.reporter_contact = ''
+
             # Parse multi-victim/suspect JSON from dynamic form rows
             import json as json_module
             try:
@@ -3090,6 +3113,14 @@ def edit_report(request, pk):
                 updated_report.suspects_data = json_module.loads(request.POST.get('suspects_json', '[]'))
             except (json_module.JSONDecodeError, TypeError):
                 updated_report.suspects_data = []
+            try:
+                updated_report.witnesses_data = json_module.loads(request.POST.get('witnesses_json', '[]'))
+            except (json_module.JSONDecodeError, TypeError):
+                updated_report.witnesses_data = []
+            try:
+                updated_report.vehicles_data = json_module.loads(request.POST.get('vehicles_data_json', '[]'))
+            except (json_module.JSONDecodeError, TypeError):
+                updated_report.vehicles_data = []
 
             # Auto-compute counts
             updated_report.suspect_count = len(updated_report.suspects_data) or 1
@@ -3159,7 +3190,7 @@ def edit_report(request, pk):
                             recipient=admin_user,
                             notification_type='report_submitted',
                             title='Report Resubmitted',
-                            message=f'{updated_report.reporter_name} resubmitted accident report #{updated_report.pk} at {updated_report.barangay}, {updated_report.municipal}.',
+                            message=f'{request.user.get_full_name() or request.user.username} resubmitted accident report #{updated_report.pk} at {updated_report.barangay}, {updated_report.municipal}.',
                             url=f'/manage/report/{updated_report.pk}/go/',
                             related_report=updated_report,
                         ))
@@ -3175,6 +3206,7 @@ def edit_report(request, pk):
         form = AccidentReportForm(instance=report)
 
     import json as json_module
+    from .models import DropdownOption
     context = {
         'form': form,
         'report': report,
@@ -3182,6 +3214,9 @@ def edit_report(request, pk):
         'is_resubmit': is_resubmit,
         'victims_data_json': json_module.dumps(report.victims_data or []),
         'suspects_data_json': json_module.dumps(report.suspects_data or []),
+        'witnesses_data_json': json_module.dumps(report.witnesses_data or []),
+        'vehicles_data_json': json_module.dumps(report.vehicles_data or []),
+        'vehicle_hierarchy_json': json_module.dumps(DropdownOption.get_vehicle_hierarchy()),
     }
 
     return render(request, 'reports/report_form.html', context)
@@ -3516,6 +3551,17 @@ def map_view(request):
             'severity_score': float(focus_cluster.severity_score),
         }
 
+    # Extract distinct vehicle types for filter dropdown
+    vehicle_types_raw = set()
+    for vk in Accident.objects.exclude(vehicle_kind__isnull=True).exclude(
+        vehicle_kind__exact=''
+    ).values_list('vehicle_kind', flat=True).distinct():
+        for part in vk.split(','):
+            p = part.strip()
+            if p and p != 'NOT INDICATED':
+                vehicle_types_raw.add(p)
+    vehicle_types = sorted(vehicle_types_raw)
+
     context = {
         'accidents_json': accidents_json,
         'hotspots_json': hotspots_json,
@@ -3523,6 +3569,7 @@ def map_view(request):
         'total_hotspots': total_hotspots,
         'provinces': provinces,  # Now guaranteed to have data
         'years': years,  # Available years for filter dropdown
+        'vehicle_types': vehicle_types,  # Distinct vehicle types for filter
         'mapbox_token': settings.MAPBOX_ACCESS_TOKEN,
         'cluster_id': cluster_id,  # Pass cluster_id to template
         'focus_cluster': focus_cluster_data,  # Pass cluster details for map centering
@@ -5189,16 +5236,17 @@ def export_monthly_narrative_pdf(request):
         fontSize=7, fontName='Helvetica-Oblique', alignment=TA_CENTER, textColor=colors.HexColor('#888888'), spaceBefore=12)
 
     # ===================== HEADER (3-column: logo | text | logo) =====================
+    # Left: PNP Shield — Right: City/Municipal Official Seal (consistent with Police Report)
     static_dir = settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT or ''
     pnp_logo_path = os.path.join(static_dir, 'images', 'pnp-logo1.png')
     if not os.path.exists(pnp_logo_path):
         pnp_logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'pnp-logo1.png')
-    agnes_logo_path = os.path.join(static_dir, 'images', 'pnp-logo.png')
-    if not os.path.exists(agnes_logo_path):
-        agnes_logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'pnp-logo.png')
+    seal_logo_path = os.path.join(static_dir, 'images', 'POLICE_LOGO.png')
+    if not os.path.exists(seal_logo_path):
+        seal_logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'POLICE_LOGO.png')
 
-    header_left = Image(pnp_logo_path, width=50, height=60) if os.path.exists(pnp_logo_path) else ''
-    header_right = Image(agnes_logo_path, width=50, height=55) if os.path.exists(agnes_logo_path) else ''
+    header_left = Image(pnp_logo_path, width=62, height=72) if os.path.exists(pnp_logo_path) else ''
+    header_right = Image(seal_logo_path, width=62, height=62) if os.path.exists(seal_logo_path) else ''
 
     header_center = [
         Paragraph('Republic of the Philippines', s_hdr),
@@ -5209,7 +5257,7 @@ def export_monthly_narrative_pdf(request):
 
     header_tbl = Table(
         [[header_left, header_center, header_right]],
-        colWidths=[0.9 * inch, W - 1.8 * inch, 0.9 * inch],
+        colWidths=[1.0 * inch, W - 2.0 * inch, 1.0 * inch],
     )
     header_tbl.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -5691,68 +5739,131 @@ def download_report_pdf(request, pk):
     # Style definitions
     s_title = ParagraphStyle('PNPTitle', parent=styles['Normal'], fontSize=11, fontName='Helvetica-Bold', alignment=TA_CENTER, leading=13)
     s_subtitle = ParagraphStyle('PNPSub', parent=styles['Normal'], fontSize=8, fontName='Helvetica', alignment=TA_CENTER, leading=10)
-    s_section = ParagraphStyle('Section', parent=styles['Normal'], fontSize=9, fontName='Helvetica-Bold', leading=12, textColor=colors.white)
+    s_section = ParagraphStyle('Section', parent=styles['Normal'], fontSize=9, fontName='Helvetica-Bold', leading=12, textColor=colors.black)
     s_label = ParagraphStyle('Label', parent=styles['Normal'], fontSize=7.5, fontName='Helvetica-Bold', leading=9, textColor=colors.HexColor('#333333'))
     s_value = ParagraphStyle('Value', parent=styles['Normal'], fontSize=8, fontName='Helvetica', leading=10)
     s_value_sm = ParagraphStyle('ValueSm', parent=styles['Normal'], fontSize=7.5, fontName='Helvetica', leading=9)
     s_narrative = ParagraphStyle('Narrative', parent=styles['Normal'], fontSize=8, fontName='Helvetica', leading=11, spaceBefore=2, spaceAfter=2)
     s_footer = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=7, fontName='Helvetica-Oblique', alignment=TA_CENTER, textColor=colors.HexColor('#888888'))
 
-    PRIMARY = colors.HexColor('#003087')
-    LIGHT_BG = colors.HexColor('#F0F4FA')
-    BORDER = colors.HexColor('#CCCCCC')
+    # Neutral/official document colors — no blue tint
+    PRIMARY = colors.HexColor('#1A1A1A')          # Dark neutral (section headers)
+    LIGHT_BG = colors.HexColor('#F2F2F2')         # Light gray (table header rows)
+    BORDER = colors.HexColor('#888888')            # Medium gray (grid/borders)
 
     # ==================== HEADER ====================
-    logo_path = os.path.join(settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT or '', 'images', 'pnp-logo1.png')
+    # Dynamic station/province info from the reporting officer's profile
+    irf_station_name = ''
+    irf_ppo_name = 'POLICE REGIONAL OFFICE 13'
+    irf_station_address = 'Camp Col. Rafael C. Rodriguez, Libertad, Butuan City'
+    try:
+        prof = report.reported_by.profile if hasattr(report.reported_by, 'profile') else None
+        if prof:
+            if prof.station:
+                irf_station_name = str(prof.station)
+            if prof.province:
+                irf_ppo_name = f'{prof.province} POLICE OFFICE'.upper()
+            if prof.municipality:
+                irf_station_address = prof.municipality
+                if prof.province:
+                    irf_station_address = f'{prof.municipality}, {prof.province}'
+    except Exception:
+        pass
 
-    header_data = []
+    _irf_static = settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT or ''
+    # Left: PNP Shield — Right: City/Municipal Official Seal (consistent with Police Report)
+    logo_path = os.path.join(_irf_static, 'images', 'pnp-logo1.png')
     header_left = ''
     if os.path.exists(logo_path):
-        header_left = Image(logo_path, width=50, height=60)
+        header_left = Image(logo_path, width=62, height=72)
 
     header_center = [
         Paragraph('Republic of the Philippines', s_subtitle),
         Paragraph('<b>NATIONAL POLICE COMMISSION</b>', ParagraphStyle('H0', parent=s_subtitle, fontSize=7.5, leading=9)),
         Paragraph('<b>PHILIPPINE NATIONAL POLICE</b>', ParagraphStyle('H', parent=s_title, fontSize=10, leading=12)),
-        Paragraph('POLICE REGIONAL OFFICE 13', ParagraphStyle('H2', parent=s_title, fontSize=9, leading=11)),
-        Paragraph('Camp Col. Rafael C. Rodriguez, Libertad, Butuan City', s_subtitle),
-        Spacer(1, 4),
-        Paragraph('<b>TRAFFIC ACCIDENT REPORT</b>', ParagraphStyle('H3', parent=s_title, fontSize=11, leading=13, textColor=PRIMARY)),
+        Paragraph(irf_ppo_name, ParagraphStyle('H2', parent=s_title, fontSize=9, leading=11)),
     ]
+    if irf_station_name:
+        header_center.append(Paragraph(f'<b>{irf_station_name}</b>', ParagraphStyle('HSN', parent=s_title, fontSize=10, leading=12)))
+    header_center.append(Paragraph(irf_station_address, s_subtitle))
+    header_center.extend([
+        Spacer(1, 4),
+        Paragraph('<b>INCIDENT RECORD FORM (IRF)</b>', ParagraphStyle('H3', parent=s_title, fontSize=11, leading=13, textColor=PRIMARY)),
+        Paragraph('<font size="7" color="#555555">(Prescribed by DIDM under PNP MC No. 2014-009 on the Crime Incident Recording System)</font>', s_subtitle),
+    ])
 
-    logo2_path = os.path.join(settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT or '', 'images', 'pnp-logo.png')
+    logo2_path = os.path.join(_irf_static, 'images', 'POLICE_LOGO.png')
     header_right = ''
     if os.path.exists(logo2_path):
-        header_right = Image(logo2_path, width=50, height=55)
+        header_right = Image(logo2_path, width=62, height=62)
 
     header_tbl = Table(
         [[header_left, header_center, header_right]],
-        colWidths=[0.9 * inch, W - 1.8 * inch, 0.9 * inch],
+        colWidths=[1.0 * inch, W - 2.0 * inch, 1.0 * inch],
     )
     header_tbl.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (0, 0), (0, 0), 'CENTER'),
         ('ALIGN', (1, 0), (1, 0), 'CENTER'),
         ('ALIGN', (2, 0), (2, 0), 'CENTER'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]))
     elements.append(header_tbl)
 
-    # Report reference line
-    ref_data = [
-        [Paragraph(f'<b>Report No:</b> AR-{report.pk:05d}', s_value),
-         Paragraph(f'<b>Date Filed:</b> {report.created_at.strftime("%B %d, %Y")}', s_value),
-         Paragraph(f'<b>Status:</b> APPROVED', ParagraphStyle('S', parent=s_value, textColor=colors.HexColor('#059669')))]
+    # ---------- IRF Entry Number (DIDM standard: Station-YY-MM-DD-###) ----------
+    # Derive a station code from the verifier's assigned station, falling back
+    # to PRO-13 if unavailable, since IRFs are always station-stamped.
+    station_code = 'PNP'
+    try:
+        if report.verified_by and hasattr(report.verified_by, 'profile'):
+            prof = report.verified_by.profile
+            if getattr(prof, 'station', None):
+                station_code = (prof.station.code or prof.station.name or 'PNP')[:12].upper().replace(' ', '')
+            elif getattr(prof, 'municipality', None):
+                station_code = prof.municipality[:8].upper().replace(' ', '')
+    except Exception:
+        pass
+    irf_entry_no = f'{station_code}-{report.created_at.strftime("%y-%m-%d")}-{report.pk:04d}'
+    file_no = irf_entry_no  # kept for footer reuse / backward compat
+    blotter_no = str(report.blotter_number) if report.blotter_number else '______________________'
+
+    # "Copy For" checkbox row (three standard copies per DIDM SOP)
+    copy_for_cells = [
+        Paragraph('<b>Copy For:</b>', s_label),
+        Paragraph('[ ] &nbsp;Blotter Copy', s_value),
+        Paragraph('[ ] &nbsp;Complainant', s_value),
+        Paragraph('[ ] &nbsp;PNP File Copy', s_value),
     ]
-    ref_tbl = Table(ref_data, colWidths=[W / 3] * 3)
+
+    ref_data = [
+        [Paragraph(f'<b>IRF Entry Number:</b> {irf_entry_no}', s_value),
+         Paragraph(f'<b>Blotter Entry No.:</b> {blotter_no}', s_value)],
+        [Paragraph(f'<b>Date Filed:</b> {report.created_at.strftime("%B %d, %Y")}', s_value),
+         Paragraph(f'<b>Status:</b> APPROVED', ParagraphStyle('S', parent=s_value, textColor=colors.HexColor('#059669')))],
+    ]
+    ref_tbl = Table(ref_data, colWidths=[W / 2, W / 2])
     ref_tbl.setStyle(TableStyle([
         ('LINEABOVE', (0, 0), (-1, 0), 1, PRIMARY),
-        ('LINEBELOW', (0, 0), (-1, 0), 0.5, BORDER),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-        ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+        ('LINEBELOW', (0, -1), (-1, -1), 0.5, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('ALIGN', (1, 1), (1, 1), 'RIGHT'),
     ]))
     elements.append(ref_tbl)
+
+    # "Copy For" row (DIDM requirement — who gets each copy of the IRF)
+    copy_tbl = Table(
+        [copy_for_cells],
+        colWidths=[0.85 * inch, (W - 0.85 * inch) / 3, (W - 0.85 * inch) / 3, (W - 0.85 * inch) / 3],
+    )
+    copy_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('LINEBELOW', (0, 0), (-1, -1), 0.5, BORDER),
+    ]))
+    elements.append(copy_tbl)
     elements.append(Spacer(1, 6))
 
     # ==================== SECTION BUILDER ====================
@@ -5762,11 +5873,11 @@ def download_report_pdf(request, pk):
             colWidths=[W],
         )
         tbl.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), PRIMARY),
-            ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('BACKGROUND', (0, 0), (-1, -1), LIGHT_BG),
+            ('LINEABOVE', (0, 0), (-1, 0), 1.5, PRIMARY),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             ('LEFTPADDING', (0, 0), (-1, -1), 6),
-            ('ROUNDEDCORNERS', [3, 3, 0, 0]),
         ]))
         return tbl
 
@@ -5793,73 +5904,263 @@ def download_report_pdf(request, pk):
         ]))
         return tbl
 
-    # ==================== 1. INCIDENT INFORMATION ====================
-    elements.append(section_header('I. INCIDENT INFORMATION'))
+    # ==================== Helpers for this TAIR layout ====================
+    # Checkbox glyphs: use "[X]" / "[ ]" (100% safe in any PDF font)
+    def _cb(checked):
+        return '[X]' if checked else '[ ]'
 
+    BLANK = '______________________'
+    BLANK_S = '____________'
+
+    # Section-sub-header style (for "VEHICLE #1" etc.)
+    s_subhdr = ParagraphStyle(
+        'SubHdr', parent=s_label, fontSize=8, leading=11,
+        textColor=colors.HexColor('#333333'), spaceBefore=2, spaceAfter=2,
+    )
+    # Checkbox cell style
+    s_cb_cell = ParagraphStyle('CB', parent=s_value_sm, fontSize=8, leading=11)
+
+    def checkbox_grid(pairs, cols=2):
+        """Render a grid of checkbox items. pairs = [(label, is_checked), ...]"""
+        cells = [Paragraph(f'{_cb(chk)} &nbsp;{lbl}', s_cb_cell) for lbl, chk in pairs]
+        # Pad to full rows
+        while len(cells) % cols != 0:
+            cells.append(Paragraph('', s_cb_cell))
+        rows = [cells[i:i + cols] for i in range(0, len(cells), cols)]
+        col_widths = [W / cols] * cols
+        tbl = Table(rows, colWidths=col_widths)
+        tbl.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        return tbl
+
+    # ==================== TOP INCIDENT-DATA BLOCK (IRF Header Fields) ====================
+    # Per DIDM IRF layout: Type of Incident, Date/Time Reported, Date/Time of Incident,
+    # and Place of Incident appear at the very top, above Items A/B/C/D.
+
+    # ---- Type of Incident ----
+    inc = (report.incident_type or '').upper()
     incident_type_display = _choice(report.incident_type, AccidentReport.INCIDENT_TYPE_CHOICES)
     if report.incident_type == 'OTHER' and report.incident_type_other:
         incident_type_display = f'Other: {report.incident_type_other}'
 
+    type_tbl = Table(
+        [[Paragraph('<b>Type of Incident:</b>', s_label),
+          Paragraph(incident_type_display, s_value)]],
+        colWidths=[1.3 * inch, W - 1.3 * inch],
+    )
+    type_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('LINEBELOW', (0, 0), (-1, -1), 0.25, colors.HexColor('#E5E7EB')),
+    ]))
+    elements.append(type_tbl)
+
+    # ---- Date/Time Reported + Date/Time of Incident ----
+    day_of_week = report.incident_date.strftime('%A').upper() if report.incident_date else '-'
+    incident_date_str = report.incident_date.strftime('%d %b %Y') if report.incident_date else '-'
+    incident_time_str = report.incident_time.strftime('%H%MH') if report.incident_time else '-'
+    reported_str = report.created_at.strftime('%d %b %Y / %H%MH') if report.created_at else '-'
+
+    elements.append(field_row([
+        ('Date and Time Reported', reported_str),
+        ('Date and Time of Incident', f'{incident_date_str} / {incident_time_str}  ({day_of_week})'),
+    ]))
+
+    # ---- Place of Incident (address breakdown) ----
     place_type_display = _choice(report.type_of_place, AccidentReport.PLACE_TYPE_CHOICES)
     if report.type_of_place == 'OTHER' and report.type_of_place_other:
         place_type_display = f'Other: {report.type_of_place_other}'
+    place_of_incident = ', '.join(filter(None, [
+        _v(report.street_address, '').strip() or None,
+        _v(report.barangay, '').strip() or None,
+        _v(report.municipal, '').strip() or None,
+        _v(report.province, '').strip() or None,
+    ])) or '-'
 
-    elements.append(field_row([
-        ('Date of Incident', report.incident_date.strftime('%B %d, %Y') if report.incident_date else '-'),
-        ('Time of Incident', report.incident_time.strftime('%I:%M %p') if report.incident_time else '-'),
+    place_tbl = Table(
+        [[Paragraph('<b>Place of Incident:</b>', s_label),
+          Paragraph(place_of_incident, s_value)]],
+        colWidths=[1.3 * inch, W - 1.3 * inch],
+    )
+    place_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('LINEBELOW', (0, 0), (-1, -1), 0.25, colors.HexColor('#E5E7EB')),
     ]))
+    elements.append(place_tbl)
     elements.append(field_row([
-        ('Type of Incident', incident_type_display),
         ('Type of Place', place_type_display),
+        ('GPS Coordinates', f'{report.latitude or "-"}, {report.longitude or "-"}'),
     ]))
-    elements.append(Spacer(1, 6))
+    elements.append(Spacer(1, 8))
 
-    # ==================== 2. LOCATION ====================
-    elements.append(section_header('II. LOCATION OF INCIDENT'))
+    # ==================== ITEM "A" — REPORTING PERSON ====================
+    elements.append(section_header('ITEM "A" — REPORTING PERSON'))
+
+    # If no complainant, show "N/A — Officer-observed" in PDF
+    no_complainant = not report.has_complainant or not report.reporter_name
+
+    # Parse reporter_name into family/first/middle where possible
+    reporter_full = _v(report.reporter_name, '')
+    rp_parts = reporter_full.split() if reporter_full and reporter_full != '-' else []
+    rp_first = rp_parts[0] if len(rp_parts) >= 1 else BLANK
+    rp_middle = rp_parts[1] if len(rp_parts) >= 3 else BLANK
+    rp_family = rp_parts[-1] if len(rp_parts) >= 2 else BLANK
 
     elements.append(field_row([
-        ('Province', _v(report.province)),
-        ('Municipality', _v(report.municipal)),
+        ('Family Name', rp_family),
+        ('First Name', rp_first),
+        ('Middle Name', rp_middle),
     ]))
     elements.append(field_row([
-        ('Barangay', _v(report.barangay)),
-        ('Street Address', _v(report.street_address)),
+        ('Qualifier (Jr./Sr./III)', _v(report.reporter_qualifier) or BLANK_S),
+        ('Nickname', _v(report.reporter_nickname) or BLANK_S),
+        ('Citizenship', _v(report.reporter_citizenship) or 'Filipino'),
     ]))
     elements.append(field_row([
-        ('Latitude', str(report.latitude) if report.latitude else '-'),
-        ('Longitude', str(report.longitude) if report.longitude else '-'),
+        ('Sex / Gender', _v(report.reporter_gender) or BLANK_S),
+        ('Civil Status', _v(report.reporter_civil_status) or BLANK_S),
+        ('Date of Birth', report.reporter_dob.strftime('%B %d, %Y') if report.reporter_dob else BLANK_S),
     ]))
-    elements.append(Spacer(1, 6))
-
-    # ==================== 3. OFFENSE / LEGAL ====================
-    elements.append(section_header('III. OFFENSE / LEGAL CLASSIFICATION'))
-
-    offense_display = _choice(report.offense, AccidentReport.OFFENSE_CHOICES)
-    if report.offense == 'OTHER' and report.offense_other:
-        offense_display = f'Other: {report.offense_other}'
-
-    offense_type_display = _choice(report.offense_type, AccidentReport.OFFENSE_TYPE_CHOICES)
-    if report.offense_type == 'OTHER' and report.offense_type_other:
-        offense_type_display = f'Other: {report.offense_type_other}'
-
-    elements.append(field_row([('Offense', offense_display)],
-        col_widths=[1.3 * inch, W - 1.3 * inch]))
+    # Compute age from DOB if available
+    rp_age = BLANK_S
+    if report.reporter_dob:
+        from datetime import date as _date
+        today = _date.today()
+        rp_age = str(today.year - report.reporter_dob.year - ((today.month, today.day) < (report.reporter_dob.month, report.reporter_dob.day)))
     elements.append(field_row([
-        ('Offense Type', offense_type_display),
-        ('Stage of Felony', _choice(report.stage_of_felony, AccidentReport.STAGE_OF_FELONY_CHOICES)),
+        ('Age', rp_age),
+        ('Place of Birth', _v(report.reporter_place_of_birth) or BLANK),
     ]))
     elements.append(field_row([
-        ('Drug/Alcohol Involved', _bool(report.drug_involved)),
-        ('Casualties Killed', str(report.casualties_killed)),
+        ('Home Phone', _v(report.reporter_home_phone) or BLANK_S),
+        ('Mobile Phone', _v(report.reporter_contact)),
+        ('Email Address', _v(report.reporter_email) or BLANK),
+    ]))
+    # Build current address string
+    addr_parts = [p for p in [report.reporter_address_village, report.reporter_address_barangay, report.reporter_address_city, report.reporter_address_province] if p]
+    rp_address = ', '.join(addr_parts) if addr_parts else BLANK
+    elements.append(field_row([
+        ('Current Address (Village/Sitio, Barangay, Town/City, Province)', rp_address),
     ]))
     elements.append(field_row([
-        ('Casualties Injured', str(report.casualties_injured)),
-        ('', ''),
+        ('Other Address', _v(report.reporter_other_address) or BLANK),
     ]))
-    elements.append(Spacer(1, 6))
+    # Education display name
+    edu_display = _v(report.reporter_education) or BLANK
+    edu_map = {'ELEMENTARY': 'Elementary', 'HIGH_SCHOOL': 'High School', 'SENIOR_HIGH': 'Senior High School', 'VOCATIONAL': 'Vocational/Technical', 'COLLEGE': 'College', 'POST_GRADUATE': 'Post Graduate', 'NONE': 'None'}
+    edu_display = edu_map.get(edu_display, edu_display)
+    elements.append(field_row([
+        ('Highest Educational Attainment', edu_display),
+        ('Occupation', _v(report.reporter_occupation) or BLANK),
+    ]))
+    elements.append(field_row([
+        ('ID Card Presented', _v(report.reporter_id_presented) or BLANK),
+    ]))
+    elements.append(Spacer(1, 8))
 
-    # ==================== 4. VICTIM INFORMATION ====================
-    elements.append(section_header('IV. VICTIM INFORMATION'))
+    # ==================== ITEM "B" — SUSPECT'S DATA ====================
+    suspects = report.suspects_data if report.suspects_data else []
+    if not suspects and report.suspect_name:
+        suspects = [{
+            'name': report.suspect_name or '-',
+            'age': report.driver_age or '-',
+            'gender': _choice(report.driver_gender, AccidentReport.GENDER_CHOICES),
+        }]
+    has_suspect = bool(suspects)
+    no_suspect_label = f'{_cb(not has_suspect)} &nbsp;<b>NO SUSPECT</b> — check this box if no suspect is involved/identified'
+
+    elements.append(section_header('ITEM "B" — SUSPECT\'S DATA'))
+    # "NO SUSPECT" indicator row
+    ns_tbl = Table(
+        [[Paragraph(no_suspect_label, s_cb_cell)]],
+        colWidths=[W],
+    )
+    ns_tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F5F5F5')),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('LINEBELOW', (0, 0), (-1, -1), 0.5, BORDER),
+    ]))
+    elements.append(ns_tbl)
+    elements.append(Spacer(1, 2))
+
+    # Table of suspects/drivers with CIRAS-style demographic columns
+    sus_header = [
+        Paragraph('<b>No.</b>', s_label),
+        Paragraph('<b>Family Name</b>', s_label),
+        Paragraph('<b>First Name</b>', s_label),
+        Paragraph('<b>MI</b>', s_label),
+        Paragraph('<b>Age</b>', s_label),
+        Paragraph('<b>Sex</b>', s_label),
+        Paragraph('<b>Nationality</b>', s_label),
+        Paragraph('<b>Occupation</b>', s_label),
+        Paragraph('<b>Disposition</b>', s_label),
+    ]
+    sus_rows = [sus_header]
+    for i, s in enumerate(suspects, 1):
+        # Parse "name" into family/first/middle
+        nm = (s.get('name') or '').strip()
+        nm_parts = nm.split() if nm else []
+        fam = nm_parts[-1] if len(nm_parts) >= 2 else (nm_parts[0] if nm_parts else '-')
+        fst = nm_parts[0] if len(nm_parts) >= 2 else ''
+        mid = nm_parts[1][:1] + '.' if len(nm_parts) >= 3 else ''
+        gender_val = s.get('gender', '-')
+        if gender_val in ('MALE', 'FEMALE', 'UNKNOWN'):
+            gender_val = _choice(gender_val, AccidentReport.GENDER_CHOICES)
+        sus_rows.append([
+            Paragraph(str(i), s_value_sm),
+            Paragraph(_v(fam), s_value_sm),
+            Paragraph(_v(fst), s_value_sm),
+            Paragraph(_v(mid, '-'), s_value_sm),
+            Paragraph(_v(s.get('age')), s_value_sm),
+            Paragraph(_v(gender_val), s_value_sm),
+            Paragraph(_v(s.get('nationality'), 'Filipino'), s_value_sm),
+            Paragraph(_v(s.get('occupation')), s_value_sm),
+            Paragraph(_v(s.get('status'), '-'), s_value_sm),
+        ])
+    # If no suspects at all, show one placeholder row
+    if len(sus_rows) == 1:
+        sus_rows.append([Paragraph('1', s_value_sm)] +
+                        [Paragraph('-', s_value_sm) for _ in range(8)])
+
+    sus_tbl = Table(sus_rows, colWidths=[
+        0.3 * inch, 1.1 * inch, 1.0 * inch, 0.3 * inch, 0.35 * inch, 0.35 * inch,
+        0.75 * inch, W - 4.95 * inch, 0.8 * inch,
+    ])
+    sus_tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
+        ('GRID', (0, 0), (-1, -1), 0.5, BORDER),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('LEFTPADDING', (0, 0), (-1, -1), 3),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+        ('FONTSIZE', (0, 0), (-1, -1), 7),
+    ]))
+    elements.append(sus_tbl)
+    elements.append(Spacer(1, 2))
+    # Additional per-suspect details row (driver-specific)
+    elements.append(field_row([
+        ("Driver's License No.", _v(report.driver_license_no) or BLANK),
+        ('Relation to Victim', _v(report.suspect_relation_to_victim) or BLANK_S),
+    ]))
+    elements.append(field_row([
+        ('Current Address of Suspect', _v(report.suspect_address) or BLANK),
+    ]))
+    elements.append(Spacer(1, 8))
+
+    # ==================== ITEM "C" — VICTIM'S DATA ====================
+    elements.append(section_header('ITEM "C" — VICTIM\'S DATA'))
 
     victims = report.victims_data if report.victims_data else []
     if not victims and report.victim_name:
@@ -5870,95 +6171,108 @@ def download_report_pdf(request, pk):
             'status': _choice(report.victim_status, AccidentReport.VICTIM_STATUS_CHOICES),
         }]
 
-    if victims:
-        v_header = [
-            Paragraph('<b>No.</b>', s_label),
-            Paragraph('<b>Name</b>', s_label),
-            Paragraph('<b>Age</b>', s_label),
-            Paragraph('<b>Gender</b>', s_label),
-            Paragraph('<b>Status</b>', s_label),
-        ]
-        v_rows = [v_header]
-        for i, v in enumerate(victims, 1):
-            gender_val = v.get('gender', '-')
-            if gender_val in ('MALE', 'FEMALE', 'UNKNOWN'):
-                gender_val = _choice(gender_val, AccidentReport.GENDER_CHOICES)
-            status_val = v.get('status', '-')
-            if status_val in ('KILLED', 'INJURED', 'UNHARMED'):
-                status_val = _choice(status_val, AccidentReport.VICTIM_STATUS_CHOICES)
-            v_rows.append([
-                Paragraph(str(i), s_value_sm),
-                Paragraph(_v(v.get('name')), s_value_sm),
-                Paragraph(_v(v.get('age')), s_value_sm),
-                Paragraph(_v(gender_val), s_value_sm),
-                Paragraph(_v(status_val), s_value_sm),
-            ])
-        v_tbl = Table(v_rows, colWidths=[0.4 * inch, 2.2 * inch, 0.6 * inch, 0.9 * inch, W - 4.1 * inch])
-        v_tbl.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
-            ('GRID', (0, 0), (-1, -1), 0.5, BORDER),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-        ]))
-        elements.append(v_tbl)
-    else:
-        elements.append(Paragraph('No victim information recorded.', s_value))
-    elements.append(Spacer(1, 6))
+    vic_header = [
+        Paragraph('<b>No.</b>', s_label),
+        Paragraph('<b>Family Name</b>', s_label),
+        Paragraph('<b>First Name</b>', s_label),
+        Paragraph('<b>MI</b>', s_label),
+        Paragraph('<b>Age</b>', s_label),
+        Paragraph('<b>Sex</b>', s_label),
+        Paragraph('<b>Nationality</b>', s_label),
+        Paragraph('<b>Occupation</b>', s_label),
+        Paragraph('<b>Injury Status</b>', s_label),
+    ]
+    vic_rows = [vic_header]
+    for i, v in enumerate(victims, 1):
+        nm = (v.get('name') or '').strip()
+        nm_parts = nm.split() if nm else []
+        fam = nm_parts[-1] if len(nm_parts) >= 2 else (nm_parts[0] if nm_parts else '-')
+        fst = nm_parts[0] if len(nm_parts) >= 2 else ''
+        mid = nm_parts[1][:1] + '.' if len(nm_parts) >= 3 else ''
+        gender_val = v.get('gender', '-')
+        if gender_val in ('MALE', 'FEMALE', 'UNKNOWN'):
+            gender_val = _choice(gender_val, AccidentReport.GENDER_CHOICES)
+        status_val = v.get('status', '-')
+        if status_val in ('KILLED', 'INJURED', 'UNHARMED'):
+            status_val = _choice(status_val, AccidentReport.VICTIM_STATUS_CHOICES)
+        vic_rows.append([
+            Paragraph(str(i), s_value_sm),
+            Paragraph(_v(fam), s_value_sm),
+            Paragraph(_v(fst), s_value_sm),
+            Paragraph(_v(mid, '-'), s_value_sm),
+            Paragraph(_v(v.get('age')), s_value_sm),
+            Paragraph(_v(gender_val), s_value_sm),
+            Paragraph(_v(v.get('nationality'), 'Filipino'), s_value_sm),
+            Paragraph(_v(v.get('occupation')), s_value_sm),
+            Paragraph(_v(status_val), s_value_sm),
+        ])
+    # If no victims at all, show one placeholder row
+    if len(vic_rows) == 1:
+        vic_rows.append([Paragraph('1', s_value_sm)] +
+                        [Paragraph('-', s_value_sm) for _ in range(8)])
+    vic_tbl = Table(vic_rows, colWidths=[
+        0.3 * inch, 1.1 * inch, 1.0 * inch, 0.3 * inch, 0.35 * inch, 0.35 * inch,
+        0.75 * inch, W - 4.95 * inch, 0.8 * inch,
+    ])
+    vic_tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
+        ('GRID', (0, 0), (-1, -1), 0.5, BORDER),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('LEFTPADDING', (0, 0), (-1, -1), 3),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+        ('FONTSIZE', (0, 0), (-1, -1), 7),
+    ]))
+    elements.append(vic_tbl)
+    elements.append(Spacer(1, 2))
+    elements.append(field_row([
+        ('Current Address of Victim', _v(report.victim_address) or BLANK),
+        ('Work Address', _v(report.victim_work_address) or BLANK),
+    ]))
 
-    # ==================== 5. SUSPECT / DRIVER ====================
-    elements.append(section_header('V. SUSPECT / DRIVER INFORMATION'))
+    # Casualty summary (IRF always asks for totals)
+    killed = int(report.casualties_killed or 0)
+    injured = int(report.casualties_injured or 0)
+    elements.append(field_row([
+        ('Total No. Killed', str(killed)),
+        ('Total No. Injured', str(injured)),
+        ('Hospital Taken To', _v(report.hospital_taken_to) or BLANK_S),
+    ]))
+    elements.append(Spacer(1, 8))
 
-    suspects = report.suspects_data if report.suspects_data else []
-    if not suspects and report.suspect_name:
-        suspects = [{
-            'name': report.suspect_name or '-',
-            'age': report.driver_age or '-',
-            'gender': _choice(report.driver_gender, AccidentReport.GENDER_CHOICES),
-        }]
+    # ==================== ITEM "D" — NARRATIVE OF INCIDENT ====================
+    elements.append(section_header('ITEM "D" — NARRATIVE OF INCIDENT'))
+    # IRF repeats the Type/Date/Place at the top of Item D per DIDM SOP
+    elements.append(field_row([
+        ('Type of Incident', incident_type_display),
+        ('Date/Time of Incident', f'{incident_date_str} / {incident_time_str}'),
+    ]))
+    elements.append(field_row([
+        ('Place of Incident', place_of_incident),
+    ]))
+    elements.append(Spacer(1, 4))
 
-    if suspects:
-        sp_header = [
-            Paragraph('<b>No.</b>', s_label),
-            Paragraph('<b>Name</b>', s_label),
-            Paragraph('<b>Age</b>', s_label),
-            Paragraph('<b>Gender</b>', s_label),
-        ]
-        sp_rows = [sp_header]
-        for i, s in enumerate(suspects, 1):
-            gender_val = s.get('gender', '-')
-            if gender_val in ('MALE', 'FEMALE', 'UNKNOWN'):
-                gender_val = _choice(gender_val, AccidentReport.GENDER_CHOICES)
-            sp_rows.append([
-                Paragraph(str(i), s_value_sm),
-                Paragraph(_v(s.get('name')), s_value_sm),
-                Paragraph(_v(s.get('age')), s_value_sm),
-                Paragraph(_v(gender_val), s_value_sm),
-            ])
-        sp_tbl = Table(sp_rows, colWidths=[0.4 * inch, 2.8 * inch, 0.6 * inch, W - 3.8 * inch])
-        sp_tbl.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
-            ('GRID', (0, 0), (-1, -1), 0.5, BORDER),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-        ]))
-        elements.append(sp_tbl)
-    else:
-        elements.append(field_row([
-            ('Suspect Name', _v(report.suspect_name)),
-            ('Suspect Count', str(report.suspect_count)),
-        ]))
-        elements.append(field_row([
-            ('Driver Gender', _choice(report.driver_gender, AccidentReport.GENDER_CHOICES)),
-            ('Driver Age', _v(report.driver_age)),
-        ]))
-    elements.append(Spacer(1, 6))
+    narrative_text = report.incident_description or 'No narrative provided.'
+    nar_tbl = Table(
+        [[Paragraph(narrative_text.replace('\n', '<br/>'), s_narrative)]],
+        colWidths=[W],
+    )
+    nar_tbl.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.white),
+    ]))
+    elements.append(nar_tbl)
+    elements.append(Spacer(1, 8))
 
-    # ==================== 6. VEHICLE INFORMATION ====================
-    elements.append(section_header('VI. VEHICLE INFORMATION'))
+    # ==================== SUPPLEMENTAL 1: VEHICLE(S) INVOLVED ====================
+    # IRF is generic — traffic-specific vehicle, offense, and sketch data are
+    # added as supplemental sections (consistent with CIRAS encoding practice).
+    elements.append(section_header('SUPPLEMENTAL 1 — VEHICLE(S) INVOLVED (Traffic Accident Addendum)'))
 
     vk_display = _choice(report.vehicle_kind, AccidentReport.VEHICLE_KIND_CHOICES)
     if report.vehicle_kind == 'OTHER' and report.vehicle_kind_other:
@@ -5972,46 +6286,170 @@ def download_report_pdf(request, pk):
     if report.vehicle_model == 'Other' and report.vehicle_model_other:
         model_display = report.vehicle_model_other
 
+    # Vehicle #1 (populated)
+    elements.append(Paragraph('<b>VEHICLE #1</b>', s_subhdr))
     elements.append(field_row([
-        ('Vehicle Type', vk_display),
-        ('Make/Brand', make_display),
-    ]))
-    elements.append(field_row([
+        ('Kind', vk_display),
+        ('Make', make_display),
         ('Model', model_display),
-        ('Plate Number', _v(report.vehicle_plate_no)),
     ]))
     elements.append(field_row([
-        ('Chassis No.', _v(report.vehicle_chassis_no)),
-        ('Colorum (No Franchise)', _bool(report.vehicle_colorum)),
+        ('Plate No.', _v(report.vehicle_plate_no)),
+        ('Chassis/Motor No.', _v(report.vehicle_chassis_no)),
+        ('Colorum?', _bool(report.vehicle_colorum)),
     ]))
-    elements.append(Spacer(1, 6))
-
-    # ==================== 7. NARRATIVE ====================
-    elements.append(section_header('VII. INCIDENT NARRATIVE'))
-
-    narrative_text = report.incident_description or 'No narrative provided.'
-    # Wrap in a bordered box
-    nar_tbl = Table(
-        [[Paragraph(narrative_text.replace('\n', '<br/>'), s_narrative)]],
-        colWidths=[W],
-    )
-    nar_tbl.setStyle(TableStyle([
-        ('BOX', (0, 0), (-1, -1), 0.5, BORDER),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('LEFTPADDING', (0, 0), (-1, -1), 8),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FAFBFC')),
+    elements.append(field_row([
+        ('Registered Owner', _v(report.vehicle_registered_owner) or BLANK),
+        ('OR / CR No.', _v(report.vehicle_or_cr_no) or BLANK_S),
     ]))
-    elements.append(nar_tbl)
-    elements.append(Spacer(1, 6))
+    elements.append(Spacer(1, 4))
 
-    # ==================== 8. REPORTER & VERIFICATION ====================
-    elements.append(section_header('VIII. REPORTER & VERIFICATION'))
+    # Vehicle #2 — from vehicles_data JSON or blank
+    v2_data = report.vehicles_data[0] if report.vehicles_data else {}
+    elements.append(Paragraph(
+        '<b>VEHICLE #2</b> &nbsp;<font size="7" color="#888888">(if applicable)</font>',
+        s_subhdr))
+    v2_kind_display = _v(v2_data.get('kind')) or BLANK_S
+    if v2_data.get('kind') == 'OTHER' and v2_data.get('kind_other'):
+        v2_kind_display = f"Other: {v2_data['kind_other']}"
+    v2_make_display = _v(v2_data.get('make')) or BLANK_S
+    if v2_data.get('make') == 'OTHER' and v2_data.get('make_other'):
+        v2_make_display = v2_data['make_other']
+    v2_model_display = _v(v2_data.get('model')) or BLANK_S
+    if v2_data.get('model') == 'OTHER' and v2_data.get('model_other'):
+        v2_model_display = v2_data['model_other']
+    elements.append(field_row([
+        ('Kind', v2_kind_display),
+        ('Make', v2_make_display),
+        ('Model', v2_model_display),
+    ]))
+    elements.append(field_row([
+        ('Plate No.', _v(v2_data.get('plate_no')) or BLANK_S),
+        ('Chassis/Motor No.', _v(v2_data.get('chassis_no')) or BLANK_S),
+        ('Colorum?', _cb(v2_data.get('colorum', False)) + ' Yes' if v2_data else BLANK_S),
+    ]))
+    if v2_data:
+        elements.append(field_row([
+            ('Registered Owner', _v(v2_data.get('registered_owner')) or BLANK),
+            ('OR / CR No.', _v(v2_data.get('or_cr_no')) or BLANK_S),
+            ('Drug/Alcohol?', _cb(v2_data.get('drug_involved', False)) + ' Yes' if v2_data.get('drug_involved') else 'No'),
+        ]))
+    elements.append(Spacer(1, 8))
+
+    # ==================== SUPPLEMENTAL 2: OFFENSE / LEGAL CLASSIFICATION ====================
+    elements.append(section_header('SUPPLEMENTAL 2 — OFFENSE & LEGAL CLASSIFICATION'))
+
+    offense_display = _choice(report.offense, AccidentReport.OFFENSE_CHOICES)
+    if report.offense == 'OTHER' and report.offense_other:
+        offense_display = f'Other: {report.offense_other}'
+    offense_type_display = _choice(report.offense_type, AccidentReport.OFFENSE_TYPE_CHOICES)
+    if report.offense_type == 'OTHER' and report.offense_type_other:
+        offense_type_display = f'Other: {report.offense_type_other}'
+    stage_display = _choice(report.stage_of_felony, AccidentReport.STAGE_OF_FELONY_CHOICES)
 
     elements.append(field_row([
-        ('Reported By', _v(report.reporter_name)),
-        ('Contact', _v(report.reporter_contact)),
+        ('Offense / Legal Basis', offense_display),
+    ]))
+    elements.append(field_row([
+        ('Offense Type', offense_type_display),
+        ('Stage of Felony', stage_display),
+    ]))
+    drug_yes_no = f'{_cb(report.drug_involved)} Yes &nbsp;&nbsp; {_cb(not report.drug_involved)} No'
+    elements.append(field_row([
+        ('Drug / Alcohol Involved', drug_yes_no),
+        ('Is Crime', 'YES'),
+    ]))
+    elements.append(Spacer(1, 8))
+
+    # ==================== SUPPLEMENTAL 3: WITNESS(ES) ====================
+    elements.append(section_header('SUPPLEMENTAL 3 — WITNESS(ES)'))
+
+    w_header = [
+        Paragraph('<b>No.</b>', s_label),
+        Paragraph('<b>Name of Witness</b>', s_label),
+        Paragraph('<b>Age</b>', s_label),
+        Paragraph('<b>Address</b>', s_label),
+        Paragraph('<b>Contact Number</b>', s_label),
+    ]
+    w_rows = [w_header]
+    witnesses = report.witnesses_data if report.witnesses_data else []
+    for i, w in enumerate(witnesses, 1):
+        w_rows.append([
+            Paragraph(str(i), s_value_sm),
+            Paragraph(_v(w.get('name')), s_value_sm),
+            Paragraph(_v(w.get('age')), s_value_sm),
+            Paragraph(_v(w.get('address')), s_value_sm),
+            Paragraph(_v(w.get('contact')), s_value_sm),
+        ])
+    # If no witnesses at all, show one placeholder row
+    if len(w_rows) == 1:
+        w_rows.append([
+            Paragraph('1', s_value_sm),
+            Paragraph('-', s_value_sm),
+            Paragraph('-', s_value_sm),
+            Paragraph('-', s_value_sm),
+            Paragraph('-', s_value_sm),
+        ])
+    w_tbl = Table(w_rows, colWidths=[
+        0.3 * inch, 2.0 * inch, 0.4 * inch, W - 4.4 * inch, 1.7 * inch,
+    ])
+    w_tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
+        ('GRID', (0, 0), (-1, -1), 0.5, BORDER),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    elements.append(w_tbl)
+    elements.append(Spacer(1, 8))
+
+    # ==================== SUPPLEMENTAL 4: SKETCH ====================
+    elements.append(section_header('SUPPLEMENTAL 4 — SKETCH OF THE ACCIDENT SCENE'))
+
+    # Render uploaded sketch image if available, otherwise placeholder text
+    sketch_content = None
+    sketch_height = 1.7 * inch  # default placeholder height
+    if report.sketch_image:
+        try:
+            sketch_path = report.sketch_image.path
+            if os.path.exists(sketch_path):
+                # Use proportional sizing with generous max dimensions
+                sketch_content = Image(sketch_path, width=W - 0.4 * inch, height=3.5 * inch, kind='proportional')
+                sketch_height = None  # let table auto-size to image
+        except Exception:
+            sketch_content = None
+
+    if sketch_content is None:
+        sketch_content = Paragraph(
+            '<i>(No sketch attached. Draw a rough sketch of the accident scene '
+            'indicating position of vehicles, direction of travel, road markings, '
+            'point of impact, and final resting positions.)</i>',
+            ParagraphStyle(
+                'Sk', parent=s_value_sm, alignment=TA_CENTER,
+                textColor=colors.HexColor('#888888'), fontSize=7, leading=9,
+            ),
+        )
+
+    sketch_row_heights = [sketch_height] if sketch_height else None
+    sketch_tbl = Table([[sketch_content]], colWidths=[W], rowHeights=sketch_row_heights)
+    sketch_tbl.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.75, BORDER),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    elements.append(sketch_tbl)
+    elements.append(Spacer(1, 6))
+
+    # ==================== SUPPLEMENTAL 5: DISPOSITION / ACTION TAKEN ====================
+    elements.append(section_header('SUPPLEMENTAL 5 — DISPOSITION / ACTION TAKEN'))
+
+    elements.append(field_row([
+        ('Investigating Officer', report.reported_by.get_full_name() or report.reported_by.username),
+        ('Complainant (Item A)', _v(report.reporter_name) if report.has_complainant and report.reporter_name else 'N/A — No complainant'),
     ]))
 
     verifier_name = '-'
@@ -6026,39 +6464,86 @@ def download_report_pdf(request, pk):
         ('Approved By', verifier_name),
         ('Date Approved', report.verified_at.strftime('%B %d, %Y') if report.verified_at else '-'),
     ]))
-    elements.append(Spacer(1, 16))
+    elements.append(field_row([
+        ('Case Status', 'UNDER INVESTIGATION'),
+        ('Stage of Felony', _choice(report.stage_of_felony, AccidentReport.STAGE_OF_FELONY_CHOICES)),
+    ]))
+    elements.append(Spacer(1, 12))
 
-    # ==================== SIGNATURE BLOCK ====================
-    sig_line = '_' * 35
+    # ==================== CERTIFICATION STATEMENT ====================
+    s_cert = ParagraphStyle(
+        'Cert', parent=s_value, fontSize=8.5, leading=11,
+        alignment=TA_LEFT, spaceBefore=4, spaceAfter=6,
+    )
+    elements.append(Paragraph(
+        '<b>CERTIFICATION:</b> I HEREBY CERTIFY that the foregoing information '
+        'is true and correct to the best of my knowledge and belief, based on '
+        'the investigation conducted and the statements of the parties and '
+        'witnesses involved in the above-cited traffic incident.',
+        s_cert,
+    ))
+    elements.append(Spacer(1, 18))
+
+    # ==================== SIGNATURE BLOCK (PNP 3-column: Prepared / Noted / Approved) ====================
+    sig_line = '_' * 28
+    s_sig_line = ParagraphStyle('SL', parent=s_value, alignment=TA_CENTER)
+    s_sig_name = ParagraphStyle('SN', parent=s_label, alignment=TA_CENTER, fontSize=8)
+    s_sig_role = ParagraphStyle(
+        'SR', parent=s_value_sm, alignment=TA_CENTER,
+        textColor=colors.HexColor('#666666'), fontSize=7,
+    )
+    s_sig_header = ParagraphStyle(
+        'SH', parent=s_label, alignment=TA_CENTER, fontSize=8,
+        textColor=colors.HexColor('#333333'),
+    )
+
+    # Prepared By: the investigating officer (TIOC)
+    officer_name = report.reported_by.get_full_name() or report.reported_by.username
+    prepared_name = officer_name.upper()
+    # Noted By: intermediate supervisor — left blank for manual signature at the station
+    noted_name = '______________________'
+    # Approved By: the verifier (station commander / provincial chief / etc.)
+    approved_name = verifier_name.upper() if verifier_name != '-' else '______________________'
+
     sig_data = [
+        [Paragraph('<b>PREPARED BY:</b>', s_sig_header),
+         Paragraph('<b>NOTED BY:</b>', s_sig_header),
+         Paragraph('<b>APPROVED BY:</b>', s_sig_header)],
         ['', '', ''],
-        [Paragraph(sig_line, ParagraphStyle('SL', parent=s_value, alignment=TA_CENTER)),
-         '',
-         Paragraph(sig_line, ParagraphStyle('SL', parent=s_value, alignment=TA_CENTER))],
-        [Paragraph(f'<b>{_v(report.reporter_name).upper()}</b>', ParagraphStyle('SN', parent=s_label, alignment=TA_CENTER)),
-         '',
-         Paragraph(f'<b>{verifier_name.upper()}</b>', ParagraphStyle('SN', parent=s_label, alignment=TA_CENTER))],
-        [Paragraph('Reporter / Complainant', ParagraphStyle('SR', parent=s_value_sm, alignment=TA_CENTER, textColor=colors.HexColor('#666666'))),
-         '',
-         Paragraph('Approving Officer', ParagraphStyle('SR', parent=s_value_sm, alignment=TA_CENTER, textColor=colors.HexColor('#666666')))],
+        [Paragraph(sig_line, s_sig_line),
+         Paragraph(sig_line, s_sig_line),
+         Paragraph(sig_line, s_sig_line)],
+        [Paragraph(f'<b>{prepared_name}</b>', s_sig_name),
+         Paragraph(f'<b>{noted_name}</b>', s_sig_name),
+         Paragraph(f'<b>{approved_name}</b>', s_sig_name)],
+        [Paragraph('Reporting Officer / TIOC', s_sig_role),
+         Paragraph('Chief, Investigation Section', s_sig_role),
+         Paragraph('Chief of Police / Approving Officer', s_sig_role)],
     ]
-    sig_tbl = Table(sig_data, colWidths=[W * 0.4, W * 0.2, W * 0.4])
+    sig_tbl = Table(sig_data, colWidths=[W / 3, W / 3, W / 3])
     sig_tbl.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('TOPPADDING', (0, 0), (-1, -1), 1),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+        # Leave ~24pt for actual wet signature between header and line
+        ('BOTTOMPADDING', (0, 1), (-1, 1), 24),
     ]))
     elements.append(sig_tbl)
-    elements.append(Spacer(1, 16))
+    elements.append(Spacer(1, 14))
 
     # ==================== FOOTER ====================
     elements.append(Paragraph(
-        f'Generated from AGNES Hotspot Detection System on {datetime.now().strftime("%B %d, %Y at %I:%M %p")}',
+        'This document is a system-generated copy of an approved PNP Incident Record '
+        'Form (IRF) with Traffic Accident supplements, prepared in compliance with '
+        'DIDM SOP on the Recording of Incidents in the Police Blotter (PNP MC 2014-009). '
+        'It forms part of the official records of the Philippine National Police — '
+        'Police Regional Office 13 (CARAGA).',
         s_footer,
     ))
     elements.append(Paragraph(
-        'This document is a system-generated copy of an approved accident report.',
+        f'Generated on {datetime.now().strftime("%B %d, %Y at %I:%M %p")} &nbsp;|&nbsp; '
+        f'IRF Entry No.: {irf_entry_no} &nbsp;|&nbsp; For Official PNP Use',
         s_footer,
     ))
 
@@ -6075,6 +6560,529 @@ def download_report_pdf(request, pk):
     else:
         response['Content-Disposition'] = f'inline; filename="{filename}"'
 
+    return response
+
+
+# =============================================================================
+# POLICE REPORT PDF GENERATION
+# =============================================================================
+
+@login_required
+def generate_police_report_pdf(request, pk):
+    """Generate an official PNP Police Report PDF matching the exact official format."""
+    from django.http import HttpResponse
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, HRFlowable
+    from io import BytesIO
+    import os
+
+    report = get_object_or_404(AccidentReport, pk=pk)
+
+    # Permission check
+    is_own = report.reported_by == request.user
+    can_appr = can_approve_reports(request.user)
+    in_jur = can_user_approve_report(request.user, report) if can_appr else False
+    if not (is_own or (can_appr and in_jur)):
+        return JsonResponse({'error': 'Permission denied.'}, status=403)
+    if report.status != 'verified':
+        return JsonResponse({'error': 'Only approved reports can generate a Police Report.'}, status=403)
+
+    # --- Parameters from modal ---
+    requesting_party = request.GET.get('requesting_party', '').strip() or '-'
+    reference = request.GET.get('reference', '').strip()
+    purpose = request.GET.get('purpose', 'For any legal purposes.').strip()
+
+    def _v(val, default='-'):
+        if val is None or val == '' or val == 'None':
+            return default
+        return str(val)
+
+    # --- PDF setup (matching official PNP Police Report format exactly) ---
+    buf = BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=letter,
+        leftMargin=0.9 * inch, rightMargin=0.9 * inch,
+        topMargin=0.5 * inch, bottomMargin=0.5 * inch)
+    elements = []
+    W = doc.width  # ~6.7 inches
+
+    # ── Font: Times New Roman family (built into ReportLab) ──
+    FN = 'Times-Roman'
+    FNB = 'Times-Bold'
+    FNI = 'Times-Italic'
+    FNBI = 'Times-BoldItalic'
+
+    # ── Style sheet matching the official PNP document exactly ──
+    s_hdr_sm = ParagraphStyle('HS', fontName=FN, fontSize=9, leading=11, alignment=TA_CENTER, spaceAfter=0)
+    s_hdr_md = ParagraphStyle('HM', fontName=FNB, fontSize=9, leading=11, alignment=TA_CENTER, spaceAfter=0)
+    s_hdr_lg = ParagraphStyle('HL', fontName=FNB, fontSize=11, leading=13, alignment=TA_CENTER, spaceAfter=0)
+    s_hdr_station = ParagraphStyle('HST', fontName=FNB, fontSize=12, leading=15, alignment=TA_CENTER, spaceAfter=0)
+    s_hdr_addr = ParagraphStyle('HA', fontName=FN, fontSize=9, leading=11, alignment=TA_CENTER)
+
+    s_code = ParagraphStyle('SC', fontName=FN, fontSize=9, leading=11, alignment=TA_LEFT)
+
+    # Label column: bold, 11pt — exactly like official PNP forms
+    s_label = ParagraphStyle('LBL', fontName=FNB, fontSize=11, leading=13)
+    s_colon_val = ParagraphStyle('CV', fontName=FN, fontSize=11, leading=13)
+    s_colon_val_b = ParagraphStyle('CVB', fontName=FNB, fontSize=11, leading=13)
+
+    # Body paragraph: justified text, first-line indent matching official tab
+    s_body = ParagraphStyle('BD', fontName=FN, fontSize=11, leading=14, alignment=TA_JUSTIFY,
+                            leftIndent=0, firstLineIndent=0)
+    s_body_indent = ParagraphStyle('BDI', fontName=FN, fontSize=11, leading=14, alignment=TA_JUSTIFY,
+                                   leftIndent=36, firstLineIndent=0)
+
+    s_sig_name = ParagraphStyle('SN', fontName=FNB, fontSize=11, leading=13, alignment=TA_CENTER)
+    s_sig_title = ParagraphStyle('ST', fontName=FNI, fontSize=10, leading=12, alignment=TA_CENTER)
+    s_sig_underline = ParagraphStyle('SU', fontName=FN, fontSize=11, leading=13, alignment=TA_CENTER)
+
+    s_footer = ParagraphStyle('FT', fontName=FNI, fontSize=7, leading=9, alignment=TA_CENTER,
+                              textColor=colors.HexColor('#888888'))
+
+    # ── Station info from officer profile ──
+    station_name = 'Police Station'
+    station_address = ''
+    ppo_name = ''
+    try:
+        prof = report.reported_by.profile if hasattr(report.reported_by, 'profile') else None
+        if prof:
+            station_name = prof.station or 'Police Station'
+            ppo_name = f'{prof.province} POLICE OFFICE' if prof.province else ''
+            station_address = prof.municipality or ''
+            if station_address and prof.province:
+                station_address = f'{station_address}, {prof.province}'
+    except Exception:
+        pass
+
+    # ==================== HEADER (centered letterhead — official PNP format) ====================
+    _static_dir = settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT or ''
+    # Left: PNP Shield logo — Right: City/Municipal Official Seal (matching POLICE_REPORT.pdf)
+    logo_path = os.path.join(_static_dir, 'images', 'pnp-logo1.png')
+    header_left = ''
+    if os.path.exists(logo_path):
+        header_left = Image(logo_path, width=62, height=72)
+
+    logo2_path = os.path.join(_static_dir, 'images', 'POLICE_LOGO.png')
+    header_right = ''
+    if os.path.exists(logo2_path):
+        header_right = Image(logo2_path, width=62, height=62)
+
+    header_center = [
+        Paragraph('Republic of the Philippines', s_hdr_sm),
+        Paragraph('<b>NATIONAL POLICE COMMISSION</b>', s_hdr_md),
+        Paragraph('PHILIPPINE NATIONAL POLICE', s_hdr_md),
+        Paragraph(ppo_name.upper() if ppo_name else 'BUTUAN CITY POLICE OFFICE', s_hdr_md),
+        Paragraph(f'<b>{station_name}</b>', s_hdr_station),
+    ]
+    if station_address:
+        header_center.append(Paragraph(station_address, s_hdr_addr))
+
+    header_tbl = Table(
+        [[header_left, header_center, header_right]],
+        colWidths=[1.0 * inch, W - 2.0 * inch, 1.0 * inch],
+    )
+    header_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'CENTER'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    elements.append(header_tbl)
+    elements.append(Spacer(1, 4))
+
+    # ── Horizontal line under header (official form style) ──
+    elements.append(HRFlowable(width='100%', thickness=1, color=colors.black, spaceBefore=2, spaceAfter=4))
+
+    # ── Station code (left-aligned, like "-BCPS2TIS-") ──
+    station_code = station_name.replace(' ', '')[:12].upper() if station_name else 'PNP'
+    elements.append(Paragraph(f'-{station_code}-', s_code))
+    elements.append(Spacer(1, 10))
+
+    # ==================== FIELD ROWS (label : value with tab — official PNP tab stop) ====================
+    # Official PNP form uses ~2.2-inch left label column, then ": value"
+    LW = 2.2 * inch   # label column width (matches official tab stop)
+    VW = W - LW        # value column width
+
+    tbl_style = TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0.5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0.5),
+        ('LEFTPADDING', (0, 0), (0, -1), 0),
+        ('LEFTPADDING', (1, 0), (1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ])
+
+    # Auto-generate reference if not provided — use blotter_number if available
+    if not reference:
+        blotter_no = report.blotter_number or report.pk
+        reference = f'Traffic Police Blotter Entry No. {blotter_no}'
+    report_date = report.verified_at.strftime('%B %d, %Y') if report.verified_at else report.created_at.strftime('%B %d, %Y')
+    blotter_date = report.incident_date.strftime('%B %d %Y') if report.incident_date else report_date
+
+    # SUBJECT
+    r1 = Table([[Paragraph('<b>SUBJECT</b>', s_label),
+                 Paragraph(': <b>POLICE REPORT</b>', s_colon_val_b)]],
+               colWidths=[LW, VW])
+    r1.setStyle(tbl_style)
+    elements.append(r1)
+    elements.append(Spacer(1, 4))
+
+    # REQUESTING PARTY
+    r2 = Table([[Paragraph('<b>REQUESTING PARTY</b>', s_label),
+                 Paragraph(f': {requesting_party}', s_colon_val)]],
+               colWidths=[LW, VW])
+    r2.setStyle(tbl_style)
+    elements.append(r2)
+    elements.append(Spacer(1, 4))
+
+    # DATE
+    r3 = Table([[Paragraph('<b>DATE</b>', s_label),
+                 Paragraph(f': {report_date}', s_colon_val)]],
+               colWidths=[LW, VW])
+    r3.setStyle(tbl_style)
+    elements.append(r3)
+    elements.append(Spacer(1, 4))
+
+    # REFERENCE (two-line value — official format: blotter entry + dated)
+    ref_val = f': {reference}<br/>&nbsp;&nbsp;&nbsp;Dated {blotter_date}'
+    r4 = Table([[Paragraph('<b>REFERENCE</b>', s_label),
+                 Paragraph(ref_val, s_colon_val)]],
+               colWidths=[LW, VW])
+    r4.setStyle(tbl_style)
+    elements.append(r4)
+    elements.append(Spacer(1, 8))
+
+    # ── Separator (double horizontal line matching official PNP form) ──
+    elements.append(HRFlowable(width='100%', thickness=1.5, color=colors.black, spaceBefore=2, spaceAfter=2))
+    elements.append(HRFlowable(width='100%', thickness=0.5, color=colors.black, spaceBefore=1, spaceAfter=8))
+
+    # ==================== NATURE OF INCIDENT ====================
+    incident_type_display = report.incident_type_other if (report.incident_type == 'OTHER' and report.incident_type_other) else report.get_incident_type_display()
+    severity_parts = []
+    if report.casualties_killed and report.casualties_killed > 0:
+        severity_parts.append('F')
+    if report.casualties_injured and report.casualties_injured > 0:
+        severity_parts.append('PI')
+    severity_parts.append('RIRDP')
+    severity_code = f' ({" and ".join(severity_parts)})'
+
+    noi = Table([[Paragraph('<b>NATURE OF INCIDENT</b>', s_label),
+                  Paragraph(f': <b>Traffic Accident ({incident_type_display})</b>{severity_code}', s_colon_val_b)]],
+                colWidths=[LW, VW])
+    noi.setStyle(tbl_style)
+    elements.append(noi)
+    elements.append(Spacer(1, 8))
+
+    # ==================== VEHICLES INVOLVED (matching official PNP format) ====================
+    # Helper: build a flowing vehicle description paragraph exactly like the original document
+    def _build_vehicle_paragraph(vnum, kind, make, model, plate_no, chassis_no,
+                                  registered_owner, or_cr_no=None, colorum=False,
+                                  driver_data=None, driver_license=None, driver_license_expiry=None,
+                                  driver_address=None):
+        """Build a Vehicle-N paragraph in official PNP police report style."""
+        # Header: bold italic — "Vehicle-1, Toyota Avanza, (Taxi)"
+        header = f': <b><i>Vehicle-{vnum}, {make} {model}, ({kind})</i></b>'
+        frags = []
+
+        # Plate, Engine, Chassis — matching official order
+        if plate_no:
+            frags.append(f'bearing Plate No. {plate_no}')
+        if chassis_no:
+            frags.append(f'Chassis No. {chassis_no}')
+        if or_cr_no:
+            frags.append(f'OR/CR No. {or_cr_no}')
+
+        # Registered owner
+        if registered_owner:
+            frags.append(f'registered under the name of {registered_owner}')
+
+        # Driver details (from suspects_data or separate fields)
+        if driver_data:
+            d = driver_data
+            drv_name = _v(d.get('name', ''), 'unknown')
+            drv_text = f'driven by <b>{drv_name}</b>'
+            drv_parts = []
+            if d.get('age'):
+                drv_parts.append(f'{d["age"]} years old')
+            if d.get('civil_status'):
+                drv_parts.append(d['civil_status'].lower())
+            if d.get('occupation'):
+                drv_parts.append(d['occupation'].lower())
+            if drv_parts:
+                drv_text += ', ' + ', '.join(drv_parts)
+            # Residence
+            addr = d.get('address') or driver_address
+            if addr:
+                drv_text += f' and a resident of {addr}'
+            # License
+            lic = d.get('license_no') or driver_license
+            if lic:
+                drv_text += f' with License No. {lic}'
+                exp = d.get('license_expiry') or driver_license_expiry
+                if exp:
+                    drv_text += f', expire on {exp}'
+            frags.append(drv_text)
+        elif registered_owner and not driver_data:
+            # If no separate driver data, registered owner may be the driver
+            pass
+
+        if frags:
+            return header + ', ' + ', '.join(frags) + '.'
+        return header + '.'
+
+    # --- Vehicle 1 (from report model direct fields) ---
+    v1_kind = report.vehicle_kind_other if (report.vehicle_kind == 'OTHER' and report.vehicle_kind_other) else report.get_vehicle_kind_display()
+    v1_make = report.vehicle_make_other if (report.vehicle_make == 'OTHER' and report.vehicle_make_other) else _v(report.vehicle_make, '')
+    v1_model = report.vehicle_model_other if (report.vehicle_model == 'OTHER' and report.vehicle_model_other) else _v(report.vehicle_model, '')
+
+    suspects = report.suspects_data or []
+    v1_driver = suspects[0] if suspects else None
+
+    v1_para = _build_vehicle_paragraph(
+        vnum=1,
+        kind=v1_kind,
+        make=v1_make,
+        model=v1_model,
+        plate_no=report.vehicle_plate_no,
+        chassis_no=report.vehicle_chassis_no,
+        registered_owner=report.vehicle_registered_owner,
+        or_cr_no=report.vehicle_or_cr_no,
+        colorum=report.vehicle_colorum,
+        driver_data=v1_driver,
+        driver_license=report.driver_license_no,
+        driver_address=report.suspect_address,
+    )
+
+    # VEHICLES INVOLVED label row (matching the official document: label + value start on same line)
+    vi_row = Table([[Paragraph('<b>VEHICLES INVOLVED</b>', s_label),
+                     Paragraph(v1_para, ParagraphStyle('V1P', fontName=FN, fontSize=11, leading=14, alignment=TA_JUSTIFY))]],
+                   colWidths=[LW, VW])
+    vi_row.setStyle(tbl_style)
+    elements.append(vi_row)
+    elements.append(Spacer(1, 8))
+
+    # --- Vehicle 2+ (from vehicles_data JSON) ---
+    vehicles2 = report.vehicles_data or []
+    # Keep readable names for narrative generation
+    v1_display_name = f'{v1_make} {v1_model}'.strip() or v1_kind
+    v2_display_name = ''
+
+    for idx, v2 in enumerate(vehicles2):
+        vnum = idx + 2
+        v2k = v2.get('kind_other') if v2.get('kind') == 'OTHER' else _v(v2.get('kind', ''), '')
+        v2mk = v2.get('make_other') if v2.get('make') == 'OTHER' else _v(v2.get('make', ''), '')
+        v2md = v2.get('model_other') if v2.get('model') == 'OTHER' else _v(v2.get('model', ''), '')
+
+        # Second suspect is driver of Vehicle 2 (if available)
+        v2_driver = suspects[idx + 1] if len(suspects) > idx + 1 else None
+
+        v2_para = _build_vehicle_paragraph(
+            vnum=vnum,
+            kind=v2k,
+            make=v2mk,
+            model=v2md,
+            plate_no=v2.get('plate_no'),
+            chassis_no=v2.get('chassis_no'),
+            registered_owner=v2.get('registered_owner'),
+            or_cr_no=v2.get('or_cr_no'),
+            colorum=v2.get('colorum', False),
+            driver_data=v2_driver,
+        )
+        if idx == 0:
+            v2_display_name = f'{v2mk} {v2md}'.strip() or v2k
+
+        # Indented paragraph with colon prefix (matching official format)
+        s_vn = ParagraphStyle(f'V{vnum}P', fontName=FN, fontSize=11, leading=14,
+                              alignment=TA_JUSTIFY, leftIndent=LW)
+        elements.append(Paragraph(v2_para, s_vn))
+        elements.append(Spacer(1, 8))
+
+    # ==================== PASSENGER(S) — matching official PNP format ====================
+    # In the official form, passengers/victims are listed as separate labeled rows
+    victims = report.victims_data or []
+    if victims:
+        for v in victims:
+            v_name = _v(v.get('name', ''), '')
+            if not v_name or v_name == '-':
+                continue
+            # Build descriptor: "Name, female, legal age, single, student, and a resident of..."
+            v_detail = f': <b>{v_name}</b>'
+            d_parts = []
+            if v.get('gender'):
+                d_parts.append(v['gender'].lower())
+            if v.get('age'):
+                d_parts.append(f'legal age' if not v.get('age') else f'{v["age"]} years old')
+            if v.get('civil_status'):
+                d_parts.append(v['civil_status'].lower())
+            if v.get('occupation'):
+                d_parts.append(v['occupation'].lower())
+            if v.get('address'):
+                d_parts.append(f'and a resident of {v["address"]}')
+            if d_parts:
+                v_detail += ', ' + ', '.join(d_parts)
+            v_detail += '.'
+
+            vt = Table([[Paragraph('<b>PASSENGER</b>', s_label),
+                         Paragraph(v_detail, s_colon_val)]],
+                       colWidths=[LW, VW])
+            vt.setStyle(tbl_style)
+            elements.append(vt)
+            elements.append(Spacer(1, 4))
+
+    elements.append(Spacer(1, 4))
+
+    # ==================== FACTS OF THE CASE (semi-automated narrative) ====================
+    # Build a structured narrative referencing both vehicles, matching official police report style
+    def _generate_narrative():
+        """Generate a police-style narrative from report data, or use the manual narrative if provided."""
+        manual = (report.incident_description or '').strip()
+
+        # Build location string
+        loc_parts = [p for p in [report.street_address, report.barangay, report.municipal] if p]
+        loc_str = ', '.join(loc_parts) if loc_parts else 'the area'
+
+        # Direction / place type
+        place = ''
+        if report.type_of_place and report.type_of_place != 'OTHER':
+            place_map = {
+                'ALONG_STREET': 'along the street',
+                'HIGHWAY': 'along the highway',
+                'INTERSECTION': 'at the intersection',
+                'BRIDGE': 'on the bridge',
+                'CURVE_BEND': 'along the curve/bend',
+                'PARKING_AREA': 'at the parking area',
+                'RESIDENTIAL': 'in the residential area',
+            }
+            place = place_map.get(report.type_of_place, '')
+        elif report.type_of_place == 'OTHER' and report.type_of_place_other:
+            place = report.type_of_place_other.lower()
+
+        # If user wrote a manual narrative, use it enriched with vehicle references
+        if manual and len(manual) > 30:
+            return manual
+
+        # Auto-generate narrative
+        parts = []
+
+        # V2 traveling, bumped by V1 (standard rear-end pattern), or generic
+        v2_ref = f'<b>Vehicle 2</b>'
+        v1_ref = f'<b>Vehicle 1</b>'
+
+        if vehicles2:
+            v2_drv = suspects[1].get('name', '') if len(suspects) > 1 else ''
+            travel_clause = f'{v2_ref}, while traveling {place} of {loc_str}' if place else f'{v2_ref}, while traveling along {loc_str}'
+            parts.append(travel_clause)
+
+            incident_type_display = report.incident_type_other if (report.incident_type == 'OTHER' and report.incident_type_other) else report.get_incident_type_display()
+            collision_type = incident_type_display.lower() if incident_type_display else 'collision'
+            parts[-1] += f', was involved in a {collision_type} with {v1_ref} which was traveling in the same direction.'
+        else:
+            travel_clause = f'{v1_ref}, while traveling {place} of {loc_str}' if place else f'{v1_ref}, while traveling along {loc_str}'
+            parts.append(travel_clause)
+            incident_type_display = report.incident_type_other if (report.incident_type == 'OTHER' and report.incident_type_other) else report.get_incident_type_display()
+            parts[-1] += f', was involved in a traffic accident ({incident_type_display.lower() if incident_type_display else "collision"}).'
+
+        # Injuries
+        killed = int(report.casualties_killed or 0)
+        injured = int(report.casualties_injured or 0)
+        if killed > 0 or injured > 0:
+            inj_parts = []
+            if injured > 0:
+                victim_names = [_v(v.get('name', ''), '') for v in victims if v.get('status', '').upper() in ('INJURED', '')]
+                if victim_names and victim_names[0]:
+                    inj_parts.append(f'As a result, {", ".join(victim_names[:3])} sustained injuries and {"was" if len(victim_names) == 1 else "were"} rushed to the hospital for medical treatment')
+                else:
+                    inj_parts.append(f'As a result, {injured} person{"s" if injured > 1 else ""} sustained injuries and {"were" if injured > 1 else "was"} rushed to the hospital for medical treatment')
+            if killed > 0:
+                inj_parts.append(f'{killed} person{"s" if killed > 1 else ""} {"were" if killed > 1 else "was"} killed')
+            parts.append('. '.join(inj_parts) + '.')
+
+        # Vehicle damage
+        if vehicles2:
+            parts.append('Thereafter, both vehicles incurred significant damage and were brought to this office for proper disposition.')
+        else:
+            parts.append('Thereafter, the vehicle was brought to this office for proper disposition.')
+
+        return ' '.join(parts)
+
+    narrative = _generate_narrative()
+    s_facts_body = ParagraphStyle('FCB', fontName=FN, fontSize=11, leading=14, alignment=TA_JUSTIFY)
+    facts_header = Table([[Paragraph('<b>FACTS OF THE CASE</b>', s_label),
+                           Paragraph(f': {narrative}', s_facts_body)]],
+                         colWidths=[LW, VW])
+    facts_header.setStyle(tbl_style)
+    elements.append(facts_header)
+    elements.append(Spacer(1, 8))
+
+    # ==================== TDPO (Time, Date, Place of Occurrence) ====================
+    time_str = report.incident_time.strftime('%I:%M %p') if report.incident_time else ''
+    date_str = report.incident_date.strftime('%B %d, %Y') if report.incident_date else ''
+    loc_parts = [p for p in [report.street_address, report.barangay, report.municipal] if p]
+    location = ', '.join(loc_parts) if loc_parts else '-'
+
+    tdpo_val = f': Incident transpired at around {time_str} of {date_str}, at {location}.'
+    tdpo = Table([[Paragraph('<b>TDPO</b>', s_label),
+                   Paragraph(tdpo_val, s_colon_val)]],
+                 colWidths=[LW, VW])
+    tdpo.setStyle(tbl_style)
+    elements.append(tdpo)
+    elements.append(Spacer(1, 8))
+
+    # ==================== PURPOSE ====================
+    purp = Table([[Paragraph('<b>PURPOSE</b>', s_label),
+                   Paragraph(f': {purpose}', s_colon_val)]],
+                 colWidths=[LW, VW])
+    purp.setStyle(tbl_style)
+    elements.append(purp)
+    elements.append(Spacer(1, 24))
+
+    # ==================== SIGNATURE BLOCK (official PNP format) ====================
+    elements.append(Paragraph('FOR THE ACTING STATION COMMANDER:', s_colon_val))
+    elements.append(Spacer(1, 36))
+
+    # Officer name + rank (right-aligned block with underline)
+    officer_name = report.reported_by.get_full_name() or report.reported_by.username
+    officer_rank = ''
+    try:
+        if hasattr(report.reported_by, 'profile') and report.reported_by.profile.rank:
+            officer_rank = report.reported_by.profile.get_rank_display()
+    except Exception:
+        pass
+
+    sig_text = f'<b><u>{officer_rank} {officer_name.upper()}</u></b>' if officer_rank else f'<b><u>{officer_name.upper()}</u></b>'
+    sig_data = [
+        [Paragraph(sig_text, s_sig_name)],
+        [Paragraph('Investigator on-case', s_sig_title)],
+    ]
+    sig_block = Table(sig_data, colWidths=[3.2 * inch])
+    sig_block.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+    ]))
+    # Push to right side (official format: signature block on the right)
+    wrapper = Table([[Spacer(1, 1), sig_block]], colWidths=[W - 3.2 * inch, 3.2 * inch])
+    wrapper.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    elements.append(wrapper)
+
+    # ── Footer ──
+    elements.append(Spacer(1, 24))
+    elements.append(HRFlowable(width='100%', thickness=0.5, color=colors.HexColor('#CCCCCC'), spaceBefore=4, spaceAfter=4))
+    elements.append(Paragraph(
+        f'Generated by AGNES &mdash; Report #{report.pk} | {report.created_at.strftime("%B %d, %Y")}',
+        s_footer))
+
+    # ── Build & return ──
+    doc.build(elements)
+    buf.seek(0)
+    fn = f'Police_Report_{report.pk}_{report.incident_date.strftime("%Y%m%d") if report.incident_date else "undated"}.pdf'
+    response = HttpResponse(buf, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{fn}"'
     return response
 
 
@@ -6233,17 +7241,3 @@ def _time_ago(dt):
     now = timezone.now()
     diff = now - dt
     seconds = diff.total_seconds()
-
-    if seconds < 60:
-        return 'Just now'
-    elif seconds < 3600:
-        minutes = int(seconds // 60)
-        return f'{minutes}m ago'
-    elif seconds < 86400:
-        hours = int(seconds // 3600)
-        return f'{hours}h ago'
-    elif seconds < 604800:
-        days = int(seconds // 86400)
-        return f'{days}d ago'
-    else:
-        return dt.strftime('%b %d')

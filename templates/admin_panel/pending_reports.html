@@ -1020,12 +1020,12 @@
             <td>
                 <div class="reporter-cell">
                     {% if report.reported_by.profile and report.reported_by.profile.profile_picture %}
-                    <img src="{{ report.reported_by.profile.profile_picture.url }}" alt="{{ report.reporter_name }}" class="reporter-avatar">
+                    <img src="{{ report.reported_by.profile.profile_picture.url }}" alt="{{ report.reported_by.get_full_name|default:report.reported_by.username }}" class="reporter-avatar">
                     {% else %}
-                    <span class="reporter-avatar-placeholder">{{ report.reporter_name|first|upper }}</span>
+                    <span class="reporter-avatar-placeholder">{{ report.reported_by.get_full_name|default:report.reported_by.username|first|upper }}</span>
                     {% endif %}
                     <div>
-                        <div>{{ report.reporter_name }}</div>
+                        <div>{{ report.reported_by.get_full_name|default:report.reported_by.username }}</div>
                         <small style="color: #9CA3AF;">{{ report.reported_by.username }}</small>
                     </div>
                 </div>

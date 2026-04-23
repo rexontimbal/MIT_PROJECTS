@@ -315,8 +315,8 @@
 
         <table class="info-table">
             <tr>
-                <td class="info-label">Reporter</td>
-                <td class="info-value">{{ report.reporter_name }}</td>
+                <td class="info-label">Investigating Officer</td>
+                <td class="info-value">{{ report.reported_by.get_full_name|default:report.reported_by.username }}</td>
             </tr>
             <tr>
                 <td class="info-label">Incident Date</td>
@@ -341,7 +341,7 @@
     <form method="post">
         {% csrf_token %}
         <div class="reason-section">
-            <label for="reason"><i class="fas fa-comment-alt"></i> Reason for Rejection (Optional)</label>
+            <label for="reason"><i class="fas fa-comment-alt"></i> Reason for Rejection</label>
             <textarea name="reason" id="reason" placeholder="Provide a reason for rejecting this report..."></textarea>
             <div class="quick-reasons">
                 <span class="quick-reason" onclick="setReason('Duplicate report - this incident has already been recorded.')">Duplicate Report</span>

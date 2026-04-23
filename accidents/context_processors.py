@@ -35,6 +35,7 @@ def badge_counts(request):
     hotspot_default_view = (profile.pref_hotspot_view if profile and profile.pref_hotspot_view else sys_hotspot_view)
 
     can_submit_reports = profile.can_submit_reports if profile else True
+    can_edit_reports = profile.can_edit_reports if profile else False
 
     # Pagination default
     default_per_page = SystemSetting.get('default_per_page')
@@ -46,5 +47,6 @@ def badge_counts(request):
         'accident_default_view': accident_default_view,
         'hotspot_default_view': hotspot_default_view,
         'can_submit_reports': can_submit_reports,
+        'can_edit_reports': can_edit_reports,
         'default_per_page': default_per_page,
     }

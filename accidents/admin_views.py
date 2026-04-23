@@ -22,7 +22,7 @@ import os
 from .models import (
     UserProfile, AuditLog, ClusteringJob,
     Accident, AccidentCluster, AccidentReport, ReportActivityLog,
-    SystemSetting
+    SystemSetting, DropdownOption
 )
 from .auth_utils import log_user_action
 
@@ -494,6 +494,11 @@ def user_detail(request, user_id):
                     if old_clustering_access != profile.can_run_clustering:
                         changes_made.append(f'{"enabled" if profile.can_run_clustering else "disabled"} clustering access')
 
+                    old_edit_reports = profile.can_edit_reports
+                    profile.can_edit_reports = request.POST.get('can_edit_reports') == 'on'
+                    if old_edit_reports != profile.can_edit_reports:
+                        changes_made.append(f'{"enabled" if profile.can_edit_reports else "disabled"} report edit access')
+
                 # Automatically update permissions based on role
                 if profile.role == 'super_admin':
                     user.is_staff = True
@@ -733,6 +738,7 @@ def user_create(request):
                     must_change_password='must_change_password' in request.POST,
                     can_submit_reports='can_submit_reports' in request.POST,
                     can_run_clustering='can_run_clustering' in request.POST and requester and requester.role in ('super_admin', 'regional_director'),
+                    can_edit_reports='can_edit_reports' in request.POST and requester and requester.role in ('super_admin', 'regional_director'),
                     created_by=request.user
                 )
 
@@ -1417,16 +1423,30 @@ def system_settings(request):
             ],
             'icon': 'fas fa-list-ol',
         },
+        'blotter_starting_number': {
+            'label': 'Blotter Starting Number',
+            'description': 'Starting blotter entry number for approved reports. The system will auto-increment from this value.',
+            'input_type': 'number',
+            'icon': 'fas fa-hashtag',
+        },
     }
 
     if request.method == 'POST':
         changed_labels = []
         changed_keys = []
         for key, definition in SETTING_DEFS.items():
-            new_value = request.POST.get(key, '')
-            valid_values = [c[0] for c in definition['choices']]
-            if new_value not in valid_values:
-                continue
+            new_value = request.POST.get(key, '').strip()
+
+            # Validate based on input type
+            if definition.get('input_type') == 'number':
+                # Number input: must be a positive integer
+                if not new_value or not new_value.isdigit() or int(new_value) < 1:
+                    continue
+            else:
+                # Choice-based: must be in valid choices
+                valid_values = [c[0] for c in definition.get('choices', [])]
+                if new_value not in valid_values:
+                    continue
 
             obj, created = SystemSetting.objects.update_or_create(
                 key=key,
@@ -1463,16 +1483,197 @@ def system_settings(request):
     settings_list = []
     for key, definition in SETTING_DEFS.items():
         current_value = SystemSetting.get(key)
-        settings_list.append({
+        entry = {
             'key': key,
             'label': definition['label'],
             'description': definition['description'],
-            'choices': definition['choices'],
+            'choices': definition.get('choices', []),
             'current': current_value,
             'icon': definition['icon'],
-        })
+            'input_type': definition.get('input_type', 'radio'),
+        }
+        # For blotter, show the next auto-assigned number
+        if key == 'blotter_starting_number':
+            entry['next_blotter'] = SystemSetting.next_blotter_number()
+        settings_list.append(entry)
 
     return render(request, 'admin_panel/system_settings.html', {
         'settings_list': settings_list,
         'page_title': 'Display Settings',
     })
+
+
+# ==============================================================================
+# DROPDOWN OPTIONS MANAGEMENT
+# ==============================================================================
+
+@login_required
+def dropdown_management(request):
+    """Manage dropdown options for the report submission form."""
+    profile = getattr(request.user, 'profile', None)
+    if not (profile and (profile.role in ('super_admin', 'regional_director') or profile.can_edit_reports)):
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('dashboard')
+
+    # Determine base template based on role
+    uses_main_layout = profile.role in ('station_commander', 'provincial_chief')
+    base_template = 'base.html' if uses_main_layout else 'admin_panel/base.html'
+
+    # Seed defaults if table is empty
+    if not DropdownOption.objects.exists():
+        DropdownOption.seed_defaults()
+
+    # Group options by field (exclude vehicle_make/model — shown under Vehicle Type)
+    field_groups = []
+    for value, label in DropdownOption.FIELD_CHOICES:
+        if value in ('vehicle_make', 'vehicle_model'):
+            continue
+        options = DropdownOption.objects.filter(field_name=value).order_by('sort_order', 'label')
+        field_groups.append({
+            'field_name': value,
+            'label': label,
+            'options': options,
+            'active_count': options.filter(is_active=True).count(),
+            'total_count': options.count(),
+        })
+
+    # Build vehicle hierarchy as nested list for easy template iteration
+    vehicle_kinds_qs = DropdownOption.objects.filter(
+        field_name='vehicle_kind', is_active=True
+    ).order_by('sort_order', 'label')
+
+    vehicle_type_data = []
+    for kind_opt in vehicle_kinds_qs:
+        makes_qs = DropdownOption.objects.filter(
+            field_name='vehicle_make', parent_value=kind_opt.value
+        ).order_by('sort_order', 'label')
+        makes_list = []
+        for make_opt in makes_qs:
+            parent_key = f'{kind_opt.value}__{make_opt.value}'
+            models_qs = DropdownOption.objects.filter(
+                field_name='vehicle_model', parent_value=parent_key
+            ).order_by('sort_order', 'label')
+            makes_list.append({
+                'option': make_opt,
+                'models': models_qs,
+                'parent_key': parent_key,
+                'kind_val': kind_opt.value,
+            })
+        vehicle_type_data.append({
+            'kind_val': kind_opt.value,
+            'kind_label': kind_opt.label,
+            'makes': makes_list,
+            'make_count': makes_qs.count(),
+        })
+
+    vehicle_make_count = DropdownOption.objects.filter(field_name='vehicle_make').count()
+    vehicle_model_count = DropdownOption.objects.filter(field_name='vehicle_model').count()
+
+    return render(request, 'admin_panel/dropdown_management.html', {
+        'field_groups': field_groups,
+        'page_title': 'Form Dropdown Options',
+        'base_template': base_template,
+        'vehicle_type_data': vehicle_type_data,
+        'vehicle_make_count': vehicle_make_count,
+        'vehicle_model_count': vehicle_model_count,
+    })
+
+
+@login_required
+def dropdown_api(request):
+    """API endpoint for CRUD operations on dropdown options."""
+    profile = getattr(request.user, 'profile', None)
+    if not (profile and (profile.role in ('super_admin', 'regional_director') or profile.can_edit_reports)):
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            action = data.get('action')
+
+            if action == 'add':
+                field_name = data.get('field_name')
+                value = data.get('value', '').strip().upper().replace(' ', '_')
+                label = data.get('label', '').strip()
+                parent_value = data.get('parent_value', '').strip()
+
+                if not field_name or not value or not label:
+                    return JsonResponse({'success': False, 'error': 'Field name, value, and label are required'})
+
+                if DropdownOption.objects.filter(field_name=field_name, value=value, parent_value=parent_value).exists():
+                    return JsonResponse({'success': False, 'error': 'An option with this value already exists'})
+
+                max_order = DropdownOption.objects.filter(field_name=field_name, parent_value=parent_value).order_by('-sort_order').values_list('sort_order', flat=True).first() or 0
+                opt = DropdownOption.objects.create(
+                    field_name=field_name,
+                    value=value,
+                    label=label,
+                    parent_value=parent_value,
+                    sort_order=max_order + 10,
+                    is_default=False,
+                    is_active=True,
+                    created_by=request.user,
+                )
+
+                log_user_action(request=request, action='dropdown_add',
+                    description=f'Added dropdown option: {label} ({value}) to {field_name}', severity='info')
+
+                return JsonResponse({'success': True, 'id': opt.id, 'message': f'Option "{label}" added successfully'})
+
+            elif action == 'edit':
+                opt_id = data.get('id')
+                label = data.get('label', '').strip()
+                if not opt_id or not label:
+                    return JsonResponse({'success': False, 'error': 'ID and label are required'})
+
+                opt = DropdownOption.objects.get(id=opt_id)
+                old_label = opt.label
+                opt.label = label
+                opt.save(update_fields=['label'])
+
+                log_user_action(request=request, action='dropdown_edit',
+                    description=f'Edited dropdown option: "{old_label}" → "{label}" ({opt.field_name})', severity='info')
+
+                return JsonResponse({'success': True, 'message': f'Option updated to "{label}"'})
+
+            elif action == 'toggle':
+                opt_id = data.get('id')
+                opt = DropdownOption.objects.get(id=opt_id)
+                opt.is_active = not opt.is_active
+                opt.save(update_fields=['is_active'])
+
+                status = 'enabled' if opt.is_active else 'disabled'
+                log_user_action(request=request, action='dropdown_toggle',
+                    description=f'{status.capitalize()} dropdown option: {opt.label} ({opt.field_name})', severity='info')
+
+                return JsonResponse({'success': True, 'is_active': opt.is_active, 'message': f'Option {status}'})
+
+            elif action == 'delete':
+                opt_id = data.get('id')
+                opt = DropdownOption.objects.get(id=opt_id)
+                if opt.is_default:
+                    return JsonResponse({'success': False, 'error': 'Cannot delete default system options. Disable it instead.'})
+                label = opt.label
+                field = opt.field_name
+                opt.delete()
+
+                log_user_action(request=request, action='dropdown_delete',
+                    description=f'Deleted dropdown option: {label} ({field})', severity='warning')
+
+                return JsonResponse({'success': True, 'message': f'Option "{label}" deleted'})
+
+            elif action == 'reorder':
+                items = data.get('items', [])
+                for item in items:
+                    DropdownOption.objects.filter(id=item['id']).update(sort_order=item['order'])
+                return JsonResponse({'success': True, 'message': 'Order updated'})
+
+            else:
+                return JsonResponse({'success': False, 'error': 'Invalid action'})
+
+        except DropdownOption.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Option not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    return JsonResponse({'success': False, 'error': 'POST required'}, status=405)

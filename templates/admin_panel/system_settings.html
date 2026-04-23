@@ -39,6 +39,21 @@
                 </div>
             </div>
 
+            {% if setting.input_type == 'number' %}
+            <div class="ss-number-input" style="margin-top:8px;">
+                <input type="number" name="{{ setting.key }}" value="{{ setting.current }}"
+                    min="1" max="99999" step="1"
+                    style="width:160px; padding:8px 12px; font-size:1rem; font-weight:600; border:1.5px solid #D1D5DB; border-radius:8px; text-align:center; outline:none; transition:border-color 0.2s;"
+                    onfocus="this.style.borderColor='var(--primary, #2563EB)'"
+                    onblur="this.style.borderColor='#D1D5DB'">
+                {% if setting.key == 'blotter_starting_number' and setting.next_blotter %}
+                <div style="margin-top:6px; font-size:0.78rem; color:#6B7280;">
+                    <i class="fas fa-arrow-right" style="font-size:0.65rem;"></i>
+                    Next auto-assigned blotter number: <b style="color:#059669;">{{ setting.next_blotter }}</b>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
             <div class="ss-options {% if setting.choices|length > 3 %}ss-options-wrap{% endif %}">
                 {% for value, label in setting.choices %}
                 <label class="ss-option-label {% if setting.choices|length > 3 %}ss-option-compact{% endif %}">
@@ -60,6 +75,7 @@
                 </label>
                 {% endfor %}
             </div>
+            {% endif %}
 
             {% if setting.key == 'session_timeout' %}
             <div class="ss-hint">

@@ -443,8 +443,8 @@
 
         <div class="info-grid">
             <div class="info-card">
-                <div class="info-label">Reporter</div>
-                <div class="info-value">{{ report.reporter_name }}</div>
+                <div class="info-label">Investigating Officer</div>
+                <div class="info-value">{{ report.reported_by.get_full_name|default:report.reported_by.username }}</div>
             </div>
             <div class="info-card">
                 <div class="info-label">Contact</div>

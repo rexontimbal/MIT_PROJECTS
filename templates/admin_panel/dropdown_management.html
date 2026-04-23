@@ -1,0 +1,715 @@
+{% extends base_template|default:'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<style>
+    .dd-page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .dd-page-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-dark, #1f2937);
+        margin: 0;
+    }
+    .dd-page-header h1 i {
+        color: var(--primary-blue, #003087);
+        margin-right: 0.5rem;
+    }
+
+    /* Field group cards */
+    .dd-field-card {
+        background: var(--card-bg, #fff);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        border: 1px solid var(--border-color, #e5e7eb);
+        margin-bottom: 1.25rem;
+        overflow: hidden;
+    }
+    .dd-field-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.25rem;
+        background: var(--bg-light, #f9fafb);
+        border-bottom: 1px solid var(--border-color, #e5e7eb);
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.2s;
+    }
+    .dd-field-header:hover {
+        background: #f0f4ff;
+    }
+    .dd-field-header h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        color: var(--text-dark, #1f2937);
+    }
+    .dd-field-header h3 i {
+        color: var(--primary-blue, #003087);
+        margin-right: 0.5rem;
+        width: 20px;
+        text-align: center;
+    }
+    .dd-field-badge {
+        background: var(--primary-blue, #003087);
+        color: white;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .dd-field-badge.muted {
+        background: #9CA3AF;
+    }
+    .dd-chevron {
+        transition: transform 0.3s;
+        color: #9CA3AF;
+    }
+    .dd-field-card.open .dd-chevron {
+        transform: rotate(180deg);
+    }
+    .dd-field-body {
+        display: none;
+        padding: 1rem 1.25rem;
+    }
+    .dd-field-card.open .dd-field-body {
+        display: block;
+    }
+
+    /* Options table */
+    .dd-options-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .dd-options-table th {
+        text-align: left;
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6B7280;
+        padding: 0.5rem 0.75rem;
+        border-bottom: 2px solid var(--border-color, #e5e7eb);
+    }
+    .dd-options-table td {
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.88rem;
+        vertical-align: middle;
+    }
+    .dd-options-table tr:last-child td {
+        border-bottom: none;
+    }
+    .dd-options-table tr:hover td {
+        background: #f9fafb;
+    }
+    .dd-value-code {
+        font-family: monospace;
+        font-size: 0.78rem;
+        background: #f3f4f6;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        color: #6B7280;
+    }
+    .dd-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .dd-status-badge.active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+    .dd-status-badge.inactive {
+        background: rgba(156, 163, 175, 0.15);
+        color: #6B7280;
+    }
+    .dd-default-tag {
+        font-size: 0.68rem;
+        background: rgba(59, 130, 246, 0.1);
+        color: #3B82F6;
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    /* Action buttons */
+    .dd-actions {
+        display: flex;
+        gap: 0.35rem;
+    }
+    .dd-btn {
+        padding: 0.3rem 0.55rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.78rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .dd-btn-edit {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3B82F6;
+    }
+    .dd-btn-edit:hover { background: rgba(59, 130, 246, 0.2); }
+    .dd-btn-toggle {
+        background: rgba(245, 158, 11, 0.1);
+        color: #D97706;
+    }
+    .dd-btn-toggle:hover { background: rgba(245, 158, 11, 0.2); }
+    .dd-btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+    .dd-btn-delete:hover { background: rgba(239, 68, 68, 0.2); }
+
+    /* Add new option row */
+    .dd-add-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px dashed #e5e7eb;
+        flex-wrap: wrap;
+    }
+    .dd-add-row input {
+        flex: 1;
+        min-width: 120px;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .dd-add-row input:focus {
+        border-color: var(--primary-blue, #003087);
+        box-shadow: 0 0 0 2px rgba(0, 48, 135, 0.1);
+    }
+    .dd-btn-add {
+        padding: 0.5rem 1rem;
+        background: var(--primary-blue, #003087);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+    .dd-btn-add:hover { background: #002266; }
+
+    /* Edit inline input */
+    .dd-edit-input {
+        padding: 0.3rem 0.5rem;
+        border: 2px solid #3B82F6;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        width: 100%;
+        outline: none;
+    }
+
+    /* Notification */
+    .dd-toast {
+        position: fixed;
+        top: 80px;
+        right: 1rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        font-size: 0.88rem;
+        z-index: 10010;
+        transform: translateX(120%);
+        transition: transform 0.3s ease;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .dd-toast.show { transform: translateX(0); }
+    .dd-toast.success { background: #059669; }
+    .dd-toast.error { background: #EF4444; }
+
+    /* Field icons */
+    .fi-incident { color: #DC143C; }
+    .fi-place { color: #059669; }
+    .fi-offense { color: #7C3AED; }
+    .fi-offense-type { color: #D97706; }
+    .fi-felony { color: #2563EB; }
+    .fi-vehicle { color: #0891B2; }
+    .fi-make { color: #7C3AED; }
+    .fi-model { color: #DB2777; }
+
+    /* Sub-group for vehicle hierarchy */
+    .dd-sub-group {
+        margin-bottom: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .dd-sub-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 1rem;
+        background: #f3f4f6;
+        cursor: pointer;
+        user-select: none;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #374151;
+    }
+    .dd-sub-header:hover { background: #e5e7eb; }
+    .dd-sub-header i.dd-sub-chevron {
+        transition: transform 0.3s;
+        color: #9CA3AF;
+        font-size: 0.75rem;
+    }
+    .dd-sub-group.open .dd-sub-chevron { transform: rotate(180deg); }
+    .dd-sub-body {
+        display: none;
+        padding: 0.75rem 1rem;
+    }
+    .dd-sub-group.open .dd-sub-body { display: block; }
+    .dd-sub-count {
+        font-size: 0.72rem;
+        background: rgba(0,48,135,0.1);
+        color: #003087;
+        padding: 0.15rem 0.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    /* Add row with parent selector */
+    .dd-add-row select {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        outline: none;
+        transition: border-color 0.2s;
+        min-width: 140px;
+    }
+    .dd-add-row select:focus {
+        border-color: #003087;
+        box-shadow: 0 0 0 2px rgba(0, 48, 135, 0.1);
+    }
+
+    @media (max-width: 768px) {
+        .dd-options-table th:nth-child(2),
+        .dd-options-table td:nth-child(2) {
+            display: none;
+        }
+        .dd-add-row {
+            flex-direction: column;
+        }
+        .dd-page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="dd-page-header">
+    <h1><i class="fas fa-list-alt"></i> {{ page_title }}</h1>
+    <span style="font-size: 0.85rem; color: #6B7280;">
+        <i class="fas fa-info-circle"></i> Manage dropdown options shown in the accident report form
+    </span>
+</div>
+
+<div id="ddToast" class="dd-toast"></div>
+
+{% for group in field_groups %}
+<div class="dd-field-card {% if forloop.first %}open{% endif %}" data-field="{{ group.field_name }}">
+    <div class="dd-field-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>
+            <i class="fas {% if group.field_name == 'incident_type' %}fa-exclamation-triangle fi-incident{% elif group.field_name == 'type_of_place' %}fa-map-marker-alt fi-place{% elif group.field_name == 'offense' %}fa-gavel fi-offense{% elif group.field_name == 'offense_type' %}fa-balance-scale fi-offense-type{% elif group.field_name == 'stage_of_felony' %}fa-layer-group fi-felony{% elif group.field_name == 'vehicle_kind' %}fa-car fi-vehicle{% endif %}"></i>
+            {{ group.label }}
+        </h3>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="dd-field-badge">{{ group.active_count }} active</span>
+            {% if group.total_count != group.active_count %}
+            <span class="dd-field-badge muted">{{ group.total_count }} total</span>
+            {% endif %}
+            <i class="fas fa-chevron-down dd-chevron"></i>
+        </div>
+    </div>
+    <div class="dd-field-body">
+        <table class="dd-options-table">
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th>Value (Key)</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-{{ group.field_name }}">
+                {% for opt in group.options %}
+                <tr id="opt-{{ opt.id }}" data-id="{{ opt.id }}">
+                    <td>
+                        <span class="dd-label-text">{{ opt.label }}</span>
+                        {% if opt.is_default %}<span class="dd-default-tag">System</span>{% endif %}
+                    </td>
+                    <td><code class="dd-value-code">{{ opt.value }}</code></td>
+                    <td>
+                        <span class="dd-status-badge {% if opt.is_active %}active{% else %}inactive{% endif %}">
+                            <i class="fas {% if opt.is_active %}fa-check-circle{% else %}fa-minus-circle{% endif %}"></i>
+                            {% if opt.is_active %}Active{% else %}Disabled{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="dd-actions" style="justify-content: flex-end;">
+                            <button class="dd-btn dd-btn-edit" onclick="editOption({{ opt.id }}, this)" title="Edit label">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="dd-btn dd-btn-toggle" onclick="toggleOption({{ opt.id }}, this)" title="{% if opt.is_active %}Disable{% else %}Enable{% endif %}">
+                                <i class="fas {% if opt.is_active %}fa-eye-slash{% else %}fa-eye{% endif %}"></i>
+                            </button>
+                            {% if not opt.is_default %}
+                            <button class="dd-btn dd-btn-delete" onclick="deleteOption({{ opt.id }}, '{{ opt.label|escapejs }}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="dd-add-row">
+            <input type="text" id="add-label-{{ group.field_name }}" placeholder="New option label (e.g., Motorcycle Collision)">
+            <input type="text" id="add-value-{{ group.field_name }}" placeholder="Value key (e.g., MOTORCYCLE_COLLISION)" style="max-width: 250px;">
+            <button class="dd-btn-add" onclick="addOption('{{ group.field_name }}')">
+                <i class="fas fa-plus"></i> Add Option
+            </button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- ===== Vehicle Make / Brand (grouped by Vehicle Type) ===== -->
+<div class="dd-field-card" data-field="vehicle_make">
+    <div class="dd-field-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3><i class="fas fa-industry fi-make"></i> Vehicle Make / Brand</h3>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="dd-field-badge">{{ vehicle_make_count }} total</span>
+            <i class="fas fa-chevron-down dd-chevron"></i>
+        </div>
+    </div>
+    <div class="dd-field-body">
+        <p style="font-size: 0.8rem; color: #6B7280; margin: 0 0 1rem;">
+            <i class="fas fa-info-circle"></i> Brands are grouped by Vehicle Type. The brands shown in the report form depend on the selected Vehicle Type.
+        </p>
+        {% for vt in vehicle_type_data %}
+        <div class="dd-sub-group" data-parent="{{ vt.kind_val }}">
+            <div class="dd-sub-header" onclick="this.parentElement.classList.toggle('open')">
+                <span><i class="fas fa-car" style="margin-right:0.4rem; color:#0891B2;"></i> {{ vt.kind_label }}</span>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <span class="dd-sub-count">{{ vt.make_count }} brands</span>
+                    <i class="fas fa-chevron-down dd-sub-chevron"></i>
+                </div>
+            </div>
+            <div class="dd-sub-body">
+                <table class="dd-options-table">
+                    <thead>
+                        <tr>
+                            <th>Brand</th>
+                            <th>Value (Key)</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mk in vt.makes %}
+                        <tr id="opt-{{ mk.option.id }}" data-id="{{ mk.option.id }}">
+                            <td>
+                                <span class="dd-label-text">{{ mk.option.label }}</span>
+                                {% if mk.option.is_default %}<span class="dd-default-tag">System</span>{% endif %}
+                            </td>
+                            <td><code class="dd-value-code">{{ mk.option.value }}</code></td>
+                            <td>
+                                <span class="dd-status-badge {% if mk.option.is_active %}active{% else %}inactive{% endif %}">
+                                    <i class="fas {% if mk.option.is_active %}fa-check-circle{% else %}fa-minus-circle{% endif %}"></i>
+                                    {% if mk.option.is_active %}Active{% else %}Disabled{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="dd-actions" style="justify-content:flex-end;">
+                                    <button class="dd-btn dd-btn-edit" onclick="editOption({{ mk.option.id }}, this)" title="Edit"><i class="fas fa-pen"></i></button>
+                                    <button class="dd-btn dd-btn-toggle" onclick="toggleOption({{ mk.option.id }}, this)" title="Toggle"><i class="fas {% if mk.option.is_active %}fa-eye-slash{% else %}fa-eye{% endif %}"></i></button>
+                                    {% if not mk.option.is_default %}
+                                    <button class="dd-btn dd-btn-delete" onclick="deleteOption({{ mk.option.id }}, '{{ mk.option.label|escapejs }}')" title="Delete"><i class="fas fa-trash"></i></button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="dd-add-row">
+                    <input type="text" id="add-make-label-{{ vt.kind_val }}" placeholder="Brand name (e.g., Kymco)">
+                    <input type="text" id="add-make-value-{{ vt.kind_val }}" placeholder="Value key (e.g., KYMCO)" style="max-width:200px;">
+                    <button class="dd-btn-add" onclick="addVehicleMake('{{ vt.kind_val }}')">
+                        <i class="fas fa-plus"></i> Add Brand
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ===== Vehicle Model (grouped by Vehicle Type > Make) ===== -->
+<div class="dd-field-card" data-field="vehicle_model">
+    <div class="dd-field-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3><i class="fas fa-cogs fi-model"></i> Vehicle Model</h3>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="dd-field-badge">{{ vehicle_model_count }} total</span>
+            <i class="fas fa-chevron-down dd-chevron"></i>
+        </div>
+    </div>
+    <div class="dd-field-body">
+        <p style="font-size: 0.8rem; color: #6B7280; margin: 0 0 1rem;">
+            <i class="fas fa-info-circle"></i> Models are grouped by Vehicle Type &rarr; Brand. The models shown depend on the selected Type and Brand.
+        </p>
+        {% for vt in vehicle_type_data %}
+        {% for mk in vt.makes %}
+        <div class="dd-sub-group" data-parent="{{ mk.parent_key }}">
+            <div class="dd-sub-header" onclick="this.parentElement.classList.toggle('open')">
+                <span>
+                    <i class="fas fa-car" style="margin-right:0.3rem; color:#0891B2; font-size:0.8rem;"></i>
+                    <span style="color:#6B7280;">{{ vt.kind_label }}</span>
+                    <i class="fas fa-chevron-right" style="margin:0 0.3rem; color:#d1d5db; font-size:0.65rem;"></i>
+                    <i class="fas fa-industry" style="margin-right:0.3rem; color:#7C3AED; font-size:0.8rem;"></i>
+                    {{ mk.option.label }}
+                </span>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <span class="dd-sub-count">{{ mk.models.count }} models</span>
+                    <i class="fas fa-chevron-down dd-sub-chevron"></i>
+                </div>
+            </div>
+            <div class="dd-sub-body">
+                <table class="dd-options-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mdl in mk.models %}
+                        <tr id="opt-{{ mdl.id }}" data-id="{{ mdl.id }}">
+                            <td>
+                                <span class="dd-label-text">{{ mdl.label }}</span>
+                                {% if mdl.is_default %}<span class="dd-default-tag">System</span>{% endif %}
+                            </td>
+                            <td>
+                                <span class="dd-status-badge {% if mdl.is_active %}active{% else %}inactive{% endif %}">
+                                    <i class="fas {% if mdl.is_active %}fa-check-circle{% else %}fa-minus-circle{% endif %}"></i>
+                                    {% if mdl.is_active %}Active{% else %}Disabled{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="dd-actions" style="justify-content:flex-end;">
+                                    <button class="dd-btn dd-btn-edit" onclick="editOption({{ mdl.id }}, this)" title="Edit"><i class="fas fa-pen"></i></button>
+                                    <button class="dd-btn dd-btn-toggle" onclick="toggleOption({{ mdl.id }}, this)" title="Toggle"><i class="fas {% if mdl.is_active %}fa-eye-slash{% else %}fa-eye{% endif %}"></i></button>
+                                    {% if not mdl.is_default %}
+                                    <button class="dd-btn dd-btn-delete" onclick="deleteOption({{ mdl.id }}, '{{ mdl.label|escapejs }}')" title="Delete"><i class="fas fa-trash"></i></button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="dd-add-row">
+                    <input type="text" id="add-model-label-{{ vt.kind_val }}-{{ mk.option.value }}" placeholder="Model name (e.g., Vios GR-S)">
+                    <button class="dd-btn-add" onclick="addVehicleModel('{{ vt.kind_val }}', '{{ mk.option.value }}')">
+                        <i class="fas fa-plus"></i> Add Model
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+const API_URL = '{% url "admin_panel:dropdown_api" %}';
+const csrfToken = '{{ csrf_token }}';
+
+function showToast(message, type) {
+    const t = document.getElementById('ddToast');
+    t.textContent = message;
+    t.className = 'dd-toast ' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function apiCall(data) {
+    return fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify(data)
+    }).then(r => r.json());
+}
+
+function addOption(fieldName, parentValue) {
+    const labelInput = document.getElementById('add-label-' + fieldName);
+    const valueInput = document.getElementById('add-value-' + fieldName);
+    const label = labelInput.value.trim();
+    let value = valueInput.value.trim();
+
+    if (!label) { labelInput.focus(); return; }
+    if (!value) { value = label.toUpperCase().replace(/[^A-Z0-9]+/g, '_'); }
+
+    const payload = { action: 'add', field_name: fieldName, value: value, label: label };
+    if (parentValue) payload.parent_value = parentValue;
+
+    apiCall(payload)
+    .then(res => {
+        if (res.success) {
+            showToast(res.message, 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showToast(res.error, 'error');
+        }
+    });
+}
+
+function addVehicleMake(kindValue) {
+    const labelInput = document.getElementById('add-make-label-' + kindValue);
+    const valueInput = document.getElementById('add-make-value-' + kindValue);
+    const label = labelInput.value.trim();
+    let value = valueInput.value.trim();
+
+    if (!label) { labelInput.focus(); return; }
+    if (!value) { value = label.toUpperCase().replace(/[^A-Z0-9]+/g, '_'); }
+
+    apiCall({ action: 'add', field_name: 'vehicle_make', value: value, label: label, parent_value: kindValue })
+    .then(res => {
+        if (res.success) {
+            showToast(res.message, 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showToast(res.error, 'error');
+        }
+    });
+}
+
+function addVehicleModel(kindValue, makeValue) {
+    const labelInput = document.getElementById('add-model-label-' + kindValue + '-' + makeValue);
+    const label = labelInput.value.trim();
+
+    if (!label) { labelInput.focus(); return; }
+    const value = label;  // Model values use the display name as-is
+    const parentKey = kindValue + '__' + makeValue;
+
+    apiCall({ action: 'add', field_name: 'vehicle_model', value: value, label: label, parent_value: parentKey })
+    .then(res => {
+        if (res.success) {
+            showToast(res.message, 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showToast(res.error, 'error');
+        }
+    });
+}
+
+function editOption(id, btn) {
+    const row = document.getElementById('opt-' + id);
+    const labelSpan = row.querySelector('.dd-label-text');
+    const currentLabel = labelSpan.textContent.trim();
+
+    // Replace with input
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentLabel;
+    input.className = 'dd-edit-input';
+    labelSpan.replaceWith(input);
+    input.focus();
+    input.select();
+
+    // Change button to save
+    btn.innerHTML = '<i class="fas fa-check"></i>';
+    btn.onclick = function() { saveEdit(id, input, btn); };
+
+    // Save on Enter
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') saveEdit(id, input, btn);
+        if (e.key === 'Escape') location.reload();
+    });
+}
+
+function saveEdit(id, input, btn) {
+    const label = input.value.trim();
+    if (!label) return;
+
+    apiCall({ action: 'edit', id: id, label: label })
+    .then(res => {
+        if (res.success) {
+            showToast(res.message, 'success');
+            const span = document.createElement('span');
+            span.className = 'dd-label-text';
+            span.textContent = label;
+            input.replaceWith(span);
+            btn.innerHTML = '<i class="fas fa-pen"></i>';
+            btn.onclick = function() { editOption(id, btn); };
+        } else {
+            showToast(res.error, 'error');
+        }
+    });
+}
+
+function toggleOption(id, btn) {
+    apiCall({ action: 'toggle', id: id })
+    .then(res => {
+        if (res.success) {
+            showToast(res.message, 'success');
+            const row = document.getElementById('opt-' + id);
+            const badge = row.querySelector('.dd-status-badge');
+            if (res.is_active) {
+                badge.className = 'dd-status-badge active';
+                badge.innerHTML = '<i class="fas fa-check-circle"></i> Active';
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                badge.className = 'dd-status-badge inactive';
+                badge.innerHTML = '<i class="fas fa-minus-circle"></i> Disabled';
+                btn.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        } else {
+            showToast(res.error, 'error');
+        }
+    });
+}
+
+function deleteOption(id, label) {
+    if (!confirm('Delete option "' + label + '"? This cannot be undone.')) return;
+    apiCall({ action: 'delete', id: id })
+    .then(res => {
+        if (res.success) {
+            showToast(res.message, 'success');
+            document.getElementById('opt-' + id).remove();
+        } else {
+            showToast(res.error, 'error');
+        }
+    });
+}
+</script>
+{% endblock %}

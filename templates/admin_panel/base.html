@@ -1655,6 +1655,13 @@
                 </li>
 
                 <li class="admin-nav-item">
+                    <a href="{% url 'admin_panel:dropdown_management' %}" class="admin-nav-link {% if 'dropdown' in request.path %}active{% endif %}" data-tooltip="Form Dropdowns">
+                        <i class="fas fa-list-alt"></i>
+                        <span>Form Dropdowns</span>
+                    </a>
+                </li>
+
+                <li class="admin-nav-item">
                     <a href="{% url 'admin_panel:system_monitoring' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'system_monitoring' %}active{% endif %}" data-tooltip="System Monitoring">
                         <i class="fas fa-server"></i>
                         <span>System Monitoring</span>

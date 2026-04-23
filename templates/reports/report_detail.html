@@ -257,6 +257,61 @@
         font-weight: 700;
     }
 
+    /* IRF sub-section label */
+    .irf-sub-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin: 10px 0 4px 0;
+        padding-bottom: 3px;
+        border-bottom: 1px solid #F1F5F9;
+    }
+    [data-theme="dark"] .irf-sub-label { color: #94A3B8; border-bottom-color: #334155; }
+
+    /* Vehicle 2 sub-panel */
+    .v2-panel {
+        margin-top: 10px;
+        padding: 10px 14px;
+        background: #F0F7FF;
+        border-radius: 8px;
+        border: 1px solid #DBEAFE;
+    }
+    .v2-panel-title {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: #2563EB;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    [data-theme="dark"] .v2-panel { background: #1E293B; border-color: #334155; }
+    [data-theme="dark"] .v2-panel-title { color: #60A5FA; }
+
+    /* Witness table */
+    .witness-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .witness-table th { background: #F8FAFC; color: #6B7280; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 6px 10px; text-align: left; border-bottom: 2px solid #E2E8F0; }
+    .witness-table td { padding: 6px 10px; border-bottom: 1px solid #F1F5F9; color: #1E293B; }
+    [data-theme="dark"] .witness-table th { background: #1A2332; color: #94A3B8; border-bottom-color: #334155; }
+    [data-theme="dark"] .witness-table td { color: #E2E8F0; border-bottom-color: #2D3A4F; }
+
+    /* Sketch display */
+    .sketch-display {
+        text-align: center;
+        padding: 8px;
+    }
+    .sketch-display img {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        border: 1px solid #E2E8F0;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .sketch-display img:hover { transform: scale(1.02); }
+
     /* Narrative Box - Clean */
     .description-box {
         background: #f8fafc;
@@ -270,21 +325,19 @@
     }
 
     .casualties-row {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 12px;
+        display: inline-flex;
+        gap: 6px;
+        margin-bottom: 10px;
     }
 
     .casualty-box {
-        flex: 1;
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 8px 10px;
-        border-radius: 6px;
-        font-size: 0.78rem;
-        font-weight: 700;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 600;
     }
 
     .casualty-killed {
@@ -300,7 +353,7 @@
     }
 
     .casualty-box i {
-        font-size: 0.78rem;
+        font-size: 0.65rem;
     }
 
     .location-map {
@@ -584,16 +637,16 @@
 
     .photo-gallery {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 8px;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 6px;
         margin-top: 8px;
     }
 
     .photo-item {
         position: relative;
-        border-radius: 6px;
+        border-radius: 5px;
         overflow: hidden;
-        aspect-ratio: 4/3;
+        aspect-ratio: 1;
         cursor: pointer;
         transition: all 0.2s ease;
         border: 1px solid #e2e8f0;
@@ -603,6 +656,7 @@
     .photo-item:hover {
         box-shadow: 0 2px 8px rgba(0,0,0,0.12);
         border-color: #003087;
+        transform: scale(1.04);
     }
 
     .photo-item img {
@@ -618,9 +672,10 @@
         right: 0;
         background: linear-gradient(transparent, rgba(0,0,0,0.7));
         color: white;
-        font-size: 0.68rem;
+        font-size: 0.58rem;
         font-weight: 600;
-        padding: 14px 8px 6px;
+        padding: 10px 4px 3px;
+        text-align: center;
     }
 
     .no-photos {
@@ -774,15 +829,15 @@
     }
 
     [data-theme="dark"] .casualty-killed {
-        background: rgba(239, 68, 68, 0.15);
+        background: rgba(239, 68, 68, 0.12);
         color: #F87171;
-        border-color: rgba(239, 68, 68, 0.3);
+        border-color: rgba(239, 68, 68, 0.25);
     }
 
     [data-theme="dark"] .casualty-injured {
-        background: rgba(245, 158, 11, 0.15);
+        background: rgba(245, 158, 11, 0.12);
         color: #FBBF24;
-        border-color: rgba(245, 158, 11, 0.3);
+        border-color: rgba(245, 158, 11, 0.25);
     }
 
     [data-theme="dark"] .btn-back {
@@ -1153,16 +1208,16 @@
         }
 
         .photo-gallery {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
         }
 
         .casualties-row {
-            gap: 6px;
+            gap: 4px;
         }
 
         .casualty-box {
-            padding: 6px 8px;
-            font-size: 0.72rem;
+            padding: 2px 8px;
+            font-size: 0.65rem;
         }
 
         .description-box {
@@ -1204,7 +1259,7 @@
         <div class="report-meta">
             <span><i class="fas fa-calendar"></i> Submitted {{ report.created_at|date:"F d, Y" }}</span>
             <span><i class="fas fa-clock"></i> at {{ report.created_at|time:"g:i A" }}</span>
-            <span><i class="fas fa-user"></i> By {{ report.reporter_name }}</span>
+            <span><i class="fas fa-user-shield"></i> By {{ report.reported_by.get_full_name|default:report.reported_by.username }}</span>
         </div>
 
         {% if activity_logs %}
@@ -1403,6 +1458,29 @@
             <div class="info-item"><div class="info-value" style="color: #9CA3AF;">No victim information recorded</div></div>
         </div>
         {% endif %}
+        {% if report.victim_address or report.victim_work_address or report.hospital_taken_to %}
+        <div class="irf-sub-label">Additional Victim Details (IRF Item C)</div>
+        <div class="info-grid">
+            {% if report.victim_address %}
+            <div class="info-item">
+                <div class="info-label">Current Address</div>
+                <div class="info-value">{{ report.victim_address }}</div>
+            </div>
+            {% endif %}
+            {% if report.victim_work_address %}
+            <div class="info-item">
+                <div class="info-label">Work Address</div>
+                <div class="info-value">{{ report.victim_work_address }}</div>
+            </div>
+            {% endif %}
+            {% if report.hospital_taken_to %}
+            <div class="info-item">
+                <div class="info-label">Hospital Taken To</div>
+                <div class="info-value">{{ report.hospital_taken_to }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 
     <!-- Suspect/Driver Information -->
@@ -1456,11 +1534,35 @@
             <div class="info-item"><div class="info-value" style="color: #9CA3AF;">No suspect information recorded</div></div>
         </div>
         {% endif %}
+        {% if report.driver_license_no or report.suspect_relation_to_victim or report.suspect_address %}
+        <div class="irf-sub-label">Additional Suspect Details (IRF Item B)</div>
+        <div class="info-grid">
+            {% if report.driver_license_no %}
+            <div class="info-item">
+                <div class="info-label">Driver's License No.</div>
+                <div class="info-value">{{ report.driver_license_no }}</div>
+            </div>
+            {% endif %}
+            {% if report.suspect_relation_to_victim %}
+            <div class="info-item">
+                <div class="info-label">Relation to Victim</div>
+                <div class="info-value">{{ report.suspect_relation_to_victim }}</div>
+            </div>
+            {% endif %}
+            {% if report.suspect_address %}
+            <div class="info-item">
+                <div class="info-label">Suspect Address</div>
+                <div class="info-value">{{ report.suspect_address }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Vehicle Information (Suspect/Driver) -->
+    <!-- Vehicle Information (Supplemental 1) -->
     <div class="detail-section">
-        <h3 class="section-title"><span class="section-icon"><i class="fas fa-car"></i></span> Vehicle Information (Suspect/Driver)</h3>
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-car"></i></span> Vehicle Information (Supplemental 1)</h3>
+        <div class="irf-sub-label">Vehicle #1 (Primary)</div>
         <div class="info-grid">
             <div class="info-item">
                 <div class="info-label">Vehicle Type</div>
@@ -1479,17 +1581,27 @@
                 <div class="info-value">{{ report.vehicle_plate_no|default:"—" }}</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Chassis Number</div>
+                <div class="info-label">Chassis / Motor No.</div>
                 <div class="info-value">{{ report.vehicle_chassis_no|default:"—" }}</div>
             </div>
+            {% if report.vehicle_registered_owner %}
+            <div class="info-item">
+                <div class="info-label">Registered Owner</div>
+                <div class="info-value">{{ report.vehicle_registered_owner }}</div>
+            </div>
+            {% endif %}
+            {% if report.vehicle_or_cr_no %}
+            <div class="info-item">
+                <div class="info-label">OR / CR No.</div>
+                <div class="info-value">{{ report.vehicle_or_cr_no }}</div>
+            </div>
+            {% endif %}
             <div class="info-item">
                 <div class="info-label">Colorum</div>
                 <div class="info-value">
                     {% if report.vehicle_colorum %}
                     <span style="color: #DC2626; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Yes (Unfranchised)</span>
-                    {% else %}
-                    <span>No</span>
-                    {% endif %}
+                    {% else %}No{% endif %}
                 </div>
             </div>
             <div class="info-item">
@@ -1497,13 +1609,112 @@
                 <div class="info-value">
                     {% if report.drug_involved %}
                     <span style="color: #DC2626; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Yes</span>
-                    {% else %}
-                    <span>No</span>
-                    {% endif %}
+                    {% else %}No{% endif %}
                 </div>
             </div>
         </div>
+        {% if report.vehicles_data %}
+        {% with v2=report.vehicles_data.0 %}
+        {% if v2 %}
+        <div class="v2-panel">
+            <div class="v2-panel-title"><i class="fas fa-car-side"></i> Vehicle #2</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Vehicle Type</div>
+                    <div class="info-value">{% if v2.kind == 'OTHER' and v2.kind_other %}{{ v2.kind_other }}{% else %}{{ v2.kind|default:"—" }}{% endif %}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Make / Brand</div>
+                    <div class="info-value">{% if v2.make == 'OTHER' and v2.make_other %}{{ v2.make_other }}{% else %}{{ v2.make|default:"—" }}{% endif %}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Model</div>
+                    <div class="info-value">{% if v2.model == 'OTHER' and v2.model_other %}{{ v2.model_other }}{% else %}{{ v2.model|default:"—" }}{% endif %}</div>
+                </div>
+                {% if v2.plate_no %}
+                <div class="info-item">
+                    <div class="info-label">Plate Number</div>
+                    <div class="info-value">{{ v2.plate_no }}</div>
+                </div>
+                {% endif %}
+                {% if v2.chassis_no %}
+                <div class="info-item">
+                    <div class="info-label">Chassis / Motor No.</div>
+                    <div class="info-value">{{ v2.chassis_no }}</div>
+                </div>
+                {% endif %}
+                {% if v2.registered_owner %}
+                <div class="info-item">
+                    <div class="info-label">Registered Owner</div>
+                    <div class="info-value">{{ v2.registered_owner }}</div>
+                </div>
+                {% endif %}
+                {% if v2.or_cr_no %}
+                <div class="info-item">
+                    <div class="info-label">OR / CR No.</div>
+                    <div class="info-value">{{ v2.or_cr_no }}</div>
+                </div>
+                {% endif %}
+                {% if v2.colorum %}
+                <div class="info-item">
+                    <div class="info-label">Colorum</div>
+                    <div class="info-value"><span style="color: #DC2626; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Yes (Unfranchised)</span></div>
+                </div>
+                {% endif %}
+                {% if v2.drug_involved %}
+                <div class="info-item">
+                    <div class="info-label">Drug / Alcohol Involved</div>
+                    <div class="info-value"><span style="color: #DC2626; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Yes</span></div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% endif %}
     </div>
+
+    <!-- Witnesses (Supplemental 3) -->
+    {% if report.witnesses_data %}
+    <div class="detail-section">
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-users"></i></span> Witnesses (Supplemental 3)</h3>
+        <div style="overflow-x: auto;">
+            <table class="witness-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Address</th>
+                        <th>Contact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in report.witnesses_data %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ w.name|default:"—" }}</td>
+                        <td>{{ w.age|default:"—" }}</td>
+                        <td>{{ w.address|default:"—" }}</td>
+                        <td>{{ w.contact|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Sketch (Supplemental 4) -->
+    {% if report.sketch_image %}
+    <div class="detail-section">
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-pencil-ruler"></i></span> Accident Sketch (Supplemental 4)</h3>
+        <div class="sketch-display">
+            <img src="{{ report.sketch_image.url }}" alt="Accident Sketch" onclick="openLightbox('{{ report.sketch_image.url }}')" title="Click to enlarge">
+            <div style="margin-top: 6px; font-size: 0.72rem; color: #6B7280;">Click image to enlarge</div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Narrative -->
     <div class="detail-section">
@@ -1555,12 +1766,15 @@
             {% if report.status == 'verified' %}
             <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
                 <a href="{% url 'download_report_pdf' report.pk %}" target="_blank" class="btn-back" style="flex: 1; justify-content: center; background: #059669; border-color: #059669; color: white;">
-                    <i class="fas fa-print"></i> Print Report
+                    <i class="fas fa-print"></i> Print IRF
                 </a>
                 <a href="{% url 'download_report_pdf' report.pk %}?dl=1" class="btn-back" style="flex: 1; justify-content: center; background: #DC2626; border-color: #DC2626; color: white;">
-                    <i class="fas fa-file-pdf"></i> Download PDF
+                    <i class="fas fa-file-pdf"></i> Download IRF
                 </a>
             </div>
+            <button type="button" class="btn-back" onclick="showPoliceReportModal()" style="justify-content: center; background: #1E40AF; border-color: #1E40AF; color: white; margin-top: 0.35rem; width: 100%;">
+                <i class="fas fa-file-alt"></i> Generate Police Report
+            </button>
             {% endif %}
         </div>
     </div>
@@ -1611,38 +1825,168 @@
         <img id="lightboxImg" src="" alt="Photo">
     </div>
 
-    <!-- Reporter Information -->
+    <!-- Investigating Officer -->
     <div class="detail-section">
-        <h3 class="section-title"><span class="section-icon"><i class="fas fa-user-tie"></i></span> Reporter Information</h3>
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-user-shield"></i></span> Investigating Officer</h3>
         <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:12px;">
             <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#003087,#0052CC);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <i class="fas fa-user" style="color:white;font-size:1rem;"></i>
+                <i class="fas fa-user-shield" style="color:white;font-size:1rem;"></i>
             </div>
             <div>
-                <div style="font-weight:700;font-size:1rem;color:#1F2937;">{{ report.reporter_name }}</div>
+                <div style="font-weight:700;font-size:1rem;color:#1F2937;">{{ report.reported_by.get_full_name|default:report.reported_by.username }}</div>
                 <div style="font-size:0.82rem;color:#6B7280;">
                     {% if report.reported_by.profile.role %}
                         {{ report.reported_by.profile.get_role_display }}
                     {% else %}
-                        Reporter
+                        Officer
                     {% endif %}
                 </div>
             </div>
         </div>
         <div class="info-grid" style="grid-template-columns: 1fr;">
-            {% if report.reporter_contact %}
+            {% if report.reported_by.profile.rank %}
             <div class="info-item">
-                <div class="info-label">Contact Number</div>
-                <div class="info-value"><i class="fas fa-phone" style="color:#003087;margin-right:6px;font-size:0.85rem;"></i>{{ report.reporter_contact }}</div>
+                <div class="info-label">Rank</div>
+                <div class="info-value">{{ report.reported_by.profile.get_rank_display }}</div>
+            </div>
+            {% endif %}
+            {% if report.reported_by.profile.badge_number %}
+            <div class="info-item">
+                <div class="info-label">Badge Number</div>
+                <div class="info-value">{{ report.reported_by.profile.badge_number }}</div>
+            </div>
+            {% endif %}
+            {% if report.reported_by.profile.station %}
+            <div class="info-item">
+                <div class="info-label">Station</div>
+                <div class="info-value"><i class="fas fa-building" style="color:#003087;margin-right:6px;font-size:0.85rem;"></i>{{ report.reported_by.profile.station }}</div>
             </div>
             {% endif %}
             {% if report.reported_by.email %}
             <div class="info-item">
-                <div class="info-label">Email Address</div>
+                <div class="info-label">Email</div>
                 <div class="info-value"><i class="fas fa-envelope" style="color:#003087;margin-right:6px;font-size:0.85rem;"></i>{{ report.reported_by.email }}</div>
             </div>
             {% endif %}
+            {% if report.reported_by.profile.mobile_number %}
+            <div class="info-item">
+                <div class="info-label">Contact</div>
+                <div class="info-value"><i class="fas fa-phone" style="color:#003087;margin-right:6px;font-size:0.85rem;"></i>{{ report.reported_by.profile.mobile_number }}</div>
+            </div>
+            {% endif %}
         </div>
+    </div>
+
+    <!-- Complainant / Reporting Person (IRF Item A) -->
+    <div class="detail-section">
+        <h3 class="section-title"><span class="section-icon"><i class="fas fa-user-edit"></i></span> Complainant <span style="font-size:0.7rem;font-weight:400;color:#6B7280;">(IRF Item A)</span></h3>
+        {% if report.has_complainant and report.reporter_name %}
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:12px;">
+            <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#059669,#10B981);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-user" style="color:white;font-size:1rem;"></i>
+            </div>
+            <div>
+                <div style="font-weight:700;font-size:1rem;color:#1F2937;">{{ report.reporter_name }}</div>
+                <div style="font-size:0.82rem;color:#6B7280;">Complainant / Reporting Person</div>
+            </div>
+        </div>
+        <div class="info-grid" style="grid-template-columns: 1fr 1fr;">
+            {% if report.reporter_contact %}
+            <div class="info-item">
+                <div class="info-label">Mobile Phone</div>
+                <div class="info-value"><i class="fas fa-phone" style="color:#059669;margin-right:6px;font-size:0.85rem;"></i>{{ report.reporter_contact }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_home_phone %}
+            <div class="info-item">
+                <div class="info-label">Home Phone</div>
+                <div class="info-value">{{ report.reporter_home_phone }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_email %}
+            <div class="info-item">
+                <div class="info-label">Email</div>
+                <div class="info-value">{{ report.reporter_email }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_qualifier %}
+            <div class="info-item">
+                <div class="info-label">Qualifier</div>
+                <div class="info-value">{{ report.reporter_qualifier }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_nickname %}
+            <div class="info-item">
+                <div class="info-label">Nickname</div>
+                <div class="info-value">{{ report.reporter_nickname }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_citizenship %}
+            <div class="info-item">
+                <div class="info-label">Citizenship</div>
+                <div class="info-value">{{ report.reporter_citizenship }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_gender %}
+            <div class="info-item">
+                <div class="info-label">Gender</div>
+                <div class="info-value">{{ report.reporter_gender }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_civil_status %}
+            <div class="info-item">
+                <div class="info-label">Civil Status</div>
+                <div class="info-value">{{ report.reporter_civil_status }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_dob %}
+            <div class="info-item">
+                <div class="info-label">Date of Birth</div>
+                <div class="info-value">{{ report.reporter_dob|date:"F j, Y" }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_place_of_birth %}
+            <div class="info-item">
+                <div class="info-label">Place of Birth</div>
+                <div class="info-value">{{ report.reporter_place_of_birth }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_education %}
+            <div class="info-item">
+                <div class="info-label">Education</div>
+                <div class="info-value">{{ report.reporter_education }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_occupation %}
+            <div class="info-item">
+                <div class="info-label">Occupation</div>
+                <div class="info-value">{{ report.reporter_occupation }}</div>
+            </div>
+            {% endif %}
+            {% if report.reporter_id_presented %}
+            <div class="info-item">
+                <div class="info-label">ID Presented</div>
+                <div class="info-value">{{ report.reporter_id_presented }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% if report.reporter_address_village or report.reporter_address_barangay or report.reporter_address_city or report.reporter_address_province or report.reporter_other_address %}
+        <div class="info-grid" style="grid-template-columns: 1fr; margin-top: 4px;">
+            <div class="info-item">
+                <div class="info-label">Address</div>
+                <div class="info-value">
+                    {% if report.reporter_address_village %}{{ report.reporter_address_village }}, {% endif %}{% if report.reporter_address_barangay %}{{ report.reporter_address_barangay }}, {% endif %}{% if report.reporter_address_city %}{{ report.reporter_address_city }}, {% endif %}{% if report.reporter_address_province %}{{ report.reporter_address_province }}{% endif %}
+                    {% if report.reporter_other_address %}<br><span style="color:#6B7280;font-size:0.82rem;">{{ report.reporter_other_address }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:#F9FAFB;border-radius:8px;border:1px dashed #D1D5DB;">
+            <i class="fas fa-shield-alt" style="font-size:1.1rem;color:#9CA3AF;"></i>
+            <span style="font-size:0.82rem;color:#6B7280;">No complainant — incident observed or responded to directly by the investigating officer.</span>
+        </div>
+        {% endif %}
     </div>
 
     </div><!-- /detail-sidebar -->
@@ -1813,6 +2157,86 @@ function submitReject() {
 function showCancelOwnConfirm() { document.getElementById('cancelOwnOverlay').classList.add('active'); }
 function hideCancelOwnConfirm() { document.getElementById('cancelOwnOverlay').classList.remove('active'); }
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { hideCancelOwnConfirm(); } });
+</script>
+{% endif %}
+
+{% if report.status == 'verified' %}
+<!-- Police Report Generation Modal -->
+<div class="confirm-overlay" id="policeReportOverlay" onclick="if(event.target===this)hidePoliceReportModal()">
+    <div class="confirm-box" style="max-width: 480px;">
+        <div class="confirm-box-header" style="background: linear-gradient(135deg, #1E3A5F, #1E40AF);">
+            <div class="confirm-box-icon approve" style="background: rgba(255,255,255,0.15);"><i class="fas fa-file-alt"></i></div>
+            <h4 style="color: white; margin: 0; font-size: 1rem;">Generate Police Report</h4>
+            <p style="color: rgba(255,255,255,0.7); margin: 4px 0 0; font-size: 0.78rem;">Official PNP Police Report based on this accident record</p>
+        </div>
+        <form id="policeReportForm" method="get" action="{% url 'generate_police_report_pdf' report.pk %}" target="_blank" style="padding: 16px 20px;">
+            <div style="margin-bottom: 12px;">
+                <label style="font-size: 0.78rem; font-weight: 600; color: #374151; display: block; margin-bottom: 4px;">
+                    Requesting Party <span style="color: #DC2626;">*</span>
+                </label>
+                <input type="text" name="requesting_party" id="pr_requesting_party" required
+                    placeholder="e.g., Dizon Aldwin Rodriguez" class="form-control"
+                    style="font-size: 0.85rem; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px; width: 100%; box-sizing: border-box;">
+                <span style="font-size: 0.68rem; color: #9CA3AF;">Person or entity requesting this police report</span>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="font-size: 0.78rem; font-weight: 600; color: #374151; display: block; margin-bottom: 4px;">
+                    Party Type
+                </label>
+                <select name="party_type" class="form-control" style="font-size: 0.85rem; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px; width: 100%; box-sizing: border-box;">
+                    <option value="individual">Individual (Driver / Victim / Relative)</option>
+                    <option value="insurance">Insurance Company</option>
+                    <option value="legal">Legal Counsel / Attorney</option>
+                    <option value="company">Company / Corporation</option>
+                    <option value="government">Government Agency</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="font-size: 0.78rem; font-weight: 600; color: #374151; display: block; margin-bottom: 4px;">
+                    Reference (Blotter Entry No.)
+                </label>
+                <input type="text" name="reference" id="pr_reference"
+                    placeholder="e.g., Traffic Police Blotter Entry No. 70" class="form-control"
+                    style="font-size: 0.85rem; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px; width: 100%; box-sizing: border-box;">
+                <span style="font-size: 0.68rem; color: #9CA3AF;">Leave blank to auto-generate from report ID</span>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.78rem; font-weight: 600; color: #374151; display: block; margin-bottom: 4px;">
+                    Purpose
+                </label>
+                <select name="purpose" id="pr_purpose" onchange="togglePurposeOther(this)" class="form-control" style="font-size: 0.85rem; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px; width: 100%; box-sizing: border-box;">
+                    <option value="For any legal purposes.">For any legal purposes</option>
+                    <option value="For insurance claim purposes.">For insurance claim</option>
+                    <option value="For reference and record purposes.">For reference and record</option>
+                    <option value="other">Other (specify)</option>
+                </select>
+                <input type="text" name="purpose_other" id="pr_purpose_other" style="display:none; font-size:0.85rem; padding:8px 10px; border:1px solid #D1D5DB; border-radius:6px; width:100%; box-sizing:border-box; margin-top:6px;" placeholder="Specify purpose...">
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="button" onclick="hidePoliceReportModal()" style="flex: 1; padding: 9px; border-radius: 6px; border: 1px solid #D1D5DB; background: white; color: #374151; font-size: 0.82rem; cursor: pointer;">Cancel</button>
+                <button type="submit" style="flex: 2; padding: 9px; border-radius: 6px; border: none; background: #1E40AF; color: white; font-size: 0.82rem; font-weight: 600; cursor: pointer;">
+                    <i class="fas fa-file-pdf"></i> Generate PDF
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+function showPoliceReportModal() { document.getElementById('policeReportOverlay').classList.add('active'); }
+function hidePoliceReportModal() { document.getElementById('policeReportOverlay').classList.remove('active'); }
+function togglePurposeOther(sel) {
+    document.getElementById('pr_purpose_other').style.display = sel.value === 'other' ? 'block' : 'none';
+}
+document.getElementById('policeReportForm').addEventListener('submit', function(e) {
+    var purposeSel = document.getElementById('pr_purpose');
+    if (purposeSel.value === 'other') {
+        var other = document.getElementById('pr_purpose_other').value.trim();
+        if (!other) { e.preventDefault(); alert('Please specify the purpose.'); return; }
+        purposeSel.value = other;
+    }
+});
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') hidePoliceReportModal(); });
 </script>
 {% endif %}
 
